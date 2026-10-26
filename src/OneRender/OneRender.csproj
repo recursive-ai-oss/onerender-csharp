@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>HTML and CSS layout and rendering engine: styled nodes in, box tree, incremental layout and a retained display list out.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="RecursiveAI.OneHtml" />
+    <PackageReference Include="RecursiveAI.OneFont" />
+  </ItemGroup>
+
+</Project>

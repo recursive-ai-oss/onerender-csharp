@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Rasterizes a OneRender display list to pixels through OneImage.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../OneRender/OneRender.csproj" />
+    <PackageReference Include="RecursiveAI.OneImage" />
+  </ItemGroup>
+
+</Project>

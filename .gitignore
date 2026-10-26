@@ -1,0 +1,37 @@
+# Allowlist: everything is ignored unless listed here.
+/*
+!/.gitignore
+!/.editorconfig
+!/.gitattributes
+!/.github/
+!/global.json
+!/Directory.Build.props
+!/Directory.Packages.props
+!/OneRender.slnx
+!/LICENSE-MIT
+!/LICENSE-APACHE
+!/README.md
+!/THIRD-PARTY-NOTICES.md
+!/src/
+!/tests/
+!/bench/
+!/fuzz/
+!/tools/
+!/docs/
+!/testdata/
+
+# Build output, results and fetched material stay out even inside allowed folders.
+bin/
+obj/
+artifacts/
+TestResults/
+*.trx
+*.binlog
+.vs/
+.idea/
+*.user
+__pycache__/
+BenchmarkDotNet.Artifacts/
+# Test-suite checkouts, corpora and browser builds are fetched by scripts, never committed.
+/tests/**/wpt/
+/tools/**/cache/

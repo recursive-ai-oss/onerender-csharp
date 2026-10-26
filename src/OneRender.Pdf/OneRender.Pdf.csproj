@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Writes a OneRender display list as a tagged PDF through OnePdf.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../OneRender/OneRender.csproj" />
+    <PackageReference Include="RecursiveAI.OnePdf" />
+  </ItemGroup>
+
+</Project>

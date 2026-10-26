@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Default fonts for OneRender: metric-compatible Liberation, Carlito and Caladea families.</Description>
+    <PackageLicenseExpression>(MIT OR Apache-2.0) AND OFL-1.1</PackageLicenseExpression>
+  </PropertyGroup>
+
+</Project>
