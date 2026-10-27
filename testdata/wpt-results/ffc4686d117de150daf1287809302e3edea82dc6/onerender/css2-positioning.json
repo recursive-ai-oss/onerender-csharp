@@ -9,8 +9,8 @@
   "counts": {
     "total": 654,
     "pass": 21,
-    "fail": 542,
-    "blank": 57,
+    "fail": 543,
+    "blank": 56,
     "skipped": 34
   },
   "rate": "0.0339",
@@ -76,7 +76,6 @@
     "css/CSS2/positioning/left-offset-percentage-002.xht",
     "css/CSS2/positioning/position-006.xht",
     "css/CSS2/positioning/position-relative-001.xht",
-    "css/CSS2/positioning/position-relative-018.xht",
     "css/CSS2/positioning/position-relative-027.xht",
     "css/CSS2/positioning/position-relative-028.xht",
     "css/CSS2/positioning/position-relative-029.xht",
@@ -99,7 +98,7 @@
   "fail": {
     "css/CSS2/abspos/between-float-and-text.html": "== ref-filled-green-200px-square.html differs (max 255, 8400 px)",
     "css/CSS2/abspos/static-fixed-inside-abspos.html": "== ref-filled-green-100px-square.xht differs (max 255, 10100 px)",
-    "css/CSS2/abspos/static-inside-float-inside-inline.html": "== ref-filled-green-200px-square.html differs (max 255, 40200 px)",
+    "css/CSS2/abspos/static-inside-float-inside-inline.html": "== ref-filled-green-200px-square.html differs (max 255, 50400 px)",
     "css/CSS2/abspos/static-inside-inline-001.html": "== ref-filled-green-100px-square.xht differs (max 255, 10100 px)",
     "css/CSS2/abspos/static-inside-inline-002.html": "== ref-filled-green-100px-square.xht differs (max 255, 15200 px)",
     "css/CSS2/abspos/static-inside-inline-003.html": "== ref-filled-green-100px-square.xht differs (max 255, 10100 px)",
@@ -240,7 +239,7 @@
     "css/CSS2/positioning/abspos-028.xht": "== abspos-028-ref.xht differs (max 255, 1632 px)",
     "css/CSS2/positioning/abspos-029.html": "== abspos-001-ref.xht differs (max 255, 2720 px)",
     "css/CSS2/positioning/abspos-containing-block-010.xht": "== abspos-containing-block-010-ref.xht differs (max 255, 480000 px)",
-    "css/CSS2/positioning/abspos-float-with-inline-container.html": "== abspos-float-with-inline-container-ref.html differs (max 255, 10100 px)",
+    "css/CSS2/positioning/abspos-float-with-inline-container.html": "== abspos-float-with-inline-container-ref.html differs (max 255, 80400 px)",
     "css/CSS2/positioning/abspos-inline-008.xht": "== ref-filled-green-100px-square-only.html differs (max 255, 20200 px)",
     "css/CSS2/positioning/abspos-negative-margin-001.html": "== abspos-negative-margin-001-ref.html differs (max 255, 200 px)",
     "css/CSS2/positioning/abspos-overflow-001.xht": "== abspos-overflow-001-ref.xht differs (max 255, 3200 px)",
@@ -394,7 +393,7 @@
     "css/CSS2/positioning/position-absolute-003.xht": "== ref-filled-green-100px-square.xht differs (max 255, 10100 px)",
     "css/CSS2/positioning/position-absolute-004.xht": "== position-absolute-004-ref.xht differs (max 255, 18528 px)",
     "css/CSS2/positioning/position-absolute-006.xht": "== position-absolute-004-ref.xht differs (max 255, 18528 px)",
-    "css/CSS2/positioning/position-absolute-007.xht": "== position-absolute-007-ref.xht differs (max 255, 9312 px)",
+    "css/CSS2/positioning/position-absolute-007.xht": "== position-absolute-007-ref.xht differs (max 255, 13920 px)",
     "css/CSS2/positioning/position-absolute-008.xht": "== ref-filled-green-100px-square.xht differs (max 255, 10100 px)",
     "css/CSS2/positioning/position-applies-to-001.xht": "== bottom-applies-to-001-ref.xht differs (max 255, 10000 px)",
     "css/CSS2/positioning/position-applies-to-002.xht": "== bottom-applies-to-001-ref.xht differs (max 255, 10000 px)",
@@ -422,6 +421,7 @@
     "css/CSS2/positioning/position-relative-015.xht": "== position-relative-014-ref.xht differs (max 255, 18528 px)",
     "css/CSS2/positioning/position-relative-016.xht": "== position-relative-016-ref.xht differs (max 255, 9312 px)",
     "css/CSS2/positioning/position-relative-017.xht": "== position-relative-014-ref.xht differs (max 255, 18528 px)",
+    "css/CSS2/positioning/position-relative-018.xht": "== position-relative-018-ref.xht differs (max 255, 9312 px)",
     "css/CSS2/positioning/position-relative-019.xht": "== position-relative-014-ref.xht differs (max 255, 18528 px)",
     "css/CSS2/positioning/position-relative-035.xht": "== position-relative-035-ref.xht differs (max 255, 2000 px)",
     "css/CSS2/positioning/position-relative-037.xht": "== position-relative-037-ref.xht differs (max 255, 11274 px)",
@@ -616,7 +616,7 @@
     "css/CSS2/visufx/overflow-applies-to-001.xht": "== overflow-applies-to-001-ref.xht differs (max 255, 7360 px)",
     "css/CSS2/zindex/stack-floats-001.xht": "== stack-floats-001-ref.xht differs (max 255, 11342 px)",
     "css/CSS2/zindex/stack-floats-002.xht": "== stack-floats-001-ref.xht differs (max 255, 11342 px)",
-    "css/CSS2/zindex/stack-floats-003.xht": "== stack-floats-001-ref.xht differs (max 255, 11342 px)",
+    "css/CSS2/zindex/stack-floats-003.xht": "== stack-floats-001-ref.xht differs (max 255, 13042 px)",
     "css/CSS2/zindex/stack-floats-004.xht": "== stack-floats-001-ref.xht differs (max 255, 11342 px)",
     "css/CSS2/zindex/z-index-001.xht": "== ref-filled-green-100px-square.xht differs (max 255, 10100 px)",
     "css/CSS2/zindex/z-index-002.xht": "== ref-filled-green-100px-square.xht differs (max 255, 10100 px)",
@@ -638,7 +638,7 @@
     "css/CSS2/zindex/z-index-abspos-004.xht": "== z-index-abspos-001-ref.xht differs (max 255, 60400 px)",
     "css/CSS2/zindex/z-index-abspos-005.xht": "== z-index-abspos-001-ref.xht differs (max 255, 60400 px)",
     "css/CSS2/zindex/z-index-abspos-007.xht": "== z-index-abspos-001-ref.xht differs (max 255, 60400 px)",
-    "css/CSS2/zorder/z-index-020.xht": "== z-index-020-ref2.xht differs (max 255, 12275 px)"
+    "css/CSS2/zorder/z-index-020.xht": "== z-index-020-ref2.xht differs (max 255, 11025 px)"
   },
   "skipped": {
     "css/CSS2/abspos/abspos-containing-block-initial-001.xht": "script-dependent",
