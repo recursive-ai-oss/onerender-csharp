@@ -184,8 +184,23 @@ internal sealed class ContentList
             });
         }
 
+        // CSS Lists 3 section 4.1: a counter name is a custom identifier, never none or a CSS-wide keyword; such a value makes the
+        // whole declaration invalid, which leaves the generated box without content.
+        foreach (GeneratedItem item in items)
+        {
+            if (item.Kind == GeneratedItemKind.Unsupported && item.A == InvalidMark)
+            {
+                return new ContentList([]);
+            }
+        }
+
         return new ContentList(items.ToArray());
     }
+
+    private const string InvalidMark = "\0";
+
+    private static bool ReservedCounterName(string name) =>
+        name.Length == 0 || name.ToLowerInvariantAscii() is "none" or "inherit" or "initial" or "unset" or "revert" or "revert-layer" or "default";
 
     private static GeneratedItem ParseFunction(string name, string inner)
     {
@@ -195,8 +210,18 @@ internal sealed class ContentList
         switch (n)
         {
             case "counter":
+                if (ReservedCounterName(Arg(0)))
+                {
+                    return new GeneratedItem(GeneratedItemKind.Unsupported, InvalidMark);
+                }
+
                 return new GeneratedItem(GeneratedItemKind.Counter, Arg(0), Arg(1).Length == 0 ? "decimal" : Arg(1));
             case "counters":
+                if (ReservedCounterName(Arg(0)))
+                {
+                    return new GeneratedItem(GeneratedItemKind.Unsupported, InvalidMark);
+                }
+
                 return new GeneratedItem(GeneratedItemKind.Counters, Arg(0), Unquote(Arg(1)), Arg(2).Length == 0 ? "decimal" : Arg(2));
             case "attr":
             {

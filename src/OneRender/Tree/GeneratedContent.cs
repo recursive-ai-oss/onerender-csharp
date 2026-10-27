@@ -61,6 +61,8 @@ internal sealed class GeneratedContent
     }
 
     private ReferenceTable _refs = new();
+    private DocumentStyles? _styles;
+    private int _scanBudget;
     private bool _counters;
     private bool _strings;
     private bool _targets;
@@ -124,6 +126,8 @@ internal sealed class GeneratedContent
 
         // Style attributes are not in the sheet text; a document that sets counters only there is not supported.
         _refs = refs;
+        _styles = styles;
+        _scanBudget = MaxScanNodes;
         _counters = counters || targets;
         _strings = strings;
         _targets = targets;
@@ -145,19 +149,19 @@ internal sealed class GeneratedContent
             string? reset = Declared(cs, "counter-reset");
             if (reset is not null)
             {
-                ForEachCounter(reset, 0, depth, 0);
+                ForEachCounter(reset, 0, depth, 0, owner);
             }
 
             string? inc = Declared(cs, "counter-increment");
             if (inc is not null)
             {
-                ForEachCounter(inc, 1, depth, 1);
+                ForEachCounter(inc, 1, depth, 1, owner);
             }
 
             string? set = Declared(cs, "counter-set");
             if (set is not null)
             {
-                ForEachCounter(set, 0, depth, 2);
+                ForEachCounter(set, 0, depth, 2, owner);
             }
         }
 
@@ -198,25 +202,34 @@ internal sealed class GeneratedContent
     }
 
     // counter-reset / counter-increment / counter-set: [ <name> <integer>? ]+ . mode 0 reset, 1 increment, 2 set.
-    private void ForEachCounter(string list, int defaultValue, int depth, int mode)
+    private void ForEachCounter(string list, int defaultValue, int depth, int mode, Node owner)
     {
         int i = 0;
         string[] words = list.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         while (i < words.Length)
         {
             string name = words[i++];
+            bool reversed = false;
             if (name.Contains('(', StringComparison.Ordinal))
             {
-                // reversed(name): treated as the plain name; the reversed numbering is not implemented.
+                // reversed(name): the counter counts down from the number of its increments.
+                reversed = mode == 0 && name.StartsWith("reversed(", StringComparison.OrdinalIgnoreCase);
                 int close = name.IndexOf(')', StringComparison.Ordinal);
                 name = close > 0 ? name[(name.IndexOf('(', StringComparison.Ordinal) + 1)..close] : name[(name.IndexOf('(', StringComparison.Ordinal) + 1)..];
             }
 
             int value = defaultValue;
+            bool given = false;
             if (i < words.Length && int.TryParse(words[i], System.Globalization.NumberStyles.AllowLeadingSign, System.Globalization.CultureInfo.InvariantCulture, out int parsed))
             {
                 value = parsed;
+                given = true;
                 i++;
+            }
+
+            if (reversed && !given && name.Length > 0)
+            {
+                value = ReversedInitial(owner, name);
             }
 
             if (name.Length == 0 || name.Equals("none", StringComparison.OrdinalIgnoreCase))
@@ -262,6 +275,150 @@ internal sealed class GeneratedContent
                 }
             }
         }
+    }
+
+    private const int MaxScanNodes = 2_000_000;
+
+    // CSS Lists 3 section 4.4.2: a reversed counter without a value starts at the sum of the negated increments of the elements in its
+    // scope, plus the last non-zero one, so that the first of them shows the count. Elements in a nested counter of the same name, and
+    // after a sibling that makes a new one, are not in this scope. The walk is bounded.
+    private int ReversedInitial(Node owner, string name)
+    {
+        if (_styles is null)
+        {
+            return 0;
+        }
+
+        long num = 0, lastNonZero = 0;
+        var stack = new Stack<Node>();
+        for (Node sib = owner; !sib.IsNull && _scanBudget > 0; sib = sib.NextSibling)
+        {
+            if (sib.Kind != NodeKind.Element)
+            {
+                continue;
+            }
+
+            stack.Push(sib);
+            while (stack.Count > 0 && _scanBudget-- > 0)
+            {
+                Node e = stack.Pop();
+                ComputedStyle cs = _styles.GetStyle(e);
+                if (IsDisplayNone(cs))
+                {
+                    continue;
+                }
+
+                if (e.Index != owner.Index)
+                {
+                    string? r = Declared(cs, "counter-reset");
+                    if (r is not null && MentionsCounter(r, name, 0, out _))
+                    {
+                        if (e.Parent.Index == owner.Parent.Index)
+                        {
+                            return Finish(num, lastNonZero);
+                        }
+
+                        continue;
+                    }
+                }
+
+                string? st = Declared(cs, "counter-set");
+                int inc = 0;
+                bool incremented = false;
+                string? incText = Declared(cs, "counter-increment");
+                if (incText is not null && MentionsCounter(incText, name, 1, out int incValue))
+                {
+                    inc = incValue;
+                    incremented = true;
+                }
+                else if (name == "list-item" && IsListItem(cs))
+                {
+                    inc = -1; // a list item of a reversed list counts down by one
+                    incremented = true;
+                }
+
+                if (incremented)
+                {
+                    long negated = -(long)inc;
+                    if (negated != 0)
+                    {
+                        lastNonZero = negated;
+                    }
+
+                    num += negated;
+                }
+
+                if (st is not null && MentionsCounter(st, name, 0, out int setValue))
+                {
+                    return Finish(num + setValue, lastNonZero, false);
+                }
+
+                // Children are pushed in reverse so they come out in tree order.
+                int before = stack.Count;
+                for (Node c = e.LastChild; !c.IsNull; c = c.PreviousSibling)
+                {
+                    if (c.Kind == NodeKind.Element)
+                    {
+                        stack.Push(c);
+                    }
+                }
+
+                if (stack.Count - before > 100_000)
+                {
+                    break;
+                }
+            }
+
+            stack.Clear();
+        }
+
+        return Finish(num, lastNonZero);
+    }
+
+    private static int Finish(long num, long lastNonZero, bool addLast = true) =>
+        (int)Math.Clamp(addLast ? num + lastNonZero : num, int.MinValue, int.MaxValue);
+
+    private static bool IsDisplayNone(ComputedStyle cs)
+    {
+        StyleValue? v = cs.GetValue("display");
+        return v is not null && !v.IsInitial && v.Text.Equals("none", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsListItem(ComputedStyle cs)
+    {
+        StyleValue? v = cs.GetValue("display");
+        return v is not null && !v.IsInitial && v.Text.Contains("list-item", StringComparison.OrdinalIgnoreCase);
+    }
+
+    // Whether a counter-reset / -increment / -set list names the counter; value is its integer, or the default.
+    private static bool MentionsCounter(string list, string name, int defaultValue, out int value)
+    {
+        value = defaultValue;
+        string[] words = list.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        for (int i = 0; i < words.Length; i++)
+        {
+            string w = words[i];
+            int open = w.IndexOf('(', StringComparison.Ordinal);
+            if (open >= 0)
+            {
+                int close = w.IndexOf(')', StringComparison.Ordinal);
+                w = close > open ? w[(open + 1)..close] : w[(open + 1)..];
+            }
+
+            if (!string.Equals(w, name, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            if (i + 1 < words.Length && int.TryParse(words[i + 1], System.Globalization.NumberStyles.AllowLeadingSign, System.Globalization.CultureInfo.InvariantCulture, out int parsed))
+            {
+                value = parsed;
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     private int Find(string name)

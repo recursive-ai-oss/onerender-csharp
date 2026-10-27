@@ -89,6 +89,12 @@ public sealed partial class HtmlFrontEnd
 
         int top = 0;
         _stack[0] = new Frame(rootElement.FirstChild, rootIdx, rootElement);
+        if (_eff.Length < _stack.Length)
+        {
+            _eff = new int[_stack.Length];
+        }
+
+        _eff[0] = 0;
         int counter = 0;
         while (top >= 0)
         {
@@ -102,8 +108,8 @@ public sealed partial class HtmlFrontEnd
             if (child.IsNull)
             {
                 // Children done: ::after comes last (CSS Pseudo-Elements 4 §4).
-                AddPseudo(styles, f.Owner, f.StyledParent, PseudoElementKind.After, top + 1);
-                _gc?.Exit(top);
+                AddPseudo(styles, f.Owner, f.StyledParent, PseudoElementKind.After, ChildDepth(top, f.StyledParent));
+                _gc?.Exit(_eff[top]);
                 top--;
                 continue;
             }
@@ -122,7 +128,8 @@ public sealed partial class HtmlFrontEnd
                     break;
                 case NodeKind.Element:
                 {
-                    int idx = AddElement(styles, child, parentIdx, top + 1);
+                    int childDepth = ChildDepth(top, parentIdx);
+                    int idx = AddElement(styles, child, parentIdx, childDepth);
                     if (idx >= 0 && ShouldDescend(idx))
                     {
                         if (top + 1 == _stack.Length)
@@ -130,7 +137,13 @@ public sealed partial class HtmlFrontEnd
                             Array.Resize(ref _stack, _stack.Length * 2);
                         }
 
+                        if (_eff.Length < _stack.Length)
+                        {
+                            Array.Resize(ref _eff, _stack.Length);
+                        }
+
                         _stack[++top] = new Frame(child.FirstChild, idx, child);
+                        _eff[top] = childDepth;
                     }
 
                     break;
@@ -138,6 +151,13 @@ public sealed partial class HtmlFrontEnd
             }
         }
     }
+
+    // Counter scopes ignore elements that generate no box of their own: the children of a display: contents element count as its siblings
+    // (CSS Lists 3 section 4.4.2).
+    private int[] _eff = new int[64];
+
+    private int ChildDepth(int top, int styledParent) =>
+        _eff[top] + (_tree.Styles[_tree.StyleOf(styledParent)].Display.IsContents ? 0 : 1);
 
     // Inline svg is replaced content: the subtree is serialized for the SVG renderer, and its size comes from width, height and viewBox.
     private void AddSvg(Node element, int idx)
