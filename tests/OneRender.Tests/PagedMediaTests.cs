@@ -271,6 +271,33 @@ public class PagedMediaTests
         Assert.Contains(big.Diagnostics, x => x.Kind == DiagnosticKind.LimitExceeded);
     }
 
+    [Fact]
+    public void TableHeadersAndFootersRepeatOnEveryPage()
+    {
+        string rows = string.Concat(Enumerable.Range(0, 30).Select(i => $"<tr><td>row{i}</td></tr>"));
+        PagedDocument d = Doc("@page{size:300px 150px;margin:10px}table{border-collapse:collapse;width:100%}td,th{padding:0;height:20px;line-height:20px;font-size:12px}</style></head><body><table><thead><tr><th>HEAD</th></tr></thead><tbody>" + rows + "</tbody><tfoot><tr><td>FOOT</td></tr></tfoot></table>");
+        Assert.True(d.PageCount >= 4, "pages: " + d.PageCount);
+        var list = new DisplayList();
+        d.PaintContent(list);
+        var runs = Runs(list);
+        int region = (int)d.Stride;
+        for (int p = 0; p < d.PageCount; p++)
+        {
+            var onPage = runs.Where(r => (int)(r.Bounds.X / d.Stride + 0.01) == p).ToList();
+            Assert.Contains(onPage, r => r.Text == "HEAD");
+            Assert.Contains(onPage, r => r.Text == "FOOT");
+            (RectF b, string t) head = onPage.First(r => r.Text == "HEAD");
+            (RectF b, string t) foot = onPage.First(r => r.Text == "FOOT");
+            Assert.True(head.b.Y < foot.b.Y);
+            Assert.All(onPage.Where(r => r.Text.StartsWith("row", StringComparison.Ordinal)), r => Assert.True(r.Bounds.Y >= head.b.Bottom - 0.5 && r.Bounds.Bottom <= foot.b.Y + 0.5));
+        }
+
+        // Every row appears exactly once, in order.
+        var seen = runs.Where(r => r.Text.StartsWith("row", StringComparison.Ordinal)).Select(r => r.Text).ToList();
+        Assert.Equal(Enumerable.Range(0, 30).Select(i => "row" + i), seen);
+        Assert.Equal(0, region % 1);
+    }
+
     private static string ContentText(PagedDocument d)
     {
         var list = new DisplayList();

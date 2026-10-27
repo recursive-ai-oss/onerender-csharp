@@ -61,6 +61,19 @@ internal sealed partial class Fragmenter
 
     internal int CandidateCount => _cn;
 
+    // A table whose header or footer group a page break repeats (CSS 2 §17.5.2.2, CSS Tables 3 §9.1): the group is copied to the top
+    // (header) or bottom (footer) of every page the table continues on, so its height is reserved there like a cloned border.
+    private struct RepeatRecord
+    {
+        public int Box;
+        public int Header;
+        public double HeaderReserve;
+        public int Footer;
+        public double FooterReserve;
+    }
+
+    private readonly List<RepeatRecord> _repeats = [];
+
     /// <summary>
     /// Walks the in-flow children of <paramref name="root"/> (a container whose content was laid out as one tall strip) and collects
     /// the possible break points (§4.1 classes A and B; class C points are not used), the boxes with room to break inside (empty
@@ -81,6 +94,7 @@ internal sealed partial class Fragmenter
         _fn = 0;
         _flN = 0;
         _spanTmpN = 0;
+        _repeats.Clear();
         _spannersOn = spanners;
         _steps = 0;
         ResetRow(0);
@@ -226,7 +240,61 @@ internal sealed partial class Fragmenter
             w.CloneBottom = parent.CloneBottom + (clone ? border.Bottom + pad.Bottom : 0);
         }
 
+        if (!isRoot && _kind == FragmentationKind.Page && box.Context == FormattingContext.Table && !v.IsScrollContainer && !v.IsMulticol)
+        {
+            NoteRepeats(frag, box, ref w);
+        }
+
         _walk[_wsp++] = w;
+    }
+
+    private void NoteRepeats(int table, Box box, ref Walk w)
+    {
+        int header = -1, footer = -1;
+        double headerReserve = 0, footerReserve = 0;
+        double prevBottom = double.NaN;
+        for (int g = _t.FirstChildOf(table); g >= 0; g = _t.NextSiblingOf(g))
+        {
+            if ((FragmentKind)_t.KindOf(g) != FragmentKind.Box)
+            {
+                continue;
+            }
+
+            Box gb = _boxes.Make(_t.BoxOf(g));
+            Rect r = _t.BorderBoxOf(g);
+            if (gb.Context == FormattingContext.TableHeaderGroup && header < 0)
+            {
+                header = g;
+                headerReserve = r.Height;
+                for (int n = _t.NextSiblingOf(g); n >= 0; n = _t.NextSiblingOf(n))
+                {
+                    if ((FragmentKind)_t.KindOf(n) == FragmentKind.Box && _boxes.Make(_t.BoxOf(n)).Context is FormattingContext.TableRowGroup or FormattingContext.TableFooterGroup)
+                    {
+                        headerReserve = Math.Max(headerReserve, _t.BorderBoxOf(n).Y - r.Y);
+                        break;
+                    }
+                }
+            }
+            else if (gb.Context == FormattingContext.TableFooterGroup && footer < 0)
+            {
+                footer = g;
+                footerReserve = r.Height + (double.IsNaN(prevBottom) ? 0 : Math.Max(0, r.Y - prevBottom));
+            }
+
+            if (gb.Context is FormattingContext.TableRowGroup or FormattingContext.TableHeaderGroup)
+            {
+                prevBottom = r.Bottom;
+            }
+        }
+
+        if (header < 0 && footer < 0)
+        {
+            return;
+        }
+
+        w.CloneTop += headerReserve;
+        w.CloneBottom += footerReserve;
+        _repeats.Add(new RepeatRecord { Box = box.Index, Header = header, HeaderReserve = headerReserve, Footer = footer, FooterReserve = footerReserve });
     }
 
     private void Visit(int wi, int c)
@@ -462,9 +530,9 @@ internal sealed partial class Fragmenter
 
             ys = cTop - Math.Clamp(m, 0, Math.Max(0, ys - ye));
         }
-        else if ((bits & AvoidMask) != 0 || w.AvoidUp)
+        else if ((bits & AvoidMask) != 0 || w.AvoidUp || (_kind == FragmentationKind.Page && _boxes.Make(_t.BoxOf(w.PrevFrag)).Context == FormattingContext.TableHeaderGroup))
         {
-            level = 2;
+            level = 2; // a break right after a repeated header would leave a page of header and nothing else
         }
 
         Add(ye, ys, in w, level, forced, false, bits);

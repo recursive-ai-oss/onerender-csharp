@@ -62,7 +62,8 @@ public sealed partial class Painter
         }
 
         int box = _tree.BoxOf(f);
-        int want = BuildChain(box, self);
+        // A repeated table header or footer is not part of the structure.
+        int want = ((FragmentTraits)_tree.TraitsOf(f) & FragmentTraits.Repeated) != 0 ? 0 : BuildChain(box, self);
 
         // Open tags, outermost first, as the list sees them.
         int open = 0;
