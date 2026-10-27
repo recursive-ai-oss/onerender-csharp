@@ -18,7 +18,7 @@
 | css-grid | 1 | 2481 | 533 | 1030 | 10 | 908 | 0.3388 |
 | css-images | 1 | 510 | 231 | 161 | 19 | 99 | 0.5620 |
 | css-inline | 1 | 255 | 14 | 149 | 0 | 92 | 0.0859 |
-| css-lists | 1 | 212 | 64 | 76 | 7 | 65 | 0.4354 |
+| css-lists | 1 | 212 | 67 | 80 | 0 | 65 | 0.4558 |
 | css-masking | 1 | 448 | 94 | 180 | 8 | 166 | 0.3333 |
 | css-multicol | 1 | 563 | 185 | 215 | 0 | 163 | 0.4625 |
 | css-overflow | 1 | 892 | 115 | 380 | 11 | 386 | 0.2273 |
@@ -30,14 +30,14 @@
 | css-transforms | 1 | 904 | 550 | 140 | 21 | 193 | 0.7736 |
 | css-transitions | 1 | 131 | 1 | 0 | 0 | 130 | 1.0000 |
 | css-ui | 1 | 1075 | 60 | 49 | 4 | 962 | 0.5310 |
-| css-values | 1 | 497 | 100 | 67 | 0 | 330 | 0.5988 |
+| css-values | 1 | 497 | 101 | 66 | 0 | 330 | 0.6048 |
 | css2-floats | 1 | 345 | 243 | 71 | 0 | 31 | 0.7739 |
 | css2-flow | 1 | 2415 | 1904 | 360 | 2 | 149 | 0.8402 |
-| css2-generated | 1 | 382 | 126 | 233 | 0 | 23 | 0.3510 |
+| css2-generated | 1 | 382 | 301 | 58 | 0 | 23 | 0.8384 |
 | css2-positioning | 1 | 654 | 486 | 134 | 0 | 34 | 0.7839 |
 | css2-tables | 1 | 375 | 144 | 105 | 0 | 126 | 0.5783 |
 | filter-effects | 1 | 367 | 148 | 118 | 4 | 97 | 0.5481 |
-| **all** | | 20428 | 7630 | 6125 | 154 | 6519 | 0.5486 |
+| **all** | | 20428 | 7809 | 5953 | 147 | 6519 | 0.5614 |
 
 ## Why tests failed or were skipped
 
@@ -87,7 +87,7 @@
 - Skipped: 59 × testharness.js test; 25 × script-dependent; 5 × reftest-wait (needs script); 3 × print reftest (paged output)
 ### css-lists
 
-- Failures: 76 × == reference differs
+- Failures: 80 × == reference differs
 - Skipped: 37 × testharness.js test; 20 × script-dependent; 8 × reftest-wait (needs script)
 ### css-masking
 
@@ -134,7 +134,7 @@
 - Skipped: 818 × script-dependent; 115 × testharness.js test; 29 × reftest-wait (needs script)
 ### css-values
 
-- Failures: 67 × == reference differs
+- Failures: 66 × == reference differs
 - Skipped: 284 × testharness.js test; 27 × script-dependent; 17 × reftest-wait (needs script); 2 × print reftest (paged output)
 ### css2-floats
 
@@ -146,7 +146,7 @@
 - Skipped: 83 × script-dependent; 35 × reftest-wait (needs script); 31 × testharness.js test
 ### css2-generated
 
-- Failures: 233 × == reference differs
+- Failures: 58 × == reference differs
 - Skipped: 19 × script-dependent; 3 × reftest-wait (needs script); 1 × reference file missing
 ### css2-positioning
 

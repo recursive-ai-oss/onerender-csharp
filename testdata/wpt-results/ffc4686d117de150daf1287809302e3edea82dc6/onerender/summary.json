@@ -130,11 +130,11 @@
       "sampleStride": 1,
       "discovered": 212,
       "total": 212,
-      "pass": 64,
-      "fail": 76,
-      "blank": 7,
+      "pass": 67,
+      "fail": 80,
+      "blank": 0,
       "skipped": 65,
-      "rate": "0.4354"
+      "rate": "0.4558"
     },
     {
       "module": "css-masking",
@@ -262,11 +262,11 @@
       "sampleStride": 1,
       "discovered": 497,
       "total": 497,
-      "pass": 100,
-      "fail": 67,
+      "pass": 101,
+      "fail": 66,
       "blank": 0,
       "skipped": 330,
-      "rate": "0.5988"
+      "rate": "0.6048"
     },
     {
       "module": "css2-floats",
@@ -295,11 +295,11 @@
       "sampleStride": 1,
       "discovered": 382,
       "total": 382,
-      "pass": 126,
-      "fail": 233,
+      "pass": 301,
+      "fail": 58,
       "blank": 0,
       "skipped": 23,
-      "rate": "0.3510"
+      "rate": "0.8384"
     },
     {
       "module": "css2-positioning",
@@ -337,10 +337,10 @@
   ],
   "totals": {
     "total": 20428,
-    "pass": 7630,
-    "fail": 6125,
-    "blank": 154,
+    "pass": 7809,
+    "fail": 5953,
+    "blank": 147,
     "skipped": 6519,
-    "rate": "0.5486"
+    "rate": "0.5614"
   }
 }
