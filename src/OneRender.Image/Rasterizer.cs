@@ -18,14 +18,21 @@ namespace OneRender.Image;
 /// <summary>Walks a display list once, front to back in paint order, keeping explicit stacks for transforms, clips and groups.</summary>
 internal sealed partial class Rasterizer : IDisposable
 {
-    private const int MaxOpenGroups = 16;
+    private const int MaxOpenGroups = 32;
     private const long MaxLayerPixels = 1L << 27;
 
     private readonly DisplayList _list;
     private readonly RasterOptions _options;
     private readonly CancellationToken _ct;
-    private readonly int _width;
-    private readonly int _height;
+    private readonly int _surfaceW;
+    private readonly int _surfaceH;
+    private int _width;
+    private int _height;
+    private readonly DiagnosticBag? _diagnostics;
+    private (int X, int Y) _off;
+    private bool _in3D;
+    private int _skip;
+    private int _next = -1;
     private readonly float _dpr;
     private readonly Frame[] _stack = new Frame[DisplayListLimits.MaxNestingDepth + 1];
     private readonly Dictionary<int, RgbaImage?> _images = [];
@@ -48,6 +55,16 @@ internal sealed partial class Rasterizer : IDisposable
         public float Opacity;
         public OBlend Blend;
         public bool Plus;
+        public (int X, int Y) Off;
+        public int W;
+        public int H;
+        public RectF Visible;
+        public bool In3D;
+        public RectI Region;
+        public int Item;
+        public float Scale;
+        public float[]? Coverage;
+        public Matrix4x4 Proj;
     }
 
     // A clip in device pixels. Rectangles are kept as rectangles so that nested rectangular clips need no path booleans.
@@ -74,9 +91,10 @@ internal sealed partial class Rasterizer : IDisposable
     {
         _list = list;
         _options = options;
+        _diagnostics = options.Diagnostics;
         _ct = ct;
-        _width = width;
-        _height = height;
+        _width = _surfaceW = width;
+        _height = _surfaceH = height;
         _dpr = options.DevicePixelRatio;
         _root = new Canvas(width, height, PixelFormat.Rgba8);
         _target = _root;
@@ -90,7 +108,7 @@ internal sealed partial class Rasterizer : IDisposable
         while (_sp > 0)
         {
             Frame f = _stack[--_sp];
-            if (f.Kind == ItemKind.PushGroup)
+            if (f.Kind is ItemKind.PushGroup or ItemKind.PushFilter or ItemKind.PushMask or ItemKind.PushMaskLayer or ItemKind.PushTransform3D)
             {
                 _target.Dispose();
                 _target = f.Target;
@@ -150,7 +168,7 @@ internal sealed partial class Rasterizer : IDisposable
     /// <summary>Draws the list, limited to a device-pixel region (the whole surface for a full render).</summary>
     public void Run(RectI region)
     {
-        bool full = region.X == 0 && region.Y == 0 && region.Width == _width && region.Height == _height;
+        bool full = region.X == 0 && region.Y == 0 && region.Width == _surfaceW && region.Height == _surfaceH;
         PaintColor bg = _options.Background;
         Path regionPath = Path.Rectangle(region.X, region.Y, region.Width, region.Height);
         if (full)
@@ -174,6 +192,7 @@ internal sealed partial class Rasterizer : IDisposable
             }
 
             DisplayItem it = _list[i];
+            _next = -1;
             switch (it.Kind)
             {
                 case ItemKind.FillRect:
@@ -239,8 +258,18 @@ internal sealed partial class Rasterizer : IDisposable
                     PushClip(it, Shapes.FromItem(it), false, default, it.FillRule == FillRule.EvenOdd);
                     break;
                 case ItemKind.PopClip:
-                case ItemKind.PopTransform:
                     Restore();
+                    break;
+                case ItemKind.PopTransform:
+                    if (_sp > 0 && _stack[_sp - 1].Kind == ItemKind.PushTransform3D)
+                    {
+                        PopProjection();
+                    }
+                    else
+                    {
+                        Restore();
+                    }
+
                     break;
                 case ItemKind.PushTransform:
                     {
@@ -257,14 +286,54 @@ internal sealed partial class Rasterizer : IDisposable
                     }
 
                 case ItemKind.PushGroup:
-                    PushGroup(it);
+                    PushGroup(i, it);
                     break;
                 case ItemKind.PopGroup:
                     PopGroup();
                     break;
+                case ItemKind.PushFilter:
+                    PushFilter(i, it);
+                    break;
+                case ItemKind.PopFilter:
+                    PopFilter();
+                    break;
+                case ItemKind.PushMask:
+                    PushMask(i, it);
+                    break;
+                case ItemKind.PopMask:
+                    PopMask();
+                    break;
+                case ItemKind.PushMaskLayer:
+                    PushMaskLayer(i, it);
+                    break;
+                case ItemKind.PopMaskLayer:
+                    PopMaskLayer();
+                    break;
+                case ItemKind.PushTransform3D:
+                    PushProjection(i, it);
+                    break;
+                case ItemKind.BackdropFilter:
+                    if (Visible(it))
+                    {
+                        BackdropFilter(it);
+                    }
+
+                    break;
+                case ItemKind.SvgImage:
+                    if (Visible(it))
+                    {
+                        DrawSvg(it);
+                    }
+
+                    break;
                 default:
                     // Tags carry structure for other backends; they have no pixels.
                     break;
+            }
+
+            if (_next >= 0)
+            {
+                i = _next;
             }
         }
     }
@@ -276,7 +345,7 @@ internal sealed partial class Rasterizer : IDisposable
             return false;
         }
 
-        RectF b = it.RootBounds;
+        RectF b = _in3D ? it.LayerBounds : it.RootBounds;
         return !b.IsEmpty && !RectF.Intersect(b, _visible).IsEmpty;
     }
 
@@ -313,7 +382,7 @@ internal sealed partial class Rasterizer : IDisposable
             throw new RasterizationException("Nesting is deeper than the display list limit.");
         }
 
-        _stack[_sp++] = new Frame { Kind = kind, Ctm = _ctm, Clip = _clip, Target = _target };
+        _stack[_sp++] = new Frame { Kind = kind, Ctm = _ctm, Clip = _clip, Target = _target, Off = _off, W = _width, H = _height, Visible = _visible, In3D = _in3D };
     }
 
     private void Restore()
@@ -357,58 +426,21 @@ internal sealed partial class Rasterizer : IDisposable
             return;
         }
 
-        Path merged = PathBoolean.Intersect(_clip.Path, devPath, IntersectionRule.NonZero, evenOdd ? IntersectionRule.EvenOdd : IntersectionRule.NonZero);
+        Path merged;
+        try
+        {
+            merged = PathBoolean.Intersect(_clip.Path, devPath, IntersectionRule.NonZero, evenOdd ? IntersectionRule.EvenOdd : IntersectionRule.NonZero);
+        }
+        catch (OneImage.ImageLimitException)
+        {
+            // A clip shape with coordinates beyond the boolean engine's range (a hostile clip-path or transform) keeps the clip it had.
+            return;
+        }
+
         _clip = new ClipState(merged, false, default, merged.IsEmpty);
     }
 
     private static ClipState EmptyClip => new(Path.Empty, true, default, true);
-
-    private void PushGroup(in DisplayItem it)
-    {
-        Save(ItemKind.PushGroup);
-        if (_groups >= MaxOpenGroups || _layerPixels + ((long)_width * _height) > MaxLayerPixels)
-        {
-            throw new RasterizationException("Groups are nested too deeply for the surface size.");
-        }
-
-        ref Frame f = ref _stack[_sp - 1];
-        f.Opacity = it.Opacity;
-        (f.Blend, f.Plus) = MapBlend(it.Blend);
-        _groups++;
-        _layerPixels += (long)_width * _height;
-        _target = new Canvas(_width, _height, PixelFormat.Rgba8);
-
-        // The enclosing clip applies once, when the finished layer is composited; inside the group only new clips count.
-        // An empty clip stays empty: nothing inside such a group can show.
-        _clip = _clip.IsEmpty ? EmptyClip : default;
-    }
-
-    private void PopGroup()
-    {
-        Frame f = _stack[--_sp];
-        Canvas layer = _target;
-        _target = f.Target;
-        _ctm = f.Ctm;
-        _clip = f.Clip;
-        _groups--;
-        _layerPixels -= (long)_width * _height;
-        try
-        {
-            if (_clip.IsEmpty)
-            {
-                return;
-            }
-
-            OneImage.Image snapshot = layer.Snapshot();
-            Brush brush = Brush.FromImage(snapshot, OneImage.Drawing.ImageSampling.Nearest, null, 0, 0, null, false);
-            Path all = Path.Rectangle(0, 0, _width, _height);
-            _target.Fill(brush, all, false, IntersectionRule.NonZero, f.Opacity, f.Blend, f.Plus ? AlphaComposition.Plus : AlphaComposition.SrcOver, false, null, _clip.Path, IntersectionRule.NonZero);
-        }
-        finally
-        {
-            layer.Dispose();
-        }
-    }
 
     private static (OBlend Blend, bool Plus) MapBlend(BlendMode m) => m switch
     {

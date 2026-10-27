@@ -15,6 +15,7 @@ public sealed class HtmlFrontEnd
     private readonly StyledTree _tree;
     private readonly OneHtmlSource _source = new();
     private Frame[] _stack = new Frame[64];
+    private readonly System.Text.StringBuilder _svgText = new();
 
     /// <summary>Creates a front end that writes into <paramref name="tree"/>.</summary>
     /// <param name="tree">The tree to fill; <see cref="Build"/> clears it first.</param>
@@ -100,6 +101,22 @@ public sealed class HtmlFrontEnd
         }
     }
 
+    // Inline svg is replaced content: the subtree is serialized for the SVG renderer, and its size comes from width, height and viewBox.
+    private void AddSvg(Node element, int idx)
+    {
+        string? markup = SvgSerializer.Serialize(element, _svgText);
+        if (markup is null)
+        {
+            _tree.Diagnostics.Add(DiagnosticKind.LimitExceeded, "inline svg: more than " + SvgSerializer.MaxNodes + " nodes or " + SvgSerializer.MaxChars + " characters; it is not drawn");
+        }
+
+        _tree.SetReplacedSource(idx, markup);
+        SvgClipDefs.Collect(element, _tree.ClipPaths, _svgText);
+        SvgSerializer.ReadSize(element, out double w, out double h, out double ratio);
+        _tree.SetNatural(idx, w, h);
+        _tree.SetNaturalRatio(idx, ratio);
+    }
+
     private bool ShouldDescend(int idx) =>
         _tree.ReplacedOf(idx) == ReplacedKind.None && !_tree.Styles[_tree.StyleOf(idx)].Display.IsNone;
 
@@ -131,6 +148,12 @@ public sealed class HtmlFrontEnd
         }
         if (replaced != ReplacedKind.None)
         {
+            if (replaced == ReplacedKind.Svg)
+            {
+                AddSvg(element, idx);
+                return idx;
+            }
+
             ReadOnlySpan<char> src = SourceAttribute(element, replaced);
             _tree.SetDefaultNaturalSize(idx, replaced, src);
             _tree.SetReplacedSource(idx, src);
@@ -266,6 +289,14 @@ public sealed class HtmlFrontEnd
         }
 
         // The parent cell's align="center" or "right" also places a table child, the way a centered block child sits in a cell.
+        // The cell's align attribute aligns the table's box, not the text inside the table: a table directly in such a cell starts over
+        // with the initial text-align (evidence: docs/layout-conventions.md, align on a cell around a table).
+        if (isTable && _alignHint.TryGetValue(_tree.ParentOf(idx), out TextAlignKind hinted) && v.TextAlign == hinted)
+        {
+            v.TextAlign = TextAlignKind.Start;
+            changed = true;
+        }
+
         if (isTable && _alignHint.TryGetValue(_tree.ParentOf(idx), out TextAlignKind parentAlign) && v.MarginLeft.Kind == LengthKind.Px && v.MarginLeft.Value == 0
             && v.MarginRight.Kind == LengthKind.Px && v.MarginRight.Value == 0)
         {

@@ -11,16 +11,21 @@ public sealed partial class DisplayList
     // ---------------------------------------------------------------- adding items
 
     private static bool IsPush(ItemKind k) =>
-        k is ItemKind.PushClipRect or ItemKind.PushClipRoundedRect or ItemKind.PushClipPath or ItemKind.PushTransform or ItemKind.PushGroup or ItemKind.BeginTag;
+        k is ItemKind.PushClipRect or ItemKind.PushClipRoundedRect or ItemKind.PushClipPath or ItemKind.PushTransform or ItemKind.PushGroup or ItemKind.BeginTag
+            or ItemKind.PushTransform3D or ItemKind.PushFilter or ItemKind.PushMask or ItemKind.PushMaskLayer;
 
     private static bool IsPop(ItemKind k) =>
-        k is ItemKind.PopClip or ItemKind.PopTransform or ItemKind.PopGroup or ItemKind.EndTag;
+        k is ItemKind.PopClip or ItemKind.PopTransform or ItemKind.PopGroup or ItemKind.EndTag
+            or ItemKind.PopFilter or ItemKind.PopMask or ItemKind.PopMaskLayer;
 
     private static int FamilyOf(ItemKind push) => push switch
     {
         ItemKind.PushClipRect or ItemKind.PushClipRoundedRect or ItemKind.PushClipPath => 0,
-        ItemKind.PushTransform => 1,
+        ItemKind.PushTransform or ItemKind.PushTransform3D => 1,
         ItemKind.PushGroup => 2,
+        ItemKind.PushFilter => 4,
+        ItemKind.PushMask => 5,
+        ItemKind.PushMaskLayer => 6,
         _ => 3,
     };
 
@@ -66,7 +71,7 @@ public sealed partial class DisplayList
 
     private PushState StateOf(int pushIndex) =>
         pushIndex < 0
-            ? new PushState { Ctm = Matrix3x2.Identity, Clip = RectF.Unbounded, Ctx = 0x726f6f74UL }
+            ? new PushState { Ctm = Matrix3x2.Identity, Clip = RectF.Unbounded, Ctx = 0x726f6f74UL, Outer = Matrix4x4.Identity }
             : _states[_items[pushIndex].State];
 
     private void Finish(int idx)
@@ -75,7 +80,7 @@ public sealed partial class DisplayList
         rec.ContentHash = _hash;
         PushState st = StateOf(rec.Parent);
         rec.CtxHash = st.Ctx;
-        rec.Device = RectF.Intersect(rec.Local.Transform(st.Ctm), st.Clip);
+        SetBounds(ref rec, in st);
     }
 
     private void FinishPush(int idx)
@@ -100,7 +105,7 @@ public sealed partial class DisplayList
             case ItemKind.PushClipRect:
             case ItemKind.PushClipRoundedRect:
             case ItemKind.PushClipPath:
-                s.Clip = RectF.Intersect(parent.Clip, rec.Local.Transform(parent.Ctm));
+                s.Clip = RectF.Intersect(parent.Clip, Project(rec.Local.Transform(parent.Ctm), in parent));
                 s.Ctx = Mix(parent.Ctx, rec.ContentHash);
                 break;
             case ItemKind.PushTransform:
@@ -113,8 +118,31 @@ public sealed partial class DisplayList
                 }
 
             case ItemKind.PushGroup:
+            case ItemKind.PushMask:
+            case ItemKind.PushMaskLayer:
                 s.Ctx = Mix(parent.Ctx, rec.ContentHash);
                 break;
+            case ItemKind.PushFilter:
+                {
+                    // Blur and shadow spread ink beyond the items, so the clips outside the filter are widened by the same amount.
+                    float outset = _num[rec.Num];
+                    s.Expand = parent.Expand + outset;
+                    s.Clip = Inflate(parent.Clip, outset);
+                    s.Ctx = Mix(parent.Ctx, rec.ContentHash);
+                    break;
+                }
+
+            case ItemKind.PushTransform3D:
+                {
+                    int n = rec.Num;
+                    var m = new Matrix4x4(_num[n], _num[n + 1], _num[n + 2], _num[n + 3], _num[n + 4], _num[n + 5], _num[n + 6], _num[n + 7], _num[n + 8], _num[n + 9], _num[n + 10], _num[n + 11], _num[n + 12], _num[n + 13], _num[n + 14], _num[n + 15]);
+                    var c = new Matrix4x4(parent.Ctm.M11, parent.Ctm.M12, 0, 0, parent.Ctm.M21, parent.Ctm.M22, 0, 0, 0, 0, 1, 0, parent.Ctm.M31, parent.Ctm.M32, 0, 1);
+                    s.Outer = m * c * parent.Outer;
+                    s.Has3D = true;
+                    s.Ctm = Matrix3x2.Identity;
+                    s.Ctx = Mix(parent.Ctx, rec.ContentHash);
+                    break;
+                }
             default:
                 // Tags carry meaning, not pixels: they leave the context hash alone so that changing one never causes damage.
                 break;
@@ -323,7 +351,7 @@ public sealed partial class DisplayList
             }
             else if (!IsPop(rec.Kind))
             {
-                rec.Device = RectF.Intersect(rec.Local.Transform(ps.Ctm), ps.Clip);
+                SetBounds(ref rec, in ps);
             }
         }
     }

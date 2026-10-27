@@ -12,7 +12,7 @@ public sealed partial class Painter
         ImageSpec image = bi.Source;
         ImageInfo info = default;
         bool isUrl = image.Kind == ImageSourceKind.Url;
-        if (isUrl && !TryImage(image.Url!, out info))
+        if (isUrl && !TryImage(image.Url!, out info, v.ImageOrientationNone))
         {
             return false;
         }

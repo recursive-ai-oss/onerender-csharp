@@ -119,7 +119,7 @@ public readonly struct GlyphRunView
 /// A read-only view of one item of a <see cref="DisplayList"/>. Properties documented for a kind return default values for
 /// other kinds. A view is valid until the list is cleared, patched or refilled.
 /// </summary>
-public readonly struct DisplayItem
+public readonly partial struct DisplayItem
 {
     private readonly DisplayList _list;
     private readonly int _index;
@@ -308,10 +308,11 @@ public readonly struct DisplayItem
     public string? Language => Rec.Kind == ItemKind.BeginTag ? _list.StringAt(Rec.D) : null;
 
     private static bool HasRect(ItemKind k) =>
-        k is ItemKind.FillRect or ItemKind.FillRoundedRect or ItemKind.Border or ItemKind.BoxShadow or ItemKind.PushClipRect or ItemKind.PushClipRoundedRect;
+        k is ItemKind.FillRect or ItemKind.FillRoundedRect or ItemKind.Border or ItemKind.BoxShadow or ItemKind.PushClipRect or ItemKind.PushClipRoundedRect
+            or ItemKind.SvgImage or ItemKind.BackdropFilter;
 
     private static bool HasRadii(ItemKind k) =>
-        k is ItemKind.FillRoundedRect or ItemKind.Border or ItemKind.BoxShadow or ItemKind.PushClipRoundedRect;
+        k is ItemKind.FillRoundedRect or ItemKind.Border or ItemKind.BoxShadow or ItemKind.PushClipRoundedRect or ItemKind.BackdropFilter;
 
     private static bool HasPath(ItemKind k) => k is ItemKind.FillPath or ItemKind.PushClipPath;
 

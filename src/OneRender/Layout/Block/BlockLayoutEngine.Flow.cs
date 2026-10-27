@@ -178,7 +178,8 @@ public sealed partial class BlockLayoutEngine
                 if (!double.IsNaN(t.RatioH))
                 {
                     // CSS Sizing 4 §5.1: the automatic minimum size of a box with a preferred aspect ratio is its content size.
-                    h = scroll ? t.RatioH : Math.Max(t.RatioH, h);
+                    // An explicit min-height (min-height: 0 included) replaces that automatic minimum.
+                    h = scroll || _boxes.Make(t.Box).Values.MinHeight.Kind != LengthKind.Auto ? t.RatioH : Math.Max(t.RatioH, h);
                 }
 
                 contentH = Math.Max(t.MinH, Math.Min(t.MaxH, h));
@@ -250,6 +251,25 @@ public sealed partial class BlockLayoutEngine
 
         double marginTop = t.MarginTop;
         RecordTop(pi, frag, t.MarginTop, t.MarginRight, t.MarginBottom, t.MarginLeft);
+        ref readonly ComputedValues tv = ref _boxes.Make(t.Box).Values;
+        if (tv.HasTransform)
+        {
+            if (clipX)
+            {
+                ovL = 0;
+                ovR = wd;
+            }
+
+            if (clipY)
+            {
+                ovT = 0;
+                ovB = bh;
+            }
+
+            TransformOverflow(in tv, wd, bh, ref ovL, ref ovT, ref ovR, ref ovB);
+            clipX = clipY = false;
+        }
+
         Attach(pi, x, y2, wd, bh, mb, baseline, ovL, ovT, ovR, ovB, clipX, clipY, rdx, rdy);
         if (emptyClearing && _frames[pi].NextChild >= 0)
         {
@@ -376,12 +396,13 @@ public sealed partial class BlockLayoutEngine
         }
         else if (mlAuto)
         {
-            ml = rem - mrv;
+            // CSS2 §10.3.3: when the box is wider than its container, an auto margin counts as zero rather than going negative.
+            ml = Math.Max(0, rem - mrv);
             mr = mrv;
         }
         else if (mrAuto)
         {
-            mr = rem - mlv;
+            mr = Math.Max(0, rem - mlv);
             ml = mlv;
         }
         else if (rtl)
@@ -470,6 +491,10 @@ public sealed partial class BlockLayoutEngine
         {
             ratio = nw / nh;
         }
+        else if (node.NaturalRatio > 0)
+        {
+            ratio = node.NaturalRatio;
+        }
 
         bool borderBox = v.BoxSizing == BoxSizingKind.BorderBox;
         double sw = ReplacedLength(v.Width, containing, ph, borderBox, available);
@@ -551,17 +576,19 @@ public sealed partial class BlockLayoutEngine
             h = 150;
         }
 
-        // CSS2 §10.4: the nine cases of the constraint table.
+        // CSS2 §10.4: the nine cases of the constraint table. The table works with the proportion w/h. A box with no width to take
+        // a share of (a ratio and an indefinite available width gives w = h = 0) would make that 0/0, so the ratio stands in for it.
+        double wh = h > 0 && w > 0 ? w / h : (ratio > 0 ? ratio : 1);
         if (w > maxW && h > maxH)
         {
             if (maxW / w <= maxH / h)
             {
                 width = maxW;
-                height = Math.Max(minH, maxW * h / w);
+                height = Math.Max(minH, maxW / wh);
             }
             else
             {
-                width = Math.Max(minW, maxH * w / h);
+                width = Math.Max(minW, maxH * wh);
                 height = maxH;
             }
         }
@@ -569,13 +596,13 @@ public sealed partial class BlockLayoutEngine
         {
             if (minW / w <= minH / h)
             {
-                width = Math.Min(maxW, minH * w / h);
+                width = Math.Min(maxW, minH * wh);
                 height = minH;
             }
             else
             {
                 width = minW;
-                height = Math.Min(maxH, minW * h / w);
+                height = Math.Min(maxH, minW / wh);
             }
         }
         else if (w < minW && h > maxH)
@@ -591,21 +618,21 @@ public sealed partial class BlockLayoutEngine
         else if (w > maxW)
         {
             width = maxW;
-            height = Math.Max(maxW * h / w, minH);
+            height = Math.Max(maxW / wh, minH);
         }
         else if (w < minW)
         {
             width = minW;
-            height = Math.Min(minW * h / w, maxH);
+            height = Math.Min(minW / wh, maxH);
         }
         else if (h > maxH)
         {
-            width = Math.Max(maxH * w / h, minW);
+            width = Math.Max(maxH * wh, minW);
             height = maxH;
         }
         else if (h < minH)
         {
-            width = Math.Min(minH * w / h, maxW);
+            width = Math.Min(minH * wh, maxW);
             height = minH;
         }
         else

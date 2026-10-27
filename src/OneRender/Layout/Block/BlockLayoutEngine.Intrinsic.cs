@@ -64,7 +64,7 @@ public sealed partial class BlockLayoutEngine
         }
 
         Enqueue(in _frames[_sp - 1], box, staticStart, staticEnd, staticTop);
-        if (containingFragment >= 0 && box.Values.Position != PositionKind.Fixed)
+        if (containingFragment >= 0 && (box.Values.Position != PositionKind.Fixed || _abs[_absCount - 1].Cb >= 0))
         {
             _abs[_absCount - 1].Cb = containingFragment;
         }
@@ -255,7 +255,8 @@ public sealed partial class BlockLayoutEngine
             ref readonly ComputedValues v = ref b.Values;
             double ph = FixedPadding(in v);
             ReplacedContentSize(b, in v, double.NaN, double.NaN, ph, 0, double.NaN, out double w, out _);
-            min = max = w;
+            // A size that did not come out finite must not poison every container that sums or maximizes over this box.
+            min = max = double.IsFinite(w) ? Math.Max(0, w) : 0;
             if (v.Width.IsPercentage)
             {
                 // CSS Sizing 3 §5.2.2: a percentage width on a replaced box is zero for its min-content contribution.

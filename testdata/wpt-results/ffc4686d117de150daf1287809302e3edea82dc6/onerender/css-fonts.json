@@ -231,7 +231,7 @@
     "css/css-fonts/font-family-name-024.xht": "== font-family-name-024-ref.xht differs (max 255, 4302 px)",
     "css/css-fonts/font-feature-resolution-001.html": "== font-feature-resolution-001-ref.html differs (max 255, 13760 px)",
     "css/css-fonts/font-feature-resolution-002.html": "== font-feature-resolution-002-ref.html differs (max 255, 9376 px)",
-    "css/css-fonts/font-feature-settings-descriptor-01.html": "== font-feature-settings-descriptor-01-ref.html differs (max 255, 4694 px)",
+    "css/css-fonts/font-feature-settings-descriptor-01.html": "== font-feature-settings-descriptor-01-ref.html differs (max 255, 4705 px)",
     "css/css-fonts/font-kerning-03.html": "== font-kerning-03-ref.html differs (max 255, 1382 px)",
     "css/css-fonts/font-kerning-04.html": "== font-kerning-04-ref.html differs (max 255, 691 px)",
     "css/css-fonts/font-kerning-05.html": "== font-kerning-05-ref.html differs (max 255, 691 px)",
@@ -355,8 +355,8 @@
     "css/css-fonts/system-ui-ur-vs-ar.html": "!= system-ui-ar.html identical",
     "css/css-fonts/system-ui-ur.html": "!= system-ui-ur-notref.html identical",
     "css/css-fonts/system-ui-zh.html": "!= system-ui-zh-notref.html identical",
-    "css/css-fonts/test-synthetic-italic-2.html": "== test-synthetic-italic-2-ref.html differs (max 255, 9016 px)",
-    "css/css-fonts/test-synthetic-italic-3.html": "== test-synthetic-italic-3-ref.html differs (max 255, 4508 px)"
+    "css/css-fonts/test-synthetic-italic-2.html": "== test-synthetic-italic-2-ref.html differs (max 255, 9329 px)",
+    "css/css-fonts/test-synthetic-italic-3.html": "== test-synthetic-italic-3-ref.html differs (max 255, 10508 px)"
   },
   "skipped": {
     "css/css-fonts/animations/font-palette-animation-not-specified-endpoints.html": "testharness.js test",

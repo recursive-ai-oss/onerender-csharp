@@ -96,8 +96,10 @@ public sealed partial class HtmlPage
     /// user-origin sheet, so author rules and presentational hints override it and the user-agent sheet does not.
     /// <para>HTML §15.3.2 (The page): when no <c>marginwidth</c>/<c>leftmargin</c>/<c>marginheight</c>/<c>topmargin</c> attribute gives
     /// the body's margins, "a default value of 8px is expected to be used".</para>
+    /// <para>HTML §15.5.5 (The details and summary elements): a closed <c>details</c> shows its first <c>summary</c> and nothing else. The
+    /// rule is important so that an author's <c>display</c> on the hidden content does not reveal it.</para>
     /// </summary>
-    internal const string UserAgentSupplement = "body { margin: 8px; }";
+    internal const string UserAgentSupplement = "body { margin: 8px; } details:not([open]) > :not(summary:first-of-type) { display: none !important; }";
 
     /// <summary>Parses <paramref name="html"/>, cascades, builds the box tree and lays it out.</summary>
     /// <param name="html">The document source, decoded to text.</param>
@@ -142,19 +144,41 @@ public sealed partial class HtmlPage
         cancellationToken.ThrowIfCancellationRequested();
         var context = new StyleContext { Media = new MediaFeatures { Width = options.ViewportWidth, Height = options.ViewportHeight } };
         Func<string, byte[]?>? bytes = options.StylesheetBytes;
-        var sourceOptions = new StyleSourceOptions
+        StyleSourceOptions MakeOptions(string? registered)
         {
-            IncludeUserAgentSheet = options.UserAgentStyles,
-            UserSheets = options.UserAgentStyles ? [Stylesheet.Parse(UserAgentSupplement, null, null, cancellationToken)] : null,
-            BaseUrl = options.BaseUrl,
-            DeclarationValidator = StyleValidation.Validator,
-            Resolver = bytes is null ? null : url =>
+            var sheets = new List<Stylesheet>(2);
+            if (options.UserAgentStyles)
             {
-                byte[]? b = bytes(url);
-                return b is null ? null : new StylesheetResource(b);
-            },
-        };
-        styles = DocumentStyles.Create(document, context, sourceOptions, cancellationToken);
+                sheets.Add(Stylesheet.Parse(UserAgentSupplement, null, null, cancellationToken));
+            }
+
+            if (registered is not null)
+            {
+                sheets.Add(Stylesheet.Parse(registered, null, null, cancellationToken));
+            }
+
+            return new StyleSourceOptions
+            {
+                IncludeUserAgentSheet = options.UserAgentStyles,
+                UserSheets = sheets.Count > 0 ? sheets : null,
+                BaseUrl = options.BaseUrl,
+                DeclarationValidator = StyleValidation.Validator,
+                Resolver = bytes is null ? null : url =>
+                {
+                    byte[]? b = bytes(url);
+                    return b is null ? null : new StylesheetResource(b);
+                },
+            };
+        }
+
+        styles = DocumentStyles.Create(document, context, MakeOptions(null), cancellationToken);
+
+        // @property registrations are not part of the cascade, so their initial values are fed back as a user-origin sheet. Only a
+        // document that registers something pays for the second pass.
+        if (PropertyRegistrations.InitialValueSheet(styles, cancellationToken) is { } registered)
+        {
+            styles = DocumentStyles.Create(document, context, MakeOptions(registered), cancellationToken);
+        }
 
         // @font-face rules of the document's sheets belong to this document only; the files come through the same host lookup as sheets.
         FontCatalog catalog = options.Fonts.Catalog;

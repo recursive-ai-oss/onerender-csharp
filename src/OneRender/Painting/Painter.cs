@@ -177,6 +177,8 @@ public sealed partial class Painter
         public bool Clip;
         public bool Outer;
         public bool Scroll;
+        public byte FxOuter;
+        public byte FxInner;
         public ulong PreMask;
     }
 
@@ -455,7 +457,7 @@ public sealed partial class Painter
         }
 
         bool positioned = v.Position != PositionKind.Static;
-        bool stacking = (positioned && (v.Position is PositionKind.Fixed or PositionKind.Sticky || !v.ZIndexAuto)) || v.Opacity < 1.0;
+        bool stacking = (positioned && (v.Position is PositionKind.Fixed or PositionKind.Sticky || !v.ZIndexAuto)) || v.CreatesEffectContext;
         if (stacking)
         {
             // Compositing 1 §3: opacity below 1 paints like a positioned element with z-index 0 in a stacking context of its own.
@@ -708,11 +710,25 @@ public sealed partial class Painter
             _stack[top].Outer = true;
         }
 
-        if (v.Opacity < 1.0 && (_flags[f] & FlagStackingContext) != 0 && _scopes < MaxScopes)
+        if (v.CreatesEffectContext && (_flags[f] & FlagStackingContext) != 0)
         {
-            _list.PushGroup(Id(f, 4), (float)Math.Clamp(v.Opacity, 0.0, 1.0));
+            _stack[top].FxOuter = EnterTransform(f, in v);
+            if (!v.BackdropFilter.IsNone && _scopes < MaxScopes - 1)
+            {
+                PaintBackdropFilter(f, in v);
+            }
+        }
+
+        if ((v.Opacity < 1.0 || v.MixBlendMode != BlendMode.Normal || v.Isolate) && (_flags[f] & FlagStackingContext) != 0 && _scopes < MaxScopes)
+        {
+            _list.PushGroup(Id(f, 4), (float)Math.Clamp(v.Opacity, 0.0, 1.0), v.MixBlendMode);
             _scopes++;
             _stack[top].Group = true;
+        }
+
+        if (v.CreatesEffectContext && (_flags[f] & FlagStackingContext) != 0)
+        {
+            _stack[top].FxInner = EnterFx(f, in v, 0);
         }
 
         // The root's background went to the canvas (Backgrounds 3 §2.11.2); its border is its own.
@@ -749,11 +765,14 @@ public sealed partial class Painter
         }
 
         PaintOutlines(frag, true);
+        ExitFx(_stack[top].FxInner);
         if (_stack[top].Group)
         {
             _list.PopGroup();
             _scopes--;
         }
+
+        ExitTransform(_stack[top].FxOuter);
 
         if (_stack[top].Outer)
         {
@@ -828,7 +847,7 @@ public sealed partial class Painter
             _vpEntry = k;
             _patch[k].Range = _vpRange;
         }
-        else if (v.Position == PositionKind.Fixed)
+        else if (v.Position == PositionKind.Fixed && !HasTransformedAncestor(f))
         {
             if (!_vpRange.CanScroll)
             {
@@ -1077,12 +1096,26 @@ public sealed partial class Painter
         return pushed;
     }
 
+    // Transforms 1 §2: inside a transformed box a fixed box is positioned against that box and scrolls with it.
+    private bool HasTransformedAncestor(int f)
+    {
+        for (int a = _tree.ParentOf(f); a >= 0; a = _tree.ParentOf(a))
+        {
+            if ((FragmentKind)_tree.KindOf(a) == FragmentKind.Box && _boxes.Make(_tree.BoxOf(a)).Values.CreatesTransformContext)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private int ContainingBlockOf(int f)
     {
         Box box = _boxes.Make(_tree.BoxOf(f));
         PositionKind p = box.Values.Position;
         int a = _tree.ParentOf(f);
-        if (p == PositionKind.Fixed)
+        if (p == PositionKind.Fixed && !HasTransformedAncestor(f))
         {
             return -1;
         }
@@ -1091,7 +1124,15 @@ public sealed partial class Painter
         {
             if ((FragmentKind)_tree.KindOf(a) == FragmentKind.Box)
             {
-                if (p != PositionKind.Absolute || _boxes.Make(_tree.BoxOf(a)).Values.Position != PositionKind.Static || a == 0)
+                if (p == PositionKind.Fixed)
+                {
+                    if (_boxes.Make(_tree.BoxOf(a)).Values.CreatesTransformContext)
+                    {
+                        return a;
+                    }
+                }
+                else if (p != PositionKind.Absolute || _boxes.Make(_tree.BoxOf(a)).Values.Position != PositionKind.Static
+                    || _boxes.Make(_tree.BoxOf(a)).Values.CreatesTransformContext || a == 0)
                 {
                     return a;
                 }

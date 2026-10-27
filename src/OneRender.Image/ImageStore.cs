@@ -42,10 +42,13 @@ public sealed class ImageStore : IImageSource, IImageResolver, IResourceResolver
     }
 
     /// <inheritdoc/>
-    public bool TryGetImage(string address, out ImageInfo image)
+    public bool TryGetImage(string address, out ImageInfo image) => TryGetImage(address, false, out image);
+
+    /// <inheritdoc/>
+    public bool TryGetImage(string address, bool storedOrientation, out ImageInfo image)
     {
         image = default;
-        int index = Lookup(address);
+        int index = Lookup(address, storedOrientation);
         RgbaImage? img = _images[index];
         if (img is null)
         {
@@ -74,20 +77,28 @@ public sealed class ImageStore : IImageSource, IImageResolver, IResourceResolver
         return true;
     }
 
-    private int Lookup(string address)
+    private int Lookup(string address, bool storedOrientation = false)
     {
-        if (_byAddress.TryGetValue(address, out int index))
+        // A second entry per address holds the pixels as stored in the file, for image-orientation: none. It is only made when asked for
+        // and only differs from the upright one for a file with an EXIF orientation.
+        string key = storedOrientation ? "\u0001stored:" + address : address;
+        if (_byAddress.TryGetValue(key, out int index))
         {
             return index;
         }
 
         RgbaImage? decoded = null;
         byte[]? bytes = _resources(ResourceAddress.Resolve(_baseUrl, address));
+        if (bytes is null && storedOrientation && _byAddress.TryGetValue(address, out int upright))
+        {
+            return upright; // pixels the host registered itself have no orientation to ignore
+        }
+
         if (bytes is not null)
         {
             try
             {
-                OneImage.Image img = OneImage.Image.Load(bytes);
+                OneImage.Image img = storedOrientation ? OneImage.Image.Load(bytes, new OneImage.LoadOptions { AutoOrient = false }) : OneImage.Image.Load(bytes);
                 Rgba32[] px = img.ToArray<Rgba32>();
                 byte[] raw = new byte[px.Length * 4];
                 for (int i = 0; i < px.Length; i++)
@@ -108,7 +119,7 @@ public sealed class ImageStore : IImageSource, IImageResolver, IResourceResolver
 
         index = _images.Count;
         _images.Add(decoded);
-        _byAddress[address] = index;
+        _byAddress[key] = index;
         return index;
     }
 }

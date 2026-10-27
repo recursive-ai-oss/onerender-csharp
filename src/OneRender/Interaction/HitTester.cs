@@ -1,3 +1,4 @@
+using OneRender.Painting;
 using OneRender.Layout;
 using OneRender.Style;
 using OneRender.Tree;
@@ -288,7 +289,7 @@ public sealed class HitTester
             }
         }
 
-        if (!v.Transform.IsIdentity)
+        if (v.HasTransform)
         {
             _flags[i] |= FlagTransform;
         }
@@ -314,7 +315,7 @@ public sealed class HitTester
         }
 
         bool positioned = v.Position != PositionKind.Static;
-        bool stacking = (positioned && (v.Position is PositionKind.Fixed or PositionKind.Sticky || !v.ZIndexAuto)) || v.Opacity < 1.0 || !v.Transform.IsIdentity;
+        bool stacking = (positioned && (v.Position is PositionKind.Fixed or PositionKind.Sticky || !v.ZIndexAuto)) || v.Opacity < 1.0 || v.HasTransform;
         if (stacking)
         {
             int z = positioned && !v.ZIndexAuto ? v.ZIndex : 0;
@@ -699,31 +700,28 @@ public sealed class HitTester
         y = r.ClampY(_scroll.RequestedY(bi));
     }
 
-    private bool InverseTransform(int a, ref double qx, ref double qy)
+    private bool TransformOf(int a, out System.Numerics.Matrix4x4 m)
     {
         ref readonly ComputedValues v = ref _boxes.Make(_tree.BoxOf(a)).Values;
         Rect bb = _tree.BorderBoxOf(a);
-        v.Transform.Resolve(bb.Width, bb.Height, out double m11, out double m12, out double m21, out double m22, out double dx, out double dy);
-        double det = (m11 * m22) - (m12 * m21);
-        if (!(Math.Abs(det) > 1e-12))
+        Insets bd = _tree.BorderOf(a);
+        Insets pd = _tree.PaddingOf(a);
+        var border = new RectF((float)_absX[a], (float)_absY[a], (float)bb.Width, (float)bb.Height);
+        var content = new RectF((float)(_absX[a] + bd.Left + pd.Left), (float)(_absY[a] + bd.Top + pd.Top),
+            (float)Math.Max(0, bb.Width - bd.Horizontal - pd.Horizontal), (float)Math.Max(0, bb.Height - bd.Vertical - pd.Vertical));
+        return TransformGeometry.Compute(in v, in border, in content, out m);
+    }
+
+    private bool InverseTransform(int a, ref double qx, ref double qy)
+    {
+        if (!TransformOf(a, out System.Numerics.Matrix4x4 m) || !TransformGeometry.UnmapPoint(in m, (float)qx, (float)qy, out float ox, out float oy))
         {
             return false;
         }
 
-        double ox = _absX[a] + Origin(v.TransformOriginX, bb.Width);
-        double oy = _absY[a] + Origin(v.TransformOriginY, bb.Height);
-        // p' = o + L(p - o) + t, so p = o + L^-1 (p' - o - t).
-        double rx = qx - ox - dx;
-        double ry = qy - oy - dy;
-        qx = ox + (((m22 * rx) - (m21 * ry)) / det);
-        qy = oy + (((m11 * ry) - (m12 * rx)) / det);
-        return !double.IsNaN(qx) && !double.IsNaN(qy);
-    }
-
-    private static double Origin(Length l, double basis)
-    {
-        double r = l.Kind is LengthKind.Px or LengthKind.Percent or LengthKind.Calc ? l.Resolve(basis) : basis / 2;
-        return double.IsNaN(r) ? 0 : r;
+        qx = ox;
+        qy = oy;
+        return true;
     }
 
     // CSS Overflow 3 §3: content is clipped to the padding box (with the rounded inner edge), on the axes that clip.
@@ -1030,15 +1028,11 @@ public sealed class HitTester
 
     private void ForwardTransform(int a, ref double x, ref double y)
     {
-        ref readonly ComputedValues v = ref _boxes.Make(_tree.BoxOf(a)).Values;
-        Rect bb = _tree.BorderBoxOf(a);
-        v.Transform.Resolve(bb.Width, bb.Height, out double m11, out double m12, out double m21, out double m22, out double dx, out double dy);
-        double ox = _absX[a] + Origin(v.TransformOriginX, bb.Width);
-        double oy = _absY[a] + Origin(v.TransformOriginY, bb.Height);
-        double rx = x - ox;
-        double ry = y - oy;
-        x = ox + (m11 * rx) + (m21 * ry) + dx;
-        y = oy + (m12 * rx) + (m22 * ry) + dy;
+        if (TransformOf(a, out System.Numerics.Matrix4x4 m) && TransformGeometry.MapPoint(in m, (float)x, (float)y, out float ox, out float oy))
+        {
+            x = ox;
+            y = oy;
+        }
     }
 
     // ------------------------------------------------------------------ scrolling support

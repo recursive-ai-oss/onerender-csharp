@@ -4,7 +4,7 @@
 #   fuzz/run.sh <target> <seconds> [corpus dir] [extra libFuzzer flags...]
 #   fuzz/run.sh replay <target> <file>...      # run saved inputs once, without libFuzzer (reproduce a finding)
 #
-# Targets: displaylist, fontdata, grid, flow, table   (see fuzz/README.md)
+# Targets: displaylist, fontdata, grid, flow, table, effects   (see fuzz/README.md)
 #
 # Environment (nothing is baked into the script):
 #   ONERENDER_FUZZ_WORK    required: where builds, corpora and findings go. Keep it outside the checkout.
@@ -41,6 +41,7 @@ case "$target" in
   grid) maxlen=2048 ;;
   flow) maxlen=2048 ;;
   table) maxlen=2048 ;;
+  effects) maxlen=2048 ;;
   *) echo "unknown target '$target'" >&2; exit 2 ;;
 esac
 

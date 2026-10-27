@@ -165,7 +165,7 @@ internal sealed partial class StyleComputer
 
                 return false;
             default:
-                return false;
+                return ApplyEffects(id, v);
         }
     }
 

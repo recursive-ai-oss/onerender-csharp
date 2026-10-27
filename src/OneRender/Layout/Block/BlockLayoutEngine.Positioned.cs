@@ -16,6 +16,7 @@ public sealed partial class BlockLayoutEngine
         public double StaticStart; // parent-relative border-box coordinates of the hypothetical box's margin edges
         public double StaticEnd;
         public double StaticTop;
+        public byte StaticAlign; // 0 start edge, 1 left, 2 center, 3 right: an inline-level box in a block container follows text-align
 
         // Set for a child of a flex container (Flexbox §4.1): the container's content box and where in it the box sits when its insets are auto.
         public bool HasArea;
@@ -137,6 +138,21 @@ public sealed partial class BlockLayoutEngine
         bool pending = (f.Flags & FrameFlags.TopPending) != 0;
         double top = f.ContentTop + (pending ? 0 : f.Cursor + _pos + _neg);
         Enqueue(in f, c, f.ContentLeft, f.ContentLeft + f.ContentWidth, top);
+        if (c.Values.DisplayWasInlineLevel && (f.Flags & (FrameFlags.Flex)) == 0)
+        {
+            // CSS Position 3 §4: the static position of a box that was inline-level is where it would sit on a line of this container,
+            // so it is aligned by text-align inside the container's content box (floats do not narrow it).
+            ref readonly ComputedValues pv = ref _boxes.Make(f.Box).Values;
+            bool rtl = pv.Direction == DirectionKind.Rtl;
+            _abs[_absCount - 1].StaticAlign = pv.TextAlign switch
+            {
+                TextAlignKind.Left => (byte)1,
+                TextAlignKind.Right => (byte)3,
+                TextAlignKind.Center => (byte)2,
+                TextAlignKind.End => rtl ? (byte)1 : (byte)3,
+                _ => rtl ? (byte)3 : (byte)1,
+            };
+        }
     }
 
     /// <summary>
@@ -206,13 +222,14 @@ public sealed partial class BlockLayoutEngine
             Array.Resize(ref _abs, _abs.Length * 2);
         }
 
-        bool fixedBox = c.Values.Position == PositionKind.Fixed;
+        // Transforms 1 §2: a transformed ancestor is the containing block of fixed boxes too, so they scroll with it.
+        bool fixedBox = c.Values.Position == PositionKind.Fixed && f.TfFrag < 0;
         _abs[_absCount++] = new AbsEntry
         {
             Box = c.Index,
             Parent = f.Frag,
             Frag = placeholder.Index,
-            Cb = fixedBox ? -1 : f.CbFrag,
+            Cb = fixedBox ? -1 : (c.Values.Position == PositionKind.Fixed ? f.TfFrag : f.CbFrag),
             Fixed = fixedBox,
             ParentRtl = (f.Flags & FrameFlags.Rtl) != 0,
             StaticStart = staticStart,
@@ -450,6 +467,12 @@ public sealed partial class BlockLayoutEngine
                 staticFromStart: true, startWins: true, negativeCenter: true,
                 contentH, contentH, 0, double.PositiveInfinity,
                 out usedTop, out _, out mt, out _);
+        }
+
+        if (a.StaticAlign != 0 && !a.HasArea && !a.HasGridArea && double.IsNaN(left) && double.IsNaN(right))
+        {
+            double s0 = px + a.StaticStart - cbx, s1 = px + a.StaticEnd - cbx, w = bb.Width + ml + mr;
+            usedLeft = a.StaticAlign == 1 ? s0 : a.StaticAlign == 3 ? s1 - w : s0 + ((s1 - s0 - w) / 2);
         }
 
         double x = cbx + usedLeft + ml - px;

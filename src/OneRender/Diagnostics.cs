@@ -45,7 +45,10 @@ public sealed class DiagnosticBag
         Dropped = 0;
     }
 
-    internal void Add(DiagnosticKind kind, string message)
+    /// <summary>Adds a diagnostic, or counts it in <see cref="Dropped"/> when the bag is full.</summary>
+    /// <param name="kind">What happened.</param>
+    /// <param name="message">A short description.</param>
+    public void Add(DiagnosticKind kind, string message)
     {
         if (_items.Count < Capacity)
         {

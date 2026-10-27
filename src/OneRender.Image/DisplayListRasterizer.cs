@@ -24,6 +24,9 @@ public sealed class RasterOptions
 
     /// <summary>Resolves image handles. Null means every image item is skipped.</summary>
     public IImageResolver? Images { get; set; }
+
+    /// <summary>Receives a diagnostic for content the rasterizer could not draw (an inline SVG that failed to render or is too large). Null drops them.</summary>
+    public DiagnosticBag? Diagnostics { get; set; }
 }
 
 /// <summary>Rasterizing a display list failed for a reason in the list or the surface size, not in the caller's arguments.</summary>
