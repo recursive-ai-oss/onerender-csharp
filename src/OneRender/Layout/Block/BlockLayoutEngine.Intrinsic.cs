@@ -19,6 +19,11 @@ public sealed partial class BlockLayoutEngine
 
         // Sum of the max-content contributions of the floats since the last clear.
         public double FloatRun;
+
+        // Flex containers (Flexbox §9.9): 0 for a block container, else the kind of flex container, with the gap and the item count.
+        public byte Flex;
+        public int Count;
+        public double Gap;
     }
 
     private int _atomicMeasureDepth;
@@ -142,7 +147,7 @@ public sealed partial class BlockLayoutEngine
             Array.Resize(ref _istack, _istack.Length * 2);
         }
 
-        _istack[_isp++] = new IntrinsicFrame { Box = b.Index, Next = b.FirstChild.IsNull ? -1 : b.FirstChild.Index };
+        _istack[_isp++] = new IntrinsicFrame { Box = b.Index, Next = b.FirstChild.IsNull ? -1 : b.FirstChild.Index, Flex = FlexIntrinsicKind(b), Gap = FlexIntrinsicGap(b) };
     }
 
     /// <summary>Post-order walk with an explicit stack, so the depth of the tree never reaches the call stack.</summary>
@@ -169,7 +174,8 @@ public sealed partial class BlockLayoutEngine
             {
                 Box c = _boxes.Make(ci);
                 _istack[top].Next = c.NextSibling.IsNull ? -1 : c.NextSibling.Index;
-                if (!IsFlowChild(c))
+                bool flexParent = _istack[top].Flex != 0;
+                if (!(flexParent ? IsFlexItemBox(c) : IsFlowChild(c)))
                 {
                     continue;
                 }
@@ -186,11 +192,24 @@ public sealed partial class BlockLayoutEngine
                 }
 
                 Contribution(c, out double a, out double b);
-                Merge(ref _istack[top], c, a, b);
+                if (flexParent)
+                {
+                    MergeFlex(ref _istack[top], c, a, b);
+                }
+                else
+                {
+                    Merge(ref _istack[top], c, a, b);
+                }
+
                 continue;
             }
 
             IntrinsicFrame done = _istack[top];
+            if (done.Flex != 0)
+            {
+                FinishFlexIntrinsic(ref done);
+            }
+
             _minContent[done.Box] = Math.Max(0, done.Min);
             _maxContent[done.Box] = Math.Max(0, Math.Max(done.Max, done.FloatRun));
             _isp--;
@@ -198,7 +217,14 @@ public sealed partial class BlockLayoutEngine
             {
                 Box d = _boxes.Make(done.Box);
                 Contribution(d, out double a, out double b);
-                Merge(ref _istack[_isp - 1], d, a, b);
+                if (_istack[_isp - 1].Flex != 0)
+                {
+                    MergeFlex(ref _istack[_isp - 1], d, a, b);
+                }
+                else
+                {
+                    Merge(ref _istack[_isp - 1], d, a, b);
+                }
             }
         }
     }

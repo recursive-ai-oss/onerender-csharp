@@ -85,7 +85,8 @@ public partial struct ComputedValues
         a.Hyphens == b.Hyphens &&
         a.TabSize.Equals(b.TabSize) &&
         a.TextAlignLast == b.TextAlignLast &&
-        a.TextJustify == b.TextJustify;
+        a.TextJustify == b.TextJustify &&
+        FlexEquals(in a, in b);
 
     internal static int ValueHash(in ComputedValues v)
     {
@@ -173,6 +174,7 @@ public partial struct ComputedValues
         h.Add(v.TabSize);
         h.Add(v.TextAlignLast);
         h.Add(v.TextJustify);
+        FlexHash(ref h, in v);
         return h.ToHashCode();
     }
 }

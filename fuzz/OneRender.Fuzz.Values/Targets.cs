@@ -22,6 +22,7 @@ internal static class Targets
         ["tree"] = Tree,
         ["html"] = Html,
         ["layout"] = Layout,
+        ["flex"] = FlexTarget.Run,
         ["positioning"] = Positioning,
         ["inline"] = Inline,
     };
@@ -40,6 +41,8 @@ internal static class Targets
         "white-space-collapse", "text-wrap-mode", "white-space", "text-align", "text-indent", "letter-spacing", "word-spacing",
         "direction", "unicode-bidi", "color", "opacity", "background-color", "background", "content",
         "list-style-type", "list-style-position", "list-style",
+        "flex-direction", "flex-wrap", "flex-grow", "flex-shrink", "flex-basis", "flex", "flex-flow", "order", "justify-content", "align-items", "align-self", "align-content",
+        "row-gap", "column-gap", "gap", "place-items", "place-content",
     ];
 
     private static readonly string[] Displays =

@@ -308,6 +308,62 @@ public sealed class FragmentTree
         _traits[fragment.Index] = (byte)traits;
     }
 
+    /// <summary>
+    /// Remembers the end of the tree so a trial layout of one child can be undone with <see cref="Truncate"/>. Flex layout lays an
+    /// item out to learn its size and then discards the fragments.
+    /// </summary>
+    /// <param name="parent">The fragment the trial adds its fragment to as a child; nothing else outside the trial may gain children before <see cref="Truncate"/>.</param>
+    public FragmentMark Mark(Fragment parent)
+    {
+        Check(parent);
+        return new FragmentMark(_count, _runCount, _glyphCount, parent.Index, _last[parent.Index]);
+    }
+
+    /// <summary>Removes every fragment, glyph run and glyph added since <paramref name="mark"/> was taken, keeping the storage.</summary>
+    /// <param name="mark">A mark of this tree.</param>
+    public void Truncate(FragmentMark mark)
+    {
+        for (int i = _count - 1; i >= mark.Count; i--)
+        {
+            if ((FragmentKind)_kind[i] != FragmentKind.Box)
+            {
+                continue;
+            }
+
+            int b = _box[i];
+            if (_boxFirst[b] >= mark.Count)
+            {
+                _boxFirst[b] = -1;
+                _boxLast[b] = -1;
+            }
+            else if (_boxLast[b] >= mark.Count)
+            {
+                int j = _boxFirst[b];
+                while (_nextOfBox[j] >= 0 && _nextOfBox[j] < mark.Count)
+                {
+                    j = _nextOfBox[j];
+                }
+
+                _nextOfBox[j] = -1;
+                _boxLast[b] = j;
+            }
+        }
+
+        _count = mark.Count;
+        _runCount = mark.Runs;
+        _glyphCount = mark.Glyphs;
+        int p = mark.Parent;
+        _last[p] = mark.ParentLast;
+        if (mark.ParentLast >= 0)
+        {
+            _next[mark.ParentLast] = -1;
+        }
+        else
+        {
+            _first[p] = -1;
+        }
+    }
+
     // ---- reading ----
 
     /// <summary>The first fragment of a box, or the null handle if layout produced none (for example for <c>display: none</c> boxes).</summary>
@@ -594,4 +650,27 @@ public sealed class FragmentTree
         Array.Resize(ref _padding, n);
         Array.Resize(ref _overflow, n);
     }
+}
+
+/// <summary>A position in a <see cref="FragmentTree"/> to cut back to; see <see cref="FragmentTree.Mark"/>.</summary>
+public readonly struct FragmentMark
+{
+    internal FragmentMark(int count, int runs, int glyphs, int parent, int parentLast)
+    {
+        Count = count;
+        Runs = runs;
+        Glyphs = glyphs;
+        Parent = parent;
+        ParentLast = parentLast;
+    }
+
+    internal int Count { get; }
+
+    internal int Runs { get; }
+
+    internal int Glyphs { get; }
+
+    internal int Parent { get; }
+
+    internal int ParentLast { get; }
 }

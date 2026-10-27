@@ -16,6 +16,15 @@ public sealed partial class BlockLayoutEngine
         public double StaticStart; // parent-relative border-box coordinates of the hypothetical box's margin edges
         public double StaticEnd;
         public double StaticTop;
+
+        // Set for a child of a flex container (Flexbox §4.1): the container's content box and where in it the box sits when its insets are auto.
+        public bool HasArea;
+        public double AreaX;
+        public double AreaY;
+        public double AreaW;
+        public double AreaH;
+        public double FracX;
+        public double FracY;
     }
 
     private const int MaxAbsolute = 1 << 22;
@@ -428,6 +437,20 @@ public sealed partial class BlockLayoutEngine
 
         double x = cbx + usedLeft + ml - px;
         double y = cby + usedTop + mt - py;
+        if (a.HasArea)
+        {
+            // Flexbox §4.1: with auto insets the box is aligned in the container's content box as the only flex item.
+            if (double.IsNaN(left) && double.IsNaN(right))
+            {
+                x = a.AreaX + ((a.AreaW - bb.Width - ml - mr) * a.FracX) + ml;
+            }
+
+            if (double.IsNaN(top) && double.IsNaN(bottom))
+            {
+                y = a.AreaY + ((a.AreaH - bb.Height - mt - (double.IsNaN(mbv) ? 0 : mbv)) * a.FracY) + mt;
+            }
+        }
+
         _out.SetBorderBox(frag, new Rect(x, y, bb.Width, bb.Height));
         EnsureOrigins(_out.Count);
         _ox[a.Frag] = px + x;

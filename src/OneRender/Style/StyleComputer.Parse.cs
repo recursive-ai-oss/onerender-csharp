@@ -330,7 +330,7 @@ internal sealed partial class StyleComputer
             }
 
             default:
-                return false;
+                return ApplyFlex(id, v);
         }
     }
 

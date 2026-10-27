@@ -123,8 +123,8 @@ fragmentation are separate implementations behind this one entry.
 `BlockLayoutEngine` implements `ILayoutEngine` for normal-flow block-level boxes: the block formatting context of CSS2
 §9.4.1, widths (§10.3.3, replaced §10.3.2/§10.3.4 with the constraint table of §10.4), heights (§10.5 percentages that
 behave as `auto`, §10.6.3, min/max §10.7), `box-sizing`, `aspect-ratio` (Sizing 4 §5), margin collapsing (§8.3.1) and
-intrinsic sizes (Sizing 3 §5). Flex, grid and table containers are laid out as plain block containers until their own
-layout exists; floats and `clear` are described under "Floats" below; absolutely positioned boxes are described under "Positioning".
+intrinsic sizes (Sizing 3 §5). Grid and table containers are laid out as plain block containers until their own
+layout exists (flex containers: see "Flex layout"); floats and `clear` are described under "Floats" below; absolutely positioned boxes are described under "Positioning".
 
 - **No recursion.** One explicit stack of frames (a struct array kept between runs) walks the box tree; a frame is a box
   whose children are being placed. Depth is capped at 262,144 levels (a diagnostic, and the deeper boxes get no fragment).
@@ -388,3 +388,40 @@ are reused, so a relayout of unchanged content allocates nothing.
   the overflow of the content of an atomic inline (the border box is used).
 - **Overflow of inline content.** Line boxes, inline box edges, text that runs past the end of its line (an unbreakable word, a
   `nowrap` line) and atomic inlines add to the scrollable overflow of the container (`InlineLayoutResult.Overflow*`).
+
+## Flex layout (`Layout/Flex/`, `BlockLayoutEngine.Flex.cs`)
+
+Flexbox Level 1 §9 on the block engine's frame stack, with Box Alignment 3 for `justify-content`, `align-content`, `align-items`,
+`align-self` (including `safe`/`unsafe`) and `gap`. Block-level and inline-level flex containers are both handled; the container
+is a formatting-context root like a BFC root, so floats stay outside it and margins do not collapse through it.
+
+- **Style.** `flex-direction`, `flex-wrap`, `flex-grow`, `flex-shrink`, `flex-basis`, `order`, the alignment properties and
+  `row-gap`/`column-gap` are typed in `ComputedValues`. The cascade layer does not expand `flex`, `flex-flow` and `place-*`, so
+  `ShorthandFallbacks` does, with the Flexbox §7 rules (`flex: 1` is `1 1 0`, `flex: auto` is `1 1 auto`, `none` is `0 0 auto`).
+- **Phases per container.** Init (collect in-flow items in `order`, skipping `display: none`; absolutely positioned children are
+  queued for the static position), Base (flex base size and hypothetical main size per item, §9.2), Lines (§9.3), Resolve flexible
+  lengths (§9.7, with min/max violation freezing; capped at 256 rounds), Cross (§9.4 hypothetical cross sizes, line cross size,
+  `align-content`, stretch), Final (§9.5 main-axis placement, §9.6 cross-axis alignment, §8.3 baseline alignment) and Close.
+- **Trial layouts.** Measuring an item means laying it out at a forced border-box width and/or height (`ForceW`/`ForceH`), then
+  truncating the fragments it produced (`FragmentTree.Mark`/`Truncate`). The measurement is memoized per box by the forced sizes,
+  the containing block size, and the containing height only when the subtree has percentage block sizes. A trial-mode container
+  skips its own final phase, so a chain of nested flex containers is measured in linear time. The exact item layout happens once.
+  A budget of 1M + 64 per box trials guards hostile input; past it a diagnostic is recorded and sizes come from style only.
+- **`min-width/height: auto`** (§4.5) uses the smaller of the content-size suggestion and the specified size suggestion, clamped by
+  `max`; for aspect-ratio items the transferred suggestion applies. Column containers compute the content-size suggestion with a
+  trial at the resolved width.
+- **Intrinsic sizes** (§9.9) are in `FlexIntrinsic.cs` and feed the shared intrinsic cache: single-line containers sum item
+  contributions along the main axis, multi-line take the largest for min-content, and gaps are added.
+- **Absolutely positioned children** (§4.1) use the flex container's content box as the containing block and are aligned with
+  `justify-content`/`align-self` when both insets on the axis are `auto`.
+- **Choices where the specs leave room (to be checked against the Chrome differential once text lands):** overflow alignment
+  defaults to `unsafe`; `space-around`/`space-evenly` with negative free space fall back to `safe center` and `space-between` to
+  `flex-start`; `align-content: normal` behaves as `stretch`; `baseline` in a column container falls back to `flex-start`;
+  `place-items`/`place-self` ignore the justify half (it has no effect on flex items); `float` and `clear` on items are ignored.
+- **Bounds.** No recursion (a 50,000-deep nest of flex containers lays out), 100,000 items lay out in well under a second, the
+  measurement count for a 2,000-level alternating nest is at most twice the depth, and relayout of a retained tree allocates
+  nothing (the zero-byte assertion covers a page of more than a thousand flex items).
+- **Not done:** `visibility: collapse` on items, `list-item` flex containers' outside marker, percentage and `min-content`
+  `flex-basis` in column containers (treated as `content`), multi-line column containers size trial layouts from the container
+  width rather than the line width, vertical writing modes, fragmentation of flex containers across pages. Text items take their min-content and
+  max-content from the inline layout's intrinsic sizes and their baselines from its lines.
