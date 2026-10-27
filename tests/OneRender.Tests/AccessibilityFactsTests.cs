@@ -367,14 +367,21 @@ public class AccessibilityFactsTests
         static string Page(int rows) => string.Concat(Enumerable.Range(0, rows).Select(i => "<div style='background:#" + (i % 2 == 0 ? "eee" : "ddd") + ";height:20px'><span>row " + i + "</span></div>"));
         var options = new FactsOptions { ComputedStyles = FactsOptions.StandardStyleList };
         Render(Page(50), options: options);
-        var sw = Stopwatch.StartNew();
-        RenderedPage small = Render(Page(1000), 400, 300, options);
-        double smallMs = sw.Elapsed.TotalMilliseconds;
-        sw.Restart();
-        RenderedPage large = Render(Page(4000), 400, 300, options);
-        double largeMs = sw.Elapsed.TotalMilliseconds;
-        Assert.True(large.Facts.BoxCount > 3 * small.Facts.BoxCount);
-        // four times the page may take about four times as long; a quadratic pass would take sixteen
-        Assert.True(largeMs < smallMs * 9, $"1000 rows {smallMs:0} ms, 4000 rows {largeMs:0} ms");
+        // Bytes allocated, not time, measure the work: the least of three runs leaves out what the runtime itself allocates.
+        long smallBytes = long.MaxValue, largeBytes = long.MaxValue;
+        RenderedPage? small = null, large = null;
+        for (int run = 0; run < 3; run++)
+        {
+            long before = GC.GetAllocatedBytesForCurrentThread();
+            small = Render(Page(1000), 400, 300, options);
+            smallBytes = Math.Min(smallBytes, GC.GetAllocatedBytesForCurrentThread() - before);
+            before = GC.GetAllocatedBytesForCurrentThread();
+            large = Render(Page(4000), 400, 300, options);
+            largeBytes = Math.Min(largeBytes, GC.GetAllocatedBytesForCurrentThread() - before);
+        }
+
+        Assert.True(large!.Facts.BoxCount > 3 * small!.Facts.BoxCount);
+        // four times the page may allocate about four times as much; a quadratic pass would take sixteen
+        Assert.True(largeBytes < smallBytes * 9, $"1000 rows {smallBytes} B, 4000 rows {largeBytes} B");
     }
 }

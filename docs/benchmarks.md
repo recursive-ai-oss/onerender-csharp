@@ -54,6 +54,14 @@ The benchmarks:
 
 The setup of each benchmark runs its changes 200–400 times first so the JIT has promoted the code, because a running game is warm.
 
+## Timing lives here, not in the unit tests
+
+The unit tests assert nothing about wall time, which depends on the load of the machine. They assert allocation, counted work (for example flex measurements per item) and results. The time of the large and hostile cases they used to clock is a benchmark row: `StressBenchmarks` (100,000 flex items with and without wrapping, 10,000 floats, 100,000 grid items, a hit test on a page of about a thousand nodes, and a frame of the HUD churn in which one element's `left` and one label's width take new values every frame):
+
+    dotnet run -c Release --project bench/OneRender.Benchmarks -- --filter '*StressBenchmarks*'
+
+On the benchmark host this takes the worker lock like any other timing run.
+
 ## The OneGame.UI comparison
 
 `bench/OneRender.Benchmarks.OneGameUi` references OneGame.UI through its published package (`RecursiveAI.OneGame.UI` and `.Text`, pinned in

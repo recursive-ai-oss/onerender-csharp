@@ -855,31 +855,19 @@ public class InlineLayoutTests
         }
 
         sb.Append("</div>");
-        var sw = System.Diagnostics.Stopwatch.StartNew();
         Lay l = Run(sb.ToString());
-        sw.Stop();
         Assert.True(l.Lines("a").Count > 1000);
-        Assert.True(sw.ElapsedMilliseconds < 20_000, "took " + sw.ElapsedMilliseconds + " ms");
-        Note("1M chars: " + sw.ElapsedMilliseconds + " ms, lines " + l.Lines("a").Count);
     }
 
     [Fact]
     public void AHundredThousandCharacterUnbreakableWordLaysOutInOneLine()
     {
         string word = new('w', 100_000);
-        var sw = System.Diagnostics.Stopwatch.StartNew();
         Lay l = Run("<div id=a style='width:300px'>" + word + "</div>");
-        sw.Stop();
         Assert.Single(l.Lines("a"));
-        Assert.True(sw.ElapsedMilliseconds < 10_000, "took " + sw.ElapsedMilliseconds + " ms");
-        Note("100k word: " + sw.ElapsedMilliseconds + " ms");
-        // The same word with overflow-wrap broken into many lines, still in linear time.
-        sw.Restart();
+        // The same word with overflow-wrap broken into many lines.
         Lay b = Run("<div id=a style='width:300px;overflow-wrap:anywhere'>" + word + "</div>");
-        sw.Stop();
         Assert.True(b.Lines("a").Count > 1000);
-        Assert.True(sw.ElapsedMilliseconds < 20_000, "took " + sw.ElapsedMilliseconds + " ms");
-        Note("100k word anywhere: " + sw.ElapsedMilliseconds + " ms, lines " + b.Lines("a").Count);
     }
 
     [Fact]
@@ -898,11 +886,8 @@ public class InlineLayoutTests
         }
 
         sb.Append("</div>");
-        var sw = System.Diagnostics.Stopwatch.StartNew();
         Lay l = Run(sb.ToString());
-        sw.Stop();
         Assert.True(l.Lines("a").Count >= 2);
-        Assert.True(sw.ElapsedMilliseconds < 20_000, "took " + sw.ElapsedMilliseconds + " ms");
     }
 
     [Fact]
@@ -922,16 +907,10 @@ public class InlineLayoutTests
         styled.AddText(n, "deep text that wraps over a few lines in the narrow box");
         boxes.Build();
         var f = new FragmentTree(boxes);
-        var sw = System.Diagnostics.Stopwatch.StartNew();
         new BlockLayoutEngine().Layout(boxes, new LayoutInput(300, double.NaN, FontProviders.ForCurrentThread()), f);
-        sw.Stop();
         Assert.True(f.Root.BorderBox.Height >= 40);
-        Assert.True(sw.ElapsedMilliseconds < 20_000, "took " + sw.ElapsedMilliseconds + " ms");
-        Note("10k deep: " + sw.ElapsedMilliseconds + " ms, fragments " + f.Count);
     }
 
-    private static void Note(string line) =>
-        System.IO.File.AppendAllText(System.IO.Path.Combine(System.Environment.GetEnvironmentVariable("TMPDIR") ?? ".", "limits.txt"), line + "\n");
 
     private static string Px(double v) => v.ToString("R", CultureInfo.InvariantCulture);
 }

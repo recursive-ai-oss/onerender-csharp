@@ -219,8 +219,13 @@ public sealed class EditSession
     private static readonly string[] Texts = ["a", "Hello world", "lorem ipsum dolor sit amet consectetur adipiscing elit", " ", "\n", "x y z", "Mixed \u05E9\u05DC\u05D5\u05DD text", "longwordwithoutanybreakopportunity"];
     private static readonly string[] Tags = ["div", "span", "p", "section", "b"];
 
+    // The fresh-values profile: lengths and numbers that no earlier edit produced, so every one is a style row never seen before.
+    private static readonly string[] FreshProperties = ["width", "height", "margin-left", "padding-left", "left", "top", "font-size", "line-height", "opacity", "min-height", "flex-basis", "border-left-width"];
+
     private readonly bool _calm;
     private readonly bool _churn;
+    private readonly bool _fresh;
+    private int _freshCounter;
     private readonly List<StyledNode> _gone = [];
     private readonly (string Property, string[] Values)[] _pool;
     private readonly string[] _texts;
@@ -237,10 +242,12 @@ public sealed class EditSession
     /// <param name="chooser">The random choices.</param>
     /// <param name="size">The approximate number of nodes, at least 1.</param>
     /// <param name="calm">Leaves out floats, out-of-flow positioning, columns, tables and display changes that remove boxes, and favors edits of text, states and declarations.</param>
+    /// <param name="fresh">Edits mostly set lengths and numbers never used before, so styles keep taking values that no row holds, and the style table sweeps for unused rows after every flush, as a long-running host's does now and then; the page must still equal a fresh build.</param>
     /// <param name="churn">Mostly inserts and removes, alone and in bursts of several before one flush, so node slots are reclaimed and reused all the time.</param>
-    public EditSession(IFontProvider fonts, Chooser chooser, int size = 40, bool calm = false, bool churn = false)
+    public EditSession(IFontProvider fonts, Chooser chooser, int size = 40, bool calm = false, bool churn = false, bool fresh = false)
     {
         _churn = churn;
+        _fresh = fresh;
         _fonts = fonts;
         _c = chooser;
         _calm = calm;
@@ -331,11 +338,29 @@ public sealed class EditSession
         {
             (string p, string[] v) = _c.Pick(_pool);
             string val = _c.Pick(v);
+            if (_fresh && _c.Next(2) == 0)
+            {
+                (p, val) = FreshValue();
+            }
+
             d.Set(p, val);
             _lastDecl += $"{p}:{val}; ";
         }
 
         return d;
+    }
+
+    private (string Property, string Value) FreshValue()
+    {
+        string p = _c.Pick(FreshProperties);
+        int n = ++_freshCounter;
+        string v = p switch
+        {
+            "opacity" => "0." + (100 + n).ToString(CultureInfo.InvariantCulture),
+            "line-height" => (1 + (n / 1000.0)).ToString("0.###", CultureInfo.InvariantCulture),
+            _ => (1 + (n % 90) + (n / 90 * 0.01)).ToString("0.##", CultureInfo.InvariantCulture) + "px",
+        };
+        return (p, v);
     }
 
     private static void Populate(StyledTree tree, M root)
@@ -412,6 +437,17 @@ public sealed class EditSession
 
         FlushResult r = Page.Flush();
         Stats.Count(r);
+        if (_fresh)
+        {
+            // Rows nothing refers to are freed; whatever the page still shows must keep the values it was computed with. Two sweeps in a
+            // row also free the rows that survive the first one for having been used in the interval.
+            Tree.Styles.Reclaim();
+            if (_c.Next(2) == 0)
+            {
+                Tree.Styles.Reclaim();
+            }
+        }
+
         CheckSlots();
         CheckAgainstFresh();
         return _lastEdit;
@@ -606,6 +642,11 @@ public sealed class EditSession
             {
                 (string p, string[] v) = _c.Pick(_pool);
                 string value = _c.Pick(v);
+                if (_fresh && _c.Next(3) != 0)
+                {
+                    (p, value) = FreshValue();
+                }
+
                 Tree.SetProperty(e.Live, p, value);
                 e.Decl = Tree.GetDeclaration(e.Live);
                 _lastEdit = $"set {p}:{value} on {e.Tag}";

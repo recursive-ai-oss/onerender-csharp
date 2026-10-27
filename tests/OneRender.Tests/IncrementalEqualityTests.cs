@@ -11,14 +11,14 @@ namespace OneRender.Tests;
 /// </summary>
 public class IncrementalEqualityTests
 {
-    private static string Run(int firstSeed, int sessions, int steps, int size, bool calm = false, bool churn = false)
+    private static string Run(int firstSeed, int sessions, int steps, int size, bool calm = false, bool churn = false, bool fresh = false)
     {
         long nothing = 0, paint = 0, patched = 0, rebuilt = 0, reused = 0, repainted = 0;
         var fonts = FontProviders.CreateDefault();
         for (int s = 0; s < sessions; s++)
         {
             int seed = firstSeed + s;
-            var session = new EditSession(fonts, new Chooser(seed), size, calm, churn);
+            var session = new EditSession(fonts, new Chooser(seed), size, calm, churn, fresh);
             session.CheckAgainstFresh();
             try
             {
@@ -79,6 +79,23 @@ public class IncrementalEqualityTests
     {
         string stats = Run(21000, 20, 150, 80, calm: true, churn: true);
         Console.WriteLine("STATS calm churn " + stats);
+        Assert.DoesNotContain("reused subtrees 0", stats);
+    }
+
+    // Every edit makes a style value no row holds, and the style table sweeps after every flush: rows are freed and reused all the time,
+    // and nothing that is on the page may change because of it.
+    [Fact]
+    public void FreshStyleValuesWithSweepsEqualAFreshBuild()
+    {
+        string stats = Run(30000, 40, 160, 36, fresh: true);
+        Console.WriteLine("STATS fresh " + stats);
+    }
+
+    [Fact]
+    public void FreshStyleValuesOnCalmPagesWithChurnEqualAFreshBuild()
+    {
+        string stats = Run(31000, 20, 150, 60, calm: true, churn: true, fresh: true);
+        Console.WriteLine("STATS fresh calm churn " + stats);
         Assert.DoesNotContain("reused subtrees 0", stats);
     }
 

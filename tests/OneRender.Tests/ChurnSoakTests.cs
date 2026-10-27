@@ -1,5 +1,7 @@
 using System.Globalization;
+using OneRender;
 using OneRender.Image;
+using OneRender.Style;
 using OneRender.TestSupport;
 using OneRender.Tree;
 using Xunit;
@@ -21,9 +23,12 @@ public class ChurnSoakTests
         return e is not null && int.TryParse(e, NumberStyles.None, CultureInfo.InvariantCulture, out int n) && n > 0 ? n : fallback;
     }
 
-    private static void Soak(bool fresh, int frames)
+    // Rows freed by a sweep are reused, so the table's size may move between sweeps but must stay within one sweep gap of what it was.
+    private const int RowSlack = 4096;
+
+    private static void Soak(bool fresh, int frames, bool moving = false)
     {
-        var soak = new ChurnSoak(FontProviders.CreateDefault(), fresh);
+        var soak = new ChurnSoak(FontProviders.CreateDefault(), fresh, moving);
         int warm = Math.Min(2000, frames / 4);
         for (int i = 0; i < warm; i++)
         {
@@ -35,7 +40,7 @@ public class ChurnSoakTests
         long heap = GC.GetTotalMemory(true);
         Console.WriteLine($"SOAK fresh={fresh} warm {warm}: {soak.Describe()}, heap {heap / 1024} KiB");
         int checkpoints = 10;
-        var clock = System.Diagnostics.Stopwatch.StartNew();
+        long flushBytesAtWarm = soak.FlushBytes;
         long maxHeap = heap, midHeap = 0, lastHeap = heap;
         for (int c = 1; c <= checkpoints; c++)
         {
@@ -52,10 +57,21 @@ public class ChurnSoakTests
                 midHeap = h;
             }
 
-            Console.WriteLine($"SOAK fresh={fresh} frame {soak.Frames}: {soak.Describe()}, heap {h / 1024} KiB, {clock.Elapsed.TotalSeconds:0} s since warm-up");
+            Console.WriteLine($"SOAK fresh={fresh} frame {soak.Frames}: {soak.Describe()}, heap {h / 1024} KiB");
             Assert.Equal(slots, tree.Count);
             Assert.Equal(capacity, tree.Capacity);
-            Assert.Equal(rows, tree.Styles.Count);
+            Assert.InRange(tree.Styles.Count, 1, rows + RowSlack);
+            Assert.InRange(tree.Styles.LiveCount, 1, rows + RowSlack);
+            Assert.DoesNotContain(tree.Styles.Diagnostics.Items, d => d.Kind == DiagnosticKind.LimitExceeded);
+        }
+
+        if (moving && !fresh)
+        {
+            // The engine's share of a frame (the flush) allocates nothing; a sweep may compute again a style it had dropped, and the
+            // runtime's own work can land in a frame, so the allowance is a few bytes a frame on average, not a per-frame zero.
+            long perFrame = (soak.FlushBytes - flushBytesAtWarm) / (frames - warm);
+            Console.WriteLine($"SOAK moving: {soak.FlushBytes - flushBytesAtWarm} B allocated by {frames - warm} flushes, rows {tree.Styles.Count} ({tree.Styles.LiveCount} live), {tree.Styles.ReclaimCount} sweeps");
+            Assert.True(perFrame <= 8, $"flushes allocated {perFrame} B per frame");
         }
 
         // Flat means flat. A host that makes a declaration per node fills the heap with short-lived garbage, and the measured
@@ -70,6 +86,49 @@ public class ChurnSoakTests
 
     [Fact]
     public void DeclarationsMadeForEachNodeKeepTheTreeFlat() => Soak(true, Frames("ONERENDER_SOAK_FRAMES_FRESH", 6000));
+
+    // One element's left and one label's width take a value never seen before on every frame, on top of the churn. Rows of the values it
+    // has left behind are freed and reused, so the table stays small, the heap stays flat and nothing leaks into the diagnostics.
+    [Fact]
+    public void StylesThatTakeANewValueEveryFrameKeepTheTableFlat() => Soak(false, Frames("ONERENDER_SOAK_FRAMES_MOVING", 30000), moving: true);
+
+    [Fact]
+    public void FlushingNewStyleValuesAllocatesNothing()
+    {
+        var soak = new ChurnSoak(FontProviders.CreateDefault(), false, moving: true);
+        for (int i = 0; i < 12000; i++)
+        {
+            soak.Frame();
+        }
+
+        // Setting a value parses CSS text, which is the host's work and allocates; the engine's flush must not. Like the other allocation
+        // tests this takes the best of several rounds, because the runtime's own work (tiered compilation) can land in any one frame.
+        StyleTable table = soak.Tree.Styles;
+        long best = long.MaxValue;
+        int sweeps = 0, dirtyFrames = 0, frames = 0;
+        for (int round = 0; round < 40; round++)
+        {
+            long bytes = 0;
+            for (int i = 0; i < 100; i++)
+            {
+                soak.Edit();
+                int before = table.ReclaimCount;
+                long start = GC.GetAllocatedBytesForCurrentThread();
+                soak.FlushEdits();
+                long used = GC.GetAllocatedBytesForCurrentThread() - start;
+                bytes += used;
+                frames++;
+                dirtyFrames += used > 0 ? 1 : 0;
+                sweeps += table.ReclaimCount != before ? 1 : 0;
+            }
+
+            best = Math.Min(best, bytes);
+        }
+
+        Console.WriteLine($"MOVING flush allocation: best round {best} B per 100 frames, {dirtyFrames} of {frames} frames allocated, {sweeps} frames swept, rows {table.Count} ({table.LiveCount} live)");
+        Assert.True(sweeps > 0, "the run was too short to include a sweep");
+        Assert.Equal(0, best);
+    }
 
     [Fact]
     public void SteadyStateChurnFramesAllocateNothing()

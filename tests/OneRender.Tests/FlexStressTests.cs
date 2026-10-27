@@ -92,7 +92,7 @@ public class FlexStressTests
     }
 
     [Fact]
-    public void AHundredThousandItemsLayOutInBoundedTime()
+    public void AHundredThousandItemsLayOutWithWorkProportionalToTheItems()
     {
         foreach (string wrap in new[] { "nowrap", "wrap" })
         {
@@ -107,10 +107,10 @@ public class FlexStressTests
 
             boxes.Build();
             var f = new FragmentTree(boxes);
-            var sw = Stopwatch.StartNew();
-            new BlockLayoutEngine().Layout(boxes, new LayoutInput(1000, double.NaN, new NoFonts()), f);
-            sw.Stop();
-            Assert.True(sw.Elapsed.TotalSeconds < 20, wrap + " took " + sw.Elapsed);
+            var engine = new BlockLayoutEngine();
+            engine.Layout(boxes, new LayoutInput(1000, double.NaN, new NoFonts()), f);
+            // Work counted in flex measurements stays proportional to the items (a quadratic pass would count 10^10).
+            Assert.True(engine.FlexMeasurements <= 8L * 100_000, wrap + " measured " + engine.FlexMeasurements + " times");
             Assert.Equal(100_001, f.Count);
             if (wrap == "nowrap")
             {
@@ -124,7 +124,7 @@ public class FlexStressTests
     }
 
     [Fact]
-    public void ADeepFlexNestLaysOutWithoutRecursionAndInLinearTime()
+    public void ADeepFlexNestLaysOutWithoutRecursionAndWithLinearWork()
     {
         foreach (int depth in new[] { 1_000, 50_000 })
         {
@@ -140,12 +140,9 @@ public class FlexStressTests
             styled.AddElement(n, "div", new StyleDeclaration().Set("width", "10px").Set("height", "10px"));
             boxes.Build();
             var f = new FragmentTree(boxes);
-            var sw = Stopwatch.StartNew();
             var eng = new BlockLayoutEngine();
             eng.Layout(boxes, new LayoutInput(1_000_000, double.NaN, new NoFonts()), f);
-            sw.Stop();
             Assert.True(eng.FlexMeasurements <= 2L * depth, "measurements " + eng.FlexMeasurements);
-            Assert.True(sw.Elapsed.TotalSeconds < 20, depth + " levels took " + sw.Elapsed);
             Assert.Equal(depth + 1, f.Count);
             Assert.Equal(10, f.Root.BorderBox.Height, 6);
             Assert.Equal(1_000_000, f.Root.BorderBox.Width, 6);
@@ -175,10 +172,10 @@ public class FlexStressTests
             styled.AddElement(n, "div", leaf);
             boxes.Build();
             var f = new FragmentTree(boxes);
-            var sw = Stopwatch.StartNew();
-            new BlockLayoutEngine().Layout(boxes, new LayoutInput(1000, double.NaN, new NoFonts()), f);
-            sw.Stop();
-            Assert.True(sw.Elapsed.TotalSeconds < 10, depth + " levels took " + sw.Elapsed);
+            var eng = new BlockLayoutEngine();
+            eng.Layout(boxes, new LayoutInput(1000, double.NaN, new NoFonts()), f);
+            // Memoized measurements: a few per level, not a doubling per level.
+            Assert.True(eng.FlexMeasurements <= 8L * depth, depth + " levels measured " + eng.FlexMeasurements + " times");
             Assert.Equal(CountTree(f), f.Count);
         }
     }

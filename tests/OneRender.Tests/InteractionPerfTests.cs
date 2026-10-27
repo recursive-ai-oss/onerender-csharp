@@ -145,16 +145,11 @@ public class InteractionAllocationTests
     }
 
     [Fact]
-    public void MeasuredCostOfAHitTestOnAThousandNodePage()
+    public void HitTestsOnAThousandNodePageFindTargets()
     {
+        // The time of a hit test is a benchmark row (InteractionBenchmarks); here the answers are checked.
         InteractivePage p = UiPage();
-        for (int i = 0; i < 2000; i++)
-        {
-            p.Hits.HitTest(10 + (i % 700), 5 + ((i * 7) % 560), out _);
-        }
-
-        const int N = 20000;
-        long start = Stopwatch.GetTimestamp();
+        const int N = 2000;
         int hits = 0;
         for (int i = 0; i < N; i++)
         {
@@ -164,9 +159,6 @@ public class InteractionAllocationTests
             }
         }
 
-        double micros = Stopwatch.GetElapsedTime(start).TotalMilliseconds * 1000 / N;
-        Console.WriteLine($"hit test on {p.Page.Styled.Count} styled nodes ({p.Page.Fragments.Count} fragments): {micros:0.00} us each, {hits} hits of {N}");
         Assert.True(hits > 0);
-        Assert.True(micros < 500, micros.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
     }
 }

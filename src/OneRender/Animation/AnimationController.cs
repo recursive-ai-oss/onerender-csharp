@@ -33,7 +33,7 @@ internal enum MotionLevel : byte
 /// <para>Ticking allocates nothing once the animations are set up, for properties whose interpolation does not build new objects (numbers,
 /// colors, lengths in one unit, transforms of matching function lists). Setup, events and the less common value types allocate.</para>
 /// </remarks>
-internal sealed partial class AnimationController
+internal sealed partial class AnimationController : IStyleHolder
 {
     /// <summary>Most elements animated at once; more are left unanimated.</summary>
     public const int MaxAnimatedElements = 100_000;
@@ -60,6 +60,37 @@ internal sealed partial class AnimationController
     private int _compositorCount;
     private StyledTree? _tree;
     private StyleTable? _table;
+    private StyleTable? _registeredWith;
+
+    /// <summary>Allocates a private row, first making sure the table's sweeps see the rows this controller holds.</summary>
+    private bool AllocateRow(StyleTable table, in ComputedValues values, out StyleId row)
+    {
+        if (!ReferenceEquals(_registeredWith, table))
+        {
+            table.AddHolder(this);
+            _registeredWith = table;
+        }
+
+        return table.TryAllocatePrivate(in values, out row);
+    }
+
+    /// <inheritdoc />
+    void IStyleHolder.MarkStyles(StyleTable table)
+    {
+        foreach (KeyValuePair<int, ElementEffects> kv in _effects)
+        {
+            ElementEffects e = kv.Value;
+            if (e.HasRow)
+            {
+                table.Mark(e.Row.Index);
+            }
+
+            foreach (StyleId row in e.FollowerRows)
+            {
+                table.Mark(row.Index);
+            }
+        }
+    }
     private bool _sameTable;
     private readonly int[] _propStamp = new int[Properties.Count];
     private int _propStampValue;
@@ -331,7 +362,7 @@ internal sealed partial class AnimationController
         StyleTable table = tree.Styles;
         if (!hadRow)
         {
-            if (!table.TryAllocatePrivate(in e.Base, out StyleId row))
+            if (!AllocateRow(table, in e.Base, out StyleId row))
             {
                 tree.Diagnostics.Add(DiagnosticKind.LimitExceeded, "style table full; element left unanimated");
                 CancelAll(e, now);

@@ -110,45 +110,6 @@ public partial class MotionGameUiTests
     }
 
     [Fact]
-    public void TimingPerTick()
-    {
-        // 1 ms is the bar for a tick plus repaint on a release build on the benchmark host; elsewhere the test only guards against an
-        // order-of-magnitude regression. ONERENDER_STRICT_TIMING=1 holds it to the bar.
-        bool strict = Environment.GetEnvironmentVariable("ONERENDER_STRICT_TIMING") == "1";
-        double limit = strict ? 1.0 : 25.0;
-        InteractivePage p = Create(Hud(0, true));
-        var painter = new Painter();
-        var retained = new RetainedDisplayList();
-        var options = new PaintOptions(GameUiScene.Width, GameUiScene.Height) { Scroll = p.Page.Scroll };
-        painter.Paint(p.Page.Fragments, retained, options);
-        double t = 0;
-        for (int i = 0; i < 300; i++)
-        {
-            t += 16;
-            p.Advance(t);
-            painter.Paint(p.Page.Fragments, retained, options);
-        }
-
-        double best = double.MaxValue;
-        const int N = 200;
-        for (int round = 0; round < 5; round++)
-        {
-            long t0 = Stopwatch.GetTimestamp();
-            for (int i = 0; i < N; i++)
-            {
-                t += 16;
-                p.Advance(t);
-                painter.Paint(p.Page.Fragments, retained, options);
-            }
-
-            best = Math.Min(best, Stopwatch.GetElapsedTime(t0).TotalMilliseconds / N);
-        }
-
-        Console.WriteLine("TIMING animated width and color tick plus repaint: " + best.ToString("F3", System.Globalization.CultureInfo.InvariantCulture) + " ms (best of 5 rounds)");
-        Assert.True(best <= limit, "a tick took " + best + " ms; limit " + limit + " ms");
-    }
-
-    [Fact]
     public void IncrementalTicksEqualAFreshRenderAtTheSameTime()
     {
         string html = Hud(40, true);

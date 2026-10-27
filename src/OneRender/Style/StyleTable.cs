@@ -33,6 +33,13 @@ public readonly struct StyleId : IEquatable<StyleId>
     public override string ToString() => "style#" + Index.ToString(System.Globalization.CultureInfo.InvariantCulture);
 }
 
+/// <summary>An object that keeps <see cref="StyleId"/>s and reports them to <see cref="StyleTable.Reclaim"/> so their rows survive.</summary>
+internal interface IStyleHolder
+{
+    /// <summary>Calls <see cref="StyleTable.Mark"/> for every row the holder will still read.</summary>
+    void MarkStyles(StyleTable table);
+}
+
 /// <summary>
 /// The retained store of distinct computed styles. Nodes hold a <see cref="StyleId"/>; two nodes whose declarations and
 /// parent style are the same share one row, so the cost of a style is paid once per distinct style, not once per node.
@@ -42,6 +49,8 @@ public sealed class StyleTable
 {
     /// <summary>The most distinct styles one table holds. Further requests reuse the parent's row and raise a diagnostic.</summary>
     public const int MaxStyles = 1 << 16;
+
+    private const int MinReclaimGap = 1024;
 
     /// <summary>Counts the resets of any table; caches keyed by style row drop their entries when it changes.</summary>
     internal static int ResetGeneration { get; private set; }
@@ -57,6 +66,20 @@ public sealed class StyleTable
     private readonly ConditionalWeakTable<object, SourceCache> _bySource = new();
     private int[] _sameHash = new int[64];
     private ComputedValues[] _rows = new ComputedValues[64];
+
+    // Row reclamation (see Reclaim). _gen counts how often a row was freed, so a weakly cached entry that names a freed row (or a freed
+    // parent row) is recognised and ignored without scanning the weak table.
+    private int[] _gen = new int[64];
+    private int[] _hash = new int[64];
+    private bool[] _private = new bool[64];
+    private bool[] _mark = new bool[64];
+    private int[] _used = new int[64];
+    private int _epoch = 1;
+    private int[] _free = new int[64];
+    private int _freeCount;
+    private int _reclaimAt = MinReclaimGap;
+    private int _reclaims;
+    private readonly List<WeakReference<IStyleHolder>> _holders = new(4);
     private int _count = 1; // row 0 is the "none" row (initial values), so a default StyleId is harmless.
     private double _viewportWidth = 800;
     private double _viewportHeight = 600;
@@ -66,8 +89,14 @@ public sealed class StyleTable
     /// <summary>Creates a table whose row 0 is the initial style.</summary>
     public StyleTable() => _rows[0] = ComputedValues.Initial;
 
-    /// <summary>The number of rows, including the initial-values row 0.</summary>
+    /// <summary>The number of row slots in use or waiting for reuse, including the initial-values row 0; it never exceeds <see cref="MaxStyles"/>.</summary>
     public int Count => _count;
+
+    /// <summary>The number of rows that hold a style (<see cref="Count"/> minus the slots waiting for reuse), including row 0.</summary>
+    public int LiveCount => _count - _freeCount;
+
+    /// <summary>How many times <see cref="Reclaim"/> freed rows.</summary>
+    public int ReclaimCount => _reclaims;
 
     /// <summary>Problems met while computing styles; cleared by <see cref="Tree.StyledTree.Clear"/>.</summary>
     public DiagnosticBag Diagnostics { get; } = new();
@@ -111,6 +140,9 @@ public sealed class StyleTable
         _anonymous.Clear();
         _byHash.Clear();
         _count = 1;
+        _freeCount = 0;
+        _reclaimAt = MinReclaimGap;
+        Array.Clear(_gen);
         _rootFontSize = 16;
         _rootEnv = new(0, 0, 16);
     }
@@ -147,7 +179,9 @@ public sealed class StyleTable
     {
         public int Version;
         public int Parent;
+        public int ParentGen;
         public int Row;
+        public int RowGen;
         public ComputeEnvironment Root;
     }
 
@@ -160,9 +194,10 @@ public sealed class StyleTable
             for (int i = 0; i < cache.Count; i++)
             {
                 ref Entry e = ref entries[i];
-                if (e.Version == version && e.Parent == parent.Index && e.Root == _rootEnv)
+                if (e.Version == version && e.Parent == parent.Index && e.Root == _rootEnv && e.ParentGen == _gen[e.Parent] && e.RowGen == _gen[e.Row])
                 {
                     id = new StyleId(e.Row);
+                    _used[e.Row] = _epoch;
                     return true;
                 }
             }
@@ -184,7 +219,8 @@ public sealed class StyleTable
         int slot = -1;
         for (int i = 0; i < cache.Count; i++)
         {
-            if (cache.Entries[i].Version != version)
+            ref Entry old = ref cache.Entries[i];
+            if (old.Version != version || old.ParentGen != _gen[old.Parent] || old.RowGen != _gen[old.Row])
             {
                 slot = i;
                 break;
@@ -209,13 +245,14 @@ public sealed class StyleTable
             }
         }
 
-        cache.Entries[slot] = new Entry { Version = version, Parent = parent, Row = row, Root = _rootEnv };
+        cache.Entries[slot] = new Entry { Version = version, Parent = parent, ParentGen = _gen[parent], Row = row, RowGen = _gen[row], Root = _rootEnv };
     }
 
     internal bool TryGetCached(object source, int version, StyleId parent, out StyleId id)
     {
         if (_intern.TryGetValue(new StyleKey(source, version, parent.Index, _rootEnv), out int row))
         {
+            _used[row] = _epoch;
             id = new StyleId(row);
             return true;
         }
@@ -274,6 +311,7 @@ public sealed class StyleTable
         long key = ((long)parent.Index << 8) | ((long)(byte)display.Outside << 4) | (long)(byte)display.Inside;
         if (_anonymous.TryGetValue(key, out int row))
         {
+            _used[row] = _epoch;
             return new StyleId(row);
         }
 
@@ -288,10 +326,156 @@ public sealed class StyleTable
         return id;
     }
 
-    // ---- rows owned by one node (animation) -------------------------------------------------------------------------------------
+    // ---- reclamation -----------------------------------------------------------------------------------------------------------
+    //
+    // Rows are shared by value, so no row has one owner to free it. Instead the table sweeps: every object that keeps StyleIds registers
+    // as an IStyleHolder (styled trees, box trees, the animation controller), and Reclaim asks each of them to Mark the rows it still
+    // reads. Unmarked rows go to a free list and are reused, the value indexes and the caches keyed by a row are purged of entries that
+    // name a freed row, and the generation of a freed row changes so weakly cached entries that name it stop matching.
+    //
+    // Sweeps run only at points where no StyleId is held in a local: the end of a flush. A StyleId obtained from a node or box is valid
+    // until the next flush; a holder outside the engine that keeps one longer must not rely on it.
 
-    private int[] _freePrivate = new int[8];
-    private int _freePrivateCount;
+    /// <summary>Registers an object whose StyleIds must survive <see cref="Reclaim"/>. The table keeps only a weak reference.</summary>
+    internal void AddHolder(IStyleHolder holder) => _holders.Add(new WeakReference<IStyleHolder>(holder));
+
+    /// <summary>Marks a row as still in use during <see cref="Reclaim"/>. Row 0 and out-of-range ids are ignored.</summary>
+    internal void Mark(int index)
+    {
+        if ((uint)index < (uint)_count)
+        {
+            _mark[index] = true;
+        }
+    }
+
+    /// <summary>Runs <see cref="Reclaim"/> when the rows in use have grown well past what the last sweep left. Cheap to call after every flush.</summary>
+    internal void ReclaimIfNeeded()
+    {
+        if (_count - _freeCount > _reclaimAt)
+        {
+            Reclaim();
+        }
+    }
+
+    /// <summary>
+    /// Frees every row that no registered holder refers to, so content that keeps producing new style values (a position set from the
+    /// host every frame, a counter's width) reuses rows instead of filling the table. Allocates nothing once the arrays have grown.
+    /// </summary>
+    /// <remarks>Call it only when no <see cref="StyleId"/> is held in a local variable, for example right after a flush. Live elements keep their values.</remarks>
+    /// <returns>The number of rows freed.</returns>
+    public int Reclaim()
+    {
+        int before = _count - _freeCount;
+        Array.Clear(_mark, 0, _count);
+        _mark[0] = true;
+        for (int i = 0; i < _holders.Count;)
+        {
+            if (_holders[i].TryGetTarget(out IStyleHolder? holder))
+            {
+                holder.MarkStyles(this);
+                i++;
+            }
+            else
+            {
+                int last = _holders.Count - 1;
+                _holders[i] = _holders[last];
+                _holders.RemoveAt(last);
+            }
+        }
+
+        int held = 1;
+        for (int i = 1; i < _count; i++)
+        {
+            if (_mark[i])
+            {
+                held++;
+            }
+        }
+
+        // Rows no holder reads stay for one more interval when they were looked up or made since the last sweep: a style a host asks for
+        // again and again (cached by the declaration that produced it) is then never computed twice, while a style that was used once and
+        // dropped (a position that took a new value) goes at the next sweep. Marked rows always stay.
+        for (int i = 1; i < _count; i++)
+        {
+            if (_used[i] == _epoch)
+            {
+                _mark[i] = true;
+            }
+        }
+
+        _epoch++;
+
+        // Entries that name a freed row, as their value or as the parent they were computed under, can never be right again.
+        // (Removing from a Dictionary while enumerating it is allowed and allocates nothing.)
+        foreach (KeyValuePair<StyleKey, int> kv in _intern)
+        {
+            if (!_mark[kv.Value] || !_mark[kv.Key.Parent])
+            {
+                _intern.Remove(kv.Key);
+            }
+        }
+
+        foreach (KeyValuePair<long, int> kv in _anonymous)
+        {
+            if (!_mark[kv.Value] || !_mark[(int)(kv.Key >> 8)])
+            {
+                _anonymous.Remove(kv.Key);
+            }
+        }
+
+        int newCount = 1;
+        for (int i = _count - 1; i >= 1; i--)
+        {
+            if (_mark[i])
+            {
+                newCount = i + 1;
+                break;
+            }
+        }
+
+        _freeCount = 0;
+        for (int i = _count - 1; i >= 1; i--)
+        {
+            if (_mark[i])
+            {
+                continue;
+            }
+
+            _gen[i]++;
+            _private[i] = false;
+            if (i < newCount)
+            {
+                PushFree(i);
+            }
+        }
+
+        _count = newCount;
+        _byHash.Clear();
+        for (int i = 1; i < newCount; i++)
+        {
+            if (_mark[i] && !_private[i])
+            {
+                int h = _hash[i];
+                _sameHash[i] = _byHash.TryGetValue(h, out int head) ? head : 0;
+                _byHash[h] = i;
+            }
+        }
+
+        int live = _count - _freeCount;
+        // The next sweep is due when as many rows again as the rows in use have been made: at least MinReclaimGap, and a share of what
+        // the holders keep so a big document is not swept every few frames. The gap does not grow with the rows kept for one interval.
+        _reclaimAt = Math.Min(live + Math.Max(MinReclaimGap, Math.Min(held, 16384)), MaxStyles - 1);
+        int freed = before - live;
+        if (freed > 0)
+        {
+            ResetGeneration++;
+            _reclaims++;
+        }
+
+        return freed;
+    }
+
+    // ---- rows owned by one node (animation) -------------------------------------------------------------------------------------
 
     /// <summary>
     /// Makes a row that belongs to one node and is changed in place by <see cref="MutableRow"/> (an animated element's current style).
@@ -300,46 +484,72 @@ public sealed class StyleTable
     /// <returns>False when the table is full.</returns>
     internal bool TryAllocatePrivate(in ComputedValues values, out StyleId id)
     {
-        if (_freePrivateCount > 0)
-        {
-            int reused = _freePrivate[--_freePrivateCount];
-            _rows[reused] = values;
-            id = new StyleId(reused);
-            return true;
-        }
-
-        if (_count >= MaxStyles)
+        int row = TakeSlot();
+        if (row < 0)
         {
             id = default;
             return false;
         }
 
-        if (_count == _rows.Length)
-        {
-            Array.Resize(ref _rows, _rows.Length * 2);
-            Array.Resize(ref _sameHash, _rows.Length);
-        }
-
-        _rows[_count] = values;
-        _sameHash[_count] = 0;
-        id = new StyleId(_count++);
+        _rows[row] = values;
+        _sameHash[row] = 0;
+        _private[row] = true;
+        id = new StyleId(row);
         return true;
     }
 
     /// <summary>Gives a row from <see cref="TryAllocatePrivate"/> back for reuse. The caller must not use the id afterwards.</summary>
     internal void ReleasePrivate(StyleId id)
     {
-        if (id.Index <= 0)
+        if (id.Index <= 0 || id.Index >= _count || !_private[id.Index])
         {
             return;
         }
 
-        if (_freePrivateCount == _freePrivate.Length)
+        _private[id.Index] = false;
+        _gen[id.Index]++;
+        PushFree(id.Index); // the values stay: the node's old style may still be read until the restyle that follows is done
+    }
+
+    // A slot for a new row: a freed one when there is any, otherwise the next one. -1 when the table is full.
+    private int TakeSlot()
+    {
+        if (_freeCount > 0)
         {
-            Array.Resize(ref _freePrivate, _freePrivate.Length * 2);
+            int reused = _free[--_freeCount];
+            _used[reused] = _epoch;
+            return reused;
         }
 
-        _freePrivate[_freePrivateCount++] = id.Index;
+        if (_count >= MaxStyles)
+        {
+            return -1;
+        }
+
+        if (_count == _rows.Length)
+        {
+            int n = _rows.Length * 2;
+            Array.Resize(ref _rows, n);
+            Array.Resize(ref _sameHash, n);
+            Array.Resize(ref _gen, n);
+            Array.Resize(ref _hash, n);
+            Array.Resize(ref _private, n);
+            Array.Resize(ref _mark, n);
+            Array.Resize(ref _used, n);
+        }
+
+        _used[_count] = _epoch;
+        return _count++;
+    }
+
+    private void PushFree(int row)
+    {
+        if (_freeCount == _free.Length)
+        {
+            Array.Resize(ref _free, _free.Length * 2);
+        }
+
+        _free[_freeCount++] = row;
     }
 
     /// <summary>The row of a private style, for in-place change. Only valid for ids from <see cref="TryAllocatePrivate"/>.</summary>
@@ -368,28 +578,26 @@ public sealed class StyleTable
             {
                 if (ComputedValues.ValueEquals(in _rows[row], in values))
                 {
+                    _used[row] = _epoch;
                     id = new StyleId(row);
                     return true;
                 }
             }
         }
 
-        if (_count >= MaxStyles)
+        int slot = TakeSlot();
+        if (slot < 0)
         {
             id = default;
             return false;
         }
 
-        if (_count == _rows.Length)
-        {
-            Array.Resize(ref _rows, _rows.Length * 2);
-            Array.Resize(ref _sameHash, _rows.Length);
-        }
-
-        _rows[_count] = values;
-        _sameHash[_count] = _byHash.TryGetValue(hash, out int head) ? head : 0;
-        _byHash[hash] = _count;
-        id = new StyleId(_count++);
+        _rows[slot] = values;
+        _hash[slot] = hash;
+        _private[slot] = false;
+        _sameHash[slot] = _byHash.TryGetValue(hash, out int head) ? head : 0;
+        _byHash[hash] = slot;
+        id = new StyleId(slot);
         return true;
     }
 
