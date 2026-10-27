@@ -211,6 +211,11 @@ public sealed class HitTester
             int z = (int)((_sortKeys[k] >> 32) - 0x80000000L);
             int p = _tree.ParentOf(f);
             int context = p < 0 ? f : _context[p];
+            if (IsTopLayer(f))
+            {
+                context = 0;
+            }
+
             AddEntry(context, z < 0 ? PhaseNegative : (z == 0 ? PhaseZero : PhasePositive), f);
         }
     }
@@ -308,6 +313,12 @@ public sealed class HitTester
             _effectParent[i] = _containing[i] < 0 ? -1 : (IsEffect(_containing[i]) ? _containing[i] : _effectParent[_containing[i]]);
         }
 
+        if (parent > 0 && v.Control == Forms.ControlKind.SelectPopup)
+        {
+            // The top layer is outside the scrolling, clipping and transforms of the page below it, but follows the viewport.
+            _effectParent[i] = IsEffect(0) ? 0 : -1;
+        }
+
         if (parent < 0)
         {
             _flags[i] |= FlagAtomic | FlagStacking;
@@ -384,6 +395,9 @@ public sealed class HitTester
 
         return -1;
     }
+
+    private bool IsTopLayer(int f) =>
+        (FragmentKind)_tree.KindOf(f) == FragmentKind.Box && _boxes.Make(_tree.BoxOf(f)).Values.Control == Forms.ControlKind.SelectPopup;
 
     private bool IsEffect(int f) =>
         (_flags[f] & (FlagClips | FlagScrollable | FlagTransform)) != 0 || (f == 0 && _vpRange.CanScroll);

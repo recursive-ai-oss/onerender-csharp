@@ -574,11 +574,15 @@ public sealed partial class Painter
         {
             int f = _sortFrags[k];
             int z = (int)((_sortKeys[k] >> 32) - 0x80000000L);
-            int context = ContextOf(f);
+            int context = IsTopLayer(f) ? 0 : ContextOf(f);
             int phase = z < 0 ? PhaseNegative : (z == 0 ? PhaseZero : PhasePositive);
             AddEntry(context, phase, f);
         }
     }
+
+    // CSS Position 4 top layer (the open drop-down list): painted last in the root stacking context, outside the clips of its ancestors.
+    private bool IsTopLayer(int f) =>
+        (FragmentKind)_tree.KindOf(f) == FragmentKind.Box && _boxes.Make(_tree.BoxOf(f)).Values.Control == Forms.ControlKind.SelectPopup;
 
     // The stacking context a deferred fragment paints in: its parent's context.
     private int ContextOf(int f)
@@ -697,7 +701,7 @@ public sealed partial class Painter
                 // Stacking-context children come from further up the tree than their parent, so the clips of the
                 // containing blocks between are applied around them.
                 ulong mask = 0;
-                int clips = phaseNow is PhaseNegative or PhaseZero or PhasePositive ? PushDeferredClips(entry, _stack[top].Fragment, out mask) : 0;
+                int clips = phaseNow is PhaseNegative or PhaseZero or PhasePositive && !IsTopLayer(entry) ? PushDeferredClips(entry, _stack[top].Fragment, out mask) : 0;
                 PushFrame(ref sp, entry, clips);
                 _stack[sp - 1].PreMask = mask;
             }

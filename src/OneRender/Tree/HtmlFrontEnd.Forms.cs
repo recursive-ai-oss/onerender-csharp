@@ -446,6 +446,7 @@ public sealed partial class HtmlFrontEnd
         v.BorderTopColor = v.BorderRightColor = v.BorderBottomColor = v.BorderLeftColor = line;
         v.MaxHeight = Length.FromPx(300);
         v.OverflowY = OverflowKind.Auto;
+        v.Control = ControlKind.SelectPopup;
         int popup = _tree.NewNode(StyledNodeKind.Element, idx, table.Derive(anon, in v), -1);
         _popupParent = popup;
         return popup;
@@ -662,7 +663,7 @@ public sealed partial class HtmlFrontEnd
     }
 
     /// <summary>HTML §4.10.10: an option's label is its label attribute when that is not empty, otherwise its text with white space stripped and collapsed.</summary>
-    private static string OptionLabel(Node option)
+    internal static string OptionLabel(Node option)
     {
         string? label = option.GetAttribute("label");
         if (!string.IsNullOrEmpty(label))
