@@ -279,13 +279,20 @@ internal sealed class EasingFunction : IEquatable<EasingFunction>
             return double.IsNaN(progress) ? 0 : progress > 0 ? 1 : 0;
         }
 
-        return Kind switch
+        double y = Kind switch
         {
             EasingKind.CubicBezier => EvaluateBezier(progress),
             EasingKind.Steps => EvaluateSteps(progress, before),
             _ => EvaluateLinear(progress),
         };
+
+        // Hostile control points or progress far outside 0..1 can overflow; the output stays finite and within a bound the value
+        // interpolation can take (a length of 1e9 px is already far past anything drawn).
+        return double.IsNaN(y) ? 0 : Math.Clamp(y, -MaxOutput, MaxOutput);
     }
+
+    /// <summary>The largest magnitude <see cref="Evaluate"/> returns.</summary>
+    public const double MaxOutput = 1e9;
 
     private double EvaluateBezier(double x)
     {

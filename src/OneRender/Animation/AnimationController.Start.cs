@@ -1,3 +1,4 @@
+using RecursiveAI.OneHtml;
 using OneRender.Style;
 using OneRender.Tree;
 using RecursiveAI.OneHtml.Css;
@@ -54,7 +55,7 @@ internal sealed partial class AnimationController
                 }
 
                 inst = new AnimationInstance { Name = name, StartTime = now, Order = _order++ };
-                ResolveKeyframes(tree, e, node, inst, rule, in after);
+                ResolveKeyframes(tree, e, node, inst, rule, in after, _styles);
                 if (inst.Tracks.Length == 0 && !HasTimingEffect(inst))
                 {
                     // A rule with no animatable declarations still runs (its events fire), just without values.
@@ -110,7 +111,7 @@ internal sealed partial class AnimationController
     /// element's own font size and parent, then one track per property is assembled with the implicit 0% and 100% keyframes taking the
     /// element's underlying value (CSS Animations 1 §4.2).
     /// </summary>
-    private static void ResolveKeyframes(StyledTree tree, ElementEffects e, int node, AnimationInstance inst, KeyframesRule rule, in ComputedValues after)
+    private static void ResolveKeyframes(StyledTree tree, ElementEffects e, int node, AnimationInstance inst, KeyframesRule rule, in ComputedValues after, DocumentStyles? styles)
     {
         StyleTable table = tree.Styles;
         int parentNode = tree.ParentOf(node);
@@ -137,7 +138,7 @@ internal sealed partial class AnimationController
         for (int p = 0; p < Properties.Count; p++)
         {
             var id = (PropertyId)p;
-            if (!PropertyAnimator.IsAnimatable(id))
+            if (!PropertyAnimator.IsAnimatable(id) || IsImportantWinner(tree, node, id, styles))
             {
                 continue;
             }
@@ -198,6 +199,20 @@ internal sealed partial class AnimationController
         inst.Tracks = tracks.ToArray();
         inst.Level = level;
         inst.Compositor = level == MotionLevel.Compositor;
+    }
+
+    // CSS Cascade 4 §6.4.1: important declarations of the author, user and user-agent origins beat animations, so an animation does
+    // not drive a property whose winning declaration is !important.
+    private static bool IsImportantWinner(StyledTree tree, int node, PropertyId id, DocumentStyles? styles)
+    {
+        Document? doc = tree.SourceDocument;
+        if (styles is null || doc is null)
+        {
+            return false;
+        }
+
+        RecursiveAI.OneHtml.Node n = doc.GetNode(tree.SourceIndexOf(node));
+        return !n.IsNull && styles.GetStyle(n).GetSource(Properties.NameOf(id)) is { IsImportant: true };
     }
 
     /// <summary>Declarations of one keyframe as the computer's input; font-size is the element's, so <c>em</c> in a keyframe means the element's em.</summary>

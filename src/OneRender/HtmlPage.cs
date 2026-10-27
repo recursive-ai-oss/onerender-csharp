@@ -233,7 +233,7 @@ public sealed partial class HtmlPage
 
         // Transitions and animations are applied to the styled tree before boxes are made from it, so the box tree, layout and paint all see
         // the animated values for this time.
-        motion?.Recalc(styled, previous, now);
+        motion?.Recalc(styled, previous, now, styles);
         var boxes = new BoxTree(styled);
         boxes.Build(cancellationToken);
         var fragments = new FragmentTree(boxes);

@@ -8,8 +8,8 @@
 | Module | Stride | Total | Pass | Fail | Blank | Skipped | Rate |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | compositing | 1 | 75 | 26 | 22 | 4 | 23 | 0.5000 |
-| css-animations | 1 | 163 | 4 | 12 | 0 | 147 | 0.2500 |
-| css-backgrounds | 1 | 847 | 297 | 314 | 8 | 228 | 0.4798 |
+| css-animations | 1 | 163 | 8 | 8 | 0 | 147 | 0.5000 |
+| css-backgrounds | 1 | 847 | 299 | 312 | 8 | 228 | 0.4830 |
 | css-borders | 1 | 181 | 18 | 76 | 0 | 87 | 0.1915 |
 | css-break | 1 | 1191 | 158 | 886 | 0 | 147 | 0.1513 |
 | css-color | 1 | 377 | 234 | 62 | 0 | 81 | 0.7905 |
@@ -27,17 +27,17 @@
 | css-tables | 1 | 308 | 79 | 59 | 0 | 170 | 0.5725 |
 | css-text-decor | 1 | 357 | 83 | 194 | 8 | 72 | 0.2912 |
 | css-text | 1 | 1860 | 866 | 515 | 4 | 475 | 0.6253 |
-| css-transforms | 1 | 904 | 548 | 142 | 21 | 193 | 0.7707 |
+| css-transforms | 1 | 904 | 550 | 140 | 21 | 193 | 0.7736 |
 | css-transitions | 1 | 131 | 1 | 0 | 0 | 130 | 1.0000 |
 | css-ui | 1 | 1075 | 60 | 49 | 4 | 962 | 0.5310 |
-| css-values | 1 | 497 | 95 | 72 | 0 | 330 | 0.5689 |
+| css-values | 1 | 497 | 99 | 68 | 0 | 330 | 0.5928 |
 | css2-floats | 1 | 345 | 243 | 71 | 0 | 31 | 0.7739 |
 | css2-flow | 1 | 2415 | 1904 | 360 | 2 | 149 | 0.8402 |
 | css2-generated | 1 | 382 | 126 | 233 | 0 | 23 | 0.3510 |
 | css2-positioning | 1 | 654 | 486 | 134 | 0 | 34 | 0.7839 |
 | css2-tables | 1 | 375 | 144 | 105 | 0 | 126 | 0.5783 |
-| filter-effects | 1 | 367 | 129 | 137 | 4 | 97 | 0.4778 |
-| **all** | | 20428 | 7583 | 6172 | 154 | 6519 | 0.5452 |
+| filter-effects | 1 | 367 | 148 | 118 | 4 | 97 | 0.5481 |
+| **all** | | 20428 | 7614 | 6141 | 154 | 6519 | 0.5474 |
 
 ## Why tests failed or were skipped
 
@@ -47,11 +47,11 @@
 - Skipped: 15 × testharness.js test; 7 × script-dependent; 1 × reftest-wait (needs script)
 ### css-animations
 
-- Failures: 12 × == reference differs
+- Failures: 8 × == reference differs
 - Skipped: 127 × testharness.js test; 16 × reftest-wait (needs script); 4 × script-dependent
 ### css-backgrounds
 
-- Failures: 313 × == reference differs; 1 × != reference identical
+- Failures: 311 × == reference differs; 1 × != reference identical
 - Skipped: 132 × testharness.js test; 71 × reftest-wait (needs script); 25 × script-dependent
 ### css-borders
 
@@ -123,7 +123,7 @@
 - Skipped: 366 × testharness.js test; 89 × script-dependent; 20 × reftest-wait (needs script)
 ### css-transforms
 
-- Failures: 141 × == reference differs; 1 × != reference identical
+- Failures: 139 × == reference differs; 1 × != reference identical
 - Skipped: 108 × testharness.js test; 60 × reftest-wait (needs script); 23 × script-dependent; 2 × reference file missing
 ### css-transitions
 
@@ -134,7 +134,7 @@
 - Skipped: 818 × script-dependent; 115 × testharness.js test; 29 × reftest-wait (needs script)
 ### css-values
 
-- Failures: 72 × == reference differs
+- Failures: 68 × == reference differs
 - Skipped: 284 × testharness.js test; 27 × script-dependent; 17 × reftest-wait (needs script); 2 × print reftest (paged output)
 ### css2-floats
 
@@ -158,5 +158,5 @@
 - Skipped: 120 × script-dependent; 3 × reftest-wait (needs script); 2 × testharness.js test; 1 × reference file missing
 ### filter-effects
 
-- Failures: 136 × == reference differs; 1 × error: ArgumentException: '0' cannot be greater than -3.2033605E-11.
+- Failures: 117 × == reference differs; 1 × error: ArgumentException: '0' cannot be greater than -3.2033605E-11.
 - Skipped: 41 × reftest-wait (needs script); 33 × testharness.js test; 23 × script-dependent

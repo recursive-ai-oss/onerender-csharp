@@ -1,3 +1,4 @@
+using RecursiveAI.OneHtml;
 using OneRender.Style;
 using OneRender.Tree;
 using RecursiveAI.OneHtml.Css;
@@ -59,6 +60,8 @@ internal sealed partial class AnimationController
     private StyleTable? _table;
     private readonly int[] _propStamp = new int[Properties.Count];
     private int _propStampValue;
+
+    private DocumentStyles? _styles;
 
     /// <summary>Creates a controller reading <c>@keyframes</c> from <paramref name="keyframes"/>.</summary>
     public AnimationController(KeyframesRegistry keyframes)
@@ -135,8 +138,10 @@ internal sealed partial class AnimationController
     /// <param name="tree">The styled tree just built (its styles are the cascade without animation).</param>
     /// <param name="previous">The tree the page showed before, or null for the first style. Its styles are the before-change style.</param>
     /// <param name="now">The host's time in ms.</param>
-    public void Recalc(StyledTree tree, StyledTree? previous, double now)
+    /// <param name="styles">The cascade the tree was built from; important declarations in it keep their properties out of animations. May be null.</param>
+    public void Recalc(StyledTree tree, StyledTree? previous, double now, DocumentStyles? styles = null)
     {
+        _styles = styles;
         ArgumentNullException.ThrowIfNull(tree);
         now = EffectTiming.ClampTime(now);
         _tree = tree;
@@ -346,31 +351,34 @@ internal sealed partial class AnimationController
         _events[_eventCount++] = new PendingMotionEvent { Kind = kind, Key = key, Name = name, ElapsedSeconds = elapsedMs / 1000, ScheduledTime = scheduled, Order = order };
     }
 
-    // Events are dispatched in the order of the time they were scheduled for, ties by the composite order of the effect (CSS Animations 1
-    // §4.? "Event dispatch", CSS Transitions 1 §6). A stable insertion sort, since the batches are small.
+    // Events are dispatched in the order of the time they were scheduled for, ties by the composite order of the effect, then kind and
+    // element, so the order is total and does not depend on the sort algorithm (CSS Animations 1 §4.2, CSS Transitions 1 §6). The sort
+    // is O(n log n) in place; a hostile page can queue tens of thousands of events in one frame.
+    private static readonly Comparison<PendingMotionEvent> EventOrder = CompareEvents;
+
     private void SortEvents()
     {
-        for (int i = 1; i < _eventCount; i++)
+        if (_eventCount > 1)
         {
-            PendingMotionEvent cur = _events[i];
-            int j = i - 1;
-            while (j >= 0 && Before(in cur, in _events[j]))
-            {
-                _events[j + 1] = _events[j];
-                j--;
-            }
-
-            _events[j + 1] = cur;
+            new Span<PendingMotionEvent>(_events, 0, _eventCount).Sort(EventOrder);
         }
     }
 
-    private static bool Before(in PendingMotionEvent a, in PendingMotionEvent b)
+    private static int CompareEvents(PendingMotionEvent a, PendingMotionEvent b)
     {
-        if (a.ScheduledTime != b.ScheduledTime)
+        int c = a.ScheduledTime.CompareTo(b.ScheduledTime);
+        if (c != 0)
         {
-            return a.ScheduledTime < b.ScheduledTime;
+            return c;
         }
 
-        return a.Order < b.Order;
+        c = a.Order.CompareTo(b.Order);
+        if (c != 0)
+        {
+            return c;
+        }
+
+        c = ((int)a.Kind).CompareTo((int)b.Kind);
+        return c != 0 ? c : a.Key.CompareTo(b.Key);
     }
 }
