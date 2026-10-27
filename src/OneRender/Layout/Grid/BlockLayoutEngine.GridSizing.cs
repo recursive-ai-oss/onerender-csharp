@@ -264,7 +264,7 @@ public sealed partial class BlockLayoutEngine
             if (it.Baseline && it.O1 >= 0 && it.O1 < tracks)
             {
                 double bl = it.ES1 + it.MT + (double.IsNaN(it.MeasBase) ? it.MeasH : it.MeasBase);
-                it.Shim = L.GroupBase[it.O1] - bl;
+                it.Shim = double.IsFinite(L.GroupBase[it.O1] - bl) ? L.GroupBase[it.O1] - bl : 0;
             }
         }
     }
@@ -804,6 +804,10 @@ public sealed partial class BlockLayoutEngine
 
             borderW = rw + ph;
             it.MeasH = rh + v.BorderTopWidth + v.BorderBottomWidth + Pad(v.PaddingTop, areaW) + Pad(v.PaddingBottom, areaW);
+            if (!double.IsFinite(it.MeasH))
+            {
+                it.MeasH = 0;
+            }
         }
         else
         {
@@ -897,7 +901,8 @@ public sealed partial class BlockLayoutEngine
         }
 
         it.X = areaStart + offset;
-        it.W = borderW;
+        it.W = double.IsFinite(borderW) ? Math.Max(0, borderW) : 0;
+        borderW = it.W;
         it.StretchW = stretch;
         it.J = j;
         it.JO = jo;

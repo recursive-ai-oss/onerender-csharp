@@ -165,6 +165,11 @@ public sealed partial class BlockLayoutEngine
             }
         }
 
+        if (!double.IsFinite(h) || h < 0)
+        {
+            h = Math.Max(0, padV);
+        }
+
         it.H = h;
         double free = basisH - (h + mt + mb);
         double shift = 0;
@@ -202,6 +207,10 @@ public sealed partial class BlockLayoutEngine
         }
 
         it.Y = areaTop + it.ES1 + ownT + shift + (baselineItem ? it.Shim : 0);
+        if (!double.IsFinite(it.Y))
+        {
+            it.Y = areaTop;
+        }
 
         double ox0 = cx.Sub0 ? cx.Org0 : 0, oy1 = cx.Sub1 ? cx.Org1 : 0;
         double lx = it.X - ox0;

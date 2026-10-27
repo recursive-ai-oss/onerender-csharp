@@ -400,6 +400,35 @@ public class GridLayoutTests
     }
 
     [Fact]
+    public void HostileValuesNeverProduceNonFiniteBoxes()
+    {
+        // Found by the grid fuzz target: replaced items with an aspect ratio in 1e9 px tracks used to get an undefined height.
+        Lay l = Run("<div style=\"display:grid;grid-template-columns:1e9px calc(10px + 5%);grid-auto-flow:column;grid-auto-rows:120%;justify-items:start;align-items:baseline\">"
+            + "<div style=\"display:grid;grid-template-rows:0fr 1fr fit-content(50%);width:-1px;grid-column:0;grid-row:span 2\">"
+            + "<div style=\"display:grid;grid-template-columns:0fr -5px;grid-auto-flow:column;grid-auto-rows:repeat(3,[a] 1fr [b]);grid-auto-columns:0;justify-items:baseline;border:1px solid;direction:rtl;grid-column:head\">"
+            + "<img src=x.png style=\"grid-column:-1 / 1;justify-self:stretch;min-width:37px;aspect-ratio:1;overflow:hidden\">"
+            + "<i style=\"display:block;width:auto;order:1;position:relative;left:0px;right:8px\"><u style=\"display:block;height:20px;width:55px\"></u></i>"
+            + "</div></div></div>");
+        Fragment f = l.F.Root;
+        while (!f.IsNull)
+        {
+            Rect b = l.F.AbsoluteBorderBox(f);
+            Assert.True(double.IsFinite(b.X) && double.IsFinite(b.Y) && double.IsFinite(b.Width) && double.IsFinite(b.Height), b.ToString());
+            Fragment next = f.FirstChild;
+            while (next.IsNull && !f.IsNull)
+            {
+                next = f.NextSibling;
+                if (next.IsNull)
+                {
+                    f = f.Parent;
+                }
+            }
+
+            f = next;
+        }
+    }
+
+    [Fact]
     public void DeepSubgridNestingDoesNotRecurse()
     {
         var sb = new System.Text.StringBuilder();
