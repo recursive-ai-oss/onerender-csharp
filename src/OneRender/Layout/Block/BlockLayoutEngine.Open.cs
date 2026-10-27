@@ -80,6 +80,13 @@ public sealed partial class BlockLayoutEngine
         {
             bfc = true;
             ReplacedContentSize(c, in v, w, f.SpecH, ph, pv, availContent, out replacedW, out replacedH);
+            if (_gridReplacedForce)
+            {
+                // A grid item's used size was settled by the grid algorithm.
+                _gridReplacedForce = false;
+                replacedW = _absRepW;
+                replacedH = _absRepH;
+            }
         }
         else
         {
@@ -323,6 +330,11 @@ public sealed partial class BlockLayoutEngine
         if (bfc)
         {
             PushBfc();
+        }
+
+        if (c.Context == FormattingContext.Grid && !replaced && GridOpen(ni, c))
+        {
+            return;
         }
 
         if (c.ChildLayout == ChildLayout.Inline && c.FirstChild.Kind == BoxKind.Marker && (c.FirstChild.Flags & BoxTraits.OutsideMarker) != 0)

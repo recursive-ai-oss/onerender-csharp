@@ -174,6 +174,11 @@ public sealed partial class BlockLayoutEngine
         ax.Ensure(n + 1);
         int leaves = GatherLeaves(L, k, a);
         BuildTracks(L, k, a, available, leaves);
+        if (a == 1)
+        {
+            MeasureRowItems(L, k, leaves, n);
+        }
+
         Span<SizeItem> items = L.Size.AsSpan(0, leaves);
         for (int i = 0; i < leaves; i++)
         {
@@ -212,8 +217,60 @@ public sealed partial class BlockLayoutEngine
         _ = containerMin;
     }
 
+    /// <summary>
+    /// Measures the block size of every item the rows must accommodate and finds the shims that line up baseline-aligned items
+    /// in the same first row (Grid 2 §11.5, Box Alignment 3 §9).
+    /// </summary>
+    private void MeasureRowItems(GridLevel L, int k, int leaves, int tracks)
+    {
+        Box cbox = _boxes.Make(L.Ctx[k].Box);
+        if (L.GroupBase.Length < tracks + 1)
+        {
+            L.GroupBase = new double[Math.Max(tracks + 1, L.GroupBase.Length * 2)];
+        }
+
+        bool anyBaseline = false;
+        for (int i = 0; i < leaves; i++)
+        {
+            ref GItem it = ref L.Item[L.SizeMap[i]];
+            Box b = _boxes.Make(it.Box);
+            AlignKind al = SelfAlign(in b.Values, in cbox.Values, false, out AlignOverflowKind ao);
+            it.A = al;
+            it.AO = ao;
+            it.Baseline = al == AlignKind.Baseline;
+            anyBaseline |= it.Baseline;
+            MeasureItem(L, L.SizeMap[i], it.Baseline);
+        }
+
+        if (!anyBaseline)
+        {
+            return;
+        }
+
+        Array.Fill(L.GroupBase, double.NegativeInfinity, 0, tracks + 1);
+        for (int i = 0; i < leaves; i++)
+        {
+            ref GItem it = ref L.Item[L.SizeMap[i]];
+            if (it.Baseline && it.O1 >= 0 && it.O1 < tracks)
+            {
+                double bl = it.ES1 + it.MT + (double.IsNaN(it.MeasBase) ? it.MeasH : it.MeasBase);
+                L.GroupBase[it.O1] = Math.Max(L.GroupBase[it.O1], bl);
+            }
+        }
+
+        for (int i = 0; i < leaves; i++)
+        {
+            ref GItem it = ref L.Item[L.SizeMap[i]];
+            if (it.Baseline && it.O1 >= 0 && it.O1 < tracks)
+            {
+                double bl = it.ES1 + it.MT + (double.IsNaN(it.MeasBase) ? it.MeasH : it.MeasBase);
+                it.Shim = L.GroupBase[it.O1] - bl;
+            }
+        }
+    }
+
     /// <summary>Collects the items whose sizes the axis of grid <paramref name="k"/> must accommodate, subgridded items' children included (Grid 2 §12.1).</summary>
-    private int GatherLeaves(GridLevel L, int k, int a)
+    private static int GatherLeaves(GridLevel L, int k, int a)
     {
         int n = 0;
         int sp = 0;
@@ -684,7 +741,7 @@ public sealed partial class BlockLayoutEngine
 
     private static bool IsStretchLike(AlignKind j, bool replaced) => j == AlignKind.Stretch || (j == AlignKind.Normal && !replaced);
 
-    private AlignKind SelfAlign(in ComputedValues itemV, in ComputedValues containerV, bool inline, out AlignOverflowKind overflow)
+    private static AlignKind SelfAlign(in ComputedValues itemV, in ComputedValues containerV, bool inline, out AlignOverflowKind overflow)
     {
         AlignKind k = inline ? itemV.JustifySelf : itemV.AlignSelf;
         overflow = inline ? itemV.JustifySelfOverflow : itemV.AlignSelfOverflow;

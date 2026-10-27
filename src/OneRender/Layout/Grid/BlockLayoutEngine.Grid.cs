@@ -21,7 +21,6 @@ public sealed partial class BlockLayoutEngine
     private bool _gridReplacedForce;
     private double _absRepW;
     private double _absRepH;
-    private long _gridWork;
 
     private struct GCtx
     {
@@ -70,6 +69,18 @@ public sealed partial class BlockLayoutEngine
         public double SizedH;
         public double MinCH;
         public double MaxCH;
+
+        // Border + padding of the box on each physical side.
+        public double BpL;
+        public double BpR;
+        public double BpT;
+        public double BpB;
+
+        public int CbFrag;
+        public double OvL;
+        public double OvT;
+        public double OvR;
+        public double OvB;
     }
 
     private struct GItem
@@ -111,6 +122,7 @@ public sealed partial class BlockLayoutEngine
         public bool Baseline;
         public bool Replaced;
         public bool Measured;
+        public int Frag;
     }
 
     private sealed class GridLevel
@@ -507,7 +519,7 @@ public sealed partial class BlockLayoutEngine
     }
 
     /// <summary>Line names of a subgrid axis: the subgrid's own names, then the parent's names on the spanned lines (Grid 2 §9).</summary>
-    private void AddSubgridNames(GridLevel L, int k, int a, GridAxis ax, GridTrackList list, int span)
+    private static void AddSubgridNames(GridLevel L, int k, int a, GridAxis ax, GridTrackList list, int span)
     {
         // Own names: one set per line, starting with line 1; an auto-fill repeat of names fills up to the span.
         int h = list.HeadNames.Length, t = list.TailNames.Length, ac = list.AutoNames.Length;
@@ -556,7 +568,7 @@ public sealed partial class BlockLayoutEngine
         src.CopyRange(ax.Names, itemStartInParent, itemStartInParent + span);
     }
 
-    private GridNameIndex ParentNames(GridLevel L, int parent, int a) => L.AxisOf(parent, a).Names;
+    private static GridNameIndex ParentNames(GridLevel L, int parent, int a) => L.AxisOf(parent, a).Names;
 
     private static void AddNameSet(GridAxis ax, string[]? names, int line)
     {
@@ -656,7 +668,7 @@ public sealed partial class BlockLayoutEngine
         }
     }
 
-    private int SubgridDepth(GridLevel L, int k)
+    private static int SubgridDepth(GridLevel L, int k)
     {
         int d = 0;
         for (int c = k; c > 0 && d <= MaxSubgridDepth; c = L.Ctx[c].Parent)
@@ -722,10 +734,15 @@ public sealed partial class BlockLayoutEngine
             cx.Eff0 = s0 ? (double.IsNaN(cx.Gap0) ? parent.Eff0 : cx.Gap0) : ResolveGap(iv.ColumnGap, double.NaN);
             cx.Eff1 = s1 ? (double.IsNaN(cx.Gap1) ? parent.Eff1 : cx.Gap1) : ResolveGap(iv.RowGap, double.NaN);
             double basis = parent.CW;
-            cx.S0 = MarginPx(iv.MarginLeft, basis) + iv.BorderLeftWidth + Pad(iv.PaddingLeft, basis);
-            cx.E0 = MarginPx(iv.MarginRight, basis) + iv.BorderRightWidth + Pad(iv.PaddingRight, basis);
-            cx.S1 = MarginPx(iv.MarginTop, basis) + iv.BorderTopWidth + Pad(iv.PaddingTop, basis);
-            cx.E1 = MarginPx(iv.MarginBottom, basis) + iv.BorderBottomWidth + Pad(iv.PaddingBottom, basis);
+            double ml = MarginPx(iv.MarginLeft, basis), mr = MarginPx(iv.MarginRight, basis);
+            cx.BpL = iv.BorderLeftWidth + Pad(iv.PaddingLeft, basis);
+            cx.BpR = iv.BorderRightWidth + Pad(iv.PaddingRight, basis);
+            cx.BpT = iv.BorderTopWidth + Pad(iv.PaddingTop, basis);
+            cx.BpB = iv.BorderBottomWidth + Pad(iv.PaddingBottom, basis);
+            cx.S0 = cx.Rtl ? mr + cx.BpR : ml + cx.BpL;
+            cx.E0 = cx.Rtl ? ml + cx.BpL : mr + cx.BpR;
+            cx.S1 = MarginPx(iv.MarginTop, basis) + cx.BpT;
+            cx.E1 = MarginPx(iv.MarginBottom, basis) + cx.BpB;
             cx.PadL = iv.BorderLeftWidth + Pad(iv.PaddingLeft, basis);
             cx.PadT = iv.BorderTopWidth + Pad(iv.PaddingTop, basis);
             cx.CW = double.NaN;

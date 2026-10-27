@@ -458,7 +458,7 @@ internal sealed class GridTrackSizer
         }
     }
 
-    private bool Affected(GridAxis ax, int t, Phase phase, int mode) => phase switch
+    private static bool Affected(GridAxis ax, int t, Phase phase, int mode) => phase switch
     {
         Phase.IntrinsicMinimums => IsIntrinsicMin(ax.MinKind[t]),
         Phase.ContentMinimums => ax.MinKind[t] is TrackKind.MinContent or TrackKind.MaxContent,
@@ -1002,7 +1002,7 @@ internal sealed class GridTrackSizer
 
     // ---- §12.8 ----
 
-    private void StretchAuto(GridAxis ax, double available, double containerMin)
+    private static void StretchAuto(GridAxis ax, double available, double containerMin)
     {
         int n = ax.Count;
         double space = double.IsNaN(available) ? containerMin : available;

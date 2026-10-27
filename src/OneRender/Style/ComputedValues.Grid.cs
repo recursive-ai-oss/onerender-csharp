@@ -2,15 +2,17 @@ namespace OneRender.Style;
 
 public partial struct ComputedValues
 {
-    private static readonly GridTrackSize[] AutoTrackPattern = [GridTrackSize.Auto];
+    // Assigned on first use: static initializers of a partial struct run in an unspecified order across files, and `Initial` calls InitGrid.
+    private static GridTrackSize[]? _autoTrackPattern;
 
     private static void InitGrid(ref ComputedValues v)
     {
         v.GridTemplateColumns = GridTrackList.None;
         v.GridTemplateRows = GridTrackList.None;
         v.GridTemplateAreas = GridAreas.None;
-        v.GridAutoColumns = AutoTrackPattern;
-        v.GridAutoRows = AutoTrackPattern;
+        GridTrackSize[] auto = _autoTrackPattern ??= [GridTrackSize.Auto];
+        v.GridAutoColumns = auto;
+        v.GridAutoRows = auto;
         v.JustifyItems = AlignKind.Normal;
         v.JustifySelf = AlignKind.Auto;
     }
