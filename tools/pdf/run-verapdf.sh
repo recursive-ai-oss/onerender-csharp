@@ -5,7 +5,7 @@
 set -uo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo="$(cd "$here/../.." && pwd)"
-home="${ONERENDER_HOME:-$HOME/onerender}/${VERAPDF_UNIT:-u25}"
+home="${ONERENDER_HOME:-$HOME/onerender}/u25"
 OUT="${OUT:-$home/out}"
 export ONERENDER_ARTIFACTS="${ONERENDER_ARTIFACTS:-$home/art}"
 mkdir -p "$OUT"
