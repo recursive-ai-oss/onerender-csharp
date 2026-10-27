@@ -1,0 +1,13 @@
+page	viewport	height	cropped	ssim	differing-pixels
+align	390x844	988	no	1.0000	0.0000
+align	1280x800	988	no	1.0000	0.0000
+baseline	390x844	844	no	1.0000	0.0000
+baseline	1280x800	800	no	1.0000	0.0000
+placement	390x844	844	no	1.0000	0.0000
+placement	1280x800	800	no	1.0000	0.0000
+sizing	390x844	924	no	1.0000	0.0000
+sizing	1280x800	924	no	1.0000	0.0000
+subgrid-nesting	390x844	844	no	1.0000	0.0000
+subgrid-nesting	1280x800	800	no	1.0000	0.0000
+tracks	390x844	844	no	1.0000	0.0000
+tracks	1280x800	800	no	1.0000	0.0000

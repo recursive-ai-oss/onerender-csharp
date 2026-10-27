@@ -9,19 +9,19 @@
 |---|---:|---:|---:|---:|---:|---:|---:|
 | compositing | 1 | 75 | 26 | 22 | 4 | 23 | 0.5000 |
 | css-animations | 1 | 163 | 4 | 12 | 0 | 147 | 0.2500 |
-| css-backgrounds | 1 | 847 | 295 | 316 | 8 | 228 | 0.4766 |
-| css-borders | 1 | 181 | 17 | 77 | 0 | 87 | 0.1809 |
+| css-backgrounds | 1 | 847 | 297 | 314 | 8 | 228 | 0.4798 |
+| css-borders | 1 | 181 | 18 | 76 | 0 | 87 | 0.1915 |
 | css-break | 1 | 1191 | 158 | 886 | 0 | 147 | 0.1513 |
 | css-color | 1 | 377 | 234 | 62 | 0 | 81 | 0.7905 |
 | css-flexbox | 1 | 1398 | 648 | 286 | 18 | 446 | 0.6807 |
 | css-fonts | 1 | 551 | 160 | 153 | 25 | 213 | 0.4734 |
-| css-grid | 1 | 2481 | 522 | 1041 | 10 | 908 | 0.3318 |
+| css-grid | 1 | 2481 | 531 | 1032 | 10 | 908 | 0.3376 |
 | css-images | 1 | 510 | 231 | 161 | 19 | 99 | 0.5620 |
 | css-inline | 1 | 255 | 14 | 149 | 0 | 92 | 0.0859 |
 | css-lists | 1 | 212 | 64 | 76 | 7 | 65 | 0.4354 |
 | css-masking | 1 | 448 | 94 | 180 | 8 | 166 | 0.3333 |
 | css-multicol | 1 | 563 | 185 | 215 | 0 | 163 | 0.4625 |
-| css-overflow | 1 | 892 | 114 | 381 | 11 | 386 | 0.2253 |
+| css-overflow | 1 | 892 | 115 | 380 | 11 | 386 | 0.2273 |
 | css-page | 1 | 247 | 2 | 5 | 0 | 240 | 0.2857 |
 | css-position | 1 | 367 | 38 | 92 | 1 | 236 | 0.2901 |
 | css-tables | 1 | 308 | 79 | 59 | 0 | 170 | 0.5725 |
@@ -33,11 +33,11 @@
 | css-values | 1 | 497 | 95 | 72 | 0 | 330 | 0.5689 |
 | css2-floats | 1 | 345 | 243 | 71 | 0 | 31 | 0.7739 |
 | css2-flow | 1 | 2415 | 1904 | 360 | 2 | 149 | 0.8402 |
-| css2-generated | 1 | 382 | 125 | 234 | 0 | 23 | 0.3482 |
+| css2-generated | 1 | 382 | 126 | 233 | 0 | 23 | 0.3510 |
 | css2-positioning | 1 | 654 | 486 | 134 | 0 | 34 | 0.7839 |
 | css2-tables | 1 | 375 | 144 | 105 | 0 | 126 | 0.5783 |
 | filter-effects | 1 | 367 | 129 | 137 | 4 | 97 | 0.4778 |
-| **all** | | 20428 | 7569 | 6186 | 154 | 6519 | 0.5442 |
+| **all** | | 20428 | 7583 | 6172 | 154 | 6519 | 0.5452 |
 
 ## Why tests failed or were skipped
 
@@ -51,11 +51,11 @@
 - Skipped: 127 × testharness.js test; 16 × reftest-wait (needs script); 4 × script-dependent
 ### css-backgrounds
 
-- Failures: 315 × == reference differs; 1 × != reference identical
+- Failures: 313 × == reference differs; 1 × != reference identical
 - Skipped: 132 × testharness.js test; 71 × reftest-wait (needs script); 25 × script-dependent
 ### css-borders
 
-- Failures: 77 × == reference differs
+- Failures: 76 × == reference differs
 - Skipped: 79 × testharness.js test; 4 × reftest-wait (needs script); 4 × script-dependent
 ### css-break
 
@@ -75,7 +75,7 @@
 - Skipped: 172 × testharness.js test; 30 × reftest-wait (needs script); 9 × script-dependent; 2 × print reftest (paged output)
 ### css-grid
 
-- Failures: 1041 × == reference differs
+- Failures: 1032 × == reference differs
 - Skipped: 758 × testharness.js test; 129 × script-dependent; 19 × reftest-wait (needs script); 2 × reference file missing
 ### css-images
 
@@ -99,7 +99,7 @@
 - Skipped: 95 × testharness.js test; 43 × reftest-wait (needs script); 21 × script-dependent; 4 × print reftest (paged output)
 ### css-overflow
 
-- Failures: 377 × == reference differs; 4 × != reference identical
+- Failures: 376 × == reference differs; 4 × != reference identical
 - Skipped: 228 × testharness.js test; 84 × reftest-wait (needs script); 73 × script-dependent; 1 × reference file missing
 ### css-page
 
@@ -146,7 +146,7 @@
 - Skipped: 83 × script-dependent; 35 × reftest-wait (needs script); 31 × testharness.js test
 ### css2-generated
 
-- Failures: 234 × == reference differs
+- Failures: 233 × == reference differs
 - Skipped: 19 × script-dependent; 3 × reftest-wait (needs script); 1 × reference file missing
 ### css2-positioning
 

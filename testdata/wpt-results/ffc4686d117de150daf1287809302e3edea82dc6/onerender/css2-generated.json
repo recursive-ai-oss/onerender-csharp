@@ -8,12 +8,12 @@
   "sampleStride": 1,
   "counts": {
     "total": 382,
-    "pass": 125,
-    "fail": 234,
+    "pass": 126,
+    "fail": 233,
     "blank": 0,
     "skipped": 23
   },
-  "rate": "0.3482",
+  "rate": "0.3510",
   "pass": [
     "css/CSS2/generated-content/after-content-display-001.xht",
     "css/CSS2/generated-content/after-content-display-002.xht",
@@ -69,6 +69,7 @@
     "css/CSS2/generated-content/content-020.xht",
     "css/CSS2/generated-content/content-036.xht",
     "css/CSS2/generated-content/content-171.xht",
+    "css/CSS2/generated-content/content-172.xht",
     "css/CSS2/generated-content/content-173.xht",
     "css/CSS2/generated-content/content-174.xht",
     "css/CSS2/generated-content/content-attr-001.xht",
@@ -239,7 +240,6 @@
     "css/CSS2/generated-content/content-157.xht": "== content-156-ref.html differs (max 225, 20 px)",
     "css/CSS2/generated-content/content-158.xht": "== content-158-ref.html differs (max 255, 10 px)",
     "css/CSS2/generated-content/content-159.xht": "== content-159-ref.html differs (max 255, 3242 px)",
-    "css/CSS2/generated-content/content-172.xht": "== content-172-ref.xht differs (max 255, 845 px)",
     "css/CSS2/generated-content/content-175.xht": "== content-175-ref.xht differs (max 255, 544 px)",
     "css/CSS2/generated-content/content-177.xht": "== content-177-ref.xht differs (max 64, 5041 px)",
     "css/CSS2/generated-content/content-attr-case-001.html": "== pass_if_pass_below.html differs (max 255, 239 px)",
