@@ -9,6 +9,7 @@ metadata (id prefix, version, authors, description, licence expression, reposito
 contents (README.md that names the package, THIRD-PARTY-NOTICES.md, both licence texts, the assembly and its XML
 documentation under lib/net10.0, OFL.txt for every fonts package, nothing else), and that a symbols package exists.
 """
+import os
 import re
 import sys
 import zipfile
@@ -21,6 +22,19 @@ CODE_LICENSE = "MIT OR Apache-2.0"
 FONT_LICENSE = "(MIT OR Apache-2.0) AND OFL-1.1"
 
 problems = []
+
+
+def load_private_patterns():
+    """Extra patterns (host, person and tool names) from the optional file named by ONERENDER_PRIVATE_PATTERNS."""
+    path = os.environ.get("ONERENDER_PRIVATE_PATTERNS")
+    if not path:
+        return None
+    lines = [l.strip() for l in Path(path).read_text(encoding="utf-8").splitlines()]
+    pats = [l for l in lines if l and not l.startswith("#")]
+    return re.compile("|".join(pats), re.IGNORECASE) if pats else None
+
+
+PRIVATE = load_private_patterns()
 
 
 def fail(pkg, msg):
@@ -107,8 +121,10 @@ def check(path: Path):
         for n in ("README.md", nuspec_name):
             if n in names:
                 body = z.read(n).decode("utf-8", "replace")
-                if re.search(r"/home/|PLAN\.md|DESIGN\.md", body):
+                if re.search(r"/home/[A-Za-z]|/Users/[A-Za-z]|PLAN\.md|DESIGN\.md|\[(Agent default|Owner|PM)\b", body):
                     fail(name, f"{n} mentions an internal path or document")
+                if PRIVATE and PRIVATE.search(re.sub(r"(?i)user[- ]agent", "", body)):
+                    fail(name, f"{n} matches a private pattern")
 
     symbols = path.with_suffix(".snupkg")
     if not symbols.exists():
