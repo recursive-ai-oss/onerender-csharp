@@ -165,7 +165,7 @@ internal sealed partial class Fragmenter
 
             Box b = _boxes.Make(tree.BoxOf(next));
             name = b.Values.PageName;
-            if (Monolithic(b))
+            if (IsMono(next, b))
             {
                 return name;
             }

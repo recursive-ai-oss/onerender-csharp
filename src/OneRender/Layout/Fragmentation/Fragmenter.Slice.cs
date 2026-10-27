@@ -16,6 +16,7 @@ internal sealed partial class Fragmenter
     private bool _sidesOn;
     private bool _firstRight = true;
     private int _cap = MaxFragmentainers;
+    private int _maxCols = int.MaxValue;
     private readonly double[] _one = new double[1];
 
     private void Record(double ys, double ye, double t, double b)
@@ -57,7 +58,7 @@ internal sealed partial class Fragmenter
     }
 
     // A filler (an empty box with a height) that the fragmentainer's end falls inside: the cut position, or NaN.
-    private bool FindFiller(double limit, double start, out double y, out double cloneTop, out double cloneBottom)
+    private bool FindFiller(double limit, double start, double h, int k, out double y, out double cloneTop, out double cloneBottom)
     {
         y = 0;
         cloneTop = cloneBottom = 0;
@@ -80,15 +81,26 @@ internal sealed partial class Fragmenter
             return false;
         }
 
-        // Fillers are disjoint in block order, but several can start above the limit; the last one is the one that can contain it.
-        ref Filler f = ref _fillers[lo - 1];
-        double cut = limit - f.CloneBottom;
-        if (cut > f.Top + Eps && cut < f.Bottom - Eps && cut > start + Eps)
+        // Fillers are mostly disjoint in block order, but floats and monolithic boxes can overlap other boxes and several can start above
+        // the limit, so look back a little for one that contains the cut.
+        for (int i = lo - 1; i >= 0 && i >= lo - 16; i--)
         {
-            y = cut;
-            cloneTop = f.CloneTop;
-            cloneBottom = f.CloneBottom;
-            return true;
+            ref Filler f = ref _fillers[i];
+            double cut = limit - f.CloneBottom;
+            // Monolithic content that is too tall for the last column overflows it instead of making another one; on pages, and in
+            // earlier columns, it is cut where the fragmentainer ends. Content that fits a fragmentainer is moved, never cut.
+            if (f.Mono && (_kind == FragmentationKind.Column && k + 1 >= _maxCols || f.Bottom - f.Top <= h + Eps))
+            {
+                continue;
+            }
+
+            if (cut > f.Top + Eps && cut < f.Bottom - Eps && cut > start + Eps)
+            {
+                y = cut;
+                cloneTop = f.CloneTop;
+                cloneBottom = f.CloneBottom;
+                return true;
+            }
         }
 
         return false;
@@ -175,7 +187,7 @@ internal sealed partial class Fragmenter
                     }
                 }
 
-                if (FindFiller(limit, s, out fy, out fT, out fB) && (cut < 0 || _c[cut].Level > 0 || fy > _c[cut].Ye))
+                if (FindFiller(limit, s, h, k, out fy, out fT, out fB) && (cut < 0 || _c[cut].Level > 0 || fy > _c[cut].Ye))
                 {
                     filler = true;
                 }

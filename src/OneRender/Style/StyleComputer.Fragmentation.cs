@@ -35,6 +35,56 @@ internal sealed partial class StyleComputer
                 return true;
             }
 
+            case PropertyId.Contain:
+            {
+                // CSS Containment 2 §3: none | strict | content | [size || layout || style || paint || inline-size].
+                ContainParts f = ContainParts.None;
+                int words = 0;
+                bool single = false, ok = true;
+                foreach (ComponentValue cv in v)
+                {
+                    if (cv.IsWhitespace)
+                    {
+                        continue;
+                    }
+
+                    if (!IsIdent(cv))
+                    {
+                        ok = false;
+                        break;
+                    }
+
+                    words++;
+                    ReadOnlySpan<char> t = cv.Raw;
+                    ContainParts add;
+                    if (t.Equals("none", StringComparison.OrdinalIgnoreCase)) { single = true; add = ContainParts.None; }
+                    else if (t.Equals("strict", StringComparison.OrdinalIgnoreCase)) { single = true; add = ContainParts.Size | ContainParts.Layout | ContainParts.Paint; }
+                    else if (t.Equals("content", StringComparison.OrdinalIgnoreCase)) { single = true; add = ContainParts.Layout | ContainParts.Paint | ContainParts.Style; }
+                    else if (t.Equals("size", StringComparison.OrdinalIgnoreCase)) { add = ContainParts.Size; }
+                    else if (t.Equals("layout", StringComparison.OrdinalIgnoreCase)) { add = ContainParts.Layout; }
+                    else if (t.Equals("style", StringComparison.OrdinalIgnoreCase)) { add = ContainParts.Style; }
+                    else if (t.Equals("paint", StringComparison.OrdinalIgnoreCase)) { add = ContainParts.Paint; }
+                    else if (t.Equals("inline-size", StringComparison.OrdinalIgnoreCase)) { add = ContainParts.InlineSize; }
+                    else { ok = false; break; }
+
+                    if (add != ContainParts.None && (f & add) == add && !single)
+                    {
+                        ok = false; // a keyword written twice
+                        break;
+                    }
+
+                    f |= add;
+                }
+
+                if (!ok || words == 0 || (single && words > 1))
+                {
+                    return false;
+                }
+
+                _r.Contain = f;
+                return true;
+            }
+
             case PropertyId.BreakInside:
             {
                 if (!Word(v, BreakInsideWords, out int k))
@@ -240,6 +290,7 @@ internal sealed partial class StyleComputer
             case PropertyId.BreakBefore: d.BreakBefore = s.BreakBefore; break;
             case PropertyId.BreakAfter: d.BreakAfter = s.BreakAfter; break;
             case PropertyId.BreakInside: d.BreakInside = s.BreakInside; break;
+            case PropertyId.Contain: d.Contain = s.Contain; break;
             case PropertyId.Orphans: d.Orphans = s.Orphans; break;
             case PropertyId.Widows: d.Widows = s.Widows; break;
             case PropertyId.Page: d.PageName = s.PageName; break;
