@@ -271,8 +271,7 @@ public sealed partial class InteractivePage
             }
 
             groups ??= [];
-            groups.TryGetValue(key, out var g);
-            if (g == default)
+            if (!groups.TryGetValue(key, out var g))
             {
                 g = (i, i, -1);
             }
@@ -315,7 +314,7 @@ public sealed partial class InteractivePage
 
     private bool TryRadioKey(Node radio, out (int Owner, string Name) key)
     {
-        string? name = radio.GetAttribute("name");
+        string? name = DocumentSnapshots.Attr(radio, "name");
         if (string.IsNullOrEmpty(name))
         {
             key = default;

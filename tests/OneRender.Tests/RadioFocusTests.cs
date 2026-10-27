@@ -131,4 +131,12 @@ public class RadioFocusTests
         p.SetChecked(Ix.Id(p, "r2"), true);
         Assert.Equal(["t", "c", "r2", "c2", "ta"], Order(p));
     }
+
+    [Fact]
+    public void ACheckedRadioAtTheFirstStopIsNotLost()
+    {
+        // The first tab stop of the page is a group's checked radio and the group has later members.
+        InteractivePage p = Ix.Page("<input type=radio name=g id=r1 checked><input type=radio name=g id=r2><input id=t>");
+        Assert.Equal(["r1", "t"], Order(p));
+    }
 }
