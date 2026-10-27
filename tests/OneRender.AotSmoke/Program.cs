@@ -210,7 +210,13 @@ ix.HandlePointer(new PointerInput { Action = PointerAction.Down, X = 5, Y = 5, B
 ix.HandlePointer(new PointerInput { Action = PointerAction.Up, X = 5, Y = 5, Button = 0, Time = 2 });
 bool ixOk = ixHit && ixClicks == 1 && ix.FocusedElement.Equals(ixButton);
 
-return ixOk && names.Length == 3 && tableOk && sfnt && painted && pageOk && boxes >= 3 && scrollOk && shaped && again && woff2Ok ? 0 : 1;
+// The rendered-facts producer: facts for a small page through the snapshot route, with colors behind text and form state.
+OneRender.Accessibility.RenderedPage factsPage = OneRender.Accessibility.AccessibilityFacts.Render(
+    "<body style='margin:0'><div id=a style='background:#036;color:#fff'>Hi</div><input id=i value=x></body>",
+    new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 100, ViewportHeight = 50 });
+bool factsOk = factsPage.Facts.BoxCount > 3 && OneRender.Accessibility.AccessibilityInfo.Name.Length > 0;
+
+return factsOk && ixOk && names.Length == 3 && tableOk && sfnt && painted && pageOk && boxes >= 3 && scrollOk && shaped && again && woff2Ok ? 0 : 1;
 
 internal sealed class NoFonts : OneRender.Layout.IFontProvider
 {

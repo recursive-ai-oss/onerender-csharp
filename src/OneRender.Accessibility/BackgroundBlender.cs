@@ -18,6 +18,7 @@ internal sealed class BackgroundBlender
     private readonly int[] _enclosing;   // innermost open group before item i, as the index of its PushGroup item; -1 for none
     private readonly float[] _opacity;   // for a PushGroup item: its opacity
     private readonly int[] _mark;
+    private readonly byte[] _scope;      // for a scope push: 0 = plain group, 1 = changes pixels in ways a color can't express, 2 = mask content
     private int _stamp;
     private (byte R, byte G, byte B, int A)[] _candidates = new (byte, byte, byte, int)[32];
 
@@ -29,6 +30,7 @@ internal sealed class BackgroundBlender
         _enclosing = new int[n + 1];
         _opacity = new float[n];
         _mark = new int[n];
+        _scope = new byte[n];
         // One pass keeps the stack of open groups; the display list's own depth limit bounds it.
         int[] open = new int[16];
         int sp = 0;
@@ -36,9 +38,17 @@ internal sealed class BackgroundBlender
         {
             _enclosing[i] = sp == 0 ? -1 : open[sp - 1];
             ItemKind kind = list[i].Kind;
-            if (kind == ItemKind.PushGroup)
+            if (kind is ItemKind.PushGroup or ItemKind.PushFilter or ItemKind.PushMask or ItemKind.PushMaskLayer)
             {
-                _opacity[i] = list[i].Opacity;
+                // Filters, masks and non-normal blend modes (Compositing 1 §3, Filter Effects 1 §5, CSS Masking 1 §7) change the
+                // pixels of everything flattened into them in ways a single color can't express; mask-layer content is never shown.
+                _opacity[i] = kind == ItemKind.PushGroup ? list[i].Opacity : 1f;
+                _scope[i] = kind switch
+                {
+                    ItemKind.PushMaskLayer => 2,
+                    ItemKind.PushGroup => list[i].Blend == BlendMode.Normal ? (byte)0 : (byte)1,
+                    _ => 1,
+                };
                 if (sp == open.Length)
                 {
                     Array.Resize(ref open, sp * 2);
@@ -46,7 +56,7 @@ internal sealed class BackgroundBlender
 
                 open[sp++] = i;
             }
-            else if (kind == ItemKind.PopGroup && sp > 0)
+            else if (kind is ItemKind.PopGroup or ItemKind.PopFilter or ItemKind.PopMask or ItemKind.PopMaskLayer && sp > 0)
             {
                 sp--;
             }
@@ -95,7 +105,8 @@ internal sealed class BackgroundBlender
         {
             DisplayItem it = _list[i];
             ItemKind kind = it.Kind;
-            if (kind is not (ItemKind.FillRect or ItemKind.FillRoundedRect or ItemKind.FillPath or ItemKind.Image))
+            if (kind is not (ItemKind.FillRect or ItemKind.FillRoundedRect or ItemKind.FillPath or ItemKind.Image
+                or ItemKind.SvgImage or ItemKind.BackdropFilter))
             {
                 continue;
             }
@@ -106,7 +117,27 @@ internal sealed class BackgroundBlender
                 continue;
             }
 
-            if (kind == ItemKind.Image)
+            bool skip = false;
+            for (int g = _enclosing[i]; g >= 0 && _mark[g] != _stamp; g = _enclosing[g])
+            {
+                if (_scope[g] == 2)
+                {
+                    skip = true;
+                    break;
+                }
+
+                if (_scope[g] == 1)
+                {
+                    unknown = true;
+                }
+            }
+
+            if (skip)
+            {
+                continue;
+            }
+
+            if (unknown || kind is ItemKind.Image or ItemKind.SvgImage or ItemKind.BackdropFilter)
             {
                 unknown = true;
                 break;

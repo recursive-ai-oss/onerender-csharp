@@ -180,6 +180,20 @@ public class AccessibilityFactsTests
     }
 
     [Fact]
+    public void FiltersAndBlendModesMakeTheColorBehindTextUnknownOnlyWhenTheyAreFlattenedUnderIt()
+    {
+        RenderedPage r = Render(
+            "<div style='position:relative;height:40px'><div style='position:absolute;left:0;top:0;width:200px;height:40px;background:#336699;filter:blur(2px)'></div>" +
+            "<div id=over style='position:absolute;left:0;top:0'>x</div></div>" +
+            "<div style='position:relative;height:40px'><div style='position:absolute;left:0;top:0;width:200px;height:40px;background:#336699;mix-blend-mode:multiply'></div>" +
+            "<div id=over2 style='position:absolute;left:0;top:0'>y</div></div>" +
+            "<div id=inside style='background:#336699;filter:blur(1px);height:30px'>z</div>");
+        Assert.Null(Of(r, "over").Layout.BlendedBackgroundColor);
+        Assert.Null(Of(r, "over2").Layout.BlendedBackgroundColor);
+        Assert.Equal("rgb(51, 102, 153)", Of(r, "inside").Layout.BlendedBackgroundColor);
+    }
+
+    [Fact]
     public void ElementsWithoutTextOfTheirOwnHaveNoBlendedColor()
     {
         RenderedPage r = Render("<div id=box style='background:#336699;height:30px'><span id=s>text</span></div>");
