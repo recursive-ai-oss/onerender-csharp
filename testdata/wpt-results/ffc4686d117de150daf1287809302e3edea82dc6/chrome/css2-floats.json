@@ -8,12 +8,12 @@
   "sampleStride": 1,
   "counts": {
     "total": 345,
-    "pass": 302,
-    "fail": 12,
+    "pass": 301,
+    "fail": 13,
     "blank": 0,
     "skipped": 31
   },
-  "rate": "0.9618",
+  "rate": "0.9586",
   "pass": [
     "css/CSS2/floats-clear/adjacent-floats-001.xht",
     "css/CSS2/floats-clear/adjoining-float-before-clearance.html",
@@ -168,7 +168,6 @@
     "css/CSS2/floats-clear/floats-139.xht",
     "css/CSS2/floats-clear/floats-141.xht",
     "css/CSS2/floats-clear/floats-142.xht",
-    "css/CSS2/floats-clear/floats-143.xht",
     "css/CSS2/floats-clear/floats-144.xht",
     "css/CSS2/floats-clear/floats-145.xht",
     "css/CSS2/floats-clear/floats-146.xht",
@@ -320,9 +319,10 @@
   ],
   "blank": [],
   "fail": {
-    "css/CSS2/floats/float-nowrap-7.html": "== float-nowrap-1.html differs (max 255, 1150 px)",
-    "css/CSS2/floats/float-nowrap-8.html": "== float-nowrap-1.html differs (max 255, 1150 px)",
-    "css/CSS2/floats/float-nowrap-9.html": "== float-nowrap-3-ref.html differs (max 255, 1158 px)",
+    "css/CSS2/floats-clear/floats-143.xht": "== floats-143-ref.xht differs (max 21, 1 px)",
+    "css/CSS2/floats/float-nowrap-7.html": "== float-nowrap-1.html differs (max 255, 1185 px)",
+    "css/CSS2/floats/float-nowrap-8.html": "== float-nowrap-1.html differs (max 255, 1185 px)",
+    "css/CSS2/floats/float-nowrap-9.html": "== float-nowrap-3-ref.html differs (max 255, 1191 px)",
     "css/CSS2/floats/floats-rule3-outside-left-002.xht": "== floats-rule3-outside-left-002-ref.xht differs (max 255, 9500 px)",
     "css/CSS2/floats/floats-rule3-outside-right-002.xht": "== floats-rule3-outside-right-002-ref.xht differs (max 255, 9500 px)",
     "css/CSS2/floats/floats-rule7-outside-left-001.xht": "== floats-rule7-outside-left-001-ref.xht differs (max 255, 8500 px)",

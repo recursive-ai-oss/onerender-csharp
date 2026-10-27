@@ -22,6 +22,22 @@ internal sealed partial class Fragmenter
         public int Widows;
         public double ContentW;
         public bool IsRoot;
+
+        /// <summary>A flex container: its children may sit side by side, so a break needs every earlier child to end above it.</summary>
+        public bool Overlapping;
+
+        /// <summary>Inside a table row: breaks here split the cells, so they rank with the avoid-rule breaks (level 2) but fillers stay usable.</summary>
+        public bool RowUp;
+
+        /// <summary>The strip offset of the bottom of the table row this walk is inside (see <see cref="RowUp"/>).</summary>
+        public double RowBottom;
+
+        /// <summary>The candidate added for the start of the current flex line, or -1.</summary>
+        public int LineCand;
+
+        /// <summary>When the children are walked in block order instead of tree order (reversed flex containers): the next and the end position in the order pool.</summary>
+        public int OrderPos;
+        public int OrderEnd;
     }
 
     private struct Filler
@@ -30,6 +46,15 @@ internal sealed partial class Fragmenter
         public double Bottom;
         public double CloneTop;
         public double CloneBottom;
+
+        /// <summary>The box has size containment: it is only cut when it is taller than a fragmentainer.</summary>
+        public bool Mono;
+
+        /// <summary>The box is inside a table row: it is cut only when no break between rows is available (CSS Tables 3 §17).</summary>
+        public bool InRow;
+
+        /// <summary>For a filler inside a table row: the strip offset of the row's bottom.</summary>
+        public double RowBottom;
     }
 
     private struct Span2
@@ -48,6 +73,8 @@ internal sealed partial class Fragmenter
     private Span2[] _floats = new Span2[16];
     private int _flN;
     private Walk[] _walk = new Walk[32];
+    private int[] _fo = new int[16];
+    private int _foN;
     private int _wsp;
     private int _steps;
 
@@ -99,6 +126,7 @@ internal sealed partial class Fragmenter
         _steps = 0;
         ResetRow(0);
         _wsp = 0;
+        _foN = 0;
         PushWalk(root, -contentTop, true, default, tree.FirstChildOf(root));
         while (_wsp > 0)
         {
@@ -111,7 +139,15 @@ internal sealed partial class Fragmenter
                 continue;
             }
 
-            _walk[top].Next = tree.NextSiblingOf(c);
+            if (_walk[top].OrderEnd > 0)
+            {
+                _walk[top].Next = ++_walk[top].OrderPos < _walk[top].OrderEnd ? _fo[_walk[top].OrderPos] : -1;
+            }
+            else
+            {
+                _walk[top].Next = tree.NextSiblingOf(c);
+            }
+
             if ((++_steps & 1023) == 0)
             {
                 ct.ThrowIfCancellationRequested();
@@ -231,11 +267,20 @@ internal sealed partial class Fragmenter
             Widows = v.Widows,
             ContentW = Math.Max(0, bb.Width - border.Horizontal - pad.Horizontal),
             IsRoot = isRoot,
+            Overlapping = box.Context is FormattingContext.Flex or FormattingContext.Grid or FormattingContext.TableRow,
+            LineCand = -1,
         };
+        if (w.Overlapping)
+        {
+            OrderChildren(ref w, firstChild);
+        }
+
         if (!isRoot)
         {
             bool clone = v.BoxDecorationBreak == BoxDecorationBreakKind.Clone;
             w.AvoidUp = parent.AvoidUp || AvoidInside(v.BreakInside);
+            w.RowUp = parent.RowUp || box.Context == FormattingContext.TableRow;
+            w.RowBottom = box.Context == FormattingContext.TableRow ? top + bb.Height : parent.RowBottom;
             w.CloneTop = parent.CloneTop + (clone ? border.Top + pad.Top : 0);
             w.CloneBottom = parent.CloneBottom + (clone ? border.Bottom + pad.Bottom : 0);
         }
@@ -246,6 +291,68 @@ internal sealed partial class Fragmenter
         }
 
         _walk[_wsp++] = w;
+    }
+
+    // Items of a reversed flex container (column-reverse, wrap-reverse) come after one another in the tree but not in block order, and
+    // a break has to be offered between them in block order. The children are put in block order (stable) in a pool when they are not.
+    private void OrderChildren(ref Walk w, int firstChild)
+    {
+        int n = 0;
+        bool sorted = true;
+        double prev = double.NegativeInfinity;
+        for (int c = firstChild; c >= 0; c = _t.NextSiblingOf(c))
+        {
+            double y = _t.BorderBoxOf(c).Y;
+            if (y < prev - Eps)
+            {
+                sorted = false;
+            }
+
+            prev = Math.Max(prev, y);
+            n++;
+        }
+
+        if (sorted || n < 2)
+        {
+            return;
+        }
+
+        if (_foN + n > _fo.Length)
+        {
+            Array.Resize(ref _fo, Math.Max(_fo.Length * 2, _foN + n));
+        }
+
+        int start = _foN, i = start;
+        for (int c = firstChild; c >= 0; c = _t.NextSiblingOf(c))
+        {
+            _fo[i++] = c;
+        }
+
+        _foN += n;
+        // Insertion order is the tie-break: sort a copy of (y, position) pairs.
+        var keys = new double[n];
+        var pos = new int[n];
+        for (int k = 0; k < n; k++)
+        {
+            keys[k] = _t.BorderBoxOf(_fo[start + k]).Y;
+            pos[k] = k;
+        }
+
+        Array.Sort(pos, (a, b) =>
+        {
+            int cmp = keys[a].CompareTo(keys[b]);
+            return cmp != 0 ? cmp : a.CompareTo(b);
+        });
+        var tmp = new int[n];
+        for (int k = 0; k < n; k++)
+        {
+            tmp[k] = _fo[start + pos[k]];
+        }
+
+        Array.Copy(tmp, 0, _fo, start, n);
+        w.Next = tmp[0];
+        w.OrderPos = start;
+        w.OrderEnd = start + n;
     }
 
     private void NoteRepeats(int table, Box box, ref Walk w)
@@ -314,7 +421,7 @@ internal sealed partial class Fragmenter
                     level = 1;
                 }
 
-                if (lw.AvoidUp)
+                if (lw.AvoidUp || lw.RowUp)
                 {
                     level = 2;
                 }
@@ -351,6 +458,7 @@ internal sealed partial class Fragmenter
 
             if (isFloat)
             {
+                AddMonoFiller(wi, cTop, cBot, in v);
                 if (_flN == _floats.Length)
                 {
                     Array.Resize(ref _floats, _floats.Length * 2);
@@ -398,13 +506,34 @@ internal sealed partial class Fragmenter
 
         if (_walk[wi].PrevFrag >= 0)
         {
-            ClassA(wi, c, cTop, in v);
+            if (!_walk[wi].Overlapping || cTop >= _walk[wi].PrevBottom - Eps)
+            {
+                ClassA(wi, c, cTop, in v);
+                _walk[wi].LineCand = _cn - 1;
+            }
+            else if (_walk[wi].LineCand >= 0)
+            {
+                // Flexbox §12.1: a forced break before any item of a flex line is a forced break before the line.
+                BreakBits own = ChainBits(c, true, out _);
+                ref BreakCandidate lc = ref _c[_walk[wi].LineCand];
+                if ((own & ForcedMask) != 0 && lc.Ye <= cTop + Eps)
+                {
+                    lc.Bits |= own;
+                    lc.Forced = true;
+                    lc.Level = 0;
+                }
+            }
         }
 
+        _walk[wi].PrevBottom = _walk[wi].Overlapping && _walk[wi].PrevFrag >= 0 ? Math.Max(_walk[wi].PrevBottom, cBot) : cBot;
         _walk[wi].PrevFrag = c;
-        _walk[wi].PrevBottom = cBot;
-        if (Monolithic(box))
+        if (IsMono(c, box))
         {
+            if (box.Kind != BoxKind.Marker)
+            {
+                AddMonoFiller(wi, cTop, cBot, in v);
+            }
+
             return;
         }
 
@@ -443,9 +572,30 @@ internal sealed partial class Fragmenter
                     Bottom = cBot,
                     CloneTop = w.CloneTop + (clone ? border.Top + pad.Top : 0),
                     CloneBottom = w.CloneBottom + (clone ? border.Bottom + pad.Bottom : 0),
+                    Mono = v.HasSizeContainment,
+                    InRow = w.RowUp,
+                    RowBottom = w.RowBottom,
                 };
             }
         }
+    }
+
+    // Monolithic content (and a float) taller than a page overflows it, and on pages the overflow carries on in the pages after it:
+    // the box is a filler that only the page planner may cut, and only when it does not fit a page whole (CSS Break 4 §4.1).
+    private void AddMonoFiller(int wi, double top, double bottom, in ComputedValues v)
+    {
+        ref Walk w = ref _walk[wi];
+        if (_kind != FragmentationKind.Page || bottom - top <= Eps || w.AvoidUp || AvoidInside(v.BreakInside))
+        {
+            return;
+        }
+
+        if (_fn == _fillers.Length)
+        {
+            Array.Resize(ref _fillers, _fillers.Length * 2);
+        }
+
+        _fillers[_fn++] = new Filler { Top = top, Bottom = bottom, CloneTop = w.CloneTop, CloneBottom = w.CloneBottom, Mono = true };
     }
 
     private bool InFlowBox(int g)
@@ -464,12 +614,20 @@ internal sealed partial class Fragmenter
     {
         BreakBits bits = BreakBits.None;
         pageName = null;
+        bool nameFrozen = false;
         int x = frag;
         for (int n = 0; x >= 0 && n < 1_000_000; n++)
         {
             Box box = _boxes.Make(_t.BoxOf(x));
             bits |= Map(first ? box.Values.BreakBefore : box.Values.BreakAfter);
-            pageName = box.Values.PageName;
+            if (!nameFrozen)
+            {
+                pageName = box.Values.PageName;
+            }
+
+            // Paged Media 3 §7.3: the page property applies to in-flow block-level boxes, not to flex items, so a name inside a flex
+            // container does not leak out to the container's neighbours.
+            nameFrozen |= box.Context is FormattingContext.Flex or FormattingContext.Grid;
             if (Monolithic(box))
             {
                 break;
@@ -509,7 +667,7 @@ internal sealed partial class Fragmenter
     {
         ref Walk w = ref _walk[wi];
         BreakBits bits = ChainBits(w.PrevFrag, false, out string? prevName) | ChainBits(c, true, out string? nextName);
-        if (_kind == FragmentationKind.Page && !string.Equals(prevName, nextName, StringComparison.Ordinal))
+        if (_kind == FragmentationKind.Page && !w.Overlapping && !string.Equals(prevName, nextName, StringComparison.Ordinal))
         {
             // Paged Media 3 §7.2: a change of used page name between consecutive boxes forces a page break.
             bits |= BreakBits.ForcePage;
@@ -530,7 +688,7 @@ internal sealed partial class Fragmenter
 
             ys = cTop - Math.Clamp(m, 0, Math.Max(0, ys - ye));
         }
-        else if ((bits & AvoidMask) != 0 || w.AvoidUp || (_kind == FragmentationKind.Page && _boxes.Make(_t.BoxOf(w.PrevFrag)).Context == FormattingContext.TableHeaderGroup))
+        else if ((bits & AvoidMask) != 0 || w.AvoidUp || w.RowUp || (_kind == FragmentationKind.Page && _boxes.Make(_t.BoxOf(w.PrevFrag)).Context == FormattingContext.TableHeaderGroup))
         {
             level = 2; // a break right after a repeated header would leave a page of header and nothing else
         }

@@ -14,10 +14,14 @@ public partial struct ComputedValues
         v.ColumnRuleColor = ColorValue.CurrentColor;
     }
 
+    /// <summary>True when <c>contain</c> includes size containment.</summary>
+    public readonly bool HasSizeContainment => (Contain & ContainParts.Size) != 0;
+
     internal static bool FragmentationEquals(in ComputedValues a, in ComputedValues b) =>
         a.BreakBefore == b.BreakBefore &&
         a.BreakAfter == b.BreakAfter &&
         a.BreakInside == b.BreakInside &&
+        a.Contain == b.Contain &&
         a.Orphans == b.Orphans &&
         a.Widows == b.Widows &&
         string.Equals(a.PageName, b.PageName, StringComparison.Ordinal) &&
@@ -35,6 +39,7 @@ public partial struct ComputedValues
         h.Add(v.BreakBefore);
         h.Add(v.BreakAfter);
         h.Add(v.BreakInside);
+        h.Add(v.Contain);
         h.Add(v.Orphans);
         h.Add(v.Widows);
         h.Add(v.PageName, StringComparer.Ordinal);

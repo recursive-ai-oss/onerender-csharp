@@ -189,15 +189,7 @@ public sealed class RazorRenderer
     internal static byte[] EncodePng(RgbaImage img)
     {
         ArgumentNullException.ThrowIfNull(img);
-        var px = new OneImage.Rgba32[img.Width * img.Height];
-        for (int i = 0; i < px.Length; i++)
-        {
-            px[i] = new OneImage.Rgba32(img.Pixels[i * 4], img.Pixels[(i * 4) + 1], img.Pixels[(i * 4) + 2], img.Pixels[(i * 4) + 3]);
-        }
-
-        using var ms = new MemoryStream();
-        OneImage.Image.FromPixels<OneImage.Rgba32>(px, img.Width, img.Height).Save(ms, OneImage.PngFormat.Instance);
-        return ms.ToArray();
+        return img.ToPng();
     }
 
     private Func<string, byte[]?> Chain(Func<string, byte[]?>? next, List<string> misses) => url =>

@@ -8,12 +8,12 @@
   "sampleStride": 1,
   "counts": {
     "total": 255,
-    "pass": 135,
+    "pass": 138,
     "fail": 28,
     "blank": 0,
-    "skipped": 92
+    "skipped": 89
   },
-  "rate": "0.8282",
+  "rate": "0.8313",
   "pass": [
     "css/css-inline/baseline-source/baseline-source-inline-box.html",
     "css/css-inline/br-font-size.html",
@@ -84,6 +84,9 @@
     "css/css-inline/text-box-trim/border-padding-003.html",
     "css/css-inline/text-box-trim/border-padding-004.html",
     "css/css-inline/text-box-trim/new-fc-001.html",
+    "css/css-inline/text-box-trim/not-at-page-edges-001-print.html",
+    "css/css-inline/text-box-trim/not-at-page-edges-002-print.html",
+    "css/css-inline/text-box-trim/not-at-page-edges-003-print.html",
     "css/css-inline/text-box-trim/out-of-flow-001.html",
     "css/css-inline/text-box-trim/out-of-flow-002.html",
     "css/css-inline/text-box-trim/text-box-trim-accumulation-001.html",
@@ -153,8 +156,8 @@
   ],
   "blank": [],
   "fail": {
-    "css/css-inline/alignment-baseline/alignment-baseline-nested-001.html": "== alignment-baseline-nested-001-ref.html differs (max 255, 11977 px)",
-    "css/css-inline/alignment-baseline/alignment-baseline-nested-002.html": "== alignment-baseline-nested-002-ref.html differs (max 255, 10860 px)",
+    "css/css-inline/alignment-baseline/alignment-baseline-nested-001.html": "== alignment-baseline-nested-001-ref.html differs (max 255, 12017 px)",
+    "css/css-inline/alignment-baseline/alignment-baseline-nested-002.html": "== alignment-baseline-nested-002-ref.html differs (max 255, 10768 px)",
     "css/css-inline/baseline-shift/baseline-shift-bottom-svg.html": "== baseline-shift-bottom-ref.html differs (max 255, 1600 px)",
     "css/css-inline/baseline-shift/baseline-shift-bottom.html": "== baseline-shift-bottom-ref.html differs (max 255, 3040 px)",
     "css/css-inline/baseline-shift/baseline-shift-center-svg.html": "== baseline-shift-center-ref.html differs (max 255, 2240 px)",
@@ -245,9 +248,6 @@
     "css/css-inline/parsing/vertical-align-computed.html": "testharness.js test",
     "css/css-inline/parsing/vertical-align-invalid.html": "testharness.js test",
     "css/css-inline/parsing/vertical-align-valid.html": "testharness.js test",
-    "css/css-inline/text-box-trim/not-at-page-edges-001-print.html": "print reftest (paged output)",
-    "css/css-inline/text-box-trim/not-at-page-edges-002-print.html": "print reftest (paged output)",
-    "css/css-inline/text-box-trim/not-at-page-edges-003-print.html": "print reftest (paged output)",
     "css/css-inline/text-box-trim/parsing/inheritance.html": "testharness.js test",
     "css/css-inline/text-box-trim/parsing/text-box-computed.html": "testharness.js test",
     "css/css-inline/text-box-trim/parsing/text-box-edge-computed.html": "testharness.js test",

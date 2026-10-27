@@ -53,8 +53,8 @@
   ],
   "blank": [],
   "fail": {
-    "css/css-ui/appearance-auto-details-list-item.html": "== appearance-auto-details-list-item-ref.html differs (max 255, 25 px)",
-    "css/css-ui/outline-color-004.html": "== outline-color-004-ref.html differs (max 255, 952 px)",
+    "css/css-ui/appearance-auto-details-list-item.html": "== appearance-auto-details-list-item-ref.html differs (max 255, 16 px)",
+    "css/css-ui/outline-color-004.html": "== outline-color-004-ref.html differs (max 255, 1024 px)",
     "css/css-ui/outline-offset-inset-003.html": "== outline-offset-inset-003-ref.html differs (max 255, 11256 px)",
     "css/css-ui/outline-offset-inset-006.html": "!= outline-offset-inset-006-notref.html identical"
   },

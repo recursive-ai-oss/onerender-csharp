@@ -4,8 +4,9 @@
 # Installs under $ONERENDER_FUZZ_HOME (default ~/onerender/fuzz). No sudo, nothing system-wide.
 set -euo pipefail
 WH=${ONERENDER_FUZZ_HOME:-$HOME/onerender/fuzz}
-export PATH=$HOME/dotnet10:$PATH DOTNET_ROOT=$HOME/dotnet10 DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1
-export NUGET_PACKAGES=$WH/nuget
+if [ -x "$HOME/dotnet10/dotnet" ]; then export PATH=$HOME/dotnet10:$PATH DOTNET_ROOT=$HOME/dotnet10; fi
+export DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1
+export NUGET_PACKAGES=${NUGET_PACKAGES:-$WH/nuget}
 mkdir -p "$WH/tools"
 
 DRIVER_TAG=v2025.05.02.0904

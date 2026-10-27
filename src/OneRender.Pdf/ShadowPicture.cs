@@ -1,5 +1,6 @@
 using System.Buffers;
 using System.Numerics;
+using OneRender.Image;
 using OneRender.Painting;
 
 namespace OneRender.Pdf;
@@ -14,6 +15,17 @@ internal static class ShadowPicture
     // A kernel reaches three deviations; beyond that a Gaussian is under 0.2% of its peak.
     private const float KernelReach = 3f;
 
+    private const long MaxPixels = 16_000_000;
+
+    private static bool IsFinite(in DisplayItem it)
+    {
+        RectF r = it.Rect;
+        CornerRadii c = it.Radii;
+        return float.IsFinite(r.X) && float.IsFinite(r.Y) && float.IsFinite(r.Width) && float.IsFinite(r.Height)
+            && float.IsFinite(it.ShadowOffsetX) && float.IsFinite(it.ShadowOffsetY) && float.IsFinite(it.ShadowSpread) && float.IsFinite(it.ShadowBlur)
+            && float.IsFinite(c.TopLeftX + c.TopLeftY + c.TopRightX + c.TopRightY + c.BottomRightX + c.BottomRightY + c.BottomLeftX + c.BottomLeftY);
+    }
+
     /// <summary>
     /// Renders the shadow of <paramref name="it"/> into a <paramref name="width"/>×<paramref name="height"/> picture that covers
     /// <paramref name="island"/>. The box's own area is not cut out of an outer shadow, nor the outside of an inset one: the writer
@@ -21,6 +33,12 @@ internal static class ShadowPicture
     /// </summary>
     public static byte[] Render(in DisplayItem it, RectF island, int width, int height)
     {
+        if (width < 1 || height < 1 || (long)width * height > MaxPixels || !float.IsFinite(island.X) || !float.IsFinite(island.Y) || !(island.Width > 0f) || !(island.Height > 0f)
+            || !float.IsFinite(island.Width) || !float.IsFinite(island.Height) || !IsFinite(in it))
+        {
+            throw new RasterizationException("The shadow's geometry is not finite or its picture would be larger than " + MaxPixels + " pixels.");
+        }
+
         float sx = width / island.Width, sy = height / island.Height;
         float sigma = it.ShadowBlur * 0.5f * MathF.Sqrt(sx * sy);
         RectF box = it.Rect;

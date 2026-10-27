@@ -8,12 +8,12 @@
   "sampleStride": 3,
   "counts": {
     "total": 283,
-    "pass": 161,
-    "fail": 38,
+    "pass": 162,
+    "fail": 37,
     "blank": 2,
     "skipped": 82
   },
-  "rate": "0.8010",
+  "rate": "0.8060",
   "pass": [
     "css/css-backgrounds/animations/background-color-animation-with-table3.html",
     "css/css-backgrounds/background-attachment-margin-root-002.html",
@@ -59,6 +59,7 @@
     "css/css-backgrounds/background-repeat-space-4.html",
     "css/css-backgrounds/background-repeat-space-7.html",
     "css/css-backgrounds/background-repeat/background-repeat-no-repeat.xht",
+    "css/css-backgrounds/background-repeat/background-repeat-round-roundup.xht",
     "css/css-backgrounds/background-repeat/gradient-repeat-spaced-with-borders.html",
     "css/css-backgrounds/background-size-002.html",
     "css/css-backgrounds/background-size-007.html",
@@ -183,10 +184,9 @@
   ],
   "fail": {
     "css/css-backgrounds/background-clip/clip-border-area-multiple-backgrounds.html": "== clip-border-area-multiple-backgrounds-ref.html differs (max 4, 557 px)",
-    "css/css-backgrounds/background-clip/clip-text-flex.html": "== clip-text-flex-ref.html differs (max 10, 2354 px)",
-    "css/css-backgrounds/background-clip/clip-text-multiline-linebreak.html": "== clip-text-multiline-linebreak-ref.html differs (max 12, 1509 px)",
+    "css/css-backgrounds/background-clip/clip-text-flex.html": "== clip-text-flex-ref.html differs (max 10, 2685 px)",
+    "css/css-backgrounds/background-clip/clip-text-multiline-linebreak.html": "== clip-text-multiline-linebreak-ref.html differs (max 12, 1166 px)",
     "css/css-backgrounds/background-origin/origin-content-box_with_radius.html": "== origin-content-box_with_radius-ref.html differs (max 34, 727 px)",
-    "css/css-backgrounds/background-repeat/background-repeat-round-roundup.xht": "== background-repeat-round-roundup.xht differs (max 11, 114 px)",
     "css/css-backgrounds/background-size-031.html": "== background-size-031-ref.xht differs (max 0, 0 px)",
     "css/css-backgrounds/background-size/background-size-contain.xht": "== background-size-contain.xht differs (max 63, 3774 px)",
     "css/css-backgrounds/background-size/background-size-near-zero-svg.html": "== background-size-near-zero-ref.html differs (max 255, 10000 px)",

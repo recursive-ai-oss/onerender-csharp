@@ -49,7 +49,5 @@ sample's PDF against PDF/UA-1 with veraPDF.
 ## Limits
 
 - `<img>` of an SVG file is not drawn by `.Image` or `.Pdf` (only inline `<svg>` is); use PNG, JPEG, WebP or inline SVG.
-- Table cells with `colspan` or `rowspan` are not yet tagged with their spans, so a PDF/UA-1 file with spanning cells fails the table
-  check at write time; avoid spans in documents that must be PDF/UA-1.
 - The package is not part of the WebAssembly smoke (it needs ASP.NET Core). Generic entry points require the component type to be
   preserved by the trimmer; type arguments written in code are.

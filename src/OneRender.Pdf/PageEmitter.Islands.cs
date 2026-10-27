@@ -139,6 +139,13 @@ internal sealed partial class PageEmitter
         {
             scale *= Math.Sqrt(MaxPixelsPerImage / area);
             reduced = true;
+            if (shadow)
+            {
+                // A shadow's picture is already sampled as coarsely as its blur allows; one that would still need more than the cap is
+                // geometry no page holds, and is left out like any island the rasterizer refuses.
+                _s.Diagnostics.Add(DiagnosticKind.Unsupported, what + " (item " + _list[from].Id.Value + ") is not drawn: it could not be rasterized (the picture would need more than " + (long)MaxPixelsPerImage + " pixels)");
+                return;
+            }
         }
 
         int pw = (int)Math.Clamp(Math.Ceiling(b.Width * scale), 1, DisplayListRasterizer.MaxDimension);
@@ -163,25 +170,34 @@ internal sealed partial class PageEmitter
             }
 
             _s.IslandPixels += (long)pw * ph;
-            if (shadow)
+            try
             {
-                DisplayItem item = _list[from];
-                image = _s.EmbedShadow(ShadowPicture.Render(in item, b, pw, ph), pw, ph, item.ShadowColor);
-                _s.ShadowImages[key] = image;
+                if (shadow)
+                {
+                    DisplayItem item = _list[from];
+                    image = _s.EmbedShadow(ShadowPicture.Render(in item, b, pw, ph), pw, ph, item.ShadowColor);
+                    _s.ShadowImages[key] = image;
+                }
+                else
+                {
+                    var sub = new DisplayList();
+                    sub.PushTransform(ItemId.Of(uint.MaxValue, ushort.MaxValue, ushort.MaxValue), Matrix3x2.CreateTranslation(-b.X, -b.Y));
+                    DisplayListCopier.Copy(_list, from, to, sub);
+                    sub.PopTransform();
+                    RgbaImage pixels = DisplayListRasterizer.Render(
+                        sub,
+                        pw,
+                        ph,
+                        new RasterOptions { DevicePixelRatio = (float)scale, Background = PaintColor.Transparent, Images = _s.Images, Diagnostics = _s.Diagnostics },
+                        _token);
+                    image = _s.Embed(pixels);
+                }
             }
-            else
+            catch (RasterizationException e)
             {
-                var sub = new DisplayList();
-                sub.PushTransform(ItemId.Of(uint.MaxValue, ushort.MaxValue, ushort.MaxValue), Matrix3x2.CreateTranslation(-b.X, -b.Y));
-                DisplayListCopier.Copy(_list, from, to, sub);
-                sub.PopTransform();
-                RgbaImage pixels = DisplayListRasterizer.Render(
-                    sub,
-                    pw,
-                    ph,
-                    new RasterOptions { DevicePixelRatio = (float)scale, Background = PaintColor.Transparent, Images = _s.Images, Diagnostics = _s.Diagnostics },
-                    _token);
-                image = _s.Embed(pixels);
+                // Hostile geometry (coordinates beyond what the rasterizer or the shadow picture accepts) leaves a hole and a diagnostic, never an exception from the writer.
+                _s.Diagnostics.Add(DiagnosticKind.Unsupported, what + " (item " + _list[from].Id.Value + ") is not drawn: it could not be rasterized (" + e.Message + ")");
+                return;
             }
         }
 

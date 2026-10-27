@@ -4,7 +4,7 @@
 #   fuzz/run.sh <target> <seconds> [corpus dir] [extra libFuzzer flags...]
 #   fuzz/run.sh replay <target> <file>...      # run saved inputs once, without libFuzzer (reproduce a finding)
 #
-# Targets: displaylist, fontdata, colorglyphs, grid, flow, table, effects, incremental, pdf   (see fuzz/README.md)
+# Targets: displaylist, fontdata, colorglyphs, grid, flow, table, effects, incremental, paged, pdf   (see fuzz/README.md)
 #
 # Environment (nothing is baked into the script):
 #   ONERENDER_FUZZ_WORK    required: where builds, corpora and findings go. Keep it outside the checkout.

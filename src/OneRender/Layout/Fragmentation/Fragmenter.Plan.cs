@@ -63,6 +63,7 @@ internal sealed partial class Fragmenter
     /// <returns>The container's content height when its own height is <c>auto</c>.</returns>
     internal double Plan(FragmentTree tree, in PlanInput inp, CancellationToken ct)
     {
+        _maxCols = inp.Columns > 0 ? inp.Columns : int.MaxValue;
         Collect(tree, inp.Frag, inp.ContentTop, FragmentationKind.Column, true, ct);
         Finish();
         int spans = SpannerCount;

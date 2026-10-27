@@ -8,12 +8,12 @@
   "sampleStride": 1,
   "counts": {
     "total": 377,
-    "pass": 287,
-    "fail": 9,
+    "pass": 286,
+    "fail": 10,
     "blank": 0,
     "skipped": 81
   },
-  "rate": "0.9696",
+  "rate": "0.9662",
   "pass": [
     "css/css-color/a98rgb-001.html",
     "css/css-color/a98rgb-002.html",
@@ -164,7 +164,6 @@
     "css/css-color/oklch-l-over-1-1.html",
     "css/css-color/oklch-l-over-1-2.html",
     "css/css-color/opacity-overlapping-letters.html",
-    "css/css-color/out-of-gamut-legacy-rgb.html",
     "css/css-color/predefined-001.html",
     "css/css-color/predefined-002.html",
     "css/css-color/predefined-005.html",
@@ -307,13 +306,14 @@
   "fail": {
     "css/css-color/at-color-profile-001.html": "== greensquare-090-ref.html differs (max 255, 18432 px)",
     "css/css-color/border-color-currentcolor.html": "== border-color-currentcolor-ref.html differs (max 238, 32080 px)",
-    "css/css-color/currentcolor-003.html": "== currentcolor-003-ref.html differs (max 255, 20418 px)",
+    "css/css-color/currentcolor-003.html": "== currentcolor-003-ref.html differs (max 255, 23666 px)",
     "css/css-color/lch-009.html": "== whitesquare-ref.html differs (max 205, 36864 px)",
     "css/css-color/lch-010.html": "== blacksquare-ref.html differs (max 75, 36864 px)",
     "css/css-color/oklch-009.html": "== whitesquare-ref.html differs (max 255, 36864 px)",
     "css/css-color/oklch-010.html": "== blacksquare-ref.html differs (max 206, 36864 px)",
-    "css/css-color/t32-opacity-offscreen-multiple-boxes-1-c.xht": "== t32-opacity-offscreen-multiple-boxes-1-c-ref.html differs (max 1, 858 px)",
-    "css/css-color/t32-opacity-offscreen-multiple-boxes-2-c.xht": "== t32-opacity-offscreen-multiple-boxes-2-c-ref.html differs (max 1, 585 px)"
+    "css/css-color/out-of-gamut-legacy-rgb.html": "error: TimeoutException: DevTools command Page.captureScreenshot timed out after 30s.",
+    "css/css-color/t32-opacity-offscreen-multiple-boxes-1-c.xht": "== t32-opacity-offscreen-multiple-boxes-1-c-ref.html differs (max 1, 880 px)",
+    "css/css-color/t32-opacity-offscreen-multiple-boxes-2-c.xht": "== t32-opacity-offscreen-multiple-boxes-2-c-ref.html differs (max 1, 600 px)"
   },
   "skipped": {
     "css/css-color/animation/color-composition.html": "testharness.js test",

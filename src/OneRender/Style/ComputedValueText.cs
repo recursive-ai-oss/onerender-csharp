@@ -128,6 +128,7 @@ internal static partial class ComputedValueText
             case PropertyId.BreakBefore: return BreakText(v.BreakBefore);
             case PropertyId.BreakAfter: return BreakText(v.BreakAfter);
             case PropertyId.BreakInside: return v.BreakInside switch { BreakInsideKind.Avoid => "avoid", BreakInsideKind.AvoidPage => "avoid-page", BreakInsideKind.AvoidColumn => "avoid-column", BreakInsideKind.AvoidRegion => "avoid-region", _ => "auto" };
+            case PropertyId.Contain: return ContainText(v.Contain);
             case PropertyId.Orphans: return v.Orphans.ToString(System.Globalization.CultureInfo.InvariantCulture);
             case PropertyId.Widows: return v.Widows.ToString(System.Globalization.CultureInfo.InvariantCulture);
             case PropertyId.BoxDecorationBreak: return v.BoxDecorationBreak == BoxDecorationBreakKind.Clone ? "clone" : "slice";
@@ -162,6 +163,34 @@ internal static partial class ComputedValueText
             case PropertyId.AccentColor: return v.AccentColorAuto ? "auto" : v.AccentColor.ToCss();
             default: return (id >= PropertyId.TransitionProperty && id <= PropertyId.AnimationPlayState ? MotionText(id, in v) : PaintText(id, in v)) ?? string.Empty;
         }
+    }
+
+    private static string ContainText(ContainParts f)
+    {
+        const ContainParts Strict = ContainParts.Size | ContainParts.Layout | ContainParts.Paint;
+        const ContainParts Content = ContainParts.Layout | ContainParts.Paint | ContainParts.Style;
+        if (f == ContainParts.None)
+        {
+            return "none";
+        }
+
+        if (f == Strict)
+        {
+            return "strict";
+        }
+
+        if (f == Content)
+        {
+            return "content";
+        }
+
+        var parts = new List<string>(5);
+        if ((f & ContainParts.Size) != 0) { parts.Add("size"); }
+        if ((f & ContainParts.InlineSize) != 0) { parts.Add("inline-size"); }
+        if ((f & ContainParts.Layout) != 0) { parts.Add("layout"); }
+        if ((f & ContainParts.Style) != 0) { parts.Add("style"); }
+        if ((f & ContainParts.Paint) != 0) { parts.Add("paint"); }
+        return string.Join(' ', parts);
     }
 
     private static string BreakText(BreakKind k) => k switch

@@ -88,7 +88,7 @@ public static class PngWriter
 }
 
 /// <summary>Saves every image it renders into a directory, named after the document path.</summary>
-internal sealed class DumpingRenderer : IReftestRenderer
+internal class DumpingRenderer : IReftestRenderer
 {
     private readonly IReftestRenderer _inner;
     private readonly string _dir;
@@ -105,5 +105,30 @@ internal sealed class DumpingRenderer : IReftestRenderer
         RgbaImage img = _inner.Render(wptPath);
         PngWriter.Save(Path.Combine(_dir, wptPath.Replace('/', '_') + ".png"), img);
         return img;
+    }
+}
+
+/// <summary>A <see cref="DumpingRenderer"/> over a renderer that paginates; saves every page as <c>path.pN.png</c>.</summary>
+internal sealed class DumpingPagedRenderer : DumpingRenderer, IPagedReftestRenderer
+{
+    private readonly IPagedReftestRenderer _paged;
+    private readonly string _pageDir;
+
+    public DumpingPagedRenderer(IPagedReftestRenderer inner, string dir)
+        : base(inner, dir)
+    {
+        _paged = inner;
+        _pageDir = dir;
+    }
+
+    public IReadOnlyList<RgbaImage> RenderPages(string wptPath)
+    {
+        IReadOnlyList<RgbaImage> pages = _paged.RenderPages(wptPath);
+        for (int i = 0; i < pages.Count; i++)
+        {
+            PngWriter.Save(Path.Combine(_pageDir, wptPath.Replace('/', '_') + ".p" + (i + 1).ToString(System.Globalization.CultureInfo.InvariantCulture) + ".png"), pages[i]);
+        }
+
+        return pages;
     }
 }

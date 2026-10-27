@@ -116,16 +116,24 @@ public sealed class ChromeRenderer : IDisposable
     }
 
     /// <summary>Loads <paramref name="url"/>, waits for load and web fonts, and returns the first screenshot that matches the one before it, and returns the viewport pixels.</summary>
-    public Screenshot Render(string url)
+    public Screenshot Render(string url) => Use(tab => tab.CaptureAsync(url));
+
+    /// <summary>
+    /// Loads <paramref name="url"/> and prints it to PDF through the browser's own print path, 5 by 3 inches with half-inch margins unless the
+    /// document's <c>@page</c> rules say otherwise (the WPT print-reftest defaults), with backgrounds. Returns the PDF bytes.
+    /// </summary>
+    public byte[] RenderPdf(string url) => Use(tab => tab.PrintAsync(url));
+
+    private T Use<T>(Func<Tab, Task<T>> action)
     {
         _slots.Wait();
         _idle.TryDequeue(out Tab? tab);
         try
         {
             tab ??= OpenTabAsync().GetAwaiter().GetResult();
-            Screenshot shot = tab.CaptureAsync(url).GetAwaiter().GetResult();
+            T result = action(tab).GetAwaiter().GetResult();
             _idle.Enqueue(tab);
-            return shot;
+            return result;
         }
         catch
         {
@@ -239,7 +247,35 @@ public sealed class ChromeRenderer : IDisposable
 
         public string TargetId { get; }
 
+        public async Task<byte[]> PrintAsync(string url)
+        {
+            await LoadAsync(url).ConfigureAwait(false);
+            JsonElement pdf = await _cdp.SendAsync(
+                "Page.printToPDF",
+                new JsonObject
+                {
+                    ["paperWidth"] = 5,
+                    ["paperHeight"] = 3,
+                    ["marginTop"] = 0.5,
+                    ["marginBottom"] = 0.5,
+                    ["marginLeft"] = 0.5,
+                    ["marginRight"] = 0.5,
+                    ["printBackground"] = true,
+                    ["preferCSSPageSize"] = true,
+                    ["displayHeaderFooter"] = false,
+                },
+                _session,
+                CommandTimeout).ConfigureAwait(false);
+            return Convert.FromBase64String(pdf.GetProperty("data").GetString()!);
+        }
+
         public async Task<Screenshot> CaptureAsync(string url)
+        {
+            await LoadAsync(url).ConfigureAwait(false);
+            return await StableShotAsync().ConfigureAwait(false);
+        }
+
+        private async Task LoadAsync(string url)
         {
             _loaded = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             JsonElement nav = await _cdp.SendAsync("Page.navigate", new JsonObject { ["url"] = url }, _session, CommandTimeout)
@@ -261,6 +297,10 @@ public sealed class ChromeRenderer : IDisposable
                 },
                 _session,
                 CommandTimeout).ConfigureAwait(false);
+        }
+
+        private async Task<Screenshot> StableShotAsync()
+        {
             // Images (SVG backgrounds especially) can finish decoding after load, so shoot until two frames in a row agree.
             Screenshot previous = await ShootAsync().ConfigureAwait(false);
             for (int attempt = 0; attempt < 5; attempt++)

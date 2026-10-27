@@ -106,4 +106,25 @@ public class ShadowPictureTests
         Assert.True(compared > 100);
         Assert.True(worst <= 6, "the largest alpha difference is " + worst + " of 255");
     }
+
+    [Fact]
+    public void ABadPictureSizeOrIslandIsRefusedWithTheRasterizersException()
+    {
+        var list = new DisplayList();
+        list.DrawBoxShadow(ItemId.Of(1, 1, 1), Box, default, new PaintColor(0f, 0f, 0f, 1f), 0, 0, 8, 0, false);
+        DisplayItem item = list[0];
+        Assert.Throws<RasterizationException>(() => ShadowPicture.Render(in item, new RectF(0, 0, 10, 10), 5000, 5000));
+        Assert.Throws<RasterizationException>(() => ShadowPicture.Render(in item, new RectF(0, 0, float.NaN, 10), 10, 10));
+        Assert.Throws<RasterizationException>(() => ShadowPicture.Render(in item, new RectF(0, 0, 10, 10), 0, 10));
+    }
+
+    [Fact]
+    public void AHugeBlurStillRendersAPictureWithinBounds()
+    {
+        var list = new DisplayList();
+        list.DrawBoxShadow(ItemId.Of(1, 1, 1), Box, default, new PaintColor(0f, 0f, 0f, 1f), 0, 0, 1e7f, 0, false);
+        DisplayItem item = list[0];
+        byte[] a = ShadowPicture.Render(in item, new RectF(0, 0, 300, 200), 30, 20);
+        Assert.Equal(600, a.Length);
+    }
 }

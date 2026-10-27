@@ -16,15 +16,20 @@ OUT=${4:?out dir}
 WH=${ONERENDER_FUZZ_HOME:-$HOME/onerender/fuzz}
 [ "$SECONDS_TO_RUN" -le 3600 ] || { echo "at most 3600 s per call"; exit 2; }
 
-export PATH=$HOME/dotnet10:$PATH DOTNET_ROOT=$HOME/dotnet10 DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1
-export MSBUILDDISABLENODEREUSE=1 NUGET_PACKAGES=$WH/nuget ONERENDER_ARTIFACTS=$WH/artifacts
+# A .NET 10 SDK in ~/dotnet10 (the worker's layout) wins; otherwise the dotnet on PATH is used.
+if [ -x "$HOME/dotnet10/dotnet" ]; then export PATH=$HOME/dotnet10:$PATH DOTNET_ROOT=$HOME/dotnet10; fi
+export DOTNET_ROOT=${DOTNET_ROOT:-$(dirname "$(readlink -f "$(command -v dotnet)")")}
+export DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1 MSBUILDDISABLENODEREUSE=1
+export NUGET_PACKAGES=${NUGET_PACKAGES:-$WH/nuget} ONERENDER_ARTIFACTS=${ONERENDER_ARTIFACTS:-$WH/artifacts}
+LIBFUZZER_DOTNET=${LIBFUZZER_DOTNET:-$WH/tools/libfuzzer-dotnet}
+SHARPFUZZ=${SHARPFUZZ:-$WH/tools/sharpfuzz}
 
 BUILD=$WH/build/fuzz
 if [ "${SKIP_BUILD:-0}" != 1 ]; then
     rm -rf "$BUILD"
     dotnet publish "$ROOT/fuzz/OneRender.Fuzz.Values" -c Release -o "$BUILD" -v quiet -clp:NoSummary
     # Instrument the engine only; the harness and the libraries it uses stay plain.
-    "$WH/tools/sharpfuzz" "$BUILD/OneRender.dll"
+    "$SHARPFUZZ" "$BUILD/OneRender.dll"
 fi
 
 mkdir -p "$OUT/corpus" "$OUT/crashes"
@@ -38,7 +43,7 @@ EOT
 chmod +x "$OUT/target.sh"
 
 set +e
-"$WH/tools/libfuzzer-dotnet" --target_path="$OUT/target.sh" \
+"$LIBFUZZER_DOTNET" --target_path="$OUT/target.sh" \
     -max_total_time="$SECONDS_TO_RUN" -max_len="${FUZZ_MAX_LEN:-4096}" -seed="${FUZZ_SEED:-1}" \
     -timeout=30 -rss_limit_mb=2048 -artifact_prefix="$OUT/crashes/" -print_final_stats=1 \
     "$OUT/corpus" > "$OUT/fuzz.log" 2>&1

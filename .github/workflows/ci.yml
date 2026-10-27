@@ -3,12 +3,27 @@ name: ci
 on:
   push:
   pull_request:
+  workflow_dispatch:
+    inputs:
+      fuzz-seconds:
+        description: Seconds of fuzzing per target
+        default: "120"
 
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+
 jobs:
-  build:
+  # Build output goes outside the checkout, as it does locally (ONERENDER_ARTIFACTS), in every job below.
+  build-test:
+    name: build and test (${{ matrix.rid }})
     strategy:
       fail-fast: false
       matrix:
@@ -18,9 +33,9 @@ jobs:
           - { os: ubuntu-24.04-arm, rid: linux-arm64 }
           - { os: macos-latest, rid: osx-arm64 }
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
-      # Build output goes outside the checkout, as it does locally.
       - name: Artifacts directory
         shell: bash
         run: echo "ONERENDER_ARTIFACTS=$RUNNER_TEMP/artifacts" >> "$GITHUB_ENV"
@@ -29,27 +44,23 @@ jobs:
           global-json-file: global.json
       - name: Restore
         run: dotnet restore OneRender.slnx
-      - name: Build
+      - name: Build (warnings are errors)
         run: dotnet build --no-restore -c Release OneRender.slnx
       - name: Test
         run: dotnet test --no-build -c Release --solution OneRender.slnx
-      - name: Native AOT toolchain (Linux)
-        if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends clang zlib1g-dev
-      - name: Publish AOT smoke app (warnings are errors)
-        run: dotnet publish tests/OneRender.AotSmoke -c Release -r ${{ matrix.rid }} -o ${{ runner.temp }}/smoke -warnaserror
-      - name: Run AOT smoke app
-        shell: bash
-        run: |
-          exe="$RUNNER_TEMP/smoke/OneRender.AotSmoke"
-          if [ "$RUNNER_OS" = "Windows" ]; then exe="$exe.exe"; fi
-          "$exe"
-      - name: Publish WebAssembly smoke app (warnings are errors)
-        run: dotnet publish tests/OneRender.WasmSmoke -c Release -o ${{ runner.temp }}/wasm -warnaserror
 
-  pack:
-    # Builds the packages as an artifact only; nothing is pushed anywhere.
-    runs-on: ubuntu-latest
+  aot:
+    name: NativeAOT smoke (${{ matrix.rid }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, rid: win-x64 }
+          - { os: ubuntu-latest, rid: linux-x64 }
+          - { os: ubuntu-24.04-arm, rid: linux-arm64 }
+          - { os: macos-latest, rid: osx-arm64 }
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - name: Artifacts directory
@@ -58,9 +69,120 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
-      - name: Pack
-        run: dotnet pack OneRender.slnx -c Release -o ${{ runner.temp }}/packages
+      - name: Native AOT toolchain (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends clang zlib1g-dev
+      - name: Publish the AOT smoke app (trim and AOT warnings are errors)
+        run: dotnet publish tests/OneRender.AotSmoke -c Release -r ${{ matrix.rid }} -o "${{ runner.temp }}/smoke" -warnaserror
+      - name: Run it
+        shell: bash
+        run: |
+          exe="$RUNNER_TEMP/smoke/OneRender.AotSmoke"
+          if [ "$RUNNER_OS" = "Windows" ]; then exe="$exe.exe"; fi
+          "$exe"
+
+  wasm:
+    name: WebAssembly trim check
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Artifacts directory
+        run: echo "ONERENDER_ARTIFACTS=$RUNNER_TEMP/artifacts" >> "$GITHUB_ENV"
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Publish the browser-wasm smoke app (trim warnings are errors)
+        run: dotnet publish tests/OneRender.WasmSmoke -c Release -o "${{ runner.temp }}/wasm" -warnaserror
+
+  packages:
+    name: pack and check the packages
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Artifacts directory
+        run: echo "ONERENDER_ARTIFACTS=$RUNNER_TEMP/artifacts" >> "$GITHUB_ENV"
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Pack every library (nothing is pushed anywhere)
+        run: dotnet pack OneRender.slnx -c Release -o "${{ runner.temp }}/packages"
+      - name: Check metadata, contents and symbols of every package
+        run: python3 tools/ci/check-packages.py "${{ runner.temp }}/packages"
+      - name: Check that every third-party item has a notice
+        run: bash tools/ci/check-notices.sh
+      - name: Check the public text
+        run: bash tools/ci/check-public-text.sh
+      - name: Check the shipped fonts against upstream
+        run: bash tools/fonts/verify-fonts.sh
       - uses: actions/upload-artifact@v4
         with:
           name: packages
           path: ${{ runner.temp }}/packages/*
+          if-no-files-found: error
+
+  workflow-lint:
+    name: actionlint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install actionlint 1.7.7 (checksum pinned)
+        run: |
+          curl -fsSL -o actionlint.tgz https://github.com/rhysd/actionlint/releases/download/v1.7.7/actionlint_1.7.7_linux_amd64.tar.gz
+          echo "023070a287cd8cccd71515fedc843f1985bf96c436b7effaecce67290e7e0757  actionlint.tgz" | sha256sum -c -
+          tar xzf actionlint.tgz actionlint
+      - name: Lint the workflows
+        run: ./actionlint -color
+
+  fuzz:
+    # Replays the committed inputs of each target, then fuzzes it for a short, bounded time (linux-x64: the libFuzzer driver is a
+    # Linux x64 binary). Longer campaigns use the same script: fuzz/ci.sh <target> <seconds>.
+    name: fuzz ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - values
+          - tree
+          - html
+          - layout
+          - inline
+          - positioning
+          - paint
+          - flex
+          - fragmentation
+          - motion
+          - displaylist
+          - fontdata
+          - colorglyphs
+          - grid
+          - flow
+          - table
+          - effects
+          - incremental
+          - paged
+          - pdf
+    env:
+      ONERENDER_FUZZ_HOME: ${{ github.workspace }}/../fuzz-home
+    steps:
+      - uses: actions/checkout@v4
+      - name: Artifacts directory
+        run: echo "ONERENDER_ARTIFACTS=$RUNNER_TEMP/artifacts" >> "$GITHUB_ENV"
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Fuzz
+        run: fuzz/ci.sh "${{ matrix.target }}" "${{ inputs.fuzz-seconds || '120' }}"
+      - name: Keep the findings
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: findings-${{ matrix.target }}
+          path: |
+            ${{ env.ONERENDER_FUZZ_HOME }}/work/*/findings/${{ matrix.target }}
+            ${{ env.ONERENDER_FUZZ_HOME }}/work/values/${{ matrix.target }}/crashes
+          if-no-files-found: ignore

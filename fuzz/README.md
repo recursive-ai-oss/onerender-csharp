@@ -28,6 +28,14 @@ Nothing may escape the library on hostile input except an `ArgumentException` fo
 
 The tools: `libfuzzer-dotnet` is the C++ host from the SharpFuzz project (`clang++ -fsanitize=fuzzer`); `sharpfuzz` is `dotnet tool install SharpFuzz.CommandLine --tool-path <dir>/sharpfuzz`. Run one fuzz process at a time.
 
+## Other targets
+
+`fuzz/OneRender.Fuzz.Values` holds the style value and layout targets: `values`, `tree`, `html`, `layout`, `inline`, `positioning`, `paint`, `flex`, `fragmentation` and `motion` (see its README). Its seeds, including the inputs that were once findings, are committed in `fuzz/OneRender.Fuzz.Values/seeds/<target>/`.
+
+## In CI and on a worker
+
+`fuzz/ci.sh <target> [seconds]` is the one entry for both harnesses (`fuzz/ci.sh --list` prints all 20 targets). It installs the tools once under `$ONERENDER_FUZZ_HOME` (default `~/onerender/fuzz`; Linux x64, because the libFuzzer driver is a Linux x64 binary), replays the committed inputs of the target without libFuzzer, runs libFuzzer for the given time on the seeds plus a growing corpus, and prints one line: target, seconds, executions, coverage features, findings. A finding or a non-zero exit fails the script and leaves the input under `$ONERENDER_FUZZ_HOME/work/`. The CI workflow runs every target for two minutes in its own job; a longer campaign is `fuzz/ci.sh <target> 900` under `nice` and `taskset`, one process at a time per core.
+
 ## Findings
 
-Minimize the input, save it under `testdata/fuzz/` (under 1 MB, from our own or redistributable files), and add a test that feeds it and asserts a typed result.
+Minimize the input, save it under `testdata/fuzz/` (under 1 MB, from our own or redistributable files) and add a test that feeds it and asserts a typed result. Name the file `<target>-<what>.bin` for the main harness (`ci.sh` replays it on every run), or put it in the target's `seeds/` folder for the values harness.

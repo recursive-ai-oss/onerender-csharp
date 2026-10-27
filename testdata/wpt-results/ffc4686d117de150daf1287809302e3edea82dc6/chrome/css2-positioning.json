@@ -8,12 +8,12 @@
   "sampleStride": 2,
   "counts": {
     "total": 327,
-    "pass": 313,
-    "fail": 0,
+    "pass": 312,
+    "fail": 1,
     "blank": 0,
     "skipped": 14
   },
-  "rate": "1.0000",
+  "rate": "0.9968",
   "pass": [
     "css/CSS2/abspos/abspos-containing-block-initial-004b.xht",
     "css/CSS2/abspos/abspos-containing-block-initial-004d.xht",
@@ -209,7 +209,6 @@
     "css/CSS2/positioning/position-relative-018.xht",
     "css/CSS2/positioning/position-relative-027.xht",
     "css/CSS2/positioning/position-relative-029.xht",
-    "css/CSS2/positioning/position-relative-031.xht",
     "css/CSS2/positioning/position-relative-033.xht",
     "css/CSS2/positioning/position-relative-037.xht",
     "css/CSS2/positioning/position-relative-nested-001.xht",
@@ -330,7 +329,9 @@
     "css/CSS2/zindex/z-index-abspos-005.xht"
   ],
   "blank": [],
-  "fail": {},
+  "fail": {
+    "css/CSS2/positioning/position-relative-031.xht": "== position-relative-031-ref.xht differs (max 255, 820 px)"
+  },
   "skipped": {
     "css/CSS2/abspos/abspos-containing-block-initial-001.xht": "script-dependent",
     "css/CSS2/abspos/abspos-in-block-in-inline-in-relpos-inline-002.html": "testharness.js test",
