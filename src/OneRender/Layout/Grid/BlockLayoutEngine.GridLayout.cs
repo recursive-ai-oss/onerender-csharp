@@ -329,7 +329,29 @@ public sealed partial class BlockLayoutEngine
             Box c = _boxes.Make(L.Abs[cx.AbsFirst + i]);
             int before = _absCount;
             Enqueue(in tf, c, tf.ContentLeft, tf.ContentLeft + tf.ContentWidth, tf.ContentTop);
-            if (!areaCb || _absCount == before)
+            if (_absCount == before)
+            {
+                continue;
+            }
+
+            ref readonly ComputedValues av = ref c.Values;
+            if (av.GridColumnStart.Kind == GridLineKind.Auto && av.GridColumnEnd.Kind == GridLineKind.Auto
+                && av.GridRowStart.Kind == GridLineKind.Auto && av.GridRowEnd.Kind == GridLineKind.Auto)
+            {
+                // Grid 2 §10.2: with no grid placement the static position is where the box would sit, aligned by its own alignment, in the container's content box.
+                ref AbsEntry s = ref _abs[_absCount - 1];
+                ref readonly ComputedValues cv = ref _boxes.Make(cx.Box).Values;
+                s.HasArea = true;
+                s.AreaX = cx.PadL;
+                s.AreaY = cx.PadT;
+                s.AreaW = double.IsNaN(cx.CW) ? 0 : cx.CW;
+                s.AreaH = double.IsNaN(cx.CH) ? 0 : cx.CH;
+                s.FracX = StaticFraction(SelfAlign(in av, in cv, true, out _), cx.Rtl);
+                s.FracY = StaticFraction(SelfAlign(in av, in cv, false, out _), false);
+                continue;
+            }
+
+            if (!areaCb)
             {
                 continue;
             }
@@ -363,6 +385,15 @@ public sealed partial class BlockLayoutEngine
             e.GridAreaB = double.IsNaN(t1) ? double.NaN : padT + t1 - (cx.Sub1 ? cx.Org1 : 0);
         }
     }
+
+    private static double StaticFraction(AlignKind k, bool rtl) => k switch
+    {
+        AlignKind.End or AlignKind.FlexEnd or AlignKind.SelfEnd or AlignKind.LastBaseline => rtl ? 0 : 1,
+        AlignKind.Right => 1,
+        AlignKind.Center => 0.5,
+        AlignKind.Left => 0,
+        _ => rtl ? 1 : 0,
+    };
 
     /// <summary>Track-space positions of an absolutely positioned child's start and end lines; NaN for <c>auto</c> or a line outside the grid (the padding edge).</summary>
     private static void AbsLines(GridLine start, GridLine end, GridAxis ax, in GCtx owner, int axis, out double p0, out double p1)

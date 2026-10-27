@@ -9,12 +9,13 @@
 |---|---:|---:|---:|---:|---:|---:|---:|
 | css-backgrounds | 1 | 847 | 123 | 391 | 105 | 228 | 0.1987 |
 | css-flexbox | 1 | 1398 | 226 | 607 | 119 | 446 | 0.2374 |
+| css-grid | 1 | 2481 | 269 | 810 | 156 | 1246 | 0.2178 |
 | css-overflow | 1 | 892 | 180 | 183 | 143 | 386 | 0.3557 |
 | css-position | 1 | 367 | 18 | 78 | 35 | 236 | 0.1374 |
 | css2-floats | 1 | 345 | 23 | 241 | 50 | 31 | 0.0732 |
 | css2-flow | 1 | 2415 | 109 | 1233 | 924 | 149 | 0.0481 |
 | css2-positioning | 1 | 654 | 21 | 543 | 56 | 34 | 0.0339 |
-| **all** | | 6918 | 700 | 3276 | 1432 | 1510 | 0.1294 |
+| **all** | | 9399 | 969 | 4086 | 1588 | 2756 | 0.1459 |
 
 ## Why tests failed or were skipped
 
@@ -22,6 +23,14 @@
 
 - Failures: 388 × == reference differs; 3 × != reference identical
 - Skipped: 132 × testharness.js test; 71 × reftest-wait (needs script); 25 × script-dependent
+### css-flexbox
+
+- Failures: 607 × == reference differs
+- Skipped: 376 × testharness.js test; 62 × script-dependent; 5 × reftest-wait (needs script); 3 × print reftest (paged output)
+### css-grid
+
+- Failures: 810 × == reference differs
+- Skipped: 758 × testharness.js test; 340 × reference file missing; 129 × script-dependent; 19 × reftest-wait (needs script)
 ### css-overflow
 
 - Failures: 179 × == reference differs; 4 × != reference identical

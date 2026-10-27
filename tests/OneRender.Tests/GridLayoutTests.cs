@@ -139,6 +139,34 @@ public class GridLayoutTests
         Is(l, "a", 10, 0, 10, 5);
     }
 
+    // ---- shorthands (Grid 2 §7.4, §8.4, §7.8) ----
+
+    [Fact]
+    public void GridTemplateShorthandSetsAreasTracksAndLines()
+    {
+        Lay l = Run("<div id=g><i id=a></i><i id=b></i><i id=c></i></div>",
+            "#g{display:grid;grid-template:'a a' 20px 'b c' 30px / 50px 60px;width:110px}i{display:block}#a{grid-area:a}#b{grid-area:b}#c{grid-area:c}");
+        Is(l, "a", 0, 0, 110, 20);
+        Is(l, "b", 0, 20, 50, 30);
+        Is(l, "c", 50, 20, 60, 30);
+    }
+
+    [Fact]
+    public void GridAreaShorthandAndAutoFlowShorthand()
+    {
+        Lay l = Run("<div id=g><i id=a></i><i id=b></i></div>",
+            "#g{display:grid;grid:auto-flow dense 10px / 40px 40px 40px;width:120px}i{display:block}#a{grid-area:2 / 2 / 3 / 4}");
+        Is(l, "a", 40, 10, 80, 10);
+        Is(l, "b", 0, 0, 40, 10);
+    }
+
+    [Fact]
+    public void PlaceShorthandsSetBothAxes()
+    {
+        Lay l = Run("<div id=g><i id=a></i></div>", "#g{display:grid;grid-template:60px / 100px;place-items:end center}i{display:block;width:20px;height:10px}");
+        Is(l, "a", 40, 50, 20, 10);
+    }
+
     // ---- auto-repeat (Grid 2 §7.2.3.2) ----
 
     [Fact]
