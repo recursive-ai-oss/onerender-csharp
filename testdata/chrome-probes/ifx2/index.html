@@ -1,0 +1,16 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+*,::before,::after{box-sizing:border-box}
+body{margin:0;font:16px/1.5 Arial,sans-serif}
+ul{margin:0;padding:8px;list-style:none;font-size:14px;display:inline-flex}
+.f{display:flex;background:#eee;margin-bottom:10px}
+.f>div{flex:none;background:#ccc}
+.a{align-items:center}
+</style></head><body>
+<div class="f"><div><ul><li>Link</li></ul></div></div>
+<div class="f a"><div><ul><li>Link</li></ul></div></div>
+<div class="f a"><div><ul><li>Link</li></ul></div><div style="height:20px"></div></div>
+<div class="f a"><div><ul style="flex-flow:row wrap"><li>Link</li></ul></div></div>
+<div class="f a"><div><ul style="flex-flow:column wrap"><li>Link</li></ul></div></div>
+<div class="f a" style="min-height:64px"><div><ul><li>Link</li></ul></div></div>
+<div class="f a" style="min-height:64px;padding:8px"><div><ul><li>Link</li></ul></div></div>
+</body></html>

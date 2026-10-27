@@ -266,6 +266,14 @@ public sealed class HtmlFrontEnd
         }
 
         // The parent cell's align="center" or "right" also places a table child, the way a centered block child sits in a cell.
+        // The cell's align attribute aligns the table's box, not the text inside the table: a table directly in such a cell starts over
+        // with the initial text-align (evidence: docs/layout-conventions.md, align on a cell around a table).
+        if (isTable && _alignHint.TryGetValue(_tree.ParentOf(idx), out TextAlignKind hinted) && v.TextAlign == hinted)
+        {
+            v.TextAlign = TextAlignKind.Start;
+            changed = true;
+        }
+
         if (isTable && _alignHint.TryGetValue(_tree.ParentOf(idx), out TextAlignKind parentAlign) && v.MarginLeft.Kind == LengthKind.Px && v.MarginLeft.Value == 0
             && v.MarginRight.Kind == LengthKind.Px && v.MarginRight.Value == 0)
         {

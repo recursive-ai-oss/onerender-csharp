@@ -36,10 +36,10 @@ internal sealed partial class InlineWorker
         Length lh = v.LineHeight;
         return lh.Kind switch
         {
-            LengthKind.Number => lh.Value * v.FontSize,
-            LengthKind.Px => lh.Value,
-            LengthKind.Percent => lh.Value / 100 * v.FontSize,
-            LengthKind.Calc => lh.Resolve(v.FontSize),
+            LengthKind.Number => LayoutUnits.Floor(lh.Value * v.FontSize),
+            LengthKind.Px => LayoutUnits.Floor(lh.Value),
+            LengthKind.Percent => LayoutUnits.Floor(lh.Value / 100 * v.FontSize),
+            LengthKind.Calc => LayoutUnits.Floor(lh.Resolve(v.FontSize)),
             _ => a + d + gap, // normal
         };
     }

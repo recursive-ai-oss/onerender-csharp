@@ -1,0 +1,191 @@
+{
+  "format": "onerender-geometry-summary/1",
+  "set": "chrome-probes",
+  "label": "perturbed",
+  "ours": "capture",
+  "tolerancePx": 1,
+  "tolerancePercent": 0.5,
+  "gateRate": 0.99,
+  "browser": "Chrome/156.0.8078.47",
+  "fontSet": "8768bf2774f6c8e8 (20 files)",
+  "viewports": [
+    {
+      "viewport": "1280x800",
+      "pages": 9,
+      "elements": 271,
+      "matched": 237,
+      "rate": 0.8745387453874539,
+      "classes": {
+        "positionOnly": 7,
+        "sizeOnly": 3,
+        "positionAndSize": 1,
+        "textRun": 10,
+        "missingOurs": 4,
+        "missingChrome": 9
+      },
+      "rootCauses": {
+        "positionOnly": 6,
+        "sizeOnly": 1,
+        "positionAndSize": 1,
+        "textRun": 9,
+        "missingOurs": 4,
+        "missingChrome": 9
+      },
+      "tagConflicts": 0,
+      "pagesAtGate": 0,
+      "medianPageRate": 0.8636363636363636,
+      "minPageRate": 0.7727272727272727,
+      "worstTags": [
+        {
+          "tag": "div",
+          "mismatches": 20,
+          "elements": 159
+        },
+        {
+          "tag": "html",
+          "mismatches": 1,
+          "elements": 9
+        },
+        {
+          "tag": "li",
+          "mismatches": 1,
+          "elements": 23
+        },
+        {
+          "tag": "p",
+          "mismatches": 1,
+          "elements": 7
+        },
+        {
+          "tag": "span",
+          "mismatches": 1,
+          "elements": 12
+        },
+        {
+          "tag": "ul",
+          "mismatches": 1,
+          "elements": 23
+        }
+      ]
+    },
+    {
+      "viewport": "390x844",
+      "pages": 9,
+      "elements": 271,
+      "matched": 237,
+      "rate": 0.8745387453874539,
+      "classes": {
+        "positionOnly": 7,
+        "sizeOnly": 3,
+        "positionAndSize": 1,
+        "textRun": 10,
+        "missingOurs": 4,
+        "missingChrome": 9
+      },
+      "rootCauses": {
+        "positionOnly": 6,
+        "sizeOnly": 1,
+        "positionAndSize": 1,
+        "textRun": 9,
+        "missingOurs": 4,
+        "missingChrome": 9
+      },
+      "tagConflicts": 0,
+      "pagesAtGate": 0,
+      "medianPageRate": 0.8636363636363636,
+      "minPageRate": 0.7727272727272727,
+      "worstTags": [
+        {
+          "tag": "div",
+          "mismatches": 20,
+          "elements": 159
+        },
+        {
+          "tag": "html",
+          "mismatches": 1,
+          "elements": 9
+        },
+        {
+          "tag": "li",
+          "mismatches": 1,
+          "elements": 23
+        },
+        {
+          "tag": "p",
+          "mismatches": 1,
+          "elements": 7
+        },
+        {
+          "tag": "span",
+          "mismatches": 1,
+          "elements": 12
+        },
+        {
+          "tag": "ul",
+          "mismatches": 1,
+          "elements": 23
+        }
+      ]
+    }
+  ],
+  "total": {
+    "viewport": "all",
+    "pages": 18,
+    "elements": 542,
+    "matched": 474,
+    "rate": 0.8745387453874539,
+    "classes": {
+      "positionOnly": 14,
+      "sizeOnly": 6,
+      "positionAndSize": 2,
+      "textRun": 20,
+      "missingOurs": 8,
+      "missingChrome": 18
+    },
+    "rootCauses": {
+      "positionOnly": 12,
+      "sizeOnly": 2,
+      "positionAndSize": 2,
+      "textRun": 18,
+      "missingOurs": 8,
+      "missingChrome": 18
+    },
+    "tagConflicts": 0,
+    "pagesAtGate": 0,
+    "medianPageRate": 0.8636363636363636,
+    "minPageRate": 0.7727272727272727,
+    "worstTags": [
+      {
+        "tag": "div",
+        "mismatches": 40,
+        "elements": 318
+      },
+      {
+        "tag": "html",
+        "mismatches": 2,
+        "elements": 18
+      },
+      {
+        "tag": "li",
+        "mismatches": 2,
+        "elements": 46
+      },
+      {
+        "tag": "p",
+        "mismatches": 2,
+        "elements": 14
+      },
+      {
+        "tag": "span",
+        "mismatches": 2,
+        "elements": 24
+      },
+      {
+        "tag": "ul",
+        "mismatches": 2,
+        "elements": 46
+      }
+    ]
+  },
+  "gateMet": false
+}
