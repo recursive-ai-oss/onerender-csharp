@@ -24,13 +24,7 @@ public partial class WptFloatReftests
     /// <summary>The page rendered through the engine's own painter and rasterizer, one packed ARGB int per pixel.</summary>
     internal static int[] Raster(string html)
     {
-        // Lines have no real text yet and the default line height (1.2 em) is fractional, which would put the edges of boxes
-        // below a paragraph on fractional pixels, where the rasterizer blends the seams of two boxes that make up a square.
-        // A whole-pixel line height, the same in the test and its reference, keeps the comparison about layout.
-        const string WholePixels = "<style>*{line-height:20px !important}</style>";
-        int doctype = html.IndexOf("<!DOCTYPE", StringComparison.OrdinalIgnoreCase);
-        int at = doctype < 0 ? 0 : html.IndexOf('>', doctype) + 1;
-        RgbaImage img = HtmlRender.ToImage(html.Insert(at, WholePixels), new HtmlRenderOptions { Width = CanvasW, Height = CanvasH });
+        RgbaImage img = HtmlRender.ToImage(html, new HtmlRenderOptions { Width = CanvasW, Height = CanvasH });
         var px = new int[CanvasW * CanvasH];
         byte[] b = img.Pixels;
         for (int i = 0; i < px.Length; i++)
