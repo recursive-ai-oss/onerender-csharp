@@ -21,6 +21,7 @@
   </Folder>
   <Folder Name="/fuzz/">
     <Project Path="fuzz/OneRender.Fuzz.Values/OneRender.Fuzz.Values.csproj" />
+    <Project Path="fuzz/OneRender.Fuzz/OneRender.Fuzz.csproj" />
   </Folder>
   <Folder Name="/bench/">
     <Project Path="bench/OneRender.Benchmarks/OneRender.Benchmarks.csproj" />

@@ -3,6 +3,7 @@ using System.IO;
 using OneRender;
 using OneRender.Fonts;
 using OneRender.Image;
+using OneRender.Painting;
 using OneRender.Pdf;
 using OneRender.Tree;
 using RecursiveAI.OneHtml;
@@ -37,4 +38,18 @@ FontFaceInfo face = DefaultFonts.GetFaces(family)[0];
 byte[] bytes = face.ReadAllBytes();
 Console.WriteLine($"{face} {bytes.Length} bytes");
 bool sfnt = bytes.Length == face.Length && bytes[0] == 0 && bytes[1] == 1 && bytes[2] == 0 && bytes[3] == 0;
-return names.Length == 3 && sfnt && boxes == 0 ? 0 : 1;
+
+// Rasterize a small display list through oneimage: a rounded rectangle, a gradient, a glyph run and a group.
+DisplayList list = new();
+list.FillRoundedRect(ItemId.Of(1), new RectF(2, 2, 28, 28), CornerRadii.Uniform(8), new PaintColor(1f, 0f, 0f, 1f));
+Paint gradient = list.ConicGradient(16, 16, 0f, [new GradientStop(0f, new PaintColor(0f, 0f, 1f, 1f)), new GradientStop(1f, new PaintColor(0f, 1f, 0f, 1f))]);
+list.PushGroup(ItemId.Of(2), 0.5f);
+list.FillRect(ItemId.Of(3), new RectF(8, 8, 16, 16), gradient);
+list.PopGroup();
+OneFont.FontFace font = OneFont.FontFace.Load(bytes);
+int glyph = font.GetGlyphIndex('A');
+list.DrawGlyphRun(ItemId.Of(4), font, 12f, 4f, 14f, new PaintColor(0f, 0f, 0f, 1f), [glyph], [0f], default, [0], "A");
+RgbaImage image = DisplayListRasterizer.Render(list, 32, 32);
+bool painted = image.Pixels[((16 * 32) + 16) * 4 + 3] == 255 && image.Pixels[(((5 * 32) + 10) * 4) + 1] < 50;
+Console.WriteLine($"rasterized {image.Width}x{image.Height} painted={painted}");
+return names.Length == 3 && sfnt && painted && boxes == 0 ? 0 : 1;
