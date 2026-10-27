@@ -210,6 +210,19 @@ ix.HandlePointer(new PointerInput { Action = PointerAction.Down, X = 5, Y = 5, B
 ix.HandlePointer(new PointerInput { Action = PointerAction.Up, X = 5, Y = 5, Button = 0, Time = 2 });
 bool ixOk = ixHit && ixClicks == 1 && ix.FocusedElement.Equals(ixButton);
 
+// Form controls: native layout and paint, a checkbox toggled by a click, and a select opened and closed.
+InteractivePage fm = InteractivePage.Create(
+    "<body style='margin:0'><input id=c type=checkbox style='margin:0'><select id=s style='margin:0'><option>a</option><option>b</option></select><input id=t value=hello></body>",
+    new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 300, ViewportHeight = 100 });
+Node fmBox = fm.Page.Document.GetElementById("c");
+Node fmSelect = fm.Page.Document.GetElementById("s");
+fm.HandlePointer(new PointerInput { Action = PointerAction.Down, X = 5, Y = 5, Button = 0, Buttons = MouseButtons.Primary, Time = 1 });
+fm.HandlePointer(new PointerInput { Action = PointerAction.Up, X = 5, Y = 5, Button = 0, Time = 2 });
+fm.HandlePointer(new PointerInput { Action = PointerAction.Down, X = 30, Y = 5, Button = 0, Buttons = MouseButtons.Primary, Time = 3 });
+fm.HandlePointer(new PointerInput { Action = PointerAction.Up, X = 30, Y = 5, Button = 0, Time = 4 });
+var fmList = new DisplayList();
+fm.Page.Paint(fmList);
+bool formsOk = fm.IsChecked(fmBox) && fm.IsDropdownOpen(fmSelect) && fmList.Count > 10;
 
 // Animations: a keyframe animation and a transition, ticked with the host clock; the events and the animated value must come out.
 InteractivePage mo = InteractivePage.Create(
@@ -258,7 +271,7 @@ OneRender.Paged.PagedDocument paged = OneRender.Paged.PagedDocument.Create(
     new OneRender.Paged.PagedOptions(FontProviders.CreateDefault()));
 bool pagedOk = paged.PageCount >= 3 && paged.Destinations.Count == 1 && paged.GetPageLayer(0) is not null;
 
-return moOk && liveOk && pdfOk && pagedOk && factsOk && ixOk && names.Length == 3 && tableOk && sfnt && painted && pageOk && boxes >= 3 && scrollOk && shaped && again && woff2Ok ? 0 : 1;
+return moOk && liveOk && pdfOk && pagedOk && factsOk && ixOk && formsOk && names.Length == 3 && tableOk && sfnt && painted && pageOk && boxes >= 3 && scrollOk && shaped && again && woff2Ok ? 0 : 1;
 
 internal sealed class NoFonts : OneRender.Layout.IFontProvider
 {

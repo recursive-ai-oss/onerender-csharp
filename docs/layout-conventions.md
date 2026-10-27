@@ -87,9 +87,23 @@ Not adjusted: `a--b` (the browser breaks between the hyphens).
 
 **A ratio with nothing to share.** A replaced box with an aspect ratio, no natural size, no specified width or height and an indefinite available width (an image that has not loaded, in a shrink-to-fit or flex-item measurement) has a 0 by 0 starting size. CSS2 §10.4 then scales with the ratio, not with the starting size's own 0/0: `min-height: 120px` on a 7/3 box gives a width of 280px. The result is always finite; a box whose size would come out non-finite contributes 0 to the intrinsic sizes of its container. Before this, one such image turned the main size of every flex container around it into NaN and placed later grid items at a non-finite offset.
 
+## Form controls
+
+Sizes, colors and the paint of each control are in `forms.md`. The layout rules that reach beyond controls:
+
+**Flex min-content contribution.** A flex item's min-content contribution is its own min-content size even when `flex: none` (an inflexible, auto-basis item): the spec's clamp to the flex base size is not applied. Chrome 160 px against 196 px in `testdata/forms-probes/avatar/b`.
+
+**Fieldset content box and legend.** A grid or flex fieldset lays out only the content after its rendered legend, in an anonymous box inside its padding, with no gap between the legend and the first row. Evidence: `tailwind/daisy-app`, `forms-probes`.
+
+**Relative positioning of atomic inlines.** An inline-block, inline-flex or replaced box with `position: relative` is drawn shifted by its insets without moving the line (CSS2 §9.4.3). Evidence: WPT `css-transforms/transform-input-*` references.
+
+**Percentage heights of atomic inlines** resolve against the height of the block container the line is in, and stay `auto` when it is indefinite (CSS2 §10.5). Evidence: WPT `css-ui/widget-percentage-height-001`, `css-flexbox/flexitem-stretch-range`.
+
+**Table cell alignment.** A cell's `height` is a minimum: `vertical-align: bottom | middle` aligns what the children fill plus the bottom padding and border, not the specified height (CSS2 §17.5.3). Evidence: WPT `CSS2/linebox/vertical-align-applies-to-007`.
+
 ## Known deviations kept
 
 - **Initial quote and a space.** Chrome breaks after `« ` at the start of a text run; UAX #14 (LB15a, Unicode 15.1) does not, and OneFont follows the standard. A `float` whose text starts with `«` is wider in the engine in narrow containers. Pages avoid the pattern.
 - **Generated content** (`::before`/`::after`, `q` quotes, `list-style-position: inside` markers, `::first-line`) is not laid out yet; pages in `text-block` avoid it.
-- **Form controls** (`input`, `select`, `textarea`, `button`, `fieldset`, `progress`) have no intrinsic size or inner layout yet; `option` children of a `select` get boxes. The remaining mismatches of the `tailwind` set are all controls or the boxes that move after one.
+- **Form controls** are laid out and painted as Chrome 156 does (`forms.md`). Known gaps: text editing, date, time, color and file inputs, and `datalist`; the select popup is not a true top layer; `:checked` and the other state selectors do not follow user changes.
 - **Transforms in the differential.** The browser reports a transformed element's box after the transform; the engine reports the layout box. `templates/receipt` has one such element (`scaleY(1.6)`).

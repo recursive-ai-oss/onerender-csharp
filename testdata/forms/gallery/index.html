@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Control gallery</title>
+<style>
+  body { margin: 8px; font: 16px Arial, sans-serif; }
+  h2 { font-size: 15px; margin: 18px 0 6px; }
+  .row { margin: 4px 0; }
+  .row > * { vertical-align: middle; }
+  .grid { display: grid; grid-template-columns: repeat(4, max-content); gap: 8px 16px; align-items: center; }
+  .flex { display: flex; gap: 8px; align-items: baseline; }
+</style></head>
+<body>
+<h2>Text fields</h2>
+<div class="row"><input> <input value="value"> <input placeholder="placeholder"> <input size="6"> <input size="30"> <input disabled value="disabled"> <input readonly value="readonly"></div>
+<div class="row"><input type="password" value="secret"> <input type="email" placeholder="a@b.c"> <input type="search" value="query"> <input type="tel"> <input type="url" placeholder="https://"> <input type="number" value="42"></div>
+<div class="row"><input style="font-size:20px" value="20px"> <input style="font:12px monospace" value="mono"> <input style="padding:8px 12px" value="padded"> <input style="border:2px solid #36c;border-radius:6px" value="bordered"> <input style="width:120px" value="narrow"> <input style="height:40px" value="tall"></div>
+<h2>Buttons</h2>
+<div class="row"><button>Button</button> <button disabled>Disabled</button> <button style="font-size:20px">Large</button> <button style="padding:10px 24px">Padded</button> <button><b>Bold</b> and <i>italic</i></button> <button style="width:120px">Fixed</button> <button style="height:50px">Tall</button></div>
+<div class="row"><input type="button" value="Input button"> <input type="submit"> <input type="reset"> <input type="submit" value="Send" disabled></div>
+<h2>Checkboxes and radios</h2>
+<div class="row"><input type="checkbox"> <input type="checkbox" checked> <input type="checkbox" disabled> <input type="checkbox" checked disabled> <input type="radio" name="r"> <input type="radio" name="r" checked> <input type="radio" disabled> <label><input type="checkbox"> with label</label> <label><input type="radio" name="r"> radio label</label></div>
+<h2>Range, progress, meter</h2>
+<div class="row"><input type="range"> <input type="range" value="80" style="width:200px"> <input type="range" disabled> <progress></progress> <progress value="0.3"></progress> <progress value="70" max="100" style="width:240px"></progress> <meter value="0.6"></meter> <meter min="0" max="10" low="3" high="8" optimum="9" value="2"></meter></div>
+<h2>Select</h2>
+<div class="row"><select><option>One</option><option>Two</option></select> <select><option>A much longer option label</option></select> <select disabled><option>Disabled</option></select> <select style="font-size:20px"><option>Large</option></select> <select style="width:200px"><option>Wide</option></select> <select></select></div>
+<div class="row"><select size="3"><option>Alpha</option><option selected>Beta</option><option>Gamma</option><option>Delta</option></select> <select multiple><option>Red</option><option selected>Green</option><option>Blue</option></select> <select size="2" style="width:160px"><option>Wide list</option><option>Second</option></select></div>
+<h2>Textarea</h2>
+<div class="row"><textarea></textarea> <textarea rows="4" cols="24">Some text
+spanning two lines</textarea> <textarea placeholder="placeholder" style="width:180px;height:60px"></textarea> <textarea disabled>disabled</textarea> <textarea style="font:13px Arial" cols="12" rows="3"></textarea></div>
+<h2>Fieldsets</h2>
+<div class="row"><fieldset><legend>Group</legend><label><input type="checkbox" checked> one</label> <label><input type="checkbox"> two</label></fieldset></div>
+<div class="row"><fieldset style="width:300px"><legend>Narrow group with long legend text</legend><input> <button>Go</button></fieldset> <fieldset disabled><legend>Disabled</legend><input value="inside"> <button>Go</button></fieldset></div>
+<h2>In layouts</h2>
+<div class="flex"><label>Name <input></label><label>Age <input type="number" style="width:60px"></label><select><option>x</option></select><button>OK</button></div>
+<div class="grid"><label>First</label><input><label>Second</label><input><label>Third</label><input type="checkbox"><label>Fourth</label><select><option>q</option></select></div>
+</body></html>

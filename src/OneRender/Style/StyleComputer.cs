@@ -305,6 +305,8 @@ internal sealed partial class StyleComputer
         ComputedValues v = ComputedValues.Initial;
         v.Visibility = p.Visibility;
         v.PointerEvents = p.PointerEvents;
+        v.AccentColor = p.AccentColor;
+        v.AccentColorAuto = p.AccentColorAuto;
         v.FontFamily = p.FontFamily;
         v.FontSize = p.FontSize;
         v.FontSizeKeyword = p.FontSizeKeyword;

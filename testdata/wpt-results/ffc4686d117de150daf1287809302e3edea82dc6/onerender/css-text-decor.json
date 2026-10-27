@@ -8,12 +8,12 @@
   "sampleStride": 1,
   "counts": {
     "total": 357,
-    "pass": 83,
-    "fail": 194,
+    "pass": 84,
+    "fail": 193,
     "blank": 8,
     "skipped": 72
   },
-  "rate": "0.2912",
+  "rate": "0.2947",
   "pass": [
     "css/css-text-decor/decorating-box/text-decoration-decorating-box-thickness-001.html",
     "css/css-text-decor/line-through-vertical.html",
@@ -43,6 +43,7 @@
     "css/css-text-decor/text-decoration-thickness-ink-skip-dilation.html",
     "css/css-text-decor/text-decoration-thickness-linethrough-001.html",
     "css/css-text-decor/text-decoration-thickness-non-inherit.html",
+    "css/css-text-decor/text-decoration-thickness-percent-001.html",
     "css/css-text-decor/text-decoration-thickness-single.html",
     "css/css-text-decor/text-decoration-thickness-single2.html",
     "css/css-text-decor/text-decoration-underline-wavy-covers-whole-line-length-001.html",
@@ -178,7 +179,6 @@
     "css/css-text-decor/text-decoration-thickness-length-rounding-002.html": "== text-decoration-thickness-length-rounding-ref.tentative.html differs (max 255, 2573 px)",
     "css/css-text-decor/text-decoration-thickness-length-rounding-min-val.html": "== text-decoration-thickness-length-rounding-min-val-ref.html differs (max 255, 1665 px)",
     "css/css-text-decor/text-decoration-thickness-overline-001.html": "== text-decoration-thickness-green-rect-ref.html differs (max 255, 1600 px)",
-    "css/css-text-decor/text-decoration-thickness-percent-001.html": "== text-decoration-thickness-percent-001-ref.html differs (max 255, 2560 px)",
     "css/css-text-decor/text-decoration-thickness-scroll-001.html": "== text-decoration-thickness-scroll-001-ref.html differs (max 255, 3080 px)",
     "css/css-text-decor/text-decoration-thickness-underline-001.html": "== text-decoration-thickness-green-rect-ref.html differs (max 255, 1600 px)",
     "css/css-text-decor/text-decoration-thickness-vertical-001.html": "== text-decoration-thickness-vertical-green-rect-ref.html differs (max 255, 1600 px)",

@@ -399,6 +399,21 @@ public enum WheelDeltaMode : byte
     Page = 2,
 }
 
+/// <summary>The <c>submit</c> event of a form (HTML §4.10.21.3): it bubbles and can be canceled; no navigation happens whatever the listeners do.</summary>
+public sealed class SubmitEvent : DomEvent
+{
+    /// <summary>Creates the event.</summary>
+    /// <param name="submitter">The button that submitted the form.</param>
+    public SubmitEvent(EventTarget submitter)
+        : base("submit", true, true)
+    {
+        Submitter = submitter;
+    }
+
+    /// <summary>The button whose activation submitted the form.</summary>
+    public EventTarget Submitter { get; }
+}
+
 /// <summary>A UI Events <c>WheelEvent</c> (UI Events §3.4.4). Positive deltas scroll content toward the start (the page moves down for a positive <see cref="DeltaY"/>).</summary>
 public sealed class WheelEvent : MouseEvent
 {

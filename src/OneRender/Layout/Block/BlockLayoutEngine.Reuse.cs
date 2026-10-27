@@ -192,6 +192,7 @@ public sealed partial class BlockLayoutEngine
     {
         ref Frame f = ref _frames[ni];
         f.MemoRec = false;
+        f.MemoHit = false;
         if (!_recording)
         {
             return false;
@@ -237,6 +238,7 @@ public sealed partial class BlockLayoutEngine
             f.NextChild = -1;
             _pos = e.Pos;
             _neg = e.Neg;
+            f.MemoHit = true;
             _hits++;
             return true;
         }

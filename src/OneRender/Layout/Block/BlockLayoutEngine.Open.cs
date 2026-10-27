@@ -460,7 +460,19 @@ public sealed partial class BlockLayoutEngine
             ResolveStrut();
             ref Frame t = ref _frames[ni];
             var req = new InlineLayoutRequest(c, t.ContentWidth, t.ContentLeft, t.ContentTop, t.BfcLeft, t.BfcTop, _fonts, this);
-            InlineLayoutResult r = _inline.Layout(in req, _out, new Fragment(_out, t.Frag), _token);
+            // CSS2 §10.5: the percentage height of an inline-block resolves against the height of the block container it sits in.
+            double savedAtomicCb = _atomicCbHeight;
+            _atomicCbHeight = t.SpecH;
+            InlineLayoutResult r;
+            try
+            {
+                r = _inline.Layout(in req, _out, new Fragment(_out, t.Frag), _token);
+            }
+            finally
+            {
+                _atomicCbHeight = savedAtomicCb;
+            }
+
             t = ref _frames[ni];
             t.Cursor = r.Height;
             if (r.LineCount > 0)

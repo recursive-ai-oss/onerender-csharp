@@ -1,3 +1,4 @@
+using OneRender.Forms;
 using OneRender.Style;
 using RecursiveAI.OneHtml;
 using RecursiveAI.OneHtml.Css;
@@ -63,6 +64,8 @@ public sealed partial class HtmlFrontEnd
         Document doc = styles.Document;
         _tree.Clear();
         _cellPadding.Clear();
+        _fieldsetOrig.Clear();
+        _wrapperOf.Clear();
         _alignHint.Clear();
         _tableBorder.Clear();
         _styles = styles;
@@ -89,6 +92,11 @@ public sealed partial class HtmlFrontEnd
 
         int top = 0;
         _stack[0] = new Frame(rootElement.FirstChild, rootIdx, rootElement);
+        if (_fieldsetOrig.ContainsKey(rootIdx))
+        {
+            _stack[0].Fieldset = rootIdx;
+        }
+
         if (_eff.Length < _stack.Length)
         {
             _eff = new int[_stack.Length];
@@ -122,6 +130,11 @@ public sealed partial class HtmlFrontEnd
                     ReadOnlySpan<char> data = child.Data;
                     if (!data.IsEmpty)
                     {
+                        if (f.Fieldset >= 0 && !data.IsWhiteSpace())
+                        {
+                            parentIdx = EnsureFieldsetContent(ref f);
+                        }
+
                         _tree.AppendText(parentIdx, data);
                     }
 
@@ -129,6 +142,11 @@ public sealed partial class HtmlFrontEnd
                 case NodeKind.Element:
                 {
                     int childDepth = ChildDepth(top, parentIdx);
+                    if (f.Fieldset >= 0 && !IsRenderedLegend(child))
+                    {
+                        parentIdx = EnsureFieldsetContent(ref f);
+                    }
+
                     int idx = AddElement(styles, child, parentIdx, childDepth);
                     if (idx >= 0 && ShouldDescend(idx))
                     {
@@ -143,8 +161,24 @@ public sealed partial class HtmlFrontEnd
                         }
 
                         _stack[++top] = new Frame(child.FirstChild, idx, child);
+                        if (_fieldsetOrig.ContainsKey(idx))
+                        {
+                            _stack[top].Fieldset = idx;
+                        }
                         _eff[top] = childDepth;
                     }
+                    else if (idx >= 0 && _popupParent >= 0)
+                    {
+                        // An open drop-down: its options go into the popup box.
+                        if (top + 1 == _stack.Length)
+                        {
+                            Array.Resize(ref _stack, _stack.Length * 2);
+                        }
+
+                        _stack[++top] = new Frame(child.FirstChild, _popupParent, child);
+                    }
+
+                    _popupParent = -1;
 
                     break;
                 }
@@ -176,7 +210,7 @@ public sealed partial class HtmlFrontEnd
     }
 
     private bool ShouldDescend(int idx) =>
-        _tree.ReplacedOf(idx) == ReplacedKind.None && !_tree.Styles[_tree.StyleOf(idx)].Display.IsNone;
+        _tree.ReplacedOf(idx) == ReplacedKind.None && !_tree.Styles[_tree.StyleOf(idx)].Display.IsNone && !_noDescend;
 
     private int AddElement(DocumentStyles styles, Node element, int parentIdx, int depth)
     {
@@ -195,6 +229,9 @@ public sealed partial class HtmlFrontEnd
             _ => ReplacedKind.None,
         };
         _tree.SetElementInfo(idx, tag, replaced);
+        ControlKind control = Classify(element);
+        _noDescend = control is ControlKind.SelectMenu or ControlKind.Progress or ControlKind.Meter;
+        _tree.ReplaceStyle(idx, AdjustControlStyle(element, SplitFieldset(element, idx, _tree.StyleOf(idx)), parentIdx < 0 ? default : _tree.StyleOf(parentIdx)));
         if (_gcConfigured && !_tree.Styles[_tree.StyleOf(idx)].Display.IsNone)
         {
             _gc!.Enter(cs, element, depth, false);
@@ -227,7 +264,17 @@ public sealed partial class HtmlFrontEnd
         StyleTable table = _tree.Styles;
         if (table[_tree.StyleOf(idx)].Display.IsNone)
         {
+            _noDescend = false;
             return idx;
+        }
+
+        if (control != ControlKind.None)
+        {
+            AddControlContent(element, idx, control);
+            if (control == ControlKind.SelectMenu && Form is not null && Form.IsOpen(element))
+            {
+                AddSelectPopup(element, idx);
+            }
         }
 
         if (table[_tree.StyleOf(idx)].Display.IsListItem)
@@ -664,5 +711,10 @@ public sealed partial class HtmlFrontEnd
         public Node Cursor = cursor;
         public int StyledParent = styledParent;
         public Node Owner = owner;
+
+        // A fieldset whose display is grid or flex: its rendered legend stays a child of the fieldset and every other child goes into the
+        // anonymous content box (HTML §15.3.13), made when the first of them arrives.
+        public int Fieldset = -1;
+        public int Wrap = -1;
     }
 }

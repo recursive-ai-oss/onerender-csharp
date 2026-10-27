@@ -1,3 +1,4 @@
+using OneRender.Forms;
 using OneRender.Style;
 using OneRender.Tree;
 
@@ -192,6 +193,26 @@ public sealed partial class BlockLayoutEngine
             }
         }
 
+        if ((fl & FrameFlags.Multicol) == 0 && Math.Abs(contentH - cursor) > 0.015625 && !_boxes.Make(t.Box).Values.ContentCenteredByPadding && CentersItsContent(_boxes.Make(t.Box).Values.Control, contentH > cursor))
+        {
+            // HTML §15.5: the text of a button, text field or drop-down sits in the middle of the box when the box is taller than the
+            // text (a stretched grid or flex item, a min-height), as the user agent sheet's align-content: center says.
+            double dy = Math.Floor((contentH - cursor) / 2 * 64) / 64;
+            // Children copied from the earlier layout were moved when it was made.
+            for (int c = t.MemoHit ? -1 : _out.FirstChildOf(t.Frag); c >= 0; c = _out.NextSiblingOf(c))
+            {
+                Rect cb = _out.BorderBoxOf(c);
+                _out.SetBorderBox(new Fragment(_out, c), new Rect(cb.X, cb.Y + dy, cb.Width, cb.Height));
+            }
+
+            if (!double.IsNaN(t.FirstBaseline))
+            {
+                t.FirstBaseline += dy;
+            }
+
+            t.OvB += dy;
+        }
+
         double bh = t.ContentTop + contentH + t.BottomEdge;
         if ((fl & FrameFlags.Bfc) != 0)
         {
@@ -277,6 +298,12 @@ public sealed partial class BlockLayoutEngine
         }
 
         Attach(pi, x, y2, wd, bh, mb, baseline, ovL, ovT, ovR, ovB, clipX, clipY, rdx, rdy);
+        if (tv.LegendGap > 0)
+        {
+            // HTML §15.3.13: the fieldset's padding follows its rendered legend; margins after the legend do not merge into it.
+            _frames[pi].Cursor += tv.LegendGap;
+        }
+
         if (emptyClearing && _frames[pi].NextChild >= 0)
         {
             // An empty block with `clear` is placed at its hypothetical position or below the floats, as CSS2 §9.5.2 says, but the margins
@@ -674,4 +701,8 @@ public sealed partial class BlockLayoutEngine
 
         return double.NaN;
     }
+
+    // A text field keeps its text centered when the box is too short for it as well (the text then overflows evenly at both ends).
+    private static bool CentersItsContent(ControlKind k, bool roomToSpare) =>
+        k is ControlKind.TextField or ControlKind.Password || (roomToSpare && k is ControlKind.Button or ControlKind.ButtonInput or ControlKind.SelectMenu);
 }

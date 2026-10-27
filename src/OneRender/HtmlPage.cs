@@ -92,6 +92,9 @@ public sealed partial class HtmlPage
     /// <summary>The parsed document.</summary>
     public Document Document { get; }
 
+    // What the user changed in the form controls; carried to every page built for the same document.
+    internal Forms.FormState Form { get; private set; } = new();
+
     /// <summary>The styled-node tree.</summary>
     public StyledTree Styled { get; }
 
@@ -123,7 +126,7 @@ public sealed partial class HtmlPage
     /// <para>HTML §15.5.5 (The details and summary elements): a closed <c>details</c> shows its first <c>summary</c> and nothing else. The
     /// rule is important so that an author's <c>display</c> on the hidden content does not reveal it.</para>
     /// </summary>
-    internal const string UserAgentSupplement = "body { margin: 8px; } details:not([open]) > :not(summary:first-of-type) { display: none !important; }";
+    internal const string UserAgentSupplement = "body { margin: 8px; } details:not([open]) > :not(summary:first-of-type) { display: none !important; }" + OneRender.Forms.FormDefaults.Css;
 
     /// <summary>Parses <paramref name="html"/>, cascades, builds the box tree and lays it out.</summary>
     /// <param name="html">The document source, decoded to text.</param>
@@ -248,13 +251,13 @@ public sealed partial class HtmlPage
     }
 
     private static HtmlPage Build(Document document, DocumentStyles styles, HtmlPageOptions options, ScrollState? scroll, ReferenceTable? references, CancellationToken cancellationToken,
-        bool incremental = false, Animation.AnimationController? motion = null, StyledTree? previous = null, double now = 0, double sampleAt = double.NaN)
+        bool incremental = false, Animation.AnimationController? motion = null, StyledTree? previous = null, double now = 0, double sampleAt = double.NaN, Forms.FormState? form = null)
     {
         var table = new StyleTable();
         table.SetViewport(options.ViewportWidth, options.ViewportHeight);
         table.Fonts = options.Fonts;
         var styled = new StyledTree(table) { Resolver = options.Replaced };
-        var front = new HtmlFrontEnd(styled) { References = references };
+        var front = new HtmlFrontEnd(styled) { References = references, Form = form ??= new Forms.FormState() };
         front.Build(styles, cancellationToken);
 
         // Transitions and animations are applied to the styled tree before boxes are made from it, so the box tree, layout and paint all see
@@ -272,7 +275,7 @@ public sealed partial class HtmlPage
         BlockLayoutEngine? reusing = incremental && options.Layout is null ? new BlockLayoutEngine() : null;
         ILayoutEngine engine = options.Layout ?? reusing ?? new BlockLayoutEngine();
         engine.Layout(boxes, new LayoutInput(options.ViewportWidth, options.ViewportHeight, options.Fonts) { Reuse = reusing is not null }, fragments, cancellationToken);
-        var page = new HtmlPage(document, styled, boxes, fragments, options) { Motion = motion, UsedPageReferences = front.UsedPageReferences };
+        var page = new HtmlPage(document, styled, boxes, fragments, options) { Motion = motion, UsedPageReferences = front.UsedPageReferences, Form = form };
         if (reusing is not null)
         {
             boxes.ClearDirty();

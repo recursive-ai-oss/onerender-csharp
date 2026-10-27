@@ -298,6 +298,60 @@ public sealed partial class StyledTree
         }
     }
 
+    private struct ControlInfo
+    {
+        public Forms.ControlKind Kind;
+        public Forms.ControlStates State;
+        public double Fraction;
+    }
+
+    private ControlInfo[]? _control;
+
+    /// <summary>
+    /// Makes an element a form control that is drawn natively (Chrome's default look) when its border and background are the
+    /// defaults, or changes the state it is drawn in. The element's size and box come from its declarations as for any element; only
+    /// the look depends on this. Nothing is allocated once the tree has grown to its size.
+    /// </summary>
+    /// <param name="node">An element of this tree.</param>
+    /// <param name="kind">The control the element is; <see cref="Forms.ControlKind.None"/> makes it an ordinary element again.</param>
+    /// <param name="states">Whether it is checked, disabled and so on.</param>
+    /// <param name="fraction">For a range, progress or meter: how far along the track the value is, 0 to 1.</param>
+    /// <exception cref="ArgumentException"><paramref name="node"/> does not belong to this tree or is not an element.</exception>
+    public void SetControl(StyledNode node, Forms.ControlKind kind, Forms.ControlStates states = Forms.ControlStates.None, double fraction = 0)
+    {
+        CheckNode(node, nameof(node));
+        CheckElement(node.Index);
+        _control ??= new ControlInfo[_kind.Length];
+        ref ControlInfo c = ref _control[node.Index];
+        double f = double.IsNaN(fraction) ? 0 : Math.Clamp(fraction, 0, 1);
+        if (c.Kind == kind && c.State == states && c.Fraction.Equals(f))
+        {
+            return;
+        }
+
+        c.Kind = kind;
+        c.State = states;
+        c.Fraction = f;
+        MarkStyleDirty(node.Index);
+    }
+
+    /// <summary>The control kind and state set with <see cref="SetControl"/>.</summary>
+    /// <param name="node">A node of this tree.</param>
+    /// <param name="states">The state flags.</param>
+    /// <returns>The kind, <see cref="Forms.ControlKind.None"/> for an ordinary element.</returns>
+    public Forms.ControlKind GetControl(StyledNode node, out Forms.ControlStates states)
+    {
+        CheckNode(node, nameof(node));
+        if (_control is null)
+        {
+            states = Forms.ControlStates.None;
+            return Forms.ControlKind.None;
+        }
+
+        states = _control[node.Index].State;
+        return _control[node.Index].Kind;
+    }
+
     /// <summary>The states set with <see cref="SetStates"/>.</summary>
     /// <param name="node">An element of this tree.</param>
     public ElementStates GetStates(StyledNode node)
@@ -854,6 +908,22 @@ public sealed partial class StyledTree
     }
 
     private StyleId ComputeBuilderElement(int n, StyleId parentStyle)
+    {
+        StyleId style = ComputeBuilderLayers(n, parentStyle);
+        if (_control is null || _control[n].Kind == Forms.ControlKind.None)
+        {
+            return style;
+        }
+
+        ControlInfo c = _control[n];
+        ComputedValues v = Styles[style];
+        v.Control = c.Kind;
+        v.ControlState = c.State;
+        v.ControlFraction = c.Fraction;
+        return Styles.Derive(style, in v);
+    }
+
+    private StyleId ComputeBuilderLayers(int n, StyleId parentStyle)
     {
         int p = _parent[n];
         StyleDeclaration? decl = _decl[n];

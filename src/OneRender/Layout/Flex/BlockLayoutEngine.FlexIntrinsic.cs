@@ -50,15 +50,20 @@ public sealed partial class BlockLayoutEngine
     {
         ref readonly ComputedValues v = ref child.Values;
         double baseOuter = maxC;
+        bool definiteBasis = false;
         if (parent.Flex != 3 && !v.FlexBasisContent && v.FlexBasis.IsPx)
         {
             double ph = FixedPadding(in v);
             double edges = ph + (v.MarginLeft.IsPx ? v.MarginLeft.Value : 0) + (v.MarginRight.IsPx ? v.MarginRight.Value : 0);
             double inner = v.BoxSizing == BoxSizingKind.BorderBox ? v.FlexBasis.Value - ph : v.FlexBasis.Value;
             baseOuter = Math.Max(0, inner) + edges;
+            definiteBasis = true;
         }
 
-        if (v.FlexShrink == 0)
+        // Probe (Chrome 156, testdata/forms-probes/avatar/b): an item whose flex base size is its max-content size contributes its own
+        // min-content size to a min-content measurement even when it cannot shrink, so `flex: none` does not hold it at its max-content.
+        // Only a definite basis (a length) holds the contribution from below.
+        if (v.FlexShrink == 0 && definiteBasis)
         {
             minC = Math.Max(minC, baseOuter);
         }
