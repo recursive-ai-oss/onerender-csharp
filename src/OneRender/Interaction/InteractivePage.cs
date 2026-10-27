@@ -286,10 +286,10 @@ public sealed partial class InteractivePage
 
     // Brings the page up to date with a new view of the cascade, in place when the change allows it, else by building the page again.
     // `textElement` (a node index, or -1) names an element whose single text child takes `text` in the same pass.
-    private InputOutcome ShowStyles(DocumentStyles styles, bool all, bool edit, int textElement, string? text, CancellationToken ct)
+    private InputOutcome ShowStyles(DocumentStyles styles, bool all, bool edit, int textElement, string? text, CancellationToken ct, bool rebuild = false)
     {
         _motionNow = Math.Max(_motionNow, _lastTime);
-        if (!DisableInPlaceRestyle && _page.CanRestyleInPlace && _page.TryRestyle(styles, all, ct, _motionNow, edit, textElement, text))
+        if (!rebuild && !DisableInPlaceRestyle && _page.CanRestyleInPlace && _page.TryRestyle(styles, all, ct, _motionNow, edit, textElement, text))
         {
             // The page object stays; its trees were updated in place, so the hit tester reads the new fragments.
             _hits.Rebuild();

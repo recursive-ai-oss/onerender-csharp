@@ -138,6 +138,7 @@ public sealed partial class InteractivePage
         ControlKind kind = HtmlFrontEnd.Classify(element);
         s = new TextEditSession(kind);
         s.Editor.SetValue(HtmlFrontEnd.InitialValue(element, kind));
+        s.Initial = s.Editor.Text.ToString();
         s.Editor.Select(0, 0);
         s.Placeholder = HtmlFrontEnd.PlaceholderOf(element, kind);
         s.RebuildDisplay();
@@ -148,11 +149,11 @@ public sealed partial class InteractivePage
     // Attributes that decide what the control accepts, read when editing starts and again for each session use.
     private void ReadControlAttributes(Node element, TextEditSession s)
     {
-        s.ReadOnly = element.HasAttribute("readonly");
+        s.ReadOnly = FocusRules.HasAttribute(element, "readonly");
         s.Disabled = IsDisabledControl(element);
-        string? type = element.GetAttribute("type");
+        string? type = DocumentSnapshots.Attr(element, "type");
         s.Numeric = type is not null && type.Equals("number", StringComparison.OrdinalIgnoreCase);
-        string? max = element.GetAttribute("maxlength");
+        string? max = DocumentSnapshots.Attr(element, "maxlength");
         s.Editor.MaxLength = !s.Numeric && max is not null && int.TryParse(max, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out int m) ? m : -1;
         TextEditView v = s.View;
         v.SourceElement = element.Index;

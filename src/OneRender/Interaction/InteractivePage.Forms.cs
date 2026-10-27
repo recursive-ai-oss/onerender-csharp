@@ -49,7 +49,7 @@ public sealed partial class InteractivePage
         }
 
         FormValues.RangeSpec spec = RangeOf(input);
-        return FormValues.TryParseNumber(input.GetAttribute("value"), out double a) ? spec.Snap(a) : spec.Default;
+        return FormValues.TryParseNumber(DocumentSnapshots.Attr(input, "value"), out double a) ? spec.Snap(a) : spec.Default;
     }
 
     /// <summary>The index of the selected option of a drop-down or single-selection list (HTML §4.10.7 <c>selectedIndex</c>), or -1 when it has no options.</summary>
@@ -164,7 +164,7 @@ public sealed partial class InteractivePage
         FocusRules.IsHtml(n, "input") && FocusRules.TryGetAttribute(n, "type", out ReadOnlySpan<char> t) && t.Equals("radio", StringComparison.OrdinalIgnoreCase);
 
     private static FormValues.RangeSpec RangeOf(Node input) =>
-        FormValues.RangeSpec.From(input.GetAttribute("min"), input.GetAttribute("max"), input.GetAttribute("step"));
+        FormValues.RangeSpec.From(DocumentSnapshots.Attr(input, "min"), DocumentSnapshots.Attr(input, "max"), DocumentSnapshots.Attr(input, "step"));
 
     private void AddScratch(ref int count, Node n)
     {
@@ -213,7 +213,7 @@ public sealed partial class InteractivePage
     private List<Node> RadioGroup(Node radio)
     {
         var group = new List<Node>();
-        string? name = radio.GetAttribute("name");
+        string? name = DocumentSnapshots.Attr(radio, "name");
         if (string.IsNullOrEmpty(name))
         {
             group.Add(radio);
@@ -223,7 +223,7 @@ public sealed partial class InteractivePage
         Node owner = FormOwner(radio);
         foreach (Node n in _page.Document.DocumentElement.Descendants)
         {
-            if (n.IsElement && IsRadio(n) && string.Equals(n.GetAttribute("name"), name, StringComparison.Ordinal) && FormOwner(n).Equals(owner))
+            if (n.IsElement && IsRadio(n) && string.Equals(DocumentSnapshots.Attr(n, "name"), name, StringComparison.Ordinal) && FormOwner(n).Equals(owner))
             {
                 group.Add(n);
             }
@@ -234,14 +234,14 @@ public sealed partial class InteractivePage
 
     private Node FormOwner(Node control)
     {
-        string? id = control.GetAttribute("form");
+        string? id = DocumentSnapshots.Attr(control, "form");
         if (!string.IsNullOrEmpty(id))
         {
-            Node f = _page.Document.GetElementById(id);
+            Node f = DocumentSnapshots.Original(DocumentSnapshots.Of(_page.Document).GetElementById(id), _page.Document);
             return !f.IsNull && FocusRules.IsHtml(f, "form") ? f : default;
         }
 
-        return control.Closest(FormSelector);
+        return DocumentSnapshots.Original(DocumentSnapshots.Current(control).Closest(FormSelector), _page.Document);
     }
 
     // Selects the option at `index` and deselects the others. Returns whether anything changed; the select and its options go to the scratch list.
@@ -272,7 +272,7 @@ public sealed partial class InteractivePage
         _page.Form.TryGetSelected(option, out bool on) ? on : FocusRules.HasAttribute(option, "selected");
 
     private static bool IsMultipleOrList(Node select) =>
-        FocusRules.HasAttribute(select, "multiple") || (int.TryParse(select.GetAttribute("size"), out int s) && s > 1);
+        FocusRules.HasAttribute(select, "multiple") || (int.TryParse(DocumentSnapshots.Attr(select, "size"), out int s) && s > 1);
 
     private static Node FirstOption(Node select) => NextOptionFrom(select, select.FirstChild);
 
@@ -344,7 +344,7 @@ public sealed partial class InteractivePage
 
     // ------------------------------------------------------------------ activation
 
-    private static bool IsDisabledControl(Node n) => n.Matches(DisabledSelector);
+    private static bool IsDisabledControl(Node n) => DocumentSnapshots.Current(n).Matches(DisabledSelector);
 
     private static bool IsSubmitter(Node n)
     {
@@ -516,10 +516,10 @@ public sealed partial class InteractivePage
     // HTML §4.10.4: the labeled control is the element the for attribute names, else the first labelable descendant.
     private Node LabeledControl(Node label)
     {
-        string? id = label.GetAttribute("for");
+        string? id = DocumentSnapshots.Attr(label, "for");
         if (!string.IsNullOrEmpty(id))
         {
-            Node c = _page.Document.GetElementById(id);
+            Node c = DocumentSnapshots.Original(DocumentSnapshots.Of(_page.Document).GetElementById(id), _page.Document);
             return !c.IsNull && IsLabelable(c) ? c : default;
         }
 
@@ -565,7 +565,7 @@ public sealed partial class InteractivePage
             bool invalid = false;
             foreach (Node n in form.Descendants)
             {
-                if (n.IsElement && n.Matches(InvalidSelector) && !FocusRules.IsHtml(n, "fieldset") && !FocusRules.IsHtml(n, "form"))
+                if (n.IsElement && DocumentSnapshots.Current(n).Matches(InvalidSelector) && !FocusRules.IsHtml(n, "fieldset") && !FocusRules.IsHtml(n, "form"))
                 {
                     invalid = true;
                     FireSimple("invalid", false, true, n, _lastTime);

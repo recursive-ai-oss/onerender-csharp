@@ -56,6 +56,17 @@ internal sealed class FormState
         Version++;
     }
 
+    /// <summary>Forgets what the user changed in one element (its type changed, so the state no longer applies).</summary>
+    internal void ClearElement(Node element)
+    {
+        _checked.Remove(element.Index);
+        _indeterminate.Remove(element.Index);
+        _range.Remove(element.Index);
+        _selected.Remove(element.Index);
+        _text.Remove(element.Index);
+        Version++;
+    }
+
     /// <summary>Forgets what the user changed in the elements under <paramref name="root"/> (a form reset).</summary>
     public void ClearUnder(Node root)
     {

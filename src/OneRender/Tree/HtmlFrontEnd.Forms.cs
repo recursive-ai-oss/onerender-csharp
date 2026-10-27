@@ -29,6 +29,7 @@ public sealed partial class HtmlFrontEnd
     /// <summary>Which control an element is, for the sizing and painting rules; <see cref="ControlKind.None"/> for everything else.</summary>
     internal static ControlKind Classify(Node element)
     {
+        element = DocumentSnapshots.Current(element);
         if (element.Namespace != ElementNamespace.Html)
         {
             return ControlKind.None;
@@ -458,6 +459,7 @@ public sealed partial class HtmlFrontEnd
     /// <summary>Puts the text a control shows after a state change into its anonymous text node (a drop-down shows the selected option).</summary>
     internal void RefreshContent(Node element, int idx)
     {
+        element = DocumentSnapshots.Current(element);
         ControlKind kind = Classify(element);
         if (kind != ControlKind.SelectMenu)
         {
@@ -668,6 +670,7 @@ public sealed partial class HtmlFrontEnd
     /// <summary>HTML §4.10.10: an option's label is its label attribute when that is not empty, otherwise its text with white space stripped and collapsed.</summary>
     internal static string OptionLabel(Node option)
     {
+        option = DocumentSnapshots.Current(option);
         string? label = option.GetAttribute("label");
         if (!string.IsNullOrEmpty(label))
         {
@@ -843,6 +846,7 @@ public sealed partial class HtmlFrontEnd
     /// <summary>The value a text control starts with: the <c>value</c> attribute, or for a textarea its text (HTML §4.10.11 raw value, line breaks normalized).</summary>
     internal static string InitialValue(Node element, ControlKind kind)
     {
+        element = DocumentSnapshots.Current(element);
         if (kind == ControlKind.TextArea)
         {
             return NormalizeNewlines(element.TextContent ?? string.Empty);
@@ -854,6 +858,7 @@ public sealed partial class HtmlFrontEnd
     /// <summary>The placeholder of a text control, with line breaks as the control allows (none in a single-line field).</summary>
     internal static string PlaceholderOf(Node element, ControlKind kind)
     {
+        element = DocumentSnapshots.Current(element);
         string? ph = element.GetAttribute("placeholder");
         if (string.IsNullOrEmpty(ph))
         {
