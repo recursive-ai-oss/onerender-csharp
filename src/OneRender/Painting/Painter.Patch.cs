@@ -49,6 +49,9 @@ public sealed partial class Painter
     /// <summary>How many flushes rewrote the list in place (a diagnostic for tests and benchmarks).</summary>
     internal int PatchedPaints { get; private set; }
 
+    /// <summary>The layout version the retained list was last painted or patched for.</summary>
+    internal int JournalVersion => _journalVersion;
+
     private byte JournalFlagsOf(Box b, in ComputedValues v)
     {
         byte f = 0;
