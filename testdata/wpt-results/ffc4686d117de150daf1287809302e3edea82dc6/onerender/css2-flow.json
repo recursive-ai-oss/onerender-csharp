@@ -8,12 +8,12 @@
   "sampleStride": 1,
   "counts": {
     "total": 2415,
-    "pass": 1905,
-    "fail": 359,
+    "pass": 1904,
+    "fail": 360,
     "blank": 2,
     "skipped": 149
   },
-  "rate": "0.8407",
+  "rate": "0.8402",
   "pass": [
     "css/CSS2/bidi-text/bidi-box-model-001.xht",
     "css/CSS2/bidi-text/bidi-box-model-002.xht",
@@ -926,7 +926,6 @@
     "css/CSS2/normal-flow/block-in-inline-empty-003.xht",
     "css/CSS2/normal-flow/block-in-inline-empty-004.xht",
     "css/CSS2/normal-flow/block-in-inline-first-line-001.html",
-    "css/CSS2/normal-flow/block-in-inline-float-in-layer-001.html",
     "css/CSS2/normal-flow/block-in-inline-insert-001-nosplit-ref.xht",
     "css/CSS2/normal-flow/block-in-inline-insert-001-ref.xht",
     "css/CSS2/normal-flow/block-in-inline-insert-002-nosplit-ref.xht",
@@ -2118,6 +2117,7 @@
     "css/CSS2/normal-flow/block-in-inline-append-002-ref.xht": "== block-in-inline-append-002-nosplit-ref.xht differs (max 64, 22 px)",
     "css/CSS2/normal-flow/block-in-inline-first-line-002.html": "== block-in-inline-first-line-002-ref.html differs (max 255, 858 px)",
     "css/CSS2/normal-flow/block-in-inline-float-between-001.xht": "== block-in-inline-float-between-001-ref.xht differs (max 255, 564 px)",
+    "css/CSS2/normal-flow/block-in-inline-float-in-layer-001.html": "== block-in-inline-float-in-layer-001-ref.html differs (max 155, 455 px)",
     "css/CSS2/normal-flow/block-in-inline-insert-012-nosplit-ref.xht": "== block-in-inline-insert-012-ref.xht differs (max 64, 8 px)",
     "css/CSS2/normal-flow/block-in-inline-insert-012-ref.xht": "== block-in-inline-insert-012-nosplit-ref.xht differs (max 64, 8 px)",
     "css/CSS2/normal-flow/block-in-inline-insert-013-nosplit-ref.xht": "== block-in-inline-insert-013-ref.xht differs (max 64, 8 px)",

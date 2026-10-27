@@ -129,6 +129,20 @@ if (!paintOk)
     return 7;
 }
 
+// The third paint area: a transform, a filter, a clip-path, a mask, a blend mode and an inline svg go through the same parsers, painter
+// and rasterizer (including OneImage's SVG renderer) that must survive trimming and AOT.
+RgbaImage fxPage = HtmlRender.ToImage(
+    "<body style='margin:0'><svg width='0' height='0' style='position:absolute'><clipPath id='c'><circle cx='10' cy='10' r='8'/></clipPath></svg>"
+    + "<div style='position:absolute;left:0;top:0;width:20px;height:20px;background:#f00;transform:translate(20px,0) rotate(10deg);filter:blur(1px) saturate(2)'></div>"
+    + "<div style='position:absolute;left:0;top:30px;width:20px;height:20px;background:#00f;clip-path:url(#c);mask-image:linear-gradient(#000,#000);mix-blend-mode:multiply'></div>"
+    + "<svg style='position:absolute;left:30px;top:30px' width='20' height='20'><rect width='20' height='20' fill='#0a0'/></svg></body>",
+    new HtmlRenderOptions { Width = 64, Height = 64 });
+int fxBlue = ((40 * 64) + 10) * 4, fxSvg = ((40 * 64) + 40) * 4;
+if (fxPage.Pixels[fxBlue + 2] < 200 || fxPage.Pixels[fxSvg + 1] < 120 || fxPage.Pixels[fxSvg] > 60)
+{
+    return 8;
+}
+
 Console.WriteLine($"{styled.Count} styled nodes, {boxTree.Count} boxes, scroll patch {scrollOk}");
 if (boxTree.Count < 8 || !dump.Contains("flex", StringComparison.Ordinal))
 {

@@ -8,12 +8,12 @@
   "sampleStride": 1,
   "counts": {
     "total": 377,
-    "pass": 233,
+    "pass": 234,
     "fail": 62,
-    "blank": 1,
+    "blank": 0,
     "skipped": 81
   },
-  "rate": "0.7872",
+  "rate": "0.7905",
   "pass": [
     "css/css-color/a98rgb-001.html",
     "css/css-color/a98rgb-002.html",
@@ -36,6 +36,7 @@
     "css/css-color/color-003.html",
     "css/css-color/color-mix-percents-01.html",
     "css/css-color/color-mix-percents-02.html",
+    "css/css-color/composited-filters-under-opacity.html",
     "css/css-color/currentcolor-001.html",
     "css/css-color/currentcolor-002.html",
     "css/css-color/currentcolor-visited-fallback.html",
@@ -249,9 +250,7 @@
     "css/css-color/xyz-d65-004.html",
     "css/css-color/xyz-d65-005.html"
   ],
-  "blank": [
-    "css/css-color/color-svg-visited.html"
-  ],
+  "blank": [],
   "fail": {
     "css/css-color/animation/contrast-color-interpolation.html": "== ref-filled-green-100px-square-only.html differs (max 255, 10000 px)",
     "css/css-color/at-color-profile-001.html": "== greensquare-090-ref.html differs (max 255, 18432 px)",
@@ -261,10 +260,10 @@
     "css/css-color/color-mix-currentcolor-003.html": "== color-mix-currentcolor-003-ref.html differs (max 127, 1121 px)",
     "css/css-color/color-mix-currentcolor-nested-for-color-property.html": "== color-mix-currentcolor-nested-for-color-property-ref.html differs (max 64, 1385 px)",
     "css/css-color/color-mix-currentcolor-visited.html": "== color-mix-currentcolor-visited-ref.html differs (max 255, 4924 px)",
-    "css/css-color/composited-filters-under-opacity.html": "== composited-filters-under-opacity-ref.html differs (max 127, 22500 px)",
+    "css/css-color/color-svg-visited.html": "== color-svg-visited-ref.html differs (max 252, 7500 px)",
     "css/css-color/contrast-color-001.html": "== contrast-color-001-ref.html differs (max 255, 13126 px)",
     "css/css-color/contrast-color-style-query.html": "== green.html differs (max 255, 480000 px)",
-    "css/css-color/currentcolor-003.html": "== currentcolor-003-ref.html differs (max 255, 21301 px)",
+    "css/css-color/currentcolor-003.html": "== currentcolor-003-ref.html differs (max 255, 42602 px)",
     "css/css-color/currentcolor-004.html": "== currentcolor-004-ref.html differs (max 255, 1174 px)",
     "css/css-color/deprecated-sameas-001.html": "== deprecated-sameas-ButtonBorder-ref.html differs (max 137, 18432 px)",
     "css/css-color/deprecated-sameas-002.html": "== deprecated-sameas-Canvas-ref.html differs (max 51, 18432 px)",

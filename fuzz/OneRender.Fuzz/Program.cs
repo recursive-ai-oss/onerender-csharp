@@ -27,6 +27,7 @@ internal static class Program
         ["grid"] = GridTarget.Run,
         ["flow"] = FlowTarget.Run,
         ["table"] = TableTarget.Run,
+        ["effects"] = EffectsTarget.Run,
     };
 
     private static int Main(string[] args)
@@ -46,6 +47,11 @@ internal static class Program
             if (args[1] == "flow")
             {
                 return FlowTarget.WriteSeeds(args[2]);
+            }
+
+            if (args[1] == "effects")
+            {
+                return EffectsTarget.WriteSeeds(args[2]);
             }
 
             if (args[1] == "table")

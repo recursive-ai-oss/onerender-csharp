@@ -122,6 +122,8 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace, 
         // Positioning: the fragment of the nearest positioned ancestor (-1: the initial containing block) and the
         // relative-positioning shift applied when the box closes (CSS2 §9.4.3).
         public int CbFrag;
+        // The nearest ancestor with a transform or perspective, which is also the containing block of fixed boxes (Transforms 1 §2); -1 for none.
+        public int TfFrag;
         public double RelDx;
         public double RelDy;
         // For a box whose top margin is still pending: the nearest ancestor with a settled top.
@@ -235,11 +237,13 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace, 
         _pos = _neg = 0;
         int baseSp = _sp;
         int inheritedCb = _sp > 0 ? _frames[_sp - 1].CbFrag : -1;
+        int inheritedTf = _sp > 0 ? _frames[_sp - 1].TfFrag : -1;
         int savedBsp = _bsp, savedFloats = _floatCount, savedLive = _liveCount, savedDef = _defCount;
         int savedFlex = _fxCount, savedItems = _itemTop, savedLines = _lineTop;
         PushFrame(new Frame
         {
             CbFrag = inheritedCb,
+            TfFrag = inheritedTf,
             Box = -1,
             Frag = parent.IsNull ? -1 : parent.Index,
             NextChild = -1,

@@ -8,15 +8,16 @@
   "sampleStride": 1,
   "counts": {
     "total": 163,
-    "pass": 3,
-    "fail": 13,
+    "pass": 4,
+    "fail": 12,
     "blank": 0,
     "skipped": 147
   },
-  "rate": "0.1875",
+  "rate": "0.2500",
   "pass": [
     "css/css-animations/animation-duration-infinite.html",
     "css/css-animations/inheritance-pseudo-element.html",
+    "css/css-animations/transform-animation-under-large-scale.html",
     "css/css-animations/translation-animation-on-important-property.html"
   ],
   "blank": [],
@@ -31,8 +32,7 @@
     "css/css-animations/animation-name-in-shadow-part.html": "== animation-name-in-shadow-part-ref.html differs (max 255, 10000 px)",
     "css/css-animations/keyframes-tree-scoped-property-with-var.html": "== ref-filled-green-100px-square-only.html differs (max 255, 10000 px)",
     "css/css-animations/parsing/animation-name-edge-cases.html": "== animation-name-edge-cases-ref.html differs (max 255, 67500 px)",
-    "css/css-animations/svg-transform-animation.html": "== svg-transform-animation-ref.html differs (max 255, 10000 px)",
-    "css/css-animations/transform-animation-under-large-scale.html": "== transform-animation-under-large-scale-ref.html differs (max 255, 39998 px)",
+    "css/css-animations/svg-transform-animation.html": "== svg-transform-animation-ref.html differs (max 255, 20000 px)",
     "css/css-animations/translation-animation-subpixel-offset.html": "== translation-animation-subpixel-offset-ref.html differs (max 255, 2000 px)"
   },
   "skipped": {

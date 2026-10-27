@@ -77,6 +77,7 @@ public sealed partial class BlockLayoutEngine
         public double BpB;
 
         public int CbFrag;
+        public int TfFrag;
         public double OvL;
         public double OvT;
         public double OvR;

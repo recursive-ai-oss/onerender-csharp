@@ -65,6 +65,27 @@ internal sealed partial class StyleComputer
     // U+6C34; each falls back to the ratio the default context carries when the font has no such measure.
     private void ApplyFontRelativeRatios() => _ctx = WithFontRatios(_ctx, in _r);
 
+    // The used line height in px: a number scales the font size, a length is itself, and normal is the font's ascent, descent and line gap.
+    private double UsedLineHeight(in ComputedValues v)
+    {
+        Length lh = v.LineHeight;
+        switch (lh.Kind)
+        {
+            case LengthKind.Number: return lh.Value * v.FontSize;
+            case LengthKind.Px: return lh.Value;
+            case LengthKind.Percent: return lh.Value / 100 * v.FontSize;
+            case LengthKind.Calc: return lh.Resolve(v.FontSize);
+            default:
+                if (Fonts is null || !(v.FontSize > 0))
+                {
+                    return v.FontSize * 1.2;
+                }
+
+                Text.FontMetricsInfo m = Fonts.GetMetrics(in v);
+                return m.Ascent + m.Descent + m.LineGap;
+        }
+    }
+
     private LengthContext WithFontRatios(LengthContext ctx, in ComputedValues font)
     {
         if (Fonts is null || !(font.FontSize > 0))
@@ -127,10 +148,15 @@ internal sealed partial class StyleComputer
         Step(PropertyId.FontStyle, hasParent);
         Step(PropertyId.FontStretch, hasParent);
         ApplyFontRelativeRatios();
+        // line-height comes right after the font because the lh unit (CSS Values 4 §6.1.2) is the element's own computed line height
+        // everywhere except in line-height itself, where it is the parent's.
+        _ctx = _ctx with { LineHeight = hasParent ? UsedLineHeight(in _parent) : 0 };
+        Step(PropertyId.LineHeight, hasParent);
+        _ctx = _ctx with { LineHeight = UsedLineHeight(in _r) };
         for (int i = 0; i < Properties.Count; i++)
         {
             var id = (PropertyId)i;
-            if (id is PropertyId.FontFamily or PropertyId.FontSize or PropertyId.FontWeight or PropertyId.FontStyle or PropertyId.FontStretch)
+            if (id is PropertyId.FontFamily or PropertyId.FontSize or PropertyId.FontWeight or PropertyId.FontStyle or PropertyId.FontStretch or PropertyId.LineHeight)
             {
                 continue;
             }
@@ -289,6 +315,7 @@ internal sealed partial class StyleComputer
         v.ListStylePosition = p.ListStylePosition;
         v.TextShadow = p.TextShadow;
         v.ImageRendering = p.ImageRendering;
+        v.ImageOrientationNone = p.ImageOrientationNone;
         v.TextUnderlineOffset = p.TextUnderlineOffset;
         v.TextUnderlinePosition = p.TextUnderlinePosition;
         v.ListStyleImage = p.ListStyleImage;
@@ -395,7 +422,7 @@ internal sealed partial class StyleComputer
             case PropertyId.TextAlignLast: d.TextAlignLast = s.TextAlignLast; break;
             case PropertyId.TextJustify: d.TextJustify = s.TextJustify; break;
             case PropertyId.OverflowClipMargin: d.OverflowClipMarginPx = s.OverflowClipMarginPx; d.OverflowClipMarginBox = s.OverflowClipMarginBox; break;
-            default: CopyFlexProperty(id, ref d, in s, fromParent); CopyGridProperty(id, ref d, in s); CopyPaintProperty(id, ref d, in s); CopyTableProperty(id, ref d, in s); CopyInteractionProperty(id, ref d, in s); break;
+            default: CopyFlexProperty(id, ref d, in s, fromParent); CopyGridProperty(id, ref d, in s); CopyPaintProperty(id, ref d, in s); CopyTableProperty(id, ref d, in s); CopyInteractionProperty(id, ref d, in s); CopyEffectsProperty(id, ref d, in s); break;
         }
     }
 
@@ -462,6 +489,7 @@ internal sealed partial class StyleComputer
             _r.Floating = FloatKind.None;
         }
 
+        _r.DisplayWasInlineLevel = _r.Position is PositionKind.Absolute or PositionKind.Fixed && _r.Display.IsInlineLevel;
         if ((_r.Floating != FloatKind.None || _r.Position is PositionKind.Absolute or PositionKind.Fixed || isRoot) && !_r.Display.IsNone && !_r.Display.IsContents)
         {
             _r.Display = _r.Display.Blockified();

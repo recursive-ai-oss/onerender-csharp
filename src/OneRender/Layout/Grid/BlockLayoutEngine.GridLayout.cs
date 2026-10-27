@@ -24,6 +24,7 @@ public sealed partial class BlockLayoutEngine
             if (k == 0)
             {
                 cx.CbFrag = _frames[ni].CbFrag;
+                cx.TfFrag = _frames[ni].TfFrag;
             }
         }
 
@@ -229,7 +230,8 @@ public sealed partial class BlockLayoutEngine
             _out.SetBaseline(frag, double.NaN);
             ref GCtx child = ref L.Ctx[it.Child];
             child.Frag = frag.Index;
-            child.CbFrag = v.Position != PositionKind.Static ? frag.Index : cx.CbFrag;
+            child.CbFrag = v.Position != PositionKind.Static || v.CreatesTransformContext ? frag.Index : cx.CbFrag;
+            child.TfFrag = v.CreatesTransformContext ? frag.Index : cx.TfFrag;
             if (child.Sub1)
             {
                 child.CH = Math.Max(0, h - child.BpT - child.BpB);
@@ -264,10 +266,12 @@ public sealed partial class BlockLayoutEngine
 
             _out.SetBorderBox(frag, new Rect(localX + relDx, localY + relDy, it.W, h));
             Rect ov = _out.OverflowOf(frag.Index);
-            cx.OvL = Math.Min(cx.OvL, localX + relDx + Math.Min(0, ov.X));
-            cx.OvT = Math.Min(cx.OvT, localY + relDy + Math.Min(0, ov.Y));
-            cx.OvR = Math.Max(cx.OvR, localX + relDx + Math.Max(it.W, ov.X + ov.Width));
-            cx.OvB = Math.Max(cx.OvB, localY + relDy + Math.Max(h, ov.Y + ov.Height));
+            double gL = Math.Min(0, ov.X), gT = Math.Min(0, ov.Y), gR = Math.Max(it.W, ov.X + ov.Width), gB = Math.Max(h, ov.Y + ov.Height);
+            TransformOverflow(in v, it.W, h, ref gL, ref gT, ref gR, ref gB);
+            cx.OvL = Math.Min(cx.OvL, localX + relDx + gL);
+            cx.OvT = Math.Min(cx.OvT, localY + relDy + gT);
+            cx.OvR = Math.Max(cx.OvR, localX + relDx + gR);
+            cx.OvB = Math.Max(cx.OvB, localY + relDy + gB);
         }
 
         it.Frag = frag.Index;
@@ -313,6 +317,7 @@ public sealed partial class BlockLayoutEngine
         Frame tf = _frames[ni];
         tf.Frag = cx.Frag;
         tf.CbFrag = cx.CbFrag;
+        tf.TfFrag = cx.TfFrag;
         tf.Flags = cx.Rtl ? FrameFlags.Rtl : FrameFlags.None;
         tf.ContentLeft = cx.PadL;
         tf.ContentTop = cx.PadT;

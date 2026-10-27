@@ -109,6 +109,9 @@ public readonly struct StyledNode : IEquatable<StyledNode>
     /// <summary>The natural height of replaced content in px, or NaN when it has none.</summary>
     public double NaturalHeight => Tree!.NaturalHeightOf(Index);
 
+    /// <summary>The natural aspect ratio (width over height) of replaced content that has a ratio but no size (an <c>svg</c> with only a <c>viewBox</c>), or 0.</summary>
+    public double NaturalRatio => Tree!.NaturalRatioOf(Index);
+
     /// <summary>
     /// The index of the OneHtml node this node was made from (<c>Node.Index</c>), or -1 for a builder node and for generated nodes.
     /// Pair it with the tree's <see cref="StyledTree.SourceDocument"/> to get the OneHtml node back.

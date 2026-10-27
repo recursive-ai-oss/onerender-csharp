@@ -26,6 +26,9 @@
     { "id": "css-break", "dirs": ["css/css-break"] },
     { "id": "css-page", "dirs": ["css/css-page"] },
     { "id": "css-multicol", "dirs": ["css/css-multicol"] },
-    { "id": "css-ui", "dirs": ["css/css-ui"] }
+    { "id": "css-ui", "dirs": ["css/css-ui"] },
+    { "id": "css-masking", "dirs": ["css/css-masking"] },
+    { "id": "filter-effects", "dirs": ["css/filter-effects"] },
+    { "id": "compositing", "dirs": ["css/compositing"] }
   ]
 }
