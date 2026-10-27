@@ -1,7 +1,7 @@
 namespace OneRender.Style;
 
 /// <summary>Serializes computed values the way <c>getComputedStyle</c> does, for tests and debug dumps.</summary>
-internal static class ComputedValueText
+internal static partial class ComputedValueText
 {
     private static readonly string[] BorderStyles = ["none", "hidden", "dotted", "dashed", "solid", "double", "groove", "ridge", "inset", "outset"];
     private static readonly string[] Overflows = ["visible", "hidden", "clip", "scroll", "auto"];
@@ -122,7 +122,7 @@ internal static class ComputedValueText
             case PropertyId.GridColumnEnd: return v.GridColumnEnd.ToCss();
             case PropertyId.JustifyItems: return AlignText(v.JustifyItems, v.JustifyItemsOverflow);
             case PropertyId.JustifySelf: return AlignText(v.JustifySelf, v.JustifySelfOverflow);
-            default: return string.Empty;
+            default: return PaintText(id, in v) ?? string.Empty;
         }
     }
 

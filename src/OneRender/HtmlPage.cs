@@ -1,6 +1,7 @@
 using OneRender.Layout;
 using OneRender.Painting;
 using OneRender.Style;
+using OneRender.Text;
 using OneRender.Tree;
 using RecursiveAI.OneHtml;
 using RecursiveAI.OneHtml.Css;
@@ -39,6 +40,12 @@ public sealed class HtmlPageOptions
 
     /// <summary>Tells the engine the natural size of replaced content such as images; null means unknown.</summary>
     public IResourceResolver? Replaced { get; init; }
+
+    /// <summary>Supplies the images that <c>url()</c> values and <c>img</c> elements refer to when painting; null means every image is missing (a diagnostic each).</summary>
+    public IImageSource? Images { get; init; }
+
+    /// <summary>Device pixels per CSS px, used to snap box edges to whole device pixels when painting. Default 1.</summary>
+    public double DevicePixelRatio { get; init; } = 1;
 
     /// <summary>The layout to run; null uses <see cref="BlockLayoutEngine"/>.</summary>
     public ILayoutEngine? Layout { get; init; }
@@ -115,6 +122,28 @@ public sealed class HtmlPage
         };
         DocumentStyles styles = DocumentStyles.Create(document, context, sourceOptions, cancellationToken);
 
+        // @font-face rules of the document's sheets belong to this document only; the files come through the same host lookup as sheets.
+        FontCatalog catalog = options.Fonts.Catalog;
+        IFontResourceResolver? savedResolver = catalog.Resolver;
+        catalog.ClearFontFaces();
+        if (bytes is not null)
+        {
+            catalog.Resolver = new PageFontResolver(bytes, options.BaseUrl);
+        }
+
+        try
+        {
+            AddFontFaces(styles, catalog, context.Media, cancellationToken);
+            return Build(document, styles, options, cancellationToken);
+        }
+        finally
+        {
+            catalog.Resolver = savedResolver;
+        }
+    }
+
+    private static HtmlPage Build(Document document, DocumentStyles styles, HtmlPageOptions options, CancellationToken cancellationToken)
+    {
         var table = new StyleTable();
         table.SetViewport(options.ViewportWidth, options.ViewportHeight);
         var styled = new StyledTree(table) { Resolver = options.Replaced };
@@ -127,6 +156,68 @@ public sealed class HtmlPage
         return new HtmlPage(document, styled, boxes, fragments, options);
     }
 
+    private const int MaxFontFaceRules = 1024;
+    private const int MaxRuleDepth = 32;
+
+    // CSS Fonts 4 §4.1: @font-face may sit at the top level or inside conditional group rules. Groups whose condition fails are skipped.
+    private static void AddFontFaces(DocumentStyles styles, FontCatalog catalog, MediaFeatures media, CancellationToken cancellationToken)
+    {
+        int added = 0;
+        var stack = new Stack<(IEnumerator<CssNode> Rules, string? BaseUrl)>();
+        foreach (StyleSheetInfo info in styles.Sheets)
+        {
+            stack.Push((((IEnumerable<CssNode>)info.Sheet.Rules).GetEnumerator(), info.Url));
+            while (stack.Count > 0)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                (IEnumerator<CssNode> rules, string? baseUrl) = stack.Peek();
+                if (!rules.MoveNext())
+                {
+                    rules.Dispose();
+                    stack.Pop();
+                    continue;
+                }
+
+                CssNode node = rules.Current;
+                if (node.Kind != CssNodeKind.AtRule)
+                {
+                    continue;
+                }
+
+                switch (node.AtRuleKind)
+                {
+                    case AtRuleKind.FontFace:
+                        if (added < MaxFontFaceRules && FontFaceRule.FromNode(node, baseUrl, catalog.Diagnostics) is { } rule && catalog.AddFontFace(rule))
+                        {
+                            added++;
+                        }
+
+                        break;
+                    case AtRuleKind.Media:
+                        if (node.HasBlock && stack.Count < MaxRuleDepth && MediaQueryList.Parse(node.Prelude.Trimmed()).Matches(media))
+                        {
+                            stack.Push((node.Rules.GetEnumerator(), baseUrl));
+                        }
+
+                        break;
+                    case AtRuleKind.Layer:
+                    case AtRuleKind.Supports:
+                        if (node.HasBlock && stack.Count < MaxRuleDepth)
+                        {
+                            stack.Push((node.Rules.GetEnumerator(), baseUrl));
+                        }
+
+                        break;
+                }
+            }
+        }
+    }
+
+    private sealed class PageFontResolver(Func<string, byte[]?> bytes, string? documentBase) : IFontResourceResolver
+    {
+        public byte[]? LoadFont(string url, string? baseUrl) => bytes(ResourceAddress.Resolve(baseUrl ?? documentBase, url));
+    }
+
     /// <summary>Paints the page into <paramref name="list"/>, which is cleared first.</summary>
     /// <param name="list">The list to fill.</param>
     /// <param name="painter">A painter to reuse; null makes a new one.</param>
@@ -134,7 +225,7 @@ public sealed class HtmlPage
     public void Paint(DisplayList list, Painter? painter = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(list);
-        (painter ?? new Painter()).Paint(Fragments, list, new PaintOptions(Options.ViewportWidth, Options.ViewportHeight) { Scroll = Scroll }, cancellationToken);
+        (painter ?? new Painter()).Paint(Fragments, list, new PaintOptions(Options.ViewportWidth, Options.ViewportHeight) { Scroll = Scroll, Images = Options.Images, Fonts = Options.Fonts, DevicePixelRatio = Options.DevicePixelRatio }, cancellationToken);
     }
 
     /// <summary>

@@ -449,6 +449,19 @@ internal sealed partial class Rasterizer : IDisposable
         }
 
         RectF src = it.ImageSource;
+        if (it.IsTiledImage)
+        {
+            RectF area = it.ImageTileArea;
+            if (area.IsEmpty)
+            {
+                return;
+            }
+
+            Brush tiled = new ImageSamplerBrush(img, src, dst, it.ImageTileGapX, it.ImageTileGapY, _ctm, it.Sampling == ImageSampling.Smooth);
+            DrawPath(tiled, Shapes.Rect(area), IntersectionRule.NonZero);
+            return;
+        }
+
         float sw = src.IsEmpty ? img.Width : src.Width;
         float sh = src.IsEmpty ? img.Height : src.Height;
         float sx = src.IsEmpty ? 0f : src.X;
@@ -489,6 +502,23 @@ internal sealed partial class Rasterizer : IDisposable
         Path path = pb.Build();
         if (path.IsEmpty)
         {
+            return;
+        }
+
+        if (run.Blur > 0f)
+        {
+            // A text shadow: the glyph shapes blurred into a coverage mask, as box shadows are (Text Decoration 4 / Backgrounds 3 §7.2).
+            float sigma = Math.Min(run.Blur * 0.5f * _dpr, MaxSigma);
+            int margin = (int)MathF.Ceiling(3f * sigma);
+            RectI region = LayerRegion(it.LocalBounds.Transform(_ctm), margin);
+            if (region.IsEmpty)
+            {
+                return;
+            }
+
+            Path clip = _clip.Path ?? Path.Rectangle(region.X, region.Y, region.Width, region.Height);
+            byte[] mask = BlurredMask(region, sigma, white: false, path, null, _ctm);
+            FillMask(run.Color, mask, region, clip);
             return;
         }
 

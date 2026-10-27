@@ -173,11 +173,7 @@ internal sealed partial class Rasterizer
             layer.Fill(white ? lo : hi, shape, true, IntersectionRule.NonZero, 1f, OneImage.BlendMode.Normal, OneImage.AlphaComposition.Src, false, m);
         }
 
-        // oneimage's wide-sigma blur works on a reduced copy and never terminates when the layer is only a few pixels across
-        // relative to sigma, so each axis' deviation is limited to 12 times the layer's extent along it. Beyond that the
-        // blur is flat across the layer anyway.
-        double sx = Math.Min(sigma, 12.0 * region.Width), sy = Math.Min(sigma, 12.0 * region.Height);
-        OneImage.Image blurredImage = layer.Snapshot().GaussianBlur(sx, sy, false);
+        OneImage.Image blurredImage = layer.Snapshot().GaussianBlur(sigma, sigma, false);
         Rgba32[] px = blurredImage.ToArray<Rgba32>();
         byte[] mask = new byte[px.Length];
         for (int i = 0; i < px.Length; i++)

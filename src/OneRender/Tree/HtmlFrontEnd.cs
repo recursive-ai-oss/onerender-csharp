@@ -119,7 +119,9 @@ public sealed class HtmlFrontEnd
         _tree.SetElementInfo(idx, tag, replaced);
         if (replaced != ReplacedKind.None)
         {
-            _tree.SetDefaultNaturalSize(idx, replaced, SourceAttribute(element, replaced));
+            ReadOnlySpan<char> src = SourceAttribute(element, replaced);
+            _tree.SetDefaultNaturalSize(idx, replaced, src);
+            _tree.SetReplacedSource(idx, src);
             ApplySizeAttributes(element, idx, replaced);
             return idx;
         }

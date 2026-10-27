@@ -24,9 +24,10 @@ public sealed partial class DisplayList
     public const int FormatMajor = 1;
 
     /// <summary>Minor version of the format this library writes. Higher minors only add item kinds and fields.</summary>
-    public const int FormatMinor = 0;
+    public const int FormatMinor = 1;
 
     private const int FlagInset = 1;
+    private const int FlagTiled = 2;
     private const int FlagEvenOdd = 1;
     private const int FlagRtl = 1;
 
@@ -430,6 +431,42 @@ public sealed partial class DisplayList
         Finish(_count - 1);
     }
 
+    /// <summary>
+    /// Draws an image repeated over an area, as <c>background-repeat</c> does (format 1.1). The cell at <paramref name="tile"/> is one copy of the
+    /// image; copies repeat every <c>tile.Width + gapX</c> horizontally and <c>tile.Height + gapY</c> vertically in both directions, and only
+    /// the part inside <paramref name="area"/> is drawn. A gap is empty space (<c>background-repeat: space</c>).
+    /// </summary>
+    /// <param name="id">The item's stable id.</param>
+    /// <param name="image">The host's handle for the image.</param>
+    /// <param name="source">The part of the image to draw, in the image's pixels; empty for the whole image.</param>
+    /// <param name="tile">Where one copy is drawn; it need not lie inside the area.</param>
+    /// <param name="area">The rectangle the repetition is limited to.</param>
+    /// <param name="gapX">Space between copies horizontally, 0 or more.</param>
+    /// <param name="gapY">Space between copies vertically, 0 or more.</param>
+    /// <param name="sampling">How to filter when scaling.</param>
+    public void DrawImageTiled(ItemId id, ImageHandle image, in RectF source, in RectF tile, in RectF area, float gapX, float gapY, ImageSampling sampling = ImageSampling.Smooth)
+    {
+        CheckRect(source);
+        CheckRect(tile);
+        CheckRect(area);
+        if (!(gapX >= 0) || !(gapY >= 0) || gapX > 1e9f || gapY > 1e9f)
+        {
+            throw new ArgumentOutOfRangeException(nameof(gapX));
+        }
+
+        Begin(ItemKind.Image, id, area, (int)sampling | FlagTiled, 14);
+        PutRect(source);
+        PutRect(tile);
+        PutRect(area);
+        PutF(gapX);
+        PutF(gapY);
+        _items[_count - 1].A = image.Value;
+        _requiredMinor = Math.Max(_requiredMinor, 1);
+        H((ulong)(uint)image.Value);
+        H((ulong)sampling | 4UL);
+        Finish(_count - 1);
+    }
+
     // ---------------------------------------------------------------- glyph runs
 
     /// <summary>
@@ -453,6 +490,10 @@ public sealed partial class DisplayList
     /// </param>
     /// <param name="text">The source text of the run, in logical order.</param>
     /// <param name="rightToLeft">True when the run's text direction is right to left, so cluster values decrease along the glyphs.</param>
+    /// <param name="blur">
+    /// Format 1.1: when above 0 the glyphs are blurred with a Gaussian of standard deviation <c>blur / 2</c> before they are painted, as
+    /// a <c>text-shadow</c> needs. 0 draws sharp glyphs, as in format 1.0.
+    /// </param>
     public void DrawGlyphRun(
         ItemId id,
         FontFace face,
@@ -465,9 +506,15 @@ public sealed partial class DisplayList
         ReadOnlySpan<float> y,
         ReadOnlySpan<int> clusters,
         ReadOnlySpan<char> text,
-        bool rightToLeft = false)
+        bool rightToLeft = false,
+        float blur = 0f)
     {
         ArgumentNullException.ThrowIfNull(face);
+        if (!(blur >= 0f) || blur > 1e6f)
+        {
+            throw new ArgumentOutOfRangeException(nameof(blur));
+        }
+
         Coord(originX);
         Coord(originY);
         Coord(fontSize);
@@ -503,12 +550,20 @@ public sealed partial class DisplayList
         _ = ClampColor(color);
         int faceIndex = FaceIndex(face);
         RectF bounds = GlyphBounds(face, fontSize, originX, originY, glyphIds, x, y);
+        if (blur > 0f)
+        {
+            bounds = bounds.Inflate((1.5f * blur) + 1f);
+            _requiredMinor = Math.Max(_requiredMinor, 1);
+        }
+
         Begin(ItemKind.GlyphRun, id, bounds, rightToLeft ? FlagRtl : 0, 8);
         int idx = _count - 1;
         PutF(originX);
         PutF(originY);
         PutF(fontSize);
         PutColor(ClampColor(color));
+        PutF(blur);
+        H(Bits(blur));
         ref ItemRecord rec = ref _items[idx];
         rec.A = faceIndex;
         rec.B = _glyphCount;

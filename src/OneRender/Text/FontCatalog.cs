@@ -32,6 +32,7 @@ public sealed class FontCatalog
     private readonly Dictionary<SystemFontFace, ResolvedFace> _systemFallback = [];
     private readonly HashSet<int> _noSystemFallback = [];
     private int _nextId;
+    private int _released;
     private int _nextListId;
 
     /// <summary>Creates a collection.</summary>
@@ -63,7 +64,7 @@ public sealed class FontCatalog
     public FontLimits Limits { get; }
 
     /// <summary>The number of faces held.</summary>
-    public int FaceCount => _nextId;
+    public int FaceCount => _nextId - _released;
 
     /// <summary>Increases whenever the set of faces changes. A <see cref="ResolvedFontList"/> made under an older version is not returned again.</summary>
     public int Version { get; private set; }
@@ -98,7 +99,7 @@ public sealed class FontCatalog
     {
         ArgumentNullException.ThrowIfNull(face);
         ArgumentNullException.ThrowIfNull(family);
-        if (_nextId >= MaxFaces)
+        if ((_nextId - _released) >= MaxFaces)
         {
             Diagnostics.Report(new TextDiagnostic(TextDiagnosticKind.FontLoadFailed, Subject: family, Detail: "The collection is full."));
             return false;
@@ -122,7 +123,7 @@ public sealed class FontCatalog
     public bool AddFontFace(FontFaceRule rule)
     {
         ArgumentNullException.ThrowIfNull(rule);
-        if (_nextId >= MaxFaces)
+        if ((_nextId - _released) >= MaxFaces)
         {
             Diagnostics.Report(new TextDiagnostic(TextDiagnosticKind.InvalidFontFaceRule, Subject: rule.Family, Detail: "The collection is full."));
             return false;
@@ -175,6 +176,28 @@ public sealed class FontCatalog
     }
 
     internal void NoteFaceFailed() => Changed();
+
+    /// <summary>
+    /// Removes every <c>@font-face</c> face, keeping registered and installed fonts. A page calls it before adding the rules of its
+    /// own style sheets, so one document's web fonts never affect another's output.
+    /// </summary>
+    public void ClearFontFaces()
+    {
+        int removed = 0;
+        foreach (List<FaceEntry> l in _web.Values)
+        {
+            removed += l.Count;
+        }
+
+        if (removed == 0)
+        {
+            return;
+        }
+
+        _released += removed;
+        _web.Clear();
+        Changed();
+    }
 
     private void Changed()
     {
@@ -312,7 +335,7 @@ public sealed class FontCatalog
                 sys = [];
                 foreach (SystemFontFace f in SystemFonts.GetFaces(name))
                 {
-                    if (_nextId < MaxFaces)
+                    if ((_nextId - _released) < MaxFaces)
                     {
                         sys.Add(FaceEntry.FromSystem(_nextId++, f));
                     }
@@ -613,7 +636,7 @@ public sealed class FontCatalog
         {
             if (!_systemFallback.TryGetValue(sf, out ResolvedFace? rf))
             {
-                if (_nextId >= MaxFaces)
+                if ((_nextId - _released) >= MaxFaces)
                 {
                     return null;
                 }

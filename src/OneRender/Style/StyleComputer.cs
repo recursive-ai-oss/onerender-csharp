@@ -171,6 +171,11 @@ internal sealed partial class StyleComputer
         v.ListStyleType = p.ListStyleType;
         v.ListStyleTypeIsString = p.ListStyleTypeIsString;
         v.ListStylePosition = p.ListStylePosition;
+        v.TextShadow = p.TextShadow;
+        v.ImageRendering = p.ImageRendering;
+        v.TextUnderlineOffset = p.TextUnderlineOffset;
+        v.TextUnderlinePosition = p.TextUnderlinePosition;
+        v.ListStyleImage = p.ListStyleImage;
         return v;
     }
 
@@ -251,7 +256,7 @@ internal sealed partial class StyleComputer
             case PropertyId.ListStyleType: d.ListStyleType = s.ListStyleType; d.ListStyleTypeIsString = s.ListStyleTypeIsString; break;
             case PropertyId.ListStylePosition: d.ListStylePosition = s.ListStylePosition; break;
             case PropertyId.OverflowClipMargin: d.OverflowClipMarginPx = s.OverflowClipMarginPx; d.OverflowClipMarginBox = s.OverflowClipMarginBox; break;
-            default: CopyFlexProperty(id, ref d, in s); CopyGridProperty(id, ref d, in s); break;
+            default: CopyFlexProperty(id, ref d, in s); CopyGridProperty(id, ref d, in s); CopyPaintProperty(id, ref d, in s); break;
         }
     }
 
@@ -264,6 +269,12 @@ internal sealed partial class StyleComputer
         _r.BorderRightWidth = VisibleBorder(_r.BorderRightStyle) ? _rawBorderWidth[1] : 0;
         _r.BorderBottomWidth = VisibleBorder(_r.BorderBottomStyle) ? _rawBorderWidth[2] : 0;
         _r.BorderLeftWidth = VisibleBorder(_r.BorderLeftStyle) ? _rawBorderWidth[3] : 0;
+
+        // CSS UI 4 §4.1: an outline whose style is none has a computed width of 0.
+        if (_r.OutlineStyle == BorderStyleKind.None && !_r.OutlineAuto)
+        {
+            _r.OutlineWidth = 0;
+        }
 
         // CSS Logical 1 §3.3: inline-start / inline-end of float and clear are left or right by the element's direction.
         bool rtl = _r.Direction == DirectionKind.Rtl;
