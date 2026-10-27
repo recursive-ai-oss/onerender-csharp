@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading.Tasks;
-using System.Net;
+using System.Text.Encodings.Web;
 using System.Text;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -238,15 +238,15 @@ public sealed class RazorRenderer
         }
 
         var sb = new StringBuilder(markup.Length + 256);
-        sb.Append("<!DOCTYPE html><html lang=\"").Append(WebUtility.HtmlEncode(_options.Language)).Append("\"><head><meta charset=\"utf-8\">");
+        sb.Append("<!DOCTYPE html><html lang=\"").Append(HtmlEncoder.Default.Encode(_options.Language)).Append("\"><head><meta charset=\"utf-8\">");
         if (_options.Title is { } title)
         {
-            sb.Append("<title>").Append(WebUtility.HtmlEncode(title)).Append("</title>");
+            sb.Append("<title>").Append(HtmlEncoder.Default.Encode(title)).Append("</title>");
         }
 
         foreach (string css in _options.Stylesheets)
         {
-            sb.Append("<link rel=\"stylesheet\" href=\"").Append(WebUtility.HtmlEncode(css)).Append("\">");
+            sb.Append("<link rel=\"stylesheet\" href=\"").Append(HtmlEncoder.Default.Encode(css)).Append("\">");
         }
 
         sb.Append("</head><body>").Append(markup).Append("</body></html>");
