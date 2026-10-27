@@ -35,7 +35,7 @@ Rate = pass / (total - skipped), or 0 when nothing was runnable.
 | css2-positioning | CSS2/positioning, abspos, zindex, stacking-context, zorder, visufx |
 | css2-tables | CSS2/tables |
 | css2-generated | CSS2/generate, generated-content, lists |
-| css-flexbox, css-grid, css-tables, css-position, css-backgrounds, css-borders, css-values, css-color, css-fonts, css-text, css-inline, css-overflow, css-transforms, css-transitions, css-animations, css-break, css-page, css-multicol, css-ui | the directory of the same name |
+| css-flexbox, css-grid, css-tables, css-position, css-backgrounds, css-borders, css-values, css-color, css-fonts, css-text, css-inline, css-overflow, css-transforms, css-transitions, css-animations, css-break, css-page, css-multicol, css-ui, css-lists, css-images, css-text-decor | the directory of the same name |
 
 A test is a `.html`, `.htm`, `.xht`, `.xhtml` or `.svg` file under those directories that links a reference or loads testharness.js. Files in directories named `support`, `resources`, `reference`, `references`, `tools` are never tests.
 
