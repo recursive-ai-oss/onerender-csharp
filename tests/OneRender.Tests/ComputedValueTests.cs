@@ -520,6 +520,11 @@ public class ComputedValueTests
                 continue; // font-stretch: a legacy alias in the table, inherited by its definition
             }
 
+            if (id == PropertyId.Page)
+            {
+                continue; // not inherited by the table, but an auto value takes the parent's name (CSS Paged Media 3 section 7.1)
+            }
+
             Assert.True(info.Inherited == RecursiveAI.OneHtml.Css.PropertyInheritance.Yes == Properties.IsInherited(id), Properties.NameOf(id) + " inheritance differs from the property table (" + info.Inherited + ")");
         }
     }

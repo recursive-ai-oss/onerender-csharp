@@ -137,6 +137,16 @@ internal sealed partial class InlineWorker
                     return;
                 default:
                 {
+                    if (el.Leader)
+                    {
+                        // A leader takes no room of its own while the line is measured; it is given what is left when the line is laid out.
+                        ink = true;
+                        placed++;
+                        e++;
+                        c = 0;
+                        break;
+                    }
+
                     ShapedText st = _shaped[e]!;
                     ReadOnlySpan<GlyphCluster> cls = st.Clusters;
                     int k = cls.Length;

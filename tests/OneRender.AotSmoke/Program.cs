@@ -251,7 +251,14 @@ byte[] pdfBytes = HtmlPdf.ToPdf(
     new HtmlPdfOptions { Output = new PdfOutputOptions { Profile = PdfProfile.PdfUA1 } });
 bool pdfOk = pdfBytes.Length > 500 && pdfBytes[0] == (byte)'%' && pdfBytes[1] == (byte)'P' && pdfBytes[2] == (byte)'D' && pdfBytes[3] == (byte)'F';
 
-return moOk && liveOk && pdfOk && factsOk && ixOk && names.Length == 3 && tableOk && sfnt && painted && pageOk && boxes >= 3 && scrollOk && shaped && again && woff2Ok ? 0 : 1;
+// Paged media: @page with margin boxes, page counters, a target counter and a leader, over several pages.
+OneRender.Paged.PagedDocument paged = OneRender.Paged.PagedDocument.Create(
+    "<!DOCTYPE html><html><head><style>@page{size:200px 120px;margin:20px;@bottom-center{content:'Page ' counter(page) ' of ' counter(pages)}}"
+    + "a::after{content:leader('.') target-counter(attr(href url),page)}div{height:60px;break-inside:avoid}</style></head><body><p><a href='#t'>Go</a></p><div>a</div><div>b</div><div id='t'>c</div></body></html>",
+    new OneRender.Paged.PagedOptions(FontProviders.CreateDefault()));
+bool pagedOk = paged.PageCount >= 3 && paged.Destinations.Count == 1 && paged.GetPageLayer(0) is not null;
+
+return moOk && liveOk && pdfOk && pagedOk && factsOk && ixOk && names.Length == 3 && tableOk && sfnt && painted && pageOk && boxes >= 3 && scrollOk && shaped && again && woff2Ok ? 0 : 1;
 
 internal sealed class NoFonts : OneRender.Layout.IFontProvider
 {

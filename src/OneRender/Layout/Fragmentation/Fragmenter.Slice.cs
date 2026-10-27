@@ -7,7 +7,15 @@ internal sealed partial class Fragmenter
     private double[] _fkYe = new double[16];
     private double[] _fkT = new double[16];
     private double[] _fkB = new double[16];
+    private bool[] _fkBlank = new bool[16];
     private int _fkN;
+
+    // Page planning: the block sizes of the first fragmentainers repeat their last two entries alternately when set, so a left/right
+    // pattern continues past the explicit entries; and a forced break to a left or right page may insert a blank page.
+    private bool _cyclic;
+    private bool _sidesOn;
+    private bool _firstRight = true;
+    private int _cap = MaxFragmentainers;
     private readonly double[] _one = new double[1];
 
     private void Record(double ys, double ye, double t, double b)
@@ -19,12 +27,14 @@ internal sealed partial class Fragmenter
             Array.Resize(ref _fkYe, n);
             Array.Resize(ref _fkT, n);
             Array.Resize(ref _fkB, n);
+            Array.Resize(ref _fkBlank, n);
         }
 
         _fkYs[_fkN] = ys;
         _fkYe[_fkN] = ye;
         _fkT[_fkN] = t;
         _fkB[_fkN] = b;
+        _fkBlank[_fkN] = false;
         _fkN++;
     }
 
@@ -103,10 +113,10 @@ internal sealed partial class Fragmenter
         double s = rowStart, t = 0;
         int p = c0;
         int k = 0;
-        int cap = MaxFragmentainers;
+        int cap = _cap;
         while (true)
         {
-            double h = sizes[Math.Min(k, sizes.Length - 1)];
+            double h = _cyclic && sizes.Length >= 2 && k >= sizes.Length ? sizes[sizes.Length - 2 + ((k - sizes.Length) & 1)] : sizes[Math.Min(k, sizes.Length - 1)];
             if (!(h >= 1))
             {
                 h = 1;
@@ -123,13 +133,18 @@ internal sealed partial class Fragmenter
             double fy = 0, fT = 0, fB = 0;
             bool final = false;
             int f = p < c1 ? Math.Min(_nextForced[p], c1) : c1;
-            if (f < c1 && _c[f].Ye <= limit + Eps)
+            bool capped = k + 1 >= cap;
+            if (f < c1 && _c[f].Ye <= limit + Eps && !capped)
             {
                 cut = f;
             }
             else if (rowEnd <= limit + Eps)
             {
                 final = true;
+                if (capped && f < c1 && _c[f].Ye <= limit + Eps)
+                {
+                    res.Truncated = true; // a forced break past the page limit is not taken
+                }
             }
             else if (k + 1 >= cap)
             {
@@ -234,6 +249,23 @@ internal sealed partial class Fragmenter
             s = ys;
             t = nt;
             k++;
+            if (_sidesOn && !filler && (_c[cut].Bits & SideMask) != 0 && NeedsBlank(_c[cut].Bits, k) && k + 1 < cap)
+            {
+                // Paged Media 3 §7.1 / Fragmentation 3 §3.1: break-*: left | right | recto | verso make the next page that side by
+                // leaving one blank page when the natural next page is the other side.
+                res.Count++;
+                if (record)
+                {
+                    Record(s, s, 0, 0);
+                    _fkBlank[_fkN - 1] = true;
+                }
+
+                k++;
+                if (res.Count > stopAbove)
+                {
+                    return res;
+                }
+            }
         }
     }
 
@@ -242,6 +274,31 @@ internal sealed partial class Fragmenter
     {
         _one[0] = size;
         return Slice(c0, c1, rowStart, rowEnd, _one, stopAbove, record);
+    }
+
+    private const BreakBits SideMask = BreakBits.SideLeft | BreakBits.SideRight | BreakBits.SideRecto | BreakBits.SideVerso;
+
+    // Whether page index k is a right-hand page: the first page is on the right in a left-to-right document and on the left otherwise.
+    private bool IsRightPage(int k) => ((k & 1) == 0) == _firstRight;
+
+    private bool NeedsBlank(BreakBits bits, int k)
+    {
+        bool right = IsRightPage(k);
+        // Several side values on one break: the first in the order left, right, recto, verso decides.
+        if ((bits & BreakBits.SideLeft) != 0)
+        {
+            return right;
+        }
+
+        if ((bits & BreakBits.SideRight) != 0)
+        {
+            return !right;
+        }
+
+        // recto is the right page of a left-to-right document and the left page of a right-to-left one; verso the other.
+        bool recto = (bits & BreakBits.SideRecto) != 0;
+        bool wantRight = recto == _firstRight;
+        return right != wantRight;
     }
 
     /// <summary>Forgets the recorded fragmentainers.</summary>

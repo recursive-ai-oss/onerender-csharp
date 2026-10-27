@@ -30,6 +30,7 @@ internal static class Program
         ["effects"] = EffectsTarget.Run,
         ["incremental"] = IncrementalTarget.Run,
         ["pdf"] = PdfTarget.Run,
+        ["paged"] = PagedTarget.Run,
     };
 
     private static int Main(string[] args)
@@ -69,6 +70,11 @@ internal static class Program
             if (args[1] == "table")
             {
                 return TableTarget.WriteSeeds(args[2]);
+            }
+
+            if (args[1] == "paged")
+            {
+                return PagedTarget.WriteSeeds(args[2]);
             }
 
             return args[1] == "fontdata"

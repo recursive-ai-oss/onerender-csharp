@@ -41,6 +41,9 @@ internal sealed class TagWriter
 
     public bool Enabled { get; }
 
+    /// <summary>Anchors that in-document links may point to; a link to any other <c>#name</c> makes no annotation.</summary>
+    public HashSet<string>? Destinations { get; set; }
+
     public int Depth => _open.Count;
 
     /// <summary>Maximum structure nesting: deeper tags are folded into their parent so a hostile document cannot build an unbounded tree.</summary>
@@ -227,13 +230,21 @@ internal sealed class TagWriter
 
         o.HasRect = false;
         string? target = o.Ref.Link;
-        // Only external destinations make annotations: the display list does not say where an in-document anchor is.
-        if (page is not null && target is { Length: > 0 } && target[0] != '#' && o.Right > o.Left && o.Top > o.Bottom)
+        // External links go to their address; a #name link goes to the anchor of that name when the host declared it.
+        if (page is not null && target is { Length: > 0 } && o.Right > o.Left && o.Top > o.Bottom)
         {
             string description = !string.IsNullOrWhiteSpace(o.Ref.Alt) ? o.Ref.Alt : (!string.IsNullOrWhiteSpace(o.Text) ? o.Text.Trim() : target);
             try
             {
-                page.AddLink(new PdfRectangle(o.Left, o.Bottom, o.Right, o.Top), target, o.Element, description);
+                var area = new PdfRectangle(o.Left, o.Bottom, o.Right, o.Top);
+                if (target[0] != '#')
+                {
+                    page.AddLink(area, target, o.Element, description);
+                }
+                else if (target.Length > 1 && Destinations is not null && Destinations.Contains(Uri.UnescapeDataString(target[1..])))
+                {
+                    page.AddLinkToDestination(area, Uri.UnescapeDataString(target[1..]), o.Element, description);
+                }
             }
             catch (ArgumentException)
             {
