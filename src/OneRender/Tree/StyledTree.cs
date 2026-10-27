@@ -284,6 +284,8 @@ public sealed partial class StyledTree
         _span[i] = c | (r << 11);
     }
 
+    internal void ReplaceStyle(int i, StyleId style) => _style[i] = style.Index;
+
     internal int ColumnSpanOf(int i) => _span[i] & 0x7FF;
 
     internal int RowSpanOf(int i) => _span[i] >> 11;

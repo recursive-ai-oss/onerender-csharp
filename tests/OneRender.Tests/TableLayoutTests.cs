@@ -220,4 +220,28 @@ public class TableLayoutTests
         l.Engine.Layout(l.P.Boxes, new LayoutInput(800, double.NaN, OneRender.Image.FontProviders.CreateDefault()), l.F);
         Assert.Equal(first, l.F.Dump());
     }
+
+    [Fact]
+    public void PresentationalAttributes()
+    {
+        // HTML §15.3.8: cellspacing, cellpadding and width on a table act as hints; the author's CSS wins.
+        Lay l = Run("<table id=t width=200 cellspacing=0 cellpadding=3><tr><td id=a><div style='width:10px;height:10px'></div><td id=b style='padding:0'><div style='width:10px;height:10px'></div></table>");
+        Assert.Equal(200, l["t"].Width, 3);
+        Assert.Equal(0, l["a"].X, 3);
+        Assert.Equal(16, l["a"].Height, 3);
+        Assert.Equal(16, l["b"].Height, 3);
+    }
+
+    [Fact]
+    public void ChangingACellTextRelaysOutLikeAFullRecompute()
+    {
+        string Doc(string cell) => "<table id=t style='width:300px'><tr><td id=a>" + cell + "</td><td id=b>beta</td></tr><tr><td colspan=2 id=c>row two</td></tr></table>";
+        Lay edited = Run(Doc("alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu nu xi omicron pi rho sigma tau upsilon"), "table{border-spacing:2px}");
+        Lay fresh = Run(Doc("alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu nu xi omicron pi rho sigma tau upsilon"), "table{border-spacing:2px}");
+        // Laying out the same boxes again (a forced flush) gives the same fragments as the first layout and as a fresh pipeline.
+        string first = edited.F.Dump();
+        edited.Engine.Layout(edited.P.Boxes, new LayoutInput(800, double.NaN, OneRender.Image.FontProviders.CreateDefault()), edited.F);
+        Assert.Equal(first, edited.F.Dump());
+        Assert.Equal(fresh.F.Dump(), edited.F.Dump());
+    }
 }

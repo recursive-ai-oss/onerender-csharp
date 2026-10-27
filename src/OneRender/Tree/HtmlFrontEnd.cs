@@ -33,6 +33,7 @@ public sealed class HtmlFrontEnd
         ArgumentNullException.ThrowIfNull(styles);
         Document doc = styles.Document;
         _tree.Clear();
+        _cellPadding.Clear();
         _tree.SetDocument(doc, doc.NodeCount);
         Node rootElement = doc.DocumentElement;
         if (rootElement.IsNull)
@@ -117,9 +118,14 @@ public sealed class HtmlFrontEnd
             _ => ReplacedKind.None,
         };
         _tree.SetElementInfo(idx, tag, replaced);
-        if (element.Namespace == ElementNamespace.Html && tag.Length is 2 or 3 or 8 && IsSpanTag(tag))
+        if (element.Namespace == ElementNamespace.Html && tag.Length is 2 or 3 or 5 or 8 && IsSpanTag(tag))
         {
             ApplySpanAttributes(element, idx, tag);
+        }
+
+        if (element.Namespace == ElementNamespace.Html && (tag.Equals("table", StringComparison.Ordinal) || tag.Equals("td", StringComparison.Ordinal) || tag.Equals("th", StringComparison.Ordinal)))
+        {
+            ApplyTableHints(element, idx, tag);
         }
         if (replaced != ReplacedKind.None)
         {
@@ -214,6 +220,93 @@ public sealed class HtmlFrontEnd
 
         return default;
     }
+
+    // HTML Standard §15.3.8 (tables): the width, height, cellspacing and cellpadding attributes act as presentational hints, below any author
+    // rule. The cascade here does not carry hints, so a hint applies where the computed value is still the user agent's default.
+    private void ApplyTableHints(Node element, int idx, string tag)
+    {
+        bool isTable = tag.Length == 5;
+        ref readonly ComputedValues v0 = ref _tree.Styles[_tree.StyleOf(idx)];
+        ComputedValues v = v0;
+        bool changed = false;
+        foreach (Attr a in element.Attributes)
+        {
+            ReadOnlySpan<char> name = a.LocalName;
+            if (name.Equals("width", StringComparison.Ordinal) && v.Width.Kind == LengthKind.Auto && TryParseHintDimension(a.Value, out Length w))
+            {
+                v.Width = w;
+                changed = true;
+            }
+            else if (name.Equals("height", StringComparison.Ordinal) && v.Height.Kind == LengthKind.Auto && TryParseHintDimension(a.Value, out Length h))
+            {
+                v.Height = h;
+                changed = true;
+            }
+            else if (isTable && name.Equals("cellspacing", StringComparison.Ordinal) && v.BorderSpacingH == 2 && v.BorderSpacingV == 2 && TryParseHintDimension(a.Value, out Length s) && s.Kind == LengthKind.Px)
+            {
+                v.BorderSpacingH = v.BorderSpacingV = s.Value;
+                changed = true;
+            }
+            else if (isTable && name.Equals("cellpadding", StringComparison.Ordinal) && TryParseHintDimension(a.Value, out Length cp) && cp.Kind == LengthKind.Px)
+            {
+                _cellPadding[idx] = cp.Value;
+            }
+        }
+
+        if (!isTable && IsUserAgentPadding(in v))
+        {
+            double pad = TablePaddingHint(idx);
+            if (pad >= 0)
+            {
+                v.PaddingTop = v.PaddingRight = v.PaddingBottom = v.PaddingLeft = new Length(LengthKind.Px, pad);
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            _tree.ReplaceStyle(idx, _tree.Styles.Derive(_tree.StyleOf(idx), in v));
+        }
+    }
+
+    private static bool IsUserAgentPadding(in ComputedValues v) =>
+        v.PaddingTop.Kind == LengthKind.Px && v.PaddingTop.Value == 1 && v.PaddingRight.Kind == LengthKind.Px && v.PaddingRight.Value == 1
+        && v.PaddingBottom.Kind == LengthKind.Px && v.PaddingBottom.Value == 1 && v.PaddingLeft.Kind == LengthKind.Px && v.PaddingLeft.Value == 1;
+
+    // The cellpadding of the nearest table ancestor, or -1.
+    private double TablePaddingHint(int idx)
+    {
+        for (int p = _tree.ParentOf(idx); p >= 0; p = _tree.ParentOf(p))
+        {
+            if (_tree.KindOf(p) == (byte)StyledNodeKind.Element && _tree.TagNameOf(p).Equals("table", StringComparison.Ordinal))
+            {
+                return _cellPadding.TryGetValue(p, out double pad) ? pad : -1;
+            }
+        }
+
+        return -1;
+    }
+
+    private static bool TryParseHintDimension(ReadOnlySpan<char> text, out Length value)
+    {
+        value = default;
+        text = text.Trim();
+        bool percent = !text.IsEmpty && text[^1] == '%';
+        if (percent)
+        {
+            text = text[..^1];
+        }
+
+        if (text.IsEmpty || text.Length > 9 || !double.TryParse(text, System.Globalization.NumberStyles.AllowDecimalPoint, System.Globalization.CultureInfo.InvariantCulture, out double n) || n < 0)
+        {
+            return false;
+        }
+
+        value = new Length(percent ? LengthKind.Percent : LengthKind.Px, n);
+        return true;
+    }
+
+    private readonly Dictionary<int, double> _cellPadding = [];
 
     private static bool IsSpanTag(string tag) =>
         tag.Equals("td", StringComparison.Ordinal) || tag.Equals("th", StringComparison.Ordinal)
