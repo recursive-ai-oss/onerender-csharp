@@ -80,6 +80,7 @@ public sealed partial class FragmentTree
     {
         _version++;
         _count = 0;
+        _copyShifted = false;
         _runCount = 0;
         _glyphCount = 0;
         ClearTableBorders();
@@ -217,6 +218,7 @@ public sealed partial class FragmentTree
     public void SetEdges(Fragment fragment, Insets border, Insets padding)
     {
         Check(fragment);
+        _srcOf[fragment.Index] = -1;
         _border[fragment.Index] = border;
         _padding[fragment.Index] = padding;
     }
@@ -228,6 +230,7 @@ public sealed partial class FragmentTree
     {
         Check(fragment);
         int i = fragment.Index;
+        _srcOf[i] = -1;
         _x[i] = borderBox.X;
         _y[i] = borderBox.Y;
         _w[i] = borderBox.Width;
@@ -240,6 +243,7 @@ public sealed partial class FragmentTree
     public void SetScrollableOverflow(Fragment fragment, Rect overflow)
     {
         Check(fragment);
+        _srcOf[fragment.Index] = -1;
         _overflow[fragment.Index] = overflow;
     }
 
@@ -249,6 +253,7 @@ public sealed partial class FragmentTree
     public void SetBaseline(Fragment fragment, double baseline)
     {
         Check(fragment);
+        _srcOf[fragment.Index] = -1;
         _baseline[fragment.Index] = baseline;
     }
 
@@ -292,6 +297,7 @@ public sealed partial class FragmentTree
         }
 
         int p = newParent.Index;
+        _srcOf[i] = -1;
         _parent[i] = p;
         _next[i] = -1;
         _prev[i] = _last[p];
@@ -313,6 +319,7 @@ public sealed partial class FragmentTree
     public void SetTraits(Fragment fragment, FragmentTraits traits)
     {
         Check(fragment);
+        _srcOf[fragment.Index] = -1;
         _traits[fragment.Index] = (byte)traits;
     }
 
@@ -324,7 +331,7 @@ public sealed partial class FragmentTree
     public FragmentMark Mark(Fragment parent)
     {
         Check(parent);
-        return new FragmentMark(_count, _runCount, _glyphCount, parent.Index, _last[parent.Index]);
+        return new FragmentMark(_count, _runCount, _glyphCount, parent.Index, _last[parent.Index], _copyShifted);
     }
 
     /// <summary>Removes every fragment, glyph run and glyph added since <paramref name="mark"/> was taken, keeping the storage.</summary>
@@ -358,6 +365,7 @@ public sealed partial class FragmentTree
         }
 
         _count = mark.Count;
+        _copyShifted = mark.Shifted;
         _runCount = mark.Runs;
         _glyphCount = mark.Glyphs;
         int p = mark.Parent;
@@ -640,6 +648,7 @@ public sealed partial class FragmentTree
 
         int i = _count++;
         _kind[i] = (byte)kind;
+        _srcOf[i] = -1;
         _traits[i] = 0;
         _box[i] = box;
         _parent[i] = p;
@@ -682,6 +691,7 @@ public sealed partial class FragmentTree
     {
         int n = _kind.Length * 2;
         Array.Resize(ref _kind, n);
+        Array.Resize(ref _srcOf, n);
         Array.Resize(ref _traits, n);
         Array.Resize(ref _box, n);
         Array.Resize(ref _parent, n);
@@ -708,8 +718,9 @@ public sealed partial class FragmentTree
 /// <summary>A position in a <see cref="FragmentTree"/> to cut back to; see <see cref="FragmentTree.Mark"/>.</summary>
 public readonly struct FragmentMark
 {
-    internal FragmentMark(int count, int runs, int glyphs, int parent, int parentLast)
+    internal FragmentMark(int count, int runs, int glyphs, int parent, int parentLast, bool shifted)
     {
+        Shifted = shifted;
         Count = count;
         Runs = runs;
         Glyphs = glyphs;
@@ -726,4 +737,6 @@ public readonly struct FragmentMark
     internal int Parent { get; }
 
     internal int ParentLast { get; }
+
+    internal bool Shifted { get; }
 }

@@ -1,0 +1,12 @@
+{"tool": "weasyprint", "doc": "invoice", "mode": "process", "run": 1, "ms": 529.9, "rssPeakKb": 67900, "pssPeakKb": 61401, "maxrssKb": 66752, "exit": 0, "pages": 3}
+{"tool": "weasyprint", "doc": "invoice", "mode": "process", "run": 2, "ms": 566.5, "rssPeakKb": 67600, "pssPeakKb": 57977, "maxrssKb": 65988, "exit": 0, "pages": 3}
+{"tool": "weasyprint", "doc": "invoice", "mode": "process", "run": 3, "ms": 558.0, "rssPeakKb": 67524, "pssPeakKb": 59516, "maxrssKb": 65784, "exit": 0, "pages": 3}
+{"tool": "weasyprint", "doc": "report", "mode": "process", "run": 1, "ms": 1602.2, "rssPeakKb": 103668, "pssPeakKb": 97203, "maxrssKb": 102296, "exit": 0, "pages": 50}
+{"tool": "weasyprint", "doc": "report", "mode": "process", "run": 2, "ms": 1751.3, "rssPeakKb": 103468, "pssPeakKb": 96968, "maxrssKb": 101332, "exit": 0, "pages": 50}
+{"tool": "weasyprint", "doc": "report", "mode": "process", "run": 3, "ms": 1913.1, "rssPeakKb": 103400, "pssPeakKb": 96970, "maxrssKb": 101860, "exit": 0, "pages": 50}
+{"tool": "weasyprint", "doc": "table10k", "mode": "process", "run": 1, "ms": 27153.0, "rssPeakKb": 931224, "pssPeakKb": 924701, "maxrssKb": 929480, "exit": 0, "pages": 218}
+{"tool": "weasyprint", "doc": "table10k", "mode": "process", "run": 2, "ms": 28554.7, "rssPeakKb": 931344, "pssPeakKb": 924937, "maxrssKb": 929636, "exit": 0, "pages": 218}
+{"tool": "weasyprint", "doc": "table10k", "mode": "process", "run": 3, "ms": 29514.8, "rssPeakKb": 931392, "pssPeakKb": 924828, "maxrssKb": 929768, "exit": 0, "pages": 218}
+{"tool": "weasyprint", "doc": "tailwind", "mode": "process", "run": 1, "ms": 1200.3, "rssPeakKb": 69316, "pssPeakKb": 62027, "maxrssKb": 68216, "exit": 0, "pages": 7}
+{"tool": "weasyprint", "doc": "tailwind", "mode": "process", "run": 2, "ms": 818.4, "rssPeakKb": 69236, "pssPeakKb": 61992, "maxrssKb": 67832, "exit": 0, "pages": 7}
+{"tool": "weasyprint", "doc": "tailwind", "mode": "process", "run": 3, "ms": 855.2, "rssPeakKb": 69256, "pssPeakKb": 62707, "maxrssKb": 67820, "exit": 0, "pages": 7}
