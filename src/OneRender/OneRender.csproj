@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="OneRender.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="RecursiveAI.OneHtml" />
     <PackageReference Include="RecursiveAI.OneFont" />
   </ItemGroup>
