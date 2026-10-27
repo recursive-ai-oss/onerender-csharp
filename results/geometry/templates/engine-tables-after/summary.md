@@ -6,10 +6,10 @@
 
 | viewport | pages | elements | within tolerance | rate | position-only | size-only | position+size | text-run | missing-ours | missing-chrome | tag conflicts | pages at gate | median page |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1280x800 | 6 | 3052 | 1888 | 61.861% | 1120 | 6 | 20 | 18 | 0 | 0 | 0 | 3 | 100.000% |
-| 390x844 | 6 | 3052 | 1137 | 37.254% | 1856 | 14 | 20 | 25 | 0 | 0 | 0 | 1 | 74.517% |
-| all | 12 | 6104 | 3025 | 49.558% | 2976 | 20 | 40 | 43 | 0 | 0 | 0 | 4 | 98.750% |
+| 1280x800 | 6 | 3052 | 1933 | 63.336% | 1118 | 0 | 0 | 1 | 0 | 0 | 0 | 3 | 100.000% |
+| 390x844 | 6 | 3052 | 1182 | 38.729% | 1854 | 8 | 0 | 8 | 0 | 0 | 0 | 1 | 97.826% |
+| all | 12 | 6104 | 3115 | 51.032% | 2972 | 8 | 0 | 9 | 0 | 0 | 0 | 4 | 98.750% |
 
-Root causes (mismatches with no mismatching ancestor), all viewports: position-only 629, size-only 4, position+size 0, text-run 2.
+Root causes (mismatches with no mismatching ancestor), all viewports: position-only 631, size-only 2, position+size 0, text-run 2.
 
-Tags with the most mismatches: td 800/2800, p 387/470, strong 331/380, em 318/344, tr 246/598, li 237/314, th 225/270, h3 108/120, ul 85/94, span 47/170
+Tags with the most mismatches: td 764/2800, p 379/470, strong 331/380, em 318/344, li 237/314, th 225/270, tr 222/598, h3 108/120, ul 85/94, span 47/170

@@ -68,7 +68,13 @@ HtmlPage paintPage = HtmlPage.Create(
     new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 80, ViewportHeight = 80 });
 var paintList = new DisplayList();
 new Painter().Paint(paintPage.Fragments, paintList, new PaintOptions(80, 80));
-Console.WriteLine($"paint items {paintList.Count}");
+// Tables: anonymous table objects, spans, collapsed borders and their painting must survive trimming and AOT as well.
+HtmlPage tablePage = HtmlPage.Create(
+    "<body style='margin:0'><table style='border-collapse:collapse;width:100px'><tr><td colspan=2 style='border:1px solid #000;height:10px'></td></tr><tr><td style='border:2px solid #f00'></td><td style='display:table-cell;border:1px solid #000'></td></tr></table><div style='display:table-cell;height:4px'></div></body>",
+    new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 200, ViewportHeight = 100 });
+var tableList = new DisplayList();
+new Painter().Paint(tablePage.Fragments, tableList, new PaintOptions(200, 100));
+Console.WriteLine($"paint items {paintList.Count}, table page {tablePage.Fragments.Count} fragments, {tableList.Count} table items");
 
 internal sealed class NoFonts : OneRender.Layout.IFontProvider
 {

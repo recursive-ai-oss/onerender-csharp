@@ -13,19 +13,19 @@
       "viewport": "1280x800",
       "pages": 6,
       "elements": 3052,
-      "matched": 1888,
-      "rate": 0.6186107470511141,
+      "matched": 1933,
+      "rate": 0.6333551769331586,
       "classes": {
-        "positionOnly": 1120,
-        "sizeOnly": 6,
-        "positionAndSize": 20,
-        "textRun": 18,
+        "positionOnly": 1118,
+        "sizeOnly": 0,
+        "positionAndSize": 0,
+        "textRun": 1,
         "missingOurs": 0,
         "missingChrome": 0
       },
       "rootCauses": {
-        "positionOnly": 273,
-        "sizeOnly": 1,
+        "positionOnly": 274,
+        "sizeOnly": 0,
         "positionAndSize": 0,
         "textRun": 1,
         "missingOurs": 0,
@@ -34,16 +34,16 @@
       "tagConflicts": 0,
       "pagesAtGate": 3,
       "medianPageRate": 1,
-      "minPageRate": 0,
+      "minPageRate": 0.20667613636363635,
       "worstTags": [
         {
           "tag": "td",
-          "mismatches": 198,
+          "mismatches": 180,
           "elements": 1400
         },
         {
           "tag": "p",
-          "mismatches": 175,
+          "mismatches": 171,
           "elements": 235
         },
         {
@@ -68,7 +68,7 @@
         },
         {
           "tag": "tr",
-          "mismatches": 81,
+          "mismatches": 69,
           "elements": 299
         },
         {
@@ -92,19 +92,19 @@
       "viewport": "390x844",
       "pages": 6,
       "elements": 3052,
-      "matched": 1137,
-      "rate": 0.37254259501965925,
+      "matched": 1182,
+      "rate": 0.3872870249017038,
       "classes": {
-        "positionOnly": 1856,
-        "sizeOnly": 14,
-        "positionAndSize": 20,
-        "textRun": 25,
+        "positionOnly": 1854,
+        "sizeOnly": 8,
+        "positionAndSize": 0,
+        "textRun": 8,
         "missingOurs": 0,
         "missingChrome": 0
       },
       "rootCauses": {
-        "positionOnly": 356,
-        "sizeOnly": 3,
+        "positionOnly": 357,
+        "sizeOnly": 2,
         "positionAndSize": 0,
         "textRun": 1,
         "missingOurs": 0,
@@ -112,17 +112,17 @@
       },
       "tagConflicts": 0,
       "pagesAtGate": 1,
-      "medianPageRate": 0.7451737451737451,
-      "minPageRate": 0,
+      "medianPageRate": 0.9782608695652174,
+      "minPageRate": 0.030456852791878174,
       "worstTags": [
         {
           "tag": "td",
-          "mismatches": 602,
+          "mismatches": 584,
           "elements": 1400
         },
         {
           "tag": "p",
-          "mismatches": 212,
+          "mismatches": 208,
           "elements": 235
         },
         {
@@ -137,7 +137,7 @@
         },
         {
           "tag": "tr",
-          "mismatches": 165,
+          "mismatches": 153,
           "elements": 299
         },
         {
@@ -172,19 +172,19 @@
     "viewport": "all",
     "pages": 12,
     "elements": 6104,
-    "matched": 3025,
-    "rate": 0.4955766710353866,
+    "matched": 3115,
+    "rate": 0.5103211009174312,
     "classes": {
-      "positionOnly": 2976,
-      "sizeOnly": 20,
-      "positionAndSize": 40,
-      "textRun": 43,
+      "positionOnly": 2972,
+      "sizeOnly": 8,
+      "positionAndSize": 0,
+      "textRun": 9,
       "missingOurs": 0,
       "missingChrome": 0
     },
     "rootCauses": {
-      "positionOnly": 629,
-      "sizeOnly": 4,
+      "positionOnly": 631,
+      "sizeOnly": 2,
       "positionAndSize": 0,
       "textRun": 2,
       "missingOurs": 0,
@@ -193,16 +193,16 @@
     "tagConflicts": 0,
     "pagesAtGate": 4,
     "medianPageRate": 0.9875,
-    "minPageRate": 0,
+    "minPageRate": 0.030456852791878174,
     "worstTags": [
       {
         "tag": "td",
-        "mismatches": 800,
+        "mismatches": 764,
         "elements": 2800
       },
       {
         "tag": "p",
-        "mismatches": 387,
+        "mismatches": 379,
         "elements": 470
       },
       {
@@ -216,11 +216,6 @@
         "elements": 344
       },
       {
-        "tag": "tr",
-        "mismatches": 246,
-        "elements": 598
-      },
-      {
         "tag": "li",
         "mismatches": 237,
         "elements": 314
@@ -229,6 +224,11 @@
         "tag": "th",
         "mismatches": 225,
         "elements": 270
+      },
+      {
+        "tag": "tr",
+        "mismatches": 222,
+        "elements": 598
       },
       {
         "tag": "h3",

@@ -274,13 +274,37 @@ public sealed class HtmlFrontEnd
             changed = true;
         }
 
-        if (!isTable && tag.Length == 2 && tag[1] != 'r' && v.BorderTopStyle == BorderStyleKind.Inset && NearestTable(idx) is int owner and >= 0
-            && _tableBorder.TryGetValue(owner, out int tb) && tb == 0)
+        if (!isTable && tag.Length == 2 && tag[1] != 'r' && NearestTable(idx) is int owner and >= 0 && _tableBorder.TryGetValue(owner, out int tb) && tb == 0)
         {
-            // The user agent sheet gives cells an inset border "only if the table's border is not equivalent to zero".
-            v.BorderTopStyle = v.BorderRightStyle = v.BorderBottomStyle = v.BorderLeftStyle = BorderStyleKind.None;
-            v.BorderTopWidth = v.BorderRightWidth = v.BorderBottomWidth = v.BorderLeftWidth = 0;
-            changed = true;
+            // The user agent sheet gives cells an inset border "only if the table's border is not equivalent to zero". Sides the author
+            // styled keep their own border.
+            if (v.BorderTopStyle == BorderStyleKind.Inset)
+            {
+                v.BorderTopStyle = BorderStyleKind.None;
+                v.BorderTopWidth = 0;
+                changed = true;
+            }
+
+            if (v.BorderRightStyle == BorderStyleKind.Inset)
+            {
+                v.BorderRightStyle = BorderStyleKind.None;
+                v.BorderRightWidth = 0;
+                changed = true;
+            }
+
+            if (v.BorderBottomStyle == BorderStyleKind.Inset)
+            {
+                v.BorderBottomStyle = BorderStyleKind.None;
+                v.BorderBottomWidth = 0;
+                changed = true;
+            }
+
+            if (v.BorderLeftStyle == BorderStyleKind.Inset)
+            {
+                v.BorderLeftStyle = BorderStyleKind.None;
+                v.BorderLeftWidth = 0;
+                changed = true;
+            }
         }
 
         if (!isTable && IsUserAgentPadding(in v))

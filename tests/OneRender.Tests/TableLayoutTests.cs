@@ -247,6 +247,8 @@ public class TableLayoutTests
         // HTML §15.3.8: border=0 removes the user agent's table and cell borders; border=N gives a table border of N pixels.
         Lay zero = Run("<table id=t border=0 cellspacing=0><tr><td id=a>x</td></tr></table>");
         Assert.Equal(0, zero["a"].X, 3);
+        Lay styled = Run("<table border=0 cellspacing=0><tr><td id=a style='border-bottom:3px solid red'>x</td></tr></table>");
+        Assert.Equal(3, styled["a"].Height - Run("<table border=0 cellspacing=0><tr><td id=a>x</td></tr></table>")["a"].Height, 3);
         Lay five = Run("<table id=t border=5 cellspacing=0><tr><td id=a>x</td></tr></table>");
         Assert.Equal(5, five["a"].X, 3);
     }

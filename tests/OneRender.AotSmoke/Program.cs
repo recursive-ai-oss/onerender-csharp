@@ -175,7 +175,15 @@ bool woff2Ok = decoded.Status == FontLoadStatus.Ok && decoded.Face!.HasGlyph(0x0
 Console.WriteLine($"shaped {run.GlyphCount} glyphs, width {run.Width:F2}, cached {again}, woff2 {decoded.Status}");
 
 
-return names.Length == 3 && sfnt && painted && pageOk && boxes >= 3 && scrollOk && shaped && again && woff2Ok ? 0 : 1;
+// Tables: anonymous table objects, spans, collapsed borders and their painting must survive trimming and AOT as well.
+HtmlPage tablePage = HtmlPage.Create(
+    "<body style='margin:0'><table style='border-collapse:collapse;width:100px'><tr><td colspan=2 style='border:1px solid #000;height:10px'></td></tr><tr><td style='border:2px solid #f00'></td><td style='display:table-cell;border:1px solid #000'></td></tr></table><div style='display:table-cell;height:4px'></div></body>",
+    new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 200, ViewportHeight = 100 });
+var tableList = new DisplayList();
+new Painter().Paint(tablePage.Fragments, tableList, new PaintOptions(200, 100));
+bool tableOk = tablePage.Fragments.Count > 8 && tableList.Count > 0;
+
+return names.Length == 3 && tableOk && sfnt && painted && pageOk && boxes >= 3 && scrollOk && shaped && again && woff2Ok ? 0 : 1;
 
 internal sealed class NoFonts : OneRender.Layout.IFontProvider
 {
