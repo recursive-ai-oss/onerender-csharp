@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <Content Include="../../testdata/fonts/*" Link="testdata/fonts/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../testdata/fuzz/*" Link="testdata/fuzz/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

@@ -255,8 +255,9 @@ public static class FontLoader
             Span<byte> probe = stackalloc byte[1];
             return z.Read(probe) == 0;
         }
-        catch (InvalidDataException)
+        catch (Exception ex) when (ex is InvalidDataException or IOException)
         {
+            // Corrupt zlib data surfaces as InvalidDataException or, for some corruptions, as the runtime's internal IOException subclass.
             return false;
         }
     }

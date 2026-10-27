@@ -1,3 +1,4 @@
+using System.IO;
 using OneRender.Style;
 using System.Linq;
 using System.Text;
@@ -407,6 +408,17 @@ public class FontLoaderTests
     {
         var limits = new FontLimits { MaxInputBytes = 1000 };
         Assert.Equal(FontLoadStatus.InputTooLarge, FontLoader.Load(Ttf, limits).Status);
+    }
+
+    [Fact]
+    public void CorruptZlibDataInAWoffTableFailsAsAStatus()
+    {
+        // Found by the font-data fuzz target: a WOFF whose compressed table made the inflater throw an IOException.
+        // The first byte is the fuzz target's mode byte; the font follows.
+        byte[] input = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "testdata", "fuzz", "woff-inflate-error.bin"));
+        FontLoadResult r = FontLoader.Load(input.AsSpan(1).ToArray());
+        Assert.NotEqual(FontLoadStatus.Ok, r.Status);
+        Assert.Null(r.Face);
     }
 
     [Fact]
