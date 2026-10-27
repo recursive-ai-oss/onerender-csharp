@@ -234,6 +234,7 @@ internal sealed partial class StyleComputer
     {
         ComputedValues v = ComputedValues.Initial;
         v.Visibility = p.Visibility;
+        v.PointerEvents = p.PointerEvents;
         v.FontFamily = p.FontFamily;
         v.FontSize = p.FontSize;
         v.FontSizeKeyword = p.FontSizeKeyword;
@@ -363,7 +364,7 @@ internal sealed partial class StyleComputer
             case PropertyId.TextAlignLast: d.TextAlignLast = s.TextAlignLast; break;
             case PropertyId.TextJustify: d.TextJustify = s.TextJustify; break;
             case PropertyId.OverflowClipMargin: d.OverflowClipMarginPx = s.OverflowClipMarginPx; d.OverflowClipMarginBox = s.OverflowClipMarginBox; break;
-            default: CopyFlexProperty(id, ref d, in s, fromParent); CopyGridProperty(id, ref d, in s); CopyPaintProperty(id, ref d, in s); CopyTableProperty(id, ref d, in s); break;
+            default: CopyFlexProperty(id, ref d, in s, fromParent); CopyGridProperty(id, ref d, in s); CopyPaintProperty(id, ref d, in s); CopyTableProperty(id, ref d, in s); CopyInteractionProperty(id, ref d, in s); break;
         }
     }
 

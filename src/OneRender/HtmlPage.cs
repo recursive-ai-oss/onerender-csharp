@@ -59,7 +59,7 @@ public sealed class HtmlPageOptions
 /// low-level pieces (OneHtml parse and cascade, <see cref="HtmlFrontEnd"/>, <see cref="BoxTree"/>, <see cref="ILayoutEngine"/>,
 /// <see cref="Painter"/>). The images and PDF backends and the test harnesses are all built on it.
 /// </summary>
-public sealed class HtmlPage
+public sealed partial class HtmlPage
 {
     private HtmlPage(Document document, StyledTree styled, BoxTree boxes, FragmentTree fragments, HtmlPageOptions options)
     {
@@ -89,7 +89,7 @@ public sealed class HtmlPage
     /// The scroll positions of the viewport and of scroll containers. <see cref="Paint"/> applies them; change them and call
     /// <see cref="Painter.PatchScroll(RetainedDisplayList)"/> to update a painted list without relayout.
     /// </summary>
-    public ScrollState Scroll { get; } = new();
+    public ScrollState Scroll { get; private set; } = new();
 
     /// <summary>
     /// Defaults the HTML rendering section asks for that the family's user-agent sheet does not carry as rules. It is applied as a
@@ -109,7 +109,11 @@ public sealed class HtmlPage
     /// <exception cref="ArgumentNullException">An argument is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException">A viewport dimension is below 1.</exception>
     /// <exception cref="OperationCanceledException">Cancelled.</exception>
-    public static HtmlPage Create(string html, HtmlPageOptions options, CancellationToken cancellationToken = default)
+    public static HtmlPage Create(string html, HtmlPageOptions options, CancellationToken cancellationToken = default) =>
+        CreateWithStyles(html, options, out _, cancellationToken);
+
+    // Create, also handing back the cascade so an interactive page can restyle it for a new hover, focus or active element.
+    internal static HtmlPage CreateWithStyles(string html, HtmlPageOptions options, out DocumentStyles styles, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(html);
         ArgumentNullException.ThrowIfNull(options);
@@ -147,7 +151,7 @@ public sealed class HtmlPage
             };
         }
 
-        DocumentStyles styles = DocumentStyles.Create(document, context, MakeOptions(null), cancellationToken);
+        styles = DocumentStyles.Create(document, context, MakeOptions(null), cancellationToken);
 
         // @property registrations are not part of the cascade, so their initial values are fed back as a user-origin sheet. Only a
         // document that registers something pays for the second pass.
@@ -168,7 +172,7 @@ public sealed class HtmlPage
         try
         {
             AddFontFaces(styles, catalog, context.Media, cancellationToken);
-            return Build(document, styles, options, cancellationToken);
+            return Build(document, styles, options, null, cancellationToken);
         }
         finally
         {
@@ -176,7 +180,7 @@ public sealed class HtmlPage
         }
     }
 
-    private static HtmlPage Build(Document document, DocumentStyles styles, HtmlPageOptions options, CancellationToken cancellationToken)
+    private static HtmlPage Build(Document document, DocumentStyles styles, HtmlPageOptions options, ScrollState? scroll, CancellationToken cancellationToken)
     {
         var table = new StyleTable();
         table.SetViewport(options.ViewportWidth, options.ViewportHeight);
@@ -187,7 +191,13 @@ public sealed class HtmlPage
         var fragments = new FragmentTree(boxes);
         ILayoutEngine engine = options.Layout ?? new BlockLayoutEngine();
         engine.Layout(boxes, new LayoutInput(options.ViewportWidth, options.ViewportHeight, options.Fonts), fragments, cancellationToken);
-        return new HtmlPage(document, styled, boxes, fragments, options);
+        var page = new HtmlPage(document, styled, boxes, fragments, options);
+        if (scroll is not null)
+        {
+            page.Scroll = scroll;
+        }
+
+        return page;
     }
 
     private const int MaxFontFaceRules = 1024;

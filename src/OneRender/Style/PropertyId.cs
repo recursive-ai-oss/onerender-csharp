@@ -148,12 +148,15 @@ internal enum PropertyId : byte
     EmptyCells,
     CaptionSide,
     TableLayout,
+    PointerEvents,
+    Transform,
+    TransformOrigin,
 }
 
 /// <summary>Names and inheritance of <see cref="PropertyId"/> values.</summary>
 internal static class Properties
 {
-    public const int Count = (int)PropertyId.TableLayout + 1;
+    public const int Count = (int)PropertyId.TransformOrigin + 1;
     private static readonly string[] Names =
     [
         "font-size", "display", "position", "float", "clear", "box-sizing", "top", "right", "bottom", "left",
@@ -177,6 +180,7 @@ internal static class Properties
         "grid-row-start", "grid-row-end", "grid-column-start", "grid-column-end", "justify-items", "justify-self",
         "background-image", "background-repeat", "background-position-x", "background-position-y", "background-size", "background-origin", "background-clip", "background-attachment", "border-image-source", "border-image-slice", "border-image-width", "border-image-outset", "border-image-repeat", "box-shadow", "outline-width", "outline-style", "outline-color", "outline-offset", "text-decoration-line", "text-decoration-style", "text-decoration-color", "text-decoration-thickness", "text-underline-offset", "text-underline-position", "text-shadow", "object-fit", "object-position", "image-rendering", "list-style-image",
         "border-collapse", "border-spacing", "empty-cells", "caption-side", "table-layout",
+        "pointer-events", "transform", "transform-origin",
     ];
 
     private static readonly Dictionary<string, PropertyId> ByName = BuildByName();
@@ -198,7 +202,7 @@ internal static class Properties
             or PropertyId.TextUnderlineOffset or PropertyId.TextUnderlinePosition
             or PropertyId.WordBreak or PropertyId.OverflowWrap or PropertyId.LineBreak or PropertyId.Hyphens or PropertyId.TabSize
             or PropertyId.TextAlignLast or PropertyId.TextJustify or PropertyId.TextTransform
-            or PropertyId.BorderCollapse or PropertyId.BorderSpacing or PropertyId.EmptyCells or PropertyId.CaptionSide => true,
+            or PropertyId.BorderCollapse or PropertyId.BorderSpacing or PropertyId.EmptyCells or PropertyId.CaptionSide or PropertyId.PointerEvents => true,
         _ => false,
     };
 
