@@ -1,0 +1,25 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+*,::before,::after{box-sizing:border-box}
+body{margin:0;font:16px/1.5 Arial,sans-serif}
+ul{margin:0;padding:8px;list-style:none;font-size:14px;display:inline-flex}
+li a{padding:6px 12px}
+.g li a{display:grid}
+.r{flex-flow:row wrap}
+.c{flex-flow:column wrap}
+.l li{display:flex;flex-flow:column wrap}
+div{background:#eee;margin-bottom:10px}
+</style></head><body>
+<div><ul><li>Link</li></ul></div>
+<div><ul class="r"><li>Link</li></ul></div>
+<div><ul class="c"><li>Link</li></ul></div>
+<div><ul><li><a>Link</a></li></ul></div>
+<div><ul class="g"><li><a>Link</a></li></ul></div>
+<div><ul class="l"><li><a>Link</a></li></ul></div>
+<div><ul class="l g"><li><a>Link</a></li></ul></div>
+<div><ul class="l g r"><li><a>Link</a></li></ul></div>
+<div><ul class="l g r" style="align-items:flex-start"><li><a>Link</a></li></ul></div>
+<div><ul style="display:inline-block"><li>Link</li></ul></div>
+<div><div style="display:inline-grid;overflow-x:auto;padding:8px;grid-auto-flow:column"><div>Total</div><div>x</div></div></div>
+<div><div style="display:inline-grid;padding:8px;grid-auto-flow:column"><div>Total</div><div>x</div></div></div>
+<div><div style="display:inline-flex;overflow:hidden;padding:8px"><div>Total</div><div>x</div></div></div>
+</body></html>

@@ -70,6 +70,21 @@ internal sealed partial class InlineWorker
                             _opp[p] = OppAllowed;
                         }
 
+                        if (_t[p - 1] == '-' && p < n && _opp[p] == OppNone && p >= 2 && _t[p] >= '0' && _t[p] <= '9' && char.IsLetterOrDigit(_t[p - 2]))
+                        {
+                            // UAX #14 LB25 joins a hyphen to the digits after it. The reference browser applies that only where the hyphen
+                            // is a sign (after a currency or percent sign, or at the start of a word); after a letter or digit, as in
+                            // "INV-2026-0418", it breaks after the hyphen (evidence: docs/layout-conventions.md, hyphen before digits).
+                            _opp[p] = OppAllowed;
+                        }
+
+                        if (_opp[p] == OppAllowed && p < n && _t[p - 1] is '/' or '|' or '!' && _t[p] < '\u2E80' && (char.IsLetterOrDigit(_t[p]) || _t[p] == '/'))
+                        {
+                            // UAX #14 allows a break after "/" (SY), "|" (BA) and "!" (EX) before a letter. The reference browser does
+                            // not, which keeps paths, URLs and "and/or" in one piece; "?" and "-" still break (evidence: docs/layout-conventions.md).
+                            _opp[p] = OppNone;
+                        }
+
                         if ((prev & CfBreakSpace) != 0 && p < n)
                         {
                             // CSS Text 3 §5.1: break-spaces gives a break after every preserved space, including between two.
@@ -419,7 +434,14 @@ internal sealed partial class InlineWorker
         e.W = m.Left + bb.Width + m.Right;
         e.H = m.Top + bb.Height + m.Bottom;
         e.Base = e.H;
-        if (b.Kind == BoxKind.Container && b.Values.OverflowX == OverflowKind.Visible && b.Values.OverflowY == OverflowKind.Visible)
+        if (b.Kind == BoxKind.Container && b.Context is FormattingContext.Flex or FormattingContext.Grid && !double.IsNaN(f.Baseline))
+        {
+            // Flexbox §8.5 and Grid §11.6: an inline flex or grid container sits on the first baseline set it computed, whatever its
+            // overflow. Reading it from the container keeps it right when the container was only measured, with no line boxes of its
+            // items to look at (evidence: docs/layout-conventions.md, inline flex baseline).
+            e.Base = m.Top + f.Baseline;
+        }
+        else if (b.Kind == BoxKind.Container && b.Values.OverflowX == OverflowKind.Visible && b.Values.OverflowY == OverflowKind.Visible)
         {
             // CSS2 §10.8.1: the baseline of an inline-block is that of its last line box in normal flow; with none, or with a
             // non-visible overflow, it is the bottom margin edge.

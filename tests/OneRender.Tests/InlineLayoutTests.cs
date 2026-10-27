@@ -293,16 +293,15 @@ public class InlineLayoutTests
         }
     }
 
+    // The reference browser keeps a path together (no break after "/" before a letter or digit) and breaks a URL after "?".
     [Fact]
-    public void UrlBreaksAfterSlashes()
+    public void UrlBreaksAfterTheQuestionMarkNotAfterSlashes()
     {
-        double w = W("http://example.com/");
-        Lay l = Run("<div id=a style='width:" + Px(w + 4) + "px'>http://example.com/alpha/beta/gamma</div>");
-        Assert.True(l.Lines("a").Count > 1);
-        foreach (Fragment line in l.Lines("a"))
-        {
-            Assert.True(Lay.Texts(line)[0].F.BorderBox.Width <= w + 4.01, "line " + Lay.Texts(line)[0].Text);
-        }
+        double w = W("http://example.com/alpha/beta?");
+        Lay l = Run("<div id=a style='width:" + Px(w + 4) + "px'>http://example.com/alpha/beta?gamma/delta</div>");
+        System.Collections.Generic.List<string> lines = [.. l.LineTexts("a")];
+        Assert.Equal(2, lines.Count);
+        Assert.EndsWith("?", lines[0]);
     }
 
     [Fact]

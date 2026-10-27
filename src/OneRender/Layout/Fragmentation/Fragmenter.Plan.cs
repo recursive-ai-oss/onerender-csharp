@@ -110,9 +110,22 @@ internal sealed partial class Fragmenter
 
                 bool balance = inp.Balance || !last;
                 double h;
+                bool balancedLast = false;
                 if (balance)
                 {
                     h = Balance(c0, c1, cs, ce, inp.Columns, avail);
+                    if (last && inp.Columns > 0)
+                    {
+                        // Balancing starts from an equal share of everything, trailing margin included, and only grows from there; the
+                        // columns end at that height and nothing trails them (evidence: docs/layout-conventions.md, balanced columns).
+                        double ideal = Math.Ceiling((inp.StripH - cs) / inp.Columns * 64) / 64;
+                        if (h < ideal && ideal <= avail)
+                        {
+                            h = ideal;
+                        }
+
+                        balancedLast = true;
+                    }
                 }
                 else
                 {
@@ -150,7 +163,7 @@ internal sealed partial class Fragmenter
                 row.OutY = cursor;
                 colBase += sr.Count;
                 cursor += h;
-                stripPos = ce;
+                stripPos = balancedLast ? inp.StripH : ce;
             }
 
             if (_rowN == _rows.Length)

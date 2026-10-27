@@ -463,6 +463,14 @@ public sealed partial class BlockLayoutEngine
 
         double baseline = fx.Baseline;
         ref Frame t = ref _frames[top];
+        if (!double.IsNaN(t.RatioH))
+        {
+            // CSS Sizing 4 §5: an auto block size with a definite inline size follows the preferred aspect ratio; unless the box scrolls or
+            // has an explicit min-height, its content size is the automatic minimum.
+            bool contentMinimum = (t.Flags & FrameFlags.ScrollContainer) == 0 && _boxes.Make(t.Box).Values.MinHeight.Kind == LengthKind.Auto;
+            contentH = Math.Max(t.MinH, Math.Min(t.MaxH, contentMinimum ? Math.Max(t.RatioH, contentH) : t.RatioH));
+        }
+
         t.SpecH = contentH;
         t.MinH = 0;
         t.MaxH = double.PositiveInfinity;

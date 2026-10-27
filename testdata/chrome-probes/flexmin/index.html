@@ -1,0 +1,15 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+*,::before,::after{box-sizing:border-box}
+body{margin:0;font:14px/20px Arial,sans-serif}
+.n{display:flex;align-items:center;width:100%;min-height:64px;padding:8px;background:#eee;margin-bottom:10px}
+.n>div{background:#ccc}
+</style></head><body>
+<div class="n"><div style="height:40px">a</div><div style="height:49px">b</div></div>
+<div class="n"><div style="height:40px">a</div></div>
+<div class="n"><div style="height:60px">a</div></div>
+<div class="n" style="min-height:0"><div style="height:20px">a</div></div>
+<div class="n" style="align-items:flex-start"><div style="height:20px">a</div></div>
+<div class="n" style="align-items:stretch"><div>a</div></div>
+<div class="n" style="min-height:4rem"><div style="height:40px">a</div><div style="height:49px">b</div></div>
+<div class="n" style="display:inline-flex"><div style="height:40px">a</div><div style="height:49px">b</div></div>
+</body></html>

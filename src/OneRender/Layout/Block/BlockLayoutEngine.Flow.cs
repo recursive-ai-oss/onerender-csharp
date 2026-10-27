@@ -178,7 +178,8 @@ public sealed partial class BlockLayoutEngine
                 if (!double.IsNaN(t.RatioH))
                 {
                     // CSS Sizing 4 §5.1: the automatic minimum size of a box with a preferred aspect ratio is its content size.
-                    h = scroll ? t.RatioH : Math.Max(t.RatioH, h);
+                    // An explicit min-height (min-height: 0 included) replaces that automatic minimum.
+                    h = scroll || _boxes.Make(t.Box).Values.MinHeight.Kind != LengthKind.Auto ? t.RatioH : Math.Max(t.RatioH, h);
                 }
 
                 contentH = Math.Max(t.MinH, Math.Min(t.MaxH, h));
@@ -376,12 +377,13 @@ public sealed partial class BlockLayoutEngine
         }
         else if (mlAuto)
         {
-            ml = rem - mrv;
+            // CSS2 §10.3.3: when the box is wider than its container, an auto margin counts as zero rather than going negative.
+            ml = Math.Max(0, rem - mrv);
             mr = mrv;
         }
         else if (mrAuto)
         {
-            mr = rem - mlv;
+            mr = Math.Max(0, rem - mlv);
             ml = mlv;
         }
         else if (rtl)
