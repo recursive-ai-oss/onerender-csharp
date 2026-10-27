@@ -11,7 +11,7 @@
 | css-animations | 1 | 163 | 4 | 12 | 0 | 147 | 0.2500 |
 | css-backgrounds | 1 | 847 | 297 | 314 | 8 | 228 | 0.4798 |
 | css-borders | 1 | 181 | 18 | 76 | 0 | 87 | 0.1915 |
-| css-break | 1 | 1191 | 158 | 886 | 0 | 147 | 0.1513 |
+| css-break | 1 | 1191 | 163 | 881 | 0 | 147 | 0.1561 |
 | css-color | 1 | 377 | 234 | 62 | 0 | 81 | 0.7905 |
 | css-flexbox | 1 | 1398 | 648 | 286 | 18 | 446 | 0.6807 |
 | css-fonts | 1 | 551 | 160 | 153 | 25 | 213 | 0.4734 |
@@ -37,7 +37,7 @@
 | css2-positioning | 1 | 654 | 486 | 134 | 0 | 34 | 0.7839 |
 | css2-tables | 1 | 375 | 144 | 105 | 0 | 126 | 0.5783 |
 | filter-effects | 1 | 367 | 129 | 137 | 4 | 97 | 0.4778 |
-| **all** | | 20428 | 7583 | 6172 | 154 | 6519 | 0.5452 |
+| **all** | | 20428 | 7588 | 6167 | 154 | 6519 | 0.5455 |
 
 ## Why tests failed or were skipped
 
@@ -59,7 +59,7 @@
 - Skipped: 79 × testharness.js test; 4 × reftest-wait (needs script); 4 × script-dependent
 ### css-break
 
-- Failures: 886 × == reference differs
+- Failures: 881 × == reference differs
 - Skipped: 66 × print reftest (paged output); 48 × testharness.js test; 26 × script-dependent; 7 × reftest-wait (needs script)
 ### css-color
 
