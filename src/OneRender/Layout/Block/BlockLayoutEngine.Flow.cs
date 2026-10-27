@@ -68,6 +68,12 @@ public sealed partial class BlockLayoutEngine
     private void Attach(int pi, double x, double y, double w, double h, double mb, double baseline, double ovL, double ovT, double ovR, double ovB, bool scrollContainer)
     {
         ref Frame p = ref _frames[pi];
+        if ((p.Flags & FrameFlags.Flex) != 0)
+        {
+            FlexItemDone(pi, x, y, w, h, baseline, ovL, ovT, ovR, ovB, scrollContainer);
+            return;
+        }
+
         p.Cursor = (y - p.ContentTop) + h;
         p.Flags |= FrameFlags.HasContent | FrameFlags.AnyChild;
         StrutAdd(mb);

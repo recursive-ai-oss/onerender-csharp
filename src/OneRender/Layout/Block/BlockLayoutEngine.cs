@@ -65,6 +65,7 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace
         Marker = 64,
         Float = 128,
         Cleared = 256,
+        Flex = 512,
     }
 
     private struct Frame
@@ -117,6 +118,9 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace
 
         // For a box with clearance whose top is still pending: the bottom edge of the floats it clears, in block-formatting-context coordinates.
         public double ClearBfc;
+
+        // For a flex container: its index in the flex stack (see BlockLayoutEngine.Flex.cs).
+        public int FlexIndex;
     }
 
     /// <inheritdoc />
@@ -143,6 +147,7 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace
         _floatCount = 0;
         _liveCount = 0;
         _defCount = 0;
+        PrepareFlex(boxes.Count);
         PrepareIntrinsicCache(boxes.Count);
         output.Clear();
         if (boxes.Root.IsNull)
@@ -191,6 +196,7 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace
         _pos = _neg = 0;
         int baseSp = _sp;
         int savedBsp = _bsp, savedFloats = _floatCount, savedLive = _liveCount, savedDef = _defCount;
+        int savedFlex = _fxCount, savedItems = _itemTop, savedLines = _lineTop;
         PushFrame(new Frame
         {
             Box = -1,
@@ -212,6 +218,18 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace
         {
             int top = _sp - 1;
             ref Frame f = ref _frames[top];
+            if ((f.Flags & FrameFlags.Flex) != 0)
+            {
+                // A flex container drives its own items (Layout/Flex): it opens them one at a time on this same stack.
+                if ((++_counter & 255) == 0)
+                {
+                    _token.ThrowIfCancellationRequested();
+                }
+
+                FlexStep(top);
+                continue;
+            }
+
             int c = f.NextChild;
             if (c < 0)
             {
@@ -236,6 +254,9 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace
         _floatCount = savedFloats;
         _liveCount = savedLive;
         _defCount = savedDef;
+        _fxCount = savedFlex;
+        _itemTop = savedItems;
+        _lineTop = savedLines;
         _pos = savedPos;
         _neg = savedNeg;
         _depth--;

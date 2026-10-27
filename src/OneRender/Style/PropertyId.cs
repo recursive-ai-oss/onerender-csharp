@@ -68,12 +68,24 @@ internal enum PropertyId : byte
     Content,
     ListStyleType,
     ListStylePosition,
+    FlexDirection,
+    FlexWrap,
+    FlexGrow,
+    FlexShrink,
+    FlexBasis,
+    Order,
+    JustifyContent,
+    AlignContent,
+    AlignItems,
+    AlignSelf,
+    RowGap,
+    ColumnGap,
 }
 
 /// <summary>Names and inheritance of <see cref="PropertyId"/> values.</summary>
 internal static class Properties
 {
-    public const int Count = (int)PropertyId.ListStylePosition + 1;
+    public const int Count = (int)PropertyId.ColumnGap + 1;
 
     private static readonly string[] Names =
     [
@@ -89,6 +101,8 @@ internal static class Properties
         "font-family", "font-weight", "font-style", "font-stretch", "line-height", "vertical-align",
         "white-space-collapse", "text-wrap-mode", "text-align", "text-indent", "letter-spacing", "word-spacing",
         "direction", "unicode-bidi", "color", "opacity", "background-color", "content", "list-style-type", "list-style-position",
+        "flex-direction", "flex-wrap", "flex-grow", "flex-shrink", "flex-basis", "order",
+        "justify-content", "align-content", "align-items", "align-self", "row-gap", "column-gap",
     ];
 
     private static readonly Dictionary<string, PropertyId> ByName = BuildByName();

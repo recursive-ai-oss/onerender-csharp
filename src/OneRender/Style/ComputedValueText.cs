@@ -95,8 +95,33 @@ internal static class ComputedValueText
             case PropertyId.ListStyleType:
                 return v.ListStyleTypeIsString ? "\"" + v.ListStyleType.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal) + "\"" : v.ListStyleType;
             case PropertyId.ListStylePosition: return v.ListStylePosition == ListStylePositionKind.Inside ? "inside" : "outside";
+            case PropertyId.FlexDirection: return v.FlexDirection switch { FlexDirectionKind.RowReverse => "row-reverse", FlexDirectionKind.Column => "column", FlexDirectionKind.ColumnReverse => "column-reverse", _ => "row" };
+            case PropertyId.FlexWrap: return v.FlexWrap switch { FlexWrapKind.Wrap => "wrap", FlexWrapKind.WrapReverse => "wrap-reverse", _ => "nowrap" };
+            case PropertyId.FlexGrow: return CssText.Number(v.FlexGrow);
+            case PropertyId.FlexShrink: return CssText.Number(v.FlexShrink);
+            case PropertyId.FlexBasis: return v.FlexBasisContent ? "content" : v.FlexBasis.ToCss();
+            case PropertyId.Order: return v.Order.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            case PropertyId.JustifyContent: return AlignText(v.JustifyContent, v.JustifyContentOverflow);
+            case PropertyId.AlignContent: return AlignText(v.AlignContent, v.AlignContentOverflow);
+            case PropertyId.AlignItems: return AlignText(v.AlignItems, v.AlignItemsOverflow);
+            case PropertyId.AlignSelf: return AlignText(v.AlignSelf, v.AlignSelfOverflow);
+            case PropertyId.RowGap: return v.RowGap.ToCss();
+            case PropertyId.ColumnGap: return v.ColumnGap.ToCss();
             default: return string.Empty;
         }
+    }
+
+    private static string AlignText(AlignKind k, AlignOverflowKind o)
+    {
+        string w = k switch
+        {
+            AlignKind.Auto => "auto", AlignKind.Normal => "normal", AlignKind.Stretch => "stretch", AlignKind.FlexStart => "flex-start",
+            AlignKind.FlexEnd => "flex-end", AlignKind.Start => "start", AlignKind.End => "end", AlignKind.SelfStart => "self-start",
+            AlignKind.SelfEnd => "self-end", AlignKind.Center => "center", AlignKind.Baseline => "baseline", AlignKind.LastBaseline => "last baseline",
+            AlignKind.Left => "left", AlignKind.Right => "right", AlignKind.SpaceBetween => "space-between", AlignKind.SpaceAround => "space-around",
+            _ => "space-evenly",
+        };
+        return o == AlignOverflowKind.Safe ? "safe " + w : o == AlignOverflowKind.Unsafe ? "unsafe " + w : w;
     }
 
     /// <summary>The serialization by property name; null for a property the engine does not compute.</summary>
