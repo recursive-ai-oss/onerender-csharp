@@ -33,6 +33,7 @@ public sealed partial class BoxTree
         _top = -1;
         if (st.Count == 0)
         {
+            PrepareIncremental();
             return;
         }
 
@@ -55,6 +56,8 @@ public sealed partial class BoxTree
             _frames[_top].Next = st.NextSiblingOf(child);
             Visit(child);
         }
+
+        PrepareIncremental();
     }
 
     private void Visit(int s)
@@ -87,6 +90,12 @@ public sealed partial class BoxTree
         if (d.IsNone)
         {
             return;
+        }
+
+        if (d.IsContents && s == 0)
+        {
+            // The root has no parent box to promote its children into, and a tree needs a root box: lay it out as a block.
+            d = DisplayType.Block;
         }
 
         ReplacedKind replaced = st.ReplacedOf(s);

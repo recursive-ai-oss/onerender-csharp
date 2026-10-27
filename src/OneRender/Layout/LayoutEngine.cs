@@ -58,6 +58,13 @@ public readonly struct LayoutInput
 
     /// <summary>The font provider.</summary>
     public IFontProvider Fonts { get; }
+
+    /// <summary>
+    /// When true, an engine that supports it takes subtrees whose boxes did not change (see the box tree's dirty marks) from the
+    /// layout it produced last time instead of laying them out again, and writes its result by replacing the contents of the output
+    /// tree. The result is the same either way. Default false.
+    /// </summary>
+    public bool Reuse { get; init; }
 }
 
 /// <summary>

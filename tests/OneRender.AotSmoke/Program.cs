@@ -230,7 +230,28 @@ OneRender.Accessibility.RenderedPage factsPage = OneRender.Accessibility.Accessi
     new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 100, ViewportHeight = 50 });
 bool factsOk = factsPage.Facts.BoxCount > 3 && OneRender.Accessibility.AccessibilityInfo.Name.Length > 0;
 
-return moOk && factsOk && ixOk && names.Length == 3 && tableOk && sfnt && painted && pageOk && boxes >= 3 && scrollOk && shaped && again && woff2Ok ? 0 : 1;
+
+// Incremental updates: edit a styled-node tree, query through the layout queries (which flush), restyle a state, and compare with the geometry.
+var liveTree = new StyledTree();
+StyledNode liveRoot = liveTree.AddRoot("div", new StyleDeclaration().Set("display", "block").Set("width", "100px"));
+StyledNode liveKid = liveTree.AddElement(liveRoot, "div", new StyleDeclaration().Set("display", "block").Set("height", "10px"));
+liveTree.SetStateStyle(liveKid, ElementStates.Hover, new StyleDeclaration().Set("height", "30px"));
+var livePage = new LivePage(liveTree, new LivePageOptions(FontProviders.CreateDefault()) { ViewportWidth = 200, ViewportHeight = 100 });
+var liveQueries = new LayoutQueries(livePage, new HitTester(livePage.Fragments, livePage.Scroll, 200, 100));
+liveTree.SetStates(liveKid, ElementStates.Hover);
+int liveHeight = liveQueries.OffsetHeight(liveKid);
+liveTree.AddText(liveTree.AddElement(liveRoot, "span"), "x");
+liveTree.SetStates(liveKid, ElementStates.None);
+FlushResult liveFlush = livePage.Flush();
+bool liveOk = liveHeight == 30 && liveQueries.OffsetHeight(liveKid) == 10 && liveFlush.Repainted && livePage.Display.Current.Count > 0;
+
+// The PDF backend: a tagged one-page file with a gradient and a rasterized island, through the PDF/UA identification pass.
+byte[] pdfBytes = HtmlPdf.ToPdf(
+    "<!DOCTYPE html><html lang='en'><head><title>T</title></head><body><h1>Hi</h1><p style='background:linear-gradient(#f00,#00f);box-shadow:2px 2px 4px #888'>text <a href='https://example.invalid/'>link</a></p></body></html>",
+    new HtmlPdfOptions { Output = new PdfOutputOptions { Profile = PdfProfile.PdfUA1 } });
+bool pdfOk = pdfBytes.Length > 500 && pdfBytes[0] == (byte)'%' && pdfBytes[1] == (byte)'P' && pdfBytes[2] == (byte)'D' && pdfBytes[3] == (byte)'F';
+
+return moOk && liveOk && pdfOk && factsOk && ixOk && names.Length == 3 && tableOk && sfnt && painted && pageOk && boxes >= 3 && scrollOk && shaped && again && woff2Ok ? 0 : 1;
 
 internal sealed class NoFonts : OneRender.Layout.IFontProvider
 {

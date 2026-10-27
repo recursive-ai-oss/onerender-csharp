@@ -90,6 +90,7 @@ internal sealed partial class InlineWorker
     // Font metrics cache, direct-mapped by style row.
     private readonly int[] _mcStyle = new int[256];
     private readonly int[] _mcVersion = new int[256];
+    private readonly int[] _mcReset = new int[256];
     private readonly double[] _mcA = new double[256];
     private readonly double[] _mcD = new double[256];
     private readonly double[] _mcGap = new double[256];

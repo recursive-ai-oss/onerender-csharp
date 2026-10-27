@@ -75,11 +75,13 @@ public sealed partial class InteractivePage
                 outcome = InputOutcome.Animated;
                 break;
             case MotionLevel.Paint:
+                // Anonymous boxes below the animated ones take the new values; nothing is laid out.
+                _page.Boxes.ApplyAnimatedRows(motion.ChangedNodes, false);
                 outcome = InputOutcome.Animated | InputOutcome.Relaid;
                 _generation++;
                 break;
             case MotionLevel.Layout:
-                RelayoutInPlace(cancellationToken);
+                RelayoutAnimated(motion, cancellationToken);
                 outcome = InputOutcome.Animated | InputOutcome.Relaid;
                 break;
         }
@@ -88,9 +90,20 @@ public sealed partial class InteractivePage
         return outcome;
     }
 
-    private void RelayoutInPlace(CancellationToken ct)
+    // Rows of the animated elements (and the descendants that follow them) were rewritten under their ids. Those elements' boxes are marked
+    // dirty and only their subtrees and ancestors are laid out again; a page without the incremental pipeline builds the boxes again.
+    private void RelayoutAnimated(AnimationController motion, CancellationToken ct)
     {
         HtmlPage page = _page;
+        if (page.Updater is { } updater)
+        {
+            page.Boxes.ApplyAnimatedRows(motion.ChangedNodes, true);
+            updater.LayoutAll(ct);
+            _hits.Rebuild();
+            _generation++;
+            return;
+        }
+
         page.Boxes.Build(ct);
         ILayoutEngine engine = _options.Layout ?? new BlockLayoutEngine();
         engine.Layout(page.Boxes, new LayoutInput(_options.ViewportWidth, _options.ViewportHeight, _options.Fonts), page.Fragments, ct);

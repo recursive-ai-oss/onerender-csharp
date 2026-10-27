@@ -94,6 +94,15 @@ internal static class DisplayListTarget
     // Pops are chosen by the target's own stack so that the list can always be finished.
     private static readonly System.Collections.Generic.List<int> Stack = [];
 
+    /// <summary>Builds a closed, validated list from the bytes (the first pass of <see cref="Run"/>), for targets that consume lists.</summary>
+    internal static DisplayList BuildClosed(ReadOnlySpan<byte> data)
+    {
+        var list = new DisplayList();
+        Build(list, data, 0);
+        Close(list);
+        return list;
+    }
+
     private static void Close(DisplayList list)
     {
         while (Stack.Count > 0)

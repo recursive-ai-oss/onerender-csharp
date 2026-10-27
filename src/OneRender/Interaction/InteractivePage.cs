@@ -37,6 +37,9 @@ public sealed partial class InteractivePage
     private int _generation;
     private IStateChangeHandler? _handler;
 
+    // Tests set it to compare the in-place restyle with building the page again.
+    internal bool DisableInPlaceRestyle { get; set; }
+
     private InteractivePage(HtmlPage page, DocumentStyles styles, HtmlPageOptions options, InteractionOptions io)
     {
         _page = page;
@@ -62,7 +65,7 @@ public sealed partial class InteractivePage
     public static InteractivePage Create(string html, HtmlPageOptions options, InteractionOptions? interaction = null, CancellationToken cancellationToken = default)
     {
         interaction ??= new InteractionOptions();
-        HtmlPage page = HtmlPage.CreateWithStyles(html, options, out DocumentStyles styles, cancellationToken, true, interaction.AnimationStartTime);
+        HtmlPage page = HtmlPage.CreateWithStyles(html, options, out DocumentStyles styles, cancellationToken, incremental: true, animate: true, startTime: interaction.AnimationStartTime);
         var created = new InteractivePage(page, styles, options, interaction);
         created._motionNow = interaction.AnimationStartTime;
         // Events of the first frame (animationstart, transitionrun) stay queued until the first Advance, so listeners added after Create see them.
@@ -272,9 +275,18 @@ public sealed partial class InteractivePage
         if (differs)
         {
             _motionNow = Math.Max(_motionNow, _lastTime);
-            _page = _page.Rebuild(styles, ct, _motionNow);
-            _hits = NewHitTester(_page);
-            _queries = new LayoutQueries(_page, _hits);
+            if (!DisableInPlaceRestyle && _page.CanRestyleInPlace && _page.TryRestyle(styles, rebase, ct, _motionNow))
+            {
+                // The page object stays; its trees were updated in place, so the hit tester reads the new fragments.
+                _hits.Rebuild();
+            }
+            else
+            {
+                _page = _page.Rebuild(styles, ct, _motionNow);
+                _hits = NewHitTester(_page);
+                _queries = new LayoutQueries(_page, _hits);
+            }
+
             _generation++;
             outcome |= InputOutcome.Relaid;
             if (_page.Motion is { } motion)

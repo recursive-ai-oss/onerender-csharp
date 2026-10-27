@@ -42,6 +42,9 @@ public sealed class StyleTable
     /// <summary>The most distinct styles one table holds. Further requests reuse the parent's row and raise a diagnostic.</summary>
     public const int MaxStyles = 1 << 16;
 
+    /// <summary>Counts the resets of any table; caches keyed by style row drop their entries when it changes.</summary>
+    internal static int ResetGeneration { get; private set; }
+
     private readonly StyleComputer _computer = new();
     private readonly Dictionary<StyleKey, int> _intern = new(256);
     private readonly Dictionary<long, int> _anonymous = new(16);
@@ -52,6 +55,7 @@ public sealed class StyleTable
     private double _viewportWidth = 800;
     private double _viewportHeight = 600;
     private double _rootFontSize = 16;
+    private ComputeEnvironment _rootEnv = new(0, 0, 16);
 
     /// <summary>Creates a table whose row 0 is the initial style.</summary>
     public StyleTable() => _rows[0] = ComputedValues.Initial;
@@ -95,11 +99,13 @@ public sealed class StyleTable
     /// <summary>Drops every cached style. Handles obtained before the call must not be used afterwards.</summary>
     public void Reset()
     {
+        ResetGeneration++;
         _intern.Clear();
         _anonymous.Clear();
         _byHash.Clear();
         _count = 1;
         _rootFontSize = 16;
+        _rootEnv = new(0, 0, 16);
     }
 
     /// <summary>The text service whose metrics resolve <c>ex</c>, <c>ch</c> and <c>ic</c>; set before building, since cached styles keep the numbers they were computed with.</summary>
@@ -110,11 +116,21 @@ public sealed class StyleTable
     }
 
     /// <summary>Records which style is the root's, so <c>rem</c> units in later styles resolve against its font size.</summary>
-    internal void NoteRoot(StyleId root) => _rootFontSize = _rows[root.Index].FontSize;
+    /// <summary>The font size that <c>rem</c> units currently resolve against.</summary>
+    internal double RootFontSizeValue => _rootFontSize;
+
+    /// <summary>The root font facts that <c>rem</c>, <c>rex</c>, <c>rcap</c>, <c>rch</c> and <c>ric</c> resolve against; it changes with the root's font size, family, weight or style.</summary>
+    internal ComputeEnvironment RootEnvironment => _rootEnv;
+
+    internal void NoteRoot(StyleId root)
+    {
+        _rootFontSize = _rows[root.Index].FontSize;
+        _rootEnv = _computer.WithRootFont(_rootEnv, in _rows[root.Index]);
+    }
 
     internal bool TryGetCached(object source, int version, StyleId parent, out StyleId id)
     {
-        if (_intern.TryGetValue(new StyleKey(source, version, parent.Index, _rootFontSize), out int row))
+        if (_intern.TryGetValue(new StyleKey(source, version, parent.Index, _rootEnv), out int row))
         {
             id = new StyleId(row);
             return true;
@@ -127,7 +143,9 @@ public sealed class StyleTable
     /// <summary>Computes the style of a node and caches it under the key and version.</summary>
     internal StyleId Compute(object key, int version, DeclarationSource declarations, StyleId parent, bool hasParent, bool isRoot)
     {
-        var env = new ComputeEnvironment(_viewportWidth, _viewportHeight, isRoot ? 16 : _rootFontSize);
+        ComputeEnvironment env = isRoot
+            ? new ComputeEnvironment(_viewportWidth, _viewportHeight, 16)
+            : _rootEnv with { ViewportWidth = _viewportWidth, ViewportHeight = _viewportHeight, RootFontSize = _rootFontSize };
         ref ComputedValues parentRow = ref _rows[hasParent ? parent.Index : 0];
         ComputedValues values = _computer.Compute(declarations, in parentRow, hasParent, in env, isRoot);
         if (_computer.InvalidCount > 0)
@@ -140,6 +158,7 @@ public sealed class StyleTable
         if (isRoot)
         {
             _rootFontSize = values.FontSize;
+            _rootEnv = _computer.WithRootFont(_rootEnv, in values);
         }
 
         if (!TryAdd(in values, out StyleId id))
@@ -148,7 +167,7 @@ public sealed class StyleTable
             return hasParent ? parent : default;
         }
 
-        _intern[new StyleKey(key, version, parent.Index, _rootFontSize)] = id.Index;
+        _intern[new StyleKey(key, version, parent.Index, _rootEnv)] = id.Index;
         return id;
     }
 
@@ -282,5 +301,5 @@ public sealed class StyleTable
         return true;
     }
 
-    private readonly record struct StyleKey(object Source, int Version, int Parent, double RootFontSize);
+    private readonly record struct StyleKey(object Source, int Version, int Parent, ComputeEnvironment Root);
 }

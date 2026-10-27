@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <Description>Generates a large HTML document and writes it as PDF, reporting time and memory.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../src/OneRender.Pdf/OneRender.Pdf.csproj" />
+    <ProjectReference Include="../../../src/OneRender.Fonts/OneRender.Fonts.csproj" />
+  </ItemGroup>
+
+</Project>

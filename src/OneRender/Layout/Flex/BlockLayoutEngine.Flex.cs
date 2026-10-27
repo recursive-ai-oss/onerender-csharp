@@ -378,6 +378,7 @@ public sealed partial class BlockLayoutEngine
             it.TrialBaseLast = baseline;
             MemoStore(it.Box, fx.ForceW, fx.ForceH, fx.CW, fx.SpecH, h, baseline);
             _out.Truncate(fx.Mark);
+            MemoTruncate(fx.Mark.Count);
             _frag.DropPlansFrom(fx.Mark.Count);
             _absCount = fx.AbsMark;
             _trialNesting--;

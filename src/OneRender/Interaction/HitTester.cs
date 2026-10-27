@@ -110,6 +110,7 @@ public sealed class HitTester
     private readonly double _vh;
 
     private int _built = -1;
+    private int _builtVersion = -1;
     private ushort[] _flags = new ushort[64];
     private int[] _owner = new int[64];
     private int[] _context = new int[64];
@@ -165,6 +166,7 @@ public sealed class HitTester
     {
         int n = _tree.Count;
         _built = n;
+        _builtVersion = _tree.Version;
         if (n == 0)
         {
             return;
@@ -443,7 +445,7 @@ public sealed class HitTester
             return 0;
         }
 
-        if (_tree.Count != _built)
+        if (_tree.Count != _built || _tree.Version != _builtVersion)
         {
             Rebuild();
         }
@@ -982,7 +984,7 @@ public sealed class HitTester
             throw new ArgumentException("The fragment is not in this tree.", nameof(fragment));
         }
 
-        if (_tree.Count != _built)
+        if (_tree.Count != _built || _tree.Version != _builtVersion)
         {
             Rebuild();
         }
@@ -1054,7 +1056,7 @@ public sealed class HitTester
 
     internal void EnsureBuilt()
     {
-        if (_tree.Count != _built)
+        if (_tree.Count != _built || _tree.Version != _builtVersion)
         {
             Rebuild();
         }

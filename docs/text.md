@@ -59,6 +59,14 @@ for `ic`. `font-size` itself is computed in the parent's font, so its `ex` and `
 complete before styles are computed (the page registers `@font-face` rules first); cached styles keep the numbers they were
 computed with. A page built without a font provider uses the fallbacks.
 
+`rex`, `rcap`, `rch` and `ric` (CSS Values 4 §6.1.2) use the root element's font, not the element's: after the root's style is computed
+its face gives the four ratios, which every later style receives (`LengthContext.RootExRatio`, `RootCapRatio`, `RootChRatio`,
+`RootIcRatio`), so `10rch` is the same length in a monospace span as in the root. The root's own `rex` uses its own font. A style cached
+under a different root x-height ratio is recomputed.
+
+`white-space` is a shorthand of `white-space-collapse` and `text-wrap-mode` (CSS Text 4 §3.1, with `white-space-trim` accepted and
+ignored); OneHtml expands it, and both longhands inherit, so a child of `white-space: pre` keeps preserved newlines and no wrapping.
+
 ## `@font-face`
 
 `FontFaceRule` carries `font-family`, `src`, `font-weight`/`-style`/`-stretch` (ranges, with `auto` = 400 / normal / 100%;

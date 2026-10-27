@@ -15,7 +15,9 @@
   <ItemGroup>
     <ProjectReference Include="../../src/OneRender/OneRender.csproj" />
     <ProjectReference Include="../../src/OneRender.Image/OneRender.Image.csproj" />
+    <ProjectReference Include="../../src/OneRender.Pdf/OneRender.Pdf.csproj" />
     <ProjectReference Include="../../src/OneRender.Fonts/OneRender.Fonts.csproj" />
+    <ProjectReference Include="../../tests/OneRender.TestSupport/OneRender.TestSupport.csproj" />
   </ItemGroup>
 
 </Project>

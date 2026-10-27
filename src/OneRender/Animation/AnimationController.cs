@@ -58,6 +58,7 @@ internal sealed partial class AnimationController
     private int _changedCount;
     private StyledTree? _tree;
     private StyleTable? _table;
+    private bool _sameTable;
     private readonly int[] _propStamp = new int[Properties.Count];
     private int _propStampValue;
 
@@ -147,70 +148,13 @@ internal sealed partial class AnimationController
         _tree = tree;
         StyleTable table = tree.Styles;
         bool sameTable = ReferenceEquals(_table, table);
+        _sameTable = sameTable;
         _table = table;
         _stamp++;
         _changedCount = 0;
         for (int i = 0; i < tree.Count; i++)
         {
-            if (tree.KindOf(i) != (byte)StyledNodeKind.Element)
-            {
-                continue;
-            }
-
-            int key = KeyOf(tree, i);
-            _effects.TryGetValue(key, out ElementEffects? e);
-            ref readonly ComputedValues after = ref tree.Styles[tree.StyleOf(i)];
-            bool wantsTransitions = HasTransitionsConfigured(in after);
-            bool wantsAnimations = after.HasAnimations;
-            if (e is null && !wantsTransitions && !wantsAnimations)
-            {
-                continue;
-            }
-
-            if (e is null)
-            {
-                if (_effects.Count >= MaxAnimatedElements)
-                {
-                    continue;
-                }
-
-                e = new ElementEffects { Key = key };
-                _effects[key] = e;
-            }
-
-            e.Stamp = _stamp;
-            e.NodeIndex = i;
-            bool hadRow = e.HasRow && sameTable;
-            ComputedValues baseValues = after;
-            e.Base = baseValues;
-
-            if (after.Display.IsNone)
-            {
-                // CSS Transitions 2 §3.1 / CSS Display 4 §2.7: an element with display: none runs no animations and no transitions, except
-                // a transition of display itself, which keeps the element shown until it ends.
-                CancelAllExceptDisplayTransition(e, now);
-                if (previous is not null && wantsTransitions)
-                {
-                    _onlyDisplay = true;
-                    UpdateTransitions(tree, previous, e, i, in baseValues, wantsTransitions, now);
-                    _onlyDisplay = false;
-                }
-
-                FinishRecalc(tree, e, i, hadRow, now);
-                continue;
-            }
-
-            UpdateAnimations(tree, e, i, in baseValues, now);
-            if (previous is not null)
-            {
-                UpdateTransitions(tree, previous, e, i, in baseValues, wantsTransitions, now);
-            }
-            else
-            {
-                CancelTransitionsNotIn(e, in baseValues, now);
-            }
-
-            FinishRecalc(tree, e, i, hadRow, now);
+            RecalcNode(tree, i, previous, false, default, now);
         }
 
         // Elements of the previous generation that are gone from the tree: their effects are cancelled.
@@ -232,6 +176,130 @@ internal sealed partial class AnimationController
 
         _pendingRemoval.Clear();
         SortEvents();
+    }
+
+    /// <summary>
+    /// Recalculation for just the elements a restyle in place changed: the same as <see cref="Recalc"/> for those nodes, with each node's
+    /// before-change style taken from the styled tree's record of what it was before the change set. The changed nodes are listed in
+    /// <see cref="ChangedNodes"/>.
+    /// </summary>
+    /// <param name="tree">The styled tree, restyled but not yet cleared of its pending changes.</param>
+    /// <param name="now">The host's time in ms.</param>
+    /// <param name="styles">The cascade the tree was restyled from; may be null.</param>
+    /// <returns>True when any restyled element has, or had, transitions or animations (its style row may differ in content from the recorded old style).</returns>
+    public bool RecalcPending(StyledTree tree, double now, DocumentStyles? styles = null)
+    {
+        ArgumentNullException.ThrowIfNull(tree);
+        _styles = styles;
+        now = EffectTiming.ClampTime(now);
+        _tree = tree;
+        _sameTable = true;
+        _table = tree.Styles;
+        _stamp++;
+        _changedCount = 0;
+        bool touched = false;
+        int count = tree.PendingCount;
+        for (int k = 0; k < count; k++)
+        {
+            if ((tree.PendingKinds(k) & NodeChanges.Style) == 0)
+            {
+                continue;
+            }
+
+            int node = tree.PendingNode(k);
+            if (tree.KindOf(node) != (byte)StyledNodeKind.Element)
+            {
+                continue;
+            }
+
+            int key = KeyOf(tree, node);
+            bool had = _effects.TryGetValue(key, out ElementEffects? already);
+            if (already is not null && already.Stamp == _stamp)
+            {
+                // The change log can name a node twice; its effects were already brought up to date in this call.
+                continue;
+            }
+
+            RecalcNode(tree, node, null, true, tree.OldStyleOf(node), now);
+            touched |= had || _effects.ContainsKey(key);
+        }
+
+        SortEvents();
+        return touched;
+    }
+
+    // One element of Recalc. `previous` is the tree the page showed before (a full rebuild); otherwise, when `useOld` is set, `oldStyle`
+    // is the node's style before the change (a restyle in place).
+    private void RecalcNode(StyledTree tree, int i, StyledTree? previous, bool useOld, StyleId oldStyle, double now)
+    {
+        if (tree.KindOf(i) != (byte)StyledNodeKind.Element)
+        {
+            return;
+        }
+
+        int key = KeyOf(tree, i);
+        _effects.TryGetValue(key, out ElementEffects? e);
+        ref readonly ComputedValues after = ref tree.Styles[tree.StyleOf(i)];
+        bool wantsTransitions = HasTransitionsConfigured(in after);
+        bool wantsAnimations = after.HasAnimations;
+        if (e is null && !wantsTransitions && !wantsAnimations)
+        {
+            return;
+        }
+
+        if (e is null)
+        {
+            if (_effects.Count >= MaxAnimatedElements)
+            {
+                return;
+            }
+
+            e = new ElementEffects { Key = key };
+            _effects[key] = e;
+        }
+
+        e.Stamp = _stamp;
+        e.NodeIndex = i;
+        bool hadRow = e.HasRow && _sameTable;
+        ComputedValues baseValues = after;
+        e.Base = baseValues;
+
+        ComputedValues before = default;
+        bool hasBefore = false;
+        if (previous is not null)
+        {
+            int prevNode = MapNode(tree, previous, i);
+            if (prevNode >= 0)
+            {
+                before = previous.Styles[previous.StyleOf(prevNode)];
+                hasBefore = true;
+            }
+        }
+        else if (useOld)
+        {
+            before = tree.Styles[oldStyle];
+            hasBefore = true;
+        }
+
+        if (after.Display.IsNone)
+        {
+            // CSS Transitions 2 §3.1 / CSS Display 4 §2.7: an element with display: none runs no animations and no transitions, except
+            // a transition of display itself, which keeps the element shown until it ends.
+            CancelAllExceptDisplayTransition(e, now);
+            if (hasBefore && wantsTransitions)
+            {
+                _onlyDisplay = true;
+                UpdateTransitions(tree, e, in before, true, in baseValues, wantsTransitions, now);
+                _onlyDisplay = false;
+            }
+
+            FinishRecalc(tree, e, i, hadRow, now);
+            return;
+        }
+
+        UpdateAnimations(tree, e, i, in baseValues, now);
+        UpdateTransitions(tree, e, in before, hasBefore, in baseValues, wantsTransitions, now);
+        FinishRecalc(tree, e, i, hadRow, now);
     }
 
     private void FinishRecalc(StyledTree tree, ElementEffects e, int node, bool hadRow, double now)
@@ -300,6 +368,16 @@ internal sealed partial class AnimationController
             if (l != MotionLevel.None)
             {
                 AddChanged(e.NodeIndex);
+                if (l >= MotionLevel.Paint)
+                {
+                    // Descendants that follow an animated inherited value changed with it and take part in repaint and relayout.
+                    int[] followers = e.FollowerNodes;
+                    for (int f = 0; f < followers.Length; f++)
+                    {
+                        AddChanged(followers[f]);
+                    }
+                }
+
                 if (l > level)
                 {
                     level = l;

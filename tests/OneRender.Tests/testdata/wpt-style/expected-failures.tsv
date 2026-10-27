@@ -478,9 +478,6 @@ css/css-text/parsing/letter-spacing-valid.html	valid	letter-spacing	120%	letter-
 css/css-text/parsing/letter-spacing-valid.html	valid	letter-spacing	-10%	letter-spacing percentages are not modelled and spacing keeps normal/0 distinct from 0px
 css/css-text/parsing/letter-spacing-valid.html	valid	letter-spacing	calc(2ch - 30%)	letter-spacing percentages are not modelled and spacing keeps normal/0 distinct from 0px
 css/css-text/parsing/letter-spacing-valid.html	valid	letter-spacing	calc(40% + 50px)	letter-spacing percentages are not modelled and spacing keeps normal/0 distinct from 0px
-css/css-text/parsing/white-space-invalid.html	invalid	white-space	normal pre	the white-space shorthand fallback accepts keyword combinations the grammar forbids
-css/css-text/parsing/white-space-invalid.html	invalid	white-space	nowrap pre-wrap	the white-space shorthand fallback accepts keyword combinations the grammar forbids
-css/css-text/parsing/white-space-invalid.html	invalid	white-space	pre-line break-spaces	the white-space shorthand fallback accepts keyword combinations the grammar forbids
 css/css-text/parsing/word-spacing-computed.html	computed	word-spacing	normal	letter-spacing percentages are not modelled and spacing keeps normal/0 distinct from 0px
 css/css-text/parsing/word-spacing-computed.html	computed	word-spacing	calc(10px - (5% + 10%)	letter-spacing percentages are not modelled and spacing keeps normal/0 distinct from 0px
 css/css-values/calc-infinity-nan-computed.html	computed	width	calc(NaN * 1%)	calc() with infinity/NaN and percentages: getComputedStyle returns the used value, and infinite lengths are not clamped

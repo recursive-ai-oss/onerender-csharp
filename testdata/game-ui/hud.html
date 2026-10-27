@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>HUD</title><style>
+html,body{margin:0;padding:0}
+#h31:hover{background:#33425f !important;}
+#h34:hover{background:#33425f !important;}
+#h37:hover{background:#33425f !important;}
+#h40:hover{background:#33425f !important;}
+#h43:hover{background:#33425f !important;}
+#h46:hover{background:#33425f !important;}
+#h49:hover{background:#33425f !important;}
+#h52:hover{background:#33425f !important;}
+#h55:hover{background:#33425f !important;}
+#h58:hover{background:#33425f !important;}
+#h61:hover{background:#33425f !important;}
+#h64:hover{background:#33425f !important;}
+#h67:hover{background:#4562a0 !important;}
+#h69:hover{background:#4562a0 !important;}
+#h71:hover{background:#4562a0 !important;}
+#h73:hover{background:#4562a0 !important;}
+#quest0:hover{background:#2a3750 !important;}
+#quest1:hover{background:#2a3750 !important;}
+#quest2:hover{background:#2a3750 !important;}
+#quest3:hover{background:#2a3750 !important;}
+#quest4:hover{background:#2a3750 !important;}
+#quest5:hover{background:#2a3750 !important;}
+#quest6:hover{background:#2a3750 !important;}
+#quest7:hover{background:#2a3750 !important;}
+#quest8:hover{background:#2a3750 !important;}
+#quest9:hover{background:#2a3750 !important;}
+#quest10:hover{background:#2a3750 !important;}
+#quest11:hover{background:#2a3750 !important;}
+#quest12:hover{background:#2a3750 !important;}
+#quest13:hover{background:#2a3750 !important;}
+#quest14:hover{background:#2a3750 !important;}
+#quest15:hover{background:#2a3750 !important;}
+#quest16:hover{background:#2a3750 !important;}
+#quest17:hover{background:#2a3750 !important;}
+#quest18:hover{background:#2a3750 !important;}
+#quest19:hover{background:#2a3750 !important;}
+#quest20:hover{background:#2a3750 !important;}
+#quest21:hover{background:#2a3750 !important;}
+#quest22:hover{background:#2a3750 !important;}
+#quest23:hover{background:#2a3750 !important;}
+#quest24:hover{background:#2a3750 !important;}
+#quest25:hover{background:#2a3750 !important;}
+#quest26:hover{background:#2a3750 !important;}
+#quest27:hover{background:#2a3750 !important;}
+#quest28:hover{background:#2a3750 !important;}
+#quest29:hover{background:#2a3750 !important;}
+#member0:hover{background:#232d40 !important;}
+#member1:hover{background:#232d40 !important;}
+#member2:hover{background:#232d40 !important;}
+#member3:hover{background:#232d40 !important;}
+#member4:hover{background:#232d40 !important;}
+#member5:hover{background:#232d40 !important;}
+#member6:hover{background:#232d40 !important;}
+#member7:hover{background:#232d40 !important;}
+#h218:hover{background:#58a86a !important;}
+#h229:hover{background:#58a86a !important;}
+#h240:hover{background:#58a86a !important;}
+#h251:hover{background:#58a86a !important;}
+#h262:hover{background:#58a86a !important;}
+#h273:hover{background:#58a86a !important;}
+#h284:hover{background:#58a86a !important;}
+#h295:hover{background:#58a86a !important;}
+#h306:hover{background:#58a86a !important;}
+#h317:hover{background:#58a86a !important;}
+#h328:hover{background:#58a86a !important;}
+#h339:hover{background:#58a86a !important;}
+#h350:hover{background:#58a86a !important;}
+#h361:hover{background:#58a86a !important;}
+#h372:hover{background:#58a86a !important;}
+#h383:hover{background:#58a86a !important;}
+#h394:hover{background:#58a86a !important;}
+#h405:hover{background:#58a86a !important;}
+#h415:hover{background:#3a4d73 !important;}
+#h417:hover{background:#3a4d73 !important;}
+#h419:hover{background:#3a4d73 !important;}
+#h421:hover{background:#3a4d73 !important;}
+#h423:hover{background:#3a4d73 !important;}
+#slot0:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot1:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot2:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot3:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot4:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot5:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot6:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot7:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot8:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot9:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot10:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot11:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot12:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot13:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot14:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot15:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot16:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot17:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot18:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot19:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot20:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot21:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot22:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot23:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot24:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot25:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot26:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot27:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot28:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot29:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot30:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot31:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot32:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot33:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot34:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot35:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot36:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot37:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot38:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot39:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot40:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot41:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot42:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot43:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot44:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot45:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot46:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#slot47:hover{background:#33425f !important;border-color:#8fb0ff !important;}
+#act0:hover{background:#3a4d73 !important;}
+#act1:hover{background:#3a4d73 !important;}
+#act2:hover{background:#3a4d73 !important;}
+#act3:hover{background:#3a4d73 !important;}
+#act4:hover{background:#3a4d73 !important;}
+#act5:hover{background:#3a4d73 !important;}
+#act6:hover{background:#3a4d73 !important;}
+#act7:hover{background:#3a4d73 !important;}
+#act8:hover{background:#3a4d73 !important;}
+#act9:hover{background:#3a4d73 !important;}
+#h613:hover{background:#232d40 !important;}
+#h616:hover{background:#232d40 !important;}
+#h619:hover{background:#232d40 !important;}
+#h622:hover{background:#232d40 !important;}
+#h625:hover{background:#232d40 !important;}
+#h628:hover{background:#232d40 !important;}
+#h631:hover{background:#232d40 !important;}
+#h634:hover{background:#232d40 !important;}
+#h637:hover{background:#232d40 !important;}
+#h640:hover{background:#232d40 !important;}
+#h643:hover{background:#232d40 !important;}
+#h646:hover{background:#232d40 !important;}
+#h649:hover{background:#232d40 !important;}
+#h652:hover{background:#232d40 !important;}
+#h655:hover{background:#232d40 !important;}
+#h658:hover{background:#232d40 !important;}
+#h661:hover{background:#232d40 !important;}
+#h664:hover{background:#232d40 !important;}
+#h667:hover{background:#232d40 !important;}
+#h670:hover{background:#232d40 !important;}
+#h673:hover{background:#232d40 !important;}
+#h676:hover{background:#232d40 !important;}
+#h679:hover{background:#232d40 !important;}
+#h682:hover{background:#232d40 !important;}
+#h685:hover{background:#232d40 !important;}
+#h688:hover{background:#232d40 !important;}
+#h691:hover{background:#232d40 !important;}
+#h694:hover{background:#232d40 !important;}
+#h697:hover{background:#232d40 !important;}
+#h700:hover{background:#232d40 !important;}
+#h703:hover{background:#232d40 !important;}
+#h706:hover{background:#232d40 !important;}
+#h709:hover{background:#232d40 !important;}
+#h712:hover{background:#232d40 !important;}
+#h715:hover{background:#232d40 !important;}
+#h718:hover{background:#232d40 !important;}
+#h721:hover{background:#232d40 !important;}
+#h724:hover{background:#232d40 !important;}
+#h727:hover{background:#232d40 !important;}
+#h730:hover{background:#232d40 !important;}
+#h733:hover{background:#232d40 !important;}
+#h736:hover{background:#232d40 !important;}
+#h739:hover{background:#232d40 !important;}
+#h742:hover{background:#232d40 !important;}
+#h745:hover{background:#232d40 !important;}
+#h748:hover{background:#232d40 !important;}
+#h751:hover{background:#232d40 !important;}
+#h754:hover{background:#232d40 !important;}
+#h757:hover{background:#232d40 !important;}
+#h760:hover{background:#232d40 !important;}
+</style></head>
+<body>
+<div style="display:flex;flex-direction:column;width:1280px;height:720px;background:#10141c;color:#dde3ee;font:14px Liberation Sans;"><div style="display:flex;height:64px;padding:8px 12px;gap:12px;background:#1a2230;align-items:center;"><div style="display:flex;gap:10px;width:300px;"><div style="width:48px;height:48px;border-radius:8px;background:#5b7bd6;"></div>
+<div style="display:flex;flex-direction:column;gap:2px;width:220px;"><span style="display:block;font-weight:bold;">Aria Stormwind</span>
+<span id="level" style="display:block;font-size:12px;color:#9fb0cc;">Level 42 Ranger</span>
+<div style="display:flex;flex-direction:column;gap:3px;"><div style="width:200px;height:6px;background:#0b0e14;overflow:hidden;"><div style="width:80%;height:6px;background:#d04a4a;"></div>
+</div>
+<div style="width:200px;height:6px;background:#0b0e14;overflow:hidden;"><div style="width:55%;height:6px;background:#4a7bd0;"></div>
+</div>
+<div style="width:200px;height:6px;background:#0b0e14;overflow:hidden;"><div style="width:30%;height:6px;background:#c9a43a;"></div>
+</div>
+</div>
+<div style="display:flex;gap:2px;"><div style="width:10px;height:10px;background:hsl(0,60%,50%);"></div>
+<div style="width:10px;height:10px;background:hsl(23,60%,50%);"></div>
+<div style="width:10px;height:10px;background:hsl(46,60%,50%);"></div>
+<div style="width:10px;height:10px;background:hsl(69,60%,50%);"></div>
+<div style="width:10px;height:10px;background:hsl(92,60%,50%);"></div>
+<div style="width:10px;height:10px;background:hsl(115,60%,50%);"></div>
+<div style="width:10px;height:10px;background:hsl(138,60%,50%);"></div>
+<div style="width:10px;height:10px;background:hsl(161,60%,50%);"></div>
+<div style="width:10px;height:10px;background:hsl(184,60%,50%);"></div>
+<div style="width:10px;height:10px;background:hsl(207,60%,50%);"></div>
+<div style="width:10px;height:10px;background:hsl(230,60%,50%);"></div>
+<div style="width:10px;height:10px;background:hsl(253,60%,50%);"></div>
+<div style="width:10px;height:10px;background:hsl(276,60%,50%);"></div>
+<div style="width:10px;height:10px;background:hsl(299,60%,50%);"></div>
+<div style="width:10px;height:10px;background:hsl(322,60%,50%);"></div>
+<div style="width:10px;height:10px;background:hsl(345,60%,50%);"></div>
+</div>
+</div>
+</div>
+<div id="h31" style="display:flex;height:28px;width:92px;gap:6px;padding:0 6px;align-items:center;background:#232d40;border-radius:4px;"><div style="width:14px;height:14px;border-radius:7px;background:#e0b84a;"></div>
+<span id="gold" style="display:block;font-size:12px;">Gold 100</span>
+</div>
+<div id="h34" style="display:flex;height:28px;width:92px;gap:6px;padding:0 6px;align-items:center;background:#232d40;border-radius:4px;"><div style="width:14px;height:14px;border-radius:7px;background:#e0b84a;"></div>
+<span style="display:block;font-size:12px;">Gems 137</span>
+</div>
+<div id="h37" style="display:flex;height:28px;width:92px;gap:6px;padding:0 6px;align-items:center;background:#232d40;border-radius:4px;"><div style="width:14px;height:14px;border-radius:7px;background:#e0b84a;"></div>
+<span style="display:block;font-size:12px;">Wood 174</span>
+</div>
+<div id="h40" style="display:flex;height:28px;width:92px;gap:6px;padding:0 6px;align-items:center;background:#232d40;border-radius:4px;"><div style="width:14px;height:14px;border-radius:7px;background:#e0b84a;"></div>
+<span style="display:block;font-size:12px;">Iron 211</span>
+</div>
+<div id="h43" style="display:flex;height:28px;width:92px;gap:6px;padding:0 6px;align-items:center;background:#232d40;border-radius:4px;"><div style="width:14px;height:14px;border-radius:7px;background:#e0b84a;"></div>
+<span style="display:block;font-size:12px;">Food 248</span>
+</div>
+<div id="h46" style="display:flex;height:28px;width:92px;gap:6px;padding:0 6px;align-items:center;background:#232d40;border-radius:4px;"><div style="width:14px;height:14px;border-radius:7px;background:#e0b84a;"></div>
+<span style="display:block;font-size:12px;">Mana 285</span>
+</div>
+<div id="h49" style="display:flex;height:28px;width:92px;gap:6px;padding:0 6px;align-items:center;background:#232d40;border-radius:4px;"><div style="width:14px;height:14px;border-radius:7px;background:#e0b84a;"></div>
+<span style="display:block;font-size:12px;">Fame 322</span>
+</div>
+<div id="h52" style="display:flex;height:28px;width:92px;gap:6px;padding:0 6px;align-items:center;background:#232d40;border-radius:4px;"><div style="width:14px;height:14px;border-radius:7px;background:#e0b84a;"></div>
+<span style="display:block;font-size:12px;">Keys 359</span>
+</div>
+<div id="h55" style="display:flex;height:28px;width:92px;gap:6px;padding:0 6px;align-items:center;background:#232d40;border-radius:4px;"><div style="width:14px;height:14px;border-radius:7px;background:#e0b84a;"></div>
+<span style="display:block;font-size:12px;">Ore 396</span>
+</div>
+<div id="h58" style="display:flex;height:28px;width:92px;gap:6px;padding:0 6px;align-items:center;background:#232d40;border-radius:4px;"><div style="width:14px;height:14px;border-radius:7px;background:#e0b84a;"></div>
+<span style="display:block;font-size:12px;">Herbs 433</span>
+</div>
+<div id="h61" style="display:flex;height:28px;width:92px;gap:6px;padding:0 6px;align-items:center;background:#232d40;border-radius:4px;"><div style="width:14px;height:14px;border-radius:7px;background:#e0b84a;"></div>
+<span style="display:block;font-size:12px;">Cloth 470</span>
+</div>
+<div id="h64" style="display:flex;height:28px;width:92px;gap:6px;padding:0 6px;align-items:center;background:#232d40;border-radius:4px;"><div style="width:14px;height:14px;border-radius:7px;background:#e0b84a;"></div>
+<span style="display:block;font-size:12px;">Ink 507</span>
+</div>
+<div id="h67" style="display:flex;width:64px;height:30px;justify-content:center;align-items:center;background:#2c3a55;border-radius:4px;"><span style="display:block;font-size:12px;">Menu</span>
+</div>
+<div id="h69" style="display:flex;width:64px;height:30px;justify-content:center;align-items:center;background:#2c3a55;border-radius:4px;"><span style="display:block;font-size:12px;">Map</span>
+</div>
+<div id="h71" style="display:flex;width:64px;height:30px;justify-content:center;align-items:center;background:#2c3a55;border-radius:4px;"><span style="display:block;font-size:12px;">Quests</span>
+</div>
+<div id="h73" style="display:flex;width:64px;height:30px;justify-content:center;align-items:center;background:#2c3a55;border-radius:4px;"><span style="display:block;font-size:12px;">Options</span>
+</div>
+</div>
+<div style="display:flex;flex:1;gap:12px;padding:12px;"><div style="display:flex;flex-direction:column;width:280px;background:#161c28;padding:8px;gap:2px;"><span style="display:block;font-weight:bold;height:24px;">Quests</span>
+<div id="quest0" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 1</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">0/5</span>
+</div>
+<div id="quest1" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 2</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">1/5</span>
+</div>
+<div id="quest2" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 3</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">2/5</span>
+</div>
+<div id="quest3" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 4</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">3/5</span>
+</div>
+<div id="quest4" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 5</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">4/5</span>
+</div>
+<div id="quest5" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 6</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">0/5</span>
+</div>
+<div id="quest6" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 7</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">1/5</span>
+</div>
+<div id="quest7" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 8</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">2/5</span>
+</div>
+<div id="quest8" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 9</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">3/5</span>
+</div>
+<div id="quest9" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 10</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">4/5</span>
+</div>
+<div id="quest10" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 11</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">0/5</span>
+</div>
+<div id="quest11" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 12</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">1/5</span>
+</div>
+<div id="quest12" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 13</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">2/5</span>
+</div>
+<div id="quest13" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 14</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">3/5</span>
+</div>
+<div id="quest14" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 15</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">4/5</span>
+</div>
+<div id="quest15" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 16</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">0/5</span>
+</div>
+<div id="quest16" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 17</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">1/5</span>
+</div>
+<div id="quest17" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 18</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">2/5</span>
+</div>
+<div id="quest18" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 19</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">3/5</span>
+</div>
+<div id="quest19" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 20</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">4/5</span>
+</div>
+<div id="quest20" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 21</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">0/5</span>
+</div>
+<div id="quest21" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 22</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">1/5</span>
+</div>
+<div id="quest22" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 23</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">2/5</span>
+</div>
+<div id="quest23" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 24</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">3/5</span>
+</div>
+<div id="quest24" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 25</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">4/5</span>
+</div>
+<div id="quest25" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 26</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">0/5</span>
+</div>
+<div id="quest26" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 27</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">1/5</span>
+</div>
+<div id="quest27" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 28</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">2/5</span>
+</div>
+<div id="quest28" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 29</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">3/5</span>
+</div>
+<div id="quest29" style="display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;"><span style="display:block;font-size:13px;">Quest number 30</span>
+<span style="display:block;font-size:12px;color:#9fb0cc;">4/5</span>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;width:200px;background:#161c28;padding:8px;gap:6px;"><div id="member0" style="display:flex;flex-direction:column;gap:2px;"><span style="display:block;font-size:12px;">Member 1</span>
+<div style="width:180px;height:5px;background:#0b0e14;"><div style="width:20%;height:5px;background:#d04a4a;"></div>
+</div>
+<div style="width:180px;height:5px;background:#0b0e14;"><div style="width:20%;height:5px;background:#4a7bd0;"></div>
+</div>
+</div>
+<div id="member1" style="display:flex;flex-direction:column;gap:2px;"><span style="display:block;font-size:12px;">Member 2</span>
+<div style="width:180px;height:5px;background:#0b0e14;"><div style="width:33%;height:5px;background:#d04a4a;"></div>
+</div>
+<div style="width:180px;height:5px;background:#0b0e14;"><div style="width:33%;height:5px;background:#4a7bd0;"></div>
+</div>
+</div>
+<div id="member2" style="display:flex;flex-direction:column;gap:2px;"><span style="display:block;font-size:12px;">Member 3</span>
+<div style="width:180px;height:5px;background:#0b0e14;"><div style="width:46%;height:5px;background:#d04a4a;"></div>
+</div>
+<div style="width:180px;height:5px;background:#0b0e14;"><div style="width:46%;height:5px;background:#4a7bd0;"></div>
+</div>
+</div>
+<div id="member3" style="display:flex;flex-direction:column;gap:2px;"><span style="display:block;font-size:12px;">Member 4</span>
+<div style="width:180px;height:5px;background:#0b0e14;"><div style="width:59%;height:5px;background:#d04a4a;"></div>
+</div>
+<div style="width:180px;height:5px;background:#0b0e14;"><div style="width:59%;height:5px;background:#4a7bd0;"></div>
+</div>
+</div>
+<div id="member4" style="display:flex;flex-direction:column;gap:2px;"><span style="display:block;font-size:12px;">Member 5</span>
+<div style="width:180px;height:5px;background:#0b0e14;"><div style="width:72%;height:5px;background:#d04a4a;"></div>
+</div>
+<div style="width:180px;height:5px;background:#0b0e14;"><div style="width:72%;height:5px;background:#4a7bd0;"></div>
+</div>
+</div>
+<div id="member5" style="display:flex;flex-direction:column;gap:2px;"><span style="display:block;font-size:12px;">Member 6</span>
+<div style="width:180px;height:5px;background:#0b0e14;"><div style="width:85%;height:5px;background:#d04a4a;"></div>
+</div>
+<div style="width:180px;height:5px;background:#0b0e14;"><div style="width:85%;height:5px;background:#4a7bd0;"></div>
+</div>
+</div>
+<div id="member6" style="display:flex;flex-direction:column;gap:2px;"><span style="display:block;font-size:12px;">Member 7</span>
+<div style="width:180px;height:5px;background:#0b0e14;"><div style="width:98%;height:5px;background:#d04a4a;"></div>
+</div>
+<div style="width:180px;height:5px;background:#0b0e14;"><div style="width:98%;height:5px;background:#4a7bd0;"></div>
+</div>
+</div>
+<div id="member7" style="display:flex;flex-direction:column;gap:2px;"><span style="display:block;font-size:12px;">Member 8</span>
+<div style="width:180px;height:5px;background:#0b0e14;"><div style="width:11%;height:5px;background:#d04a4a;"></div>
+</div>
+<div style="width:180px;height:5px;background:#0b0e14;"><div style="width:11%;height:5px;background:#4a7bd0;"></div>
+</div>
+</div>
+</div>
+<div style="flex:1;display:grid;grid-template-columns:repeat(16,1fr);grid-template-rows:repeat(12,1fr);gap:2px;background:#0d1118;padding:4px;"><div id="h218" style="background:#2f5a3a;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#2f5a3a;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div id="h229" style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#2f5a3a;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#2f5a3a;"></div>
+<div id="h240" style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#2f5a3a;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div id="h251" style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#2f5a3a;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#2f5a3a;"></div>
+<div style="background:#1e2b22;"></div>
+<div id="h262" style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#2f5a3a;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div id="h273" style="background:#1e2b22;"></div>
+<div style="background:#2f5a3a;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#2f5a3a;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div id="h284" style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#2f5a3a;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div id="h295" style="background:#2f5a3a;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#2f5a3a;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div id="h306" style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#2f5a3a;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#2f5a3a;"></div>
+<div id="h317" style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#2f5a3a;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div id="h328" style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#2f5a3a;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#2f5a3a;"></div>
+<div style="background:#1e2b22;"></div>
+<div id="h339" style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#2f5a3a;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div id="h350" style="background:#1e2b22;"></div>
+<div style="background:#2f5a3a;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#2f5a3a;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div id="h361" style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#2f5a3a;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div id="h372" style="background:#2f5a3a;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#2f5a3a;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div id="h383" style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#2f5a3a;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#2f5a3a;"></div>
+<div id="h394" style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#2f5a3a;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div id="h405" style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#2f5a3a;"></div>
+<div style="background:#1e2b22;"></div>
+<div style="background:#1e2b22;"></div>
+</div>
+<div style="display:flex;flex-direction:column;width:520px;background:#161c28;padding:8px;gap:8px;"><div style="display:flex;justify-content:space-between;height:24px;"><span style="display:block;font-weight:bold;">Inventory</span>
+<span id="weight" style="display:block;color:#e0b84a;">Weight 31/80</span>
+</div>
+<div style="display:flex;gap:4px;height:26px;"><div id="h415" style="display:flex;width:60px;justify-content:center;align-items:center;background:#232d40;"><span style="display:block;font-size:12px;">All</span>
+</div>
+<div id="h417" style="display:flex;width:60px;justify-content:center;align-items:center;background:#232d40;"><span style="display:block;font-size:12px;">Gear</span>
+</div>
+<div id="h419" style="display:flex;width:60px;justify-content:center;align-items:center;background:#232d40;"><span style="display:block;font-size:12px;">Food</span>
+</div>
+<div id="h421" style="display:flex;width:60px;justify-content:center;align-items:center;background:#232d40;"><span style="display:block;font-size:12px;">Tools</span>
+</div>
+<div id="h423" style="display:flex;width:60px;justify-content:center;align-items:center;background:#232d40;"><span style="display:block;font-size:12px;">Misc</span>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(8,56px);grid-auto-rows:56px;gap:6px;"><div id="slot0" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(0,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">1</span>
+</div>
+<div id="slot1" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(29,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">2</span>
+</div>
+<div id="slot2" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(58,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">3</span>
+</div>
+<div id="slot3" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(87,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">4</span>
+</div>
+<div id="slot4" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(116,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">5</span>
+</div>
+<div id="slot5" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(145,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">6</span>
+</div>
+<div id="slot6" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(174,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">7</span>
+</div>
+<div id="slot7" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(203,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">8</span>
+</div>
+<div id="slot8" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(232,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">9</span>
+</div>
+<div id="slot9" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(261,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">1</span>
+</div>
+<div id="slot10" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(290,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">2</span>
+</div>
+<div id="slot11" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(319,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">3</span>
+</div>
+<div id="slot12" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(348,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">4</span>
+</div>
+<div id="slot13" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(17,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">5</span>
+</div>
+<div id="slot14" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(46,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">6</span>
+</div>
+<div id="slot15" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(75,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">7</span>
+</div>
+<div id="slot16" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(104,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">8</span>
+</div>
+<div id="slot17" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(133,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">9</span>
+</div>
+<div id="slot18" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(162,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">1</span>
+</div>
+<div id="slot19" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(191,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">2</span>
+</div>
+<div id="slot20" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(220,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">3</span>
+</div>
+<div id="slot21" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(249,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">4</span>
+</div>
+<div id="slot22" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(278,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">5</span>
+</div>
+<div id="slot23" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(307,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">6</span>
+</div>
+<div id="slot24" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(336,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">7</span>
+</div>
+<div id="slot25" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(5,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">8</span>
+</div>
+<div id="slot26" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(34,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">9</span>
+</div>
+<div id="slot27" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(63,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">1</span>
+</div>
+<div id="slot28" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(92,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">2</span>
+</div>
+<div id="slot29" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(121,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">3</span>
+</div>
+<div id="slot30" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(150,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">4</span>
+</div>
+<div id="slot31" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(179,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">5</span>
+</div>
+<div id="slot32" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(208,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">6</span>
+</div>
+<div id="slot33" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(237,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">7</span>
+</div>
+<div id="slot34" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(266,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">8</span>
+</div>
+<div id="slot35" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(295,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">9</span>
+</div>
+<div id="slot36" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(324,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">1</span>
+</div>
+<div id="slot37" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(353,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">2</span>
+</div>
+<div id="slot38" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(22,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">3</span>
+</div>
+<div id="slot39" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(51,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">4</span>
+</div>
+<div id="slot40" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(80,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">5</span>
+</div>
+<div id="slot41" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(109,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">6</span>
+</div>
+<div id="slot42" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(138,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">7</span>
+</div>
+<div id="slot43" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(167,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">8</span>
+</div>
+<div id="slot44" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(196,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">9</span>
+</div>
+<div id="slot45" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(225,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">1</span>
+</div>
+<div id="slot46" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(254,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">2</span>
+</div>
+<div id="slot47" style="display:flex;flex-direction:column;justify-content:space-between;padding:4px;background:#232d40;border:1px solid #3a4560;"><div style="width:24px;height:24px;border-radius:4px;background:hsl(283,50%,50%);"></div>
+<span style="display:block;font-size:11px;align-self:flex-end;">3</span>
+</div>
+</div>
+</div>
+</div>
+<div style="display:flex;height:150px;gap:12px;padding:0 12px 12px;"><div style="display:flex;gap:6px;width:560px;align-items:flex-end;"><div id="act0" style="display:flex;flex-direction:column;width:52px;height:64px;background:#232d40;padding:3px;justify-content:space-between;"><span style="display:block;font-size:10px;color:#9fb0cc;">1</span>
+<span style="display:block;font-size:11px;">Skill 1</span>
+<div style="height:4px;background:#d04a4a;width:0%;"></div>
+</div>
+<div id="act1" style="display:flex;flex-direction:column;width:52px;height:64px;background:#232d40;padding:3px;justify-content:space-between;"><span style="display:block;font-size:10px;color:#9fb0cc;">2</span>
+<span style="display:block;font-size:11px;">Skill 2</span>
+<div style="height:4px;background:#d04a4a;width:10%;"></div>
+</div>
+<div id="act2" style="display:flex;flex-direction:column;width:52px;height:64px;background:#232d40;padding:3px;justify-content:space-between;"><span style="display:block;font-size:10px;color:#9fb0cc;">3</span>
+<span style="display:block;font-size:11px;">Skill 3</span>
+<div style="height:4px;background:#d04a4a;width:20%;"></div>
+</div>
+<div id="act3" style="display:flex;flex-direction:column;width:52px;height:64px;background:#232d40;padding:3px;justify-content:space-between;"><span style="display:block;font-size:10px;color:#9fb0cc;">4</span>
+<span style="display:block;font-size:11px;">Skill 4</span>
+<div style="height:4px;background:#d04a4a;width:30%;"></div>
+</div>
+<div id="act4" style="display:flex;flex-direction:column;width:52px;height:64px;background:#232d40;padding:3px;justify-content:space-between;"><span style="display:block;font-size:10px;color:#9fb0cc;">5</span>
+<span style="display:block;font-size:11px;">Skill 5</span>
+<div style="height:4px;background:#d04a4a;width:40%;"></div>
+</div>
+<div id="act5" style="display:flex;flex-direction:column;width:52px;height:64px;background:#232d40;padding:3px;justify-content:space-between;"><span style="display:block;font-size:10px;color:#9fb0cc;">6</span>
+<span style="display:block;font-size:11px;">Skill 6</span>
+<div style="height:4px;background:#d04a4a;width:50%;"></div>
+</div>
+<div id="act6" style="display:flex;flex-direction:column;width:52px;height:64px;background:#232d40;padding:3px;justify-content:space-between;"><span style="display:block;font-size:10px;color:#9fb0cc;">7</span>
+<span style="display:block;font-size:11px;">Skill 7</span>
+<div style="height:4px;background:#d04a4a;width:60%;"></div>
+</div>
+<div id="act7" style="display:flex;flex-direction:column;width:52px;height:64px;background:#232d40;padding:3px;justify-content:space-between;"><span style="display:block;font-size:10px;color:#9fb0cc;">8</span>
+<span style="display:block;font-size:11px;">Skill 8</span>
+<div style="height:4px;background:#d04a4a;width:70%;"></div>
+</div>
+<div id="act8" style="display:flex;flex-direction:column;width:52px;height:64px;background:#232d40;padding:3px;justify-content:space-between;"><span style="display:block;font-size:10px;color:#9fb0cc;">9</span>
+<span style="display:block;font-size:11px;">Skill 9</span>
+<div style="height:4px;background:#d04a4a;width:80%;"></div>
+</div>
+<div id="act9" style="display:flex;flex-direction:column;width:52px;height:64px;background:#232d40;padding:3px;justify-content:space-between;"><span style="display:block;font-size:10px;color:#9fb0cc;">0</span>
+<span style="display:block;font-size:11px;">Skill 10</span>
+<div style="height:4px;background:#d04a4a;width:90%;"></div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;flex:1;background:#161c28;padding:6px;gap:1px;overflow:hidden;"><div id="h613" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player0</span>
+<span style="display:block;white-space:nowrap;">message number 0 in the chat log</span>
+</div>
+<div id="h616" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player1</span>
+<span style="display:block;white-space:nowrap;">message number 1 in the chat log</span>
+</div>
+<div id="h619" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player2</span>
+<span style="display:block;white-space:nowrap;">message number 2 in the chat log</span>
+</div>
+<div id="h622" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player3</span>
+<span style="display:block;white-space:nowrap;">message number 3 in the chat log</span>
+</div>
+<div id="h625" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player4</span>
+<span style="display:block;white-space:nowrap;">message number 4 in the chat log</span>
+</div>
+<div id="h628" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player5</span>
+<span style="display:block;white-space:nowrap;">message number 5 in the chat log</span>
+</div>
+<div id="h631" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player6</span>
+<span style="display:block;white-space:nowrap;">message number 6 in the chat log</span>
+</div>
+<div id="h634" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player7</span>
+<span style="display:block;white-space:nowrap;">message number 7 in the chat log</span>
+</div>
+<div id="h637" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player8</span>
+<span style="display:block;white-space:nowrap;">message number 8 in the chat log</span>
+</div>
+<div id="h640" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player9</span>
+<span style="display:block;white-space:nowrap;">message number 9 in the chat log</span>
+</div>
+<div id="h643" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player10</span>
+<span style="display:block;white-space:nowrap;">message number 10 in the chat log</span>
+</div>
+<div id="h646" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player11</span>
+<span style="display:block;white-space:nowrap;">message number 11 in the chat log</span>
+</div>
+<div id="h649" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player12</span>
+<span style="display:block;white-space:nowrap;">message number 12 in the chat log</span>
+</div>
+<div id="h652" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player13</span>
+<span style="display:block;white-space:nowrap;">message number 13 in the chat log</span>
+</div>
+<div id="h655" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player14</span>
+<span style="display:block;white-space:nowrap;">message number 14 in the chat log</span>
+</div>
+<div id="h658" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player15</span>
+<span style="display:block;white-space:nowrap;">message number 15 in the chat log</span>
+</div>
+<div id="h661" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player16</span>
+<span style="display:block;white-space:nowrap;">message number 16 in the chat log</span>
+</div>
+<div id="h664" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player17</span>
+<span style="display:block;white-space:nowrap;">message number 17 in the chat log</span>
+</div>
+<div id="h667" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player18</span>
+<span style="display:block;white-space:nowrap;">message number 18 in the chat log</span>
+</div>
+<div id="h670" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player19</span>
+<span style="display:block;white-space:nowrap;">message number 19 in the chat log</span>
+</div>
+<div id="h673" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player20</span>
+<span style="display:block;white-space:nowrap;">message number 20 in the chat log</span>
+</div>
+<div id="h676" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player21</span>
+<span style="display:block;white-space:nowrap;">message number 21 in the chat log</span>
+</div>
+<div id="h679" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player22</span>
+<span style="display:block;white-space:nowrap;">message number 22 in the chat log</span>
+</div>
+<div id="h682" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player23</span>
+<span style="display:block;white-space:nowrap;">message number 23 in the chat log</span>
+</div>
+<div id="h685" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player24</span>
+<span style="display:block;white-space:nowrap;">message number 24 in the chat log</span>
+</div>
+<div id="h688" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player25</span>
+<span style="display:block;white-space:nowrap;">message number 25 in the chat log</span>
+</div>
+<div id="h691" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player26</span>
+<span style="display:block;white-space:nowrap;">message number 26 in the chat log</span>
+</div>
+<div id="h694" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player27</span>
+<span style="display:block;white-space:nowrap;">message number 27 in the chat log</span>
+</div>
+<div id="h697" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player28</span>
+<span style="display:block;white-space:nowrap;">message number 28 in the chat log</span>
+</div>
+<div id="h700" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player29</span>
+<span style="display:block;white-space:nowrap;">message number 29 in the chat log</span>
+</div>
+<div id="h703" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player30</span>
+<span style="display:block;white-space:nowrap;">message number 30 in the chat log</span>
+</div>
+<div id="h706" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player31</span>
+<span style="display:block;white-space:nowrap;">message number 31 in the chat log</span>
+</div>
+<div id="h709" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player32</span>
+<span style="display:block;white-space:nowrap;">message number 32 in the chat log</span>
+</div>
+<div id="h712" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player33</span>
+<span style="display:block;white-space:nowrap;">message number 33 in the chat log</span>
+</div>
+<div id="h715" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player34</span>
+<span style="display:block;white-space:nowrap;">message number 34 in the chat log</span>
+</div>
+<div id="h718" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player35</span>
+<span style="display:block;white-space:nowrap;">message number 35 in the chat log</span>
+</div>
+<div id="h721" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player36</span>
+<span style="display:block;white-space:nowrap;">message number 36 in the chat log</span>
+</div>
+<div id="h724" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player37</span>
+<span style="display:block;white-space:nowrap;">message number 37 in the chat log</span>
+</div>
+<div id="h727" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player38</span>
+<span style="display:block;white-space:nowrap;">message number 38 in the chat log</span>
+</div>
+<div id="h730" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player39</span>
+<span style="display:block;white-space:nowrap;">message number 39 in the chat log</span>
+</div>
+<div id="h733" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player40</span>
+<span style="display:block;white-space:nowrap;">message number 40 in the chat log</span>
+</div>
+<div id="h736" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player41</span>
+<span style="display:block;white-space:nowrap;">message number 41 in the chat log</span>
+</div>
+<div id="h739" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player42</span>
+<span style="display:block;white-space:nowrap;">message number 42 in the chat log</span>
+</div>
+<div id="h742" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player43</span>
+<span style="display:block;white-space:nowrap;">message number 43 in the chat log</span>
+</div>
+<div id="h745" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player44</span>
+<span style="display:block;white-space:nowrap;">message number 44 in the chat log</span>
+</div>
+<div id="h748" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player45</span>
+<span style="display:block;white-space:nowrap;">message number 45 in the chat log</span>
+</div>
+<div id="h751" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player46</span>
+<span style="display:block;white-space:nowrap;">message number 46 in the chat log</span>
+</div>
+<div id="h754" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player47</span>
+<span style="display:block;white-space:nowrap;">message number 47 in the chat log</span>
+</div>
+<div id="h757" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player48</span>
+<span style="display:block;white-space:nowrap;">message number 48 in the chat log</span>
+</div>
+<div id="h760" style="display:flex;gap:6px;height:16px;font-size:12px;"><span style="display:block;color:#7fd09a;white-space:nowrap;">Player49</span>
+<span style="display:block;white-space:nowrap;">message number 49 in the chat log</span>
+</div>
+</div>
+</div>
+</div>
+</body></html>

@@ -28,6 +28,8 @@ internal static class Program
         ["flow"] = FlowTarget.Run,
         ["table"] = TableTarget.Run,
         ["effects"] = EffectsTarget.Run,
+        ["incremental"] = IncrementalTarget.Run,
+        ["pdf"] = PdfTarget.Run,
     };
 
     private static int Main(string[] args)
@@ -49,9 +51,19 @@ internal static class Program
                 return FlowTarget.WriteSeeds(args[2]);
             }
 
+            if (args[1] == "pdf")
+            {
+                return DisplayListTarget.WriteSeeds(args[2]);
+            }
+
             if (args[1] == "effects")
             {
                 return EffectsTarget.WriteSeeds(args[2]);
+            }
+
+            if (args[1] == "incremental")
+            {
+                return IncrementalTarget.WriteSeeds(args[2]);
             }
 
             if (args[1] == "table")

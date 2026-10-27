@@ -282,23 +282,16 @@ internal sealed partial class AnimationController
     }
 
     /// <summary>Starts, reverses and cancels transitions for one element at a style change (CSS Transitions 1 §3.2 and §3.3).</summary>
-    private void UpdateTransitions(StyledTree tree, StyledTree previous, ElementEffects e, int node, in ComputedValues after, bool configured, double now)
+    private void UpdateTransitions(StyledTree tree, ElementEffects e, in ComputedValues before, bool hasBefore, in ComputedValues after, bool configured, double now)
     {
         CancelTransitionsNotIn(e, in after, now);
-        if (!configured)
-        {
-            return;
-        }
-
-        int prevNode = MapNode(tree, previous, node);
-        if (prevNode < 0)
+        if (!configured || !hasBefore)
         {
             return;
         }
 
         // Transitions start from the before-change style: what the page last showed, with running transitions and animations at their
-        // current values, which is exactly the previous tree's style for the node.
-        ComputedValues before = previous.Styles[previous.StyleOf(prevNode)];
+        // current values (the caller passes the node's style before the change).
         StyleTable table = tree.Styles;
         TransitionTarget[] targets = after.TransitionProperty;
 

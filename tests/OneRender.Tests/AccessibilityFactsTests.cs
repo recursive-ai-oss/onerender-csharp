@@ -350,9 +350,9 @@ public class AccessibilityFactsTests
     [Fact]
     public void LimitsAreHonoured()
     {
-        var limits = new DomSnapshotLimits { MaxNodes = 20 };
+        var limits = new RenderedFactsLimits { MaxBoxes = 20 };
         string many = string.Concat(Enumerable.Repeat("<p>x</p>", 50));
-        Assert.Throws<DomSnapshotFormatException>(() => Render(many, options: new FactsOptions { Limits = limits }));
+        Assert.Throws<RenderedFactsLimitException>(() => Render(many, options: new FactsOptions { Limits = limits }));
         Assert.Throws<OperationCanceledException>(() =>
         {
             using var cts = new CancellationTokenSource();
