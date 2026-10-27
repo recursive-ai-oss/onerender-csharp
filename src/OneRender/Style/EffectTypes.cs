@@ -111,16 +111,52 @@ internal sealed class TransformSpec : IEquatable<TransformSpec>
 
     public static readonly TransformSpec None = new([], "none");
 
+    private string? _text;
+
     public TransformSpec(TransformFunction[] functions, string text)
     {
         Functions = functions;
-        Text = text;
+        _text = text;
     }
 
     public TransformFunction[] Functions { get; }
 
-    /// <summary>Canonical text; two specs are equal when it is.</summary>
-    public string Text { get; }
+    /// <summary>
+    /// Canonical text; two specs are equal when it is. A spec an animation changes in place builds its text on demand, after
+    /// <see cref="Touch"/> dropped the old one, so a running animation does not format a string every frame.
+    /// </summary>
+    public string Text => _text ??= Describe();
+
+    /// <summary>Counts in-place changes made through <see cref="Touch"/>; part of equality so a changed working copy is a different value.</summary>
+    public int Revision { get; private set; }
+
+    /// <summary>Tells the spec its functions were changed in place.</summary>
+    public void Touch()
+    {
+        _text = null;
+        Revision++;
+    }
+
+    private string Describe()
+    {
+        if (Functions.Length == 0)
+        {
+            return "none";
+        }
+
+        var sb = new System.Text.StringBuilder();
+        for (int i = 0; i < Functions.Length; i++)
+        {
+            if (i > 0)
+            {
+                sb.Append(' ');
+            }
+
+            StyleComputer.DescribeTransform(Functions[i], sb);
+        }
+
+        return sb.ToString();
+    }
 
     public bool IsNone => Functions.Length == 0;
 
@@ -136,7 +172,7 @@ internal sealed class TransformSpec : IEquatable<TransformSpec>
         return acc;
     }
 
-    public bool Equals(TransformSpec? other) => other is not null && string.Equals(Text, other.Text, StringComparison.Ordinal);
+    public bool Equals(TransformSpec? other) => other is not null && Revision == other.Revision && string.Equals(Text, other.Text, StringComparison.Ordinal);
 
     public override bool Equals(object? obj) => Equals(obj as TransformSpec);
 

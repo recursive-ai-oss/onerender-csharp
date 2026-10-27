@@ -174,12 +174,25 @@ internal enum PropertyId : byte
     CaptionSide,
     TableLayout,
     PointerEvents,
+    TransitionProperty,
+    TransitionDuration,
+    TransitionTimingFunction,
+    TransitionDelay,
+    TransitionBehavior,
+    AnimationName,
+    AnimationDuration,
+    AnimationTimingFunction,
+    AnimationDelay,
+    AnimationIterationCount,
+    AnimationDirection,
+    AnimationFillMode,
+    AnimationPlayState,
 }
 
 /// <summary>Names and inheritance of <see cref="PropertyId"/> values.</summary>
 internal static class Properties
 {
-    public const int Count = (int)PropertyId.PointerEvents + 1;
+    public const int Count = (int)PropertyId.AnimationPlayState + 1;
 
     private static readonly string[] Names =
     [
@@ -207,6 +220,8 @@ internal static class Properties
         "filter", "backdrop-filter", "clip-path", "mask-image", "mask-mode", "mask-repeat", "mask-position", "mask-size", "mask-origin", "mask-clip", "mask-composite",
         "mix-blend-mode", "isolation", "background-blend-mode", "image-orientation",
         "border-collapse", "border-spacing", "empty-cells", "caption-side", "table-layout", "pointer-events",
+        "transition-property", "transition-duration", "transition-timing-function", "transition-delay", "transition-behavior",
+        "animation-name", "animation-duration", "animation-timing-function", "animation-delay", "animation-iteration-count", "animation-direction", "animation-fill-mode", "animation-play-state",
     ];
 
     private static readonly Dictionary<string, PropertyId> ByName = BuildByName();

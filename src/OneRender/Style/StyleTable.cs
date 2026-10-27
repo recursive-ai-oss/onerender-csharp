@@ -177,6 +177,76 @@ public sealed class StyleTable
         return id;
     }
 
+    // ---- rows owned by one node (animation) -------------------------------------------------------------------------------------
+
+    private int[] _freePrivate = new int[8];
+    private int _freePrivateCount;
+
+    /// <summary>
+    /// Makes a row that belongs to one node and is changed in place by <see cref="MutableRow"/> (an animated element's current style).
+    /// It is not shared and never found by value; release it with <see cref="ReleasePrivate"/>. Counts toward <see cref="MaxStyles"/>.
+    /// </summary>
+    /// <returns>False when the table is full.</returns>
+    internal bool TryAllocatePrivate(in ComputedValues values, out StyleId id)
+    {
+        if (_freePrivateCount > 0)
+        {
+            int reused = _freePrivate[--_freePrivateCount];
+            _rows[reused] = values;
+            id = new StyleId(reused);
+            return true;
+        }
+
+        if (_count >= MaxStyles)
+        {
+            id = default;
+            return false;
+        }
+
+        if (_count == _rows.Length)
+        {
+            Array.Resize(ref _rows, _rows.Length * 2);
+            Array.Resize(ref _sameHash, _rows.Length);
+        }
+
+        _rows[_count] = values;
+        _sameHash[_count] = 0;
+        id = new StyleId(_count++);
+        return true;
+    }
+
+    /// <summary>Gives a row from <see cref="TryAllocatePrivate"/> back for reuse. The caller must not use the id afterwards.</summary>
+    internal void ReleasePrivate(StyleId id)
+    {
+        if (id.Index <= 0)
+        {
+            return;
+        }
+
+        if (_freePrivateCount == _freePrivate.Length)
+        {
+            Array.Resize(ref _freePrivate, _freePrivate.Length * 2);
+        }
+
+        _freePrivate[_freePrivateCount++] = id.Index;
+    }
+
+    /// <summary>The row of a private style, for in-place change. Only valid for ids from <see cref="TryAllocatePrivate"/>.</summary>
+    internal ref ComputedValues MutableRow(StyleId id) => ref _rows[id.Index];
+
+    /// <summary>Copies one property from <paramref name="source"/> into <paramref name="target"/>, all the fields that make it up.</summary>
+    internal void CopyProperty(PropertyId id, ref ComputedValues target, in ComputedValues source) => _computer.CopyProperty(id, ref target, in source, false);
+
+    /// <summary>
+    /// Computes a style from declarations without storing it: the values a declaration block would give an element whose parent has
+    /// <paramref name="parent"/>. Used for keyframe values, which are never nodes' styles.
+    /// </summary>
+    internal ComputedValues ComputeDetached(DeclarationSource declarations, StyleId parent, bool hasParent)
+    {
+        var env = new ComputeEnvironment(_viewportWidth, _viewportHeight, _rootFontSize);
+        return _computer.Compute(declarations, in _rows[hasParent ? parent.Index : 0], hasParent, in env, false);
+    }
+
     /// <summary>Adds a row, or returns the existing row with exactly these values, so equal styles share one row however they were reached.</summary>
     private bool TryAdd(in ComputedValues values, out StyleId id)
     {

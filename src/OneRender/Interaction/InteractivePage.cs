@@ -61,8 +61,12 @@ public sealed partial class InteractivePage
     /// <exception cref="OperationCanceledException">Cancelled.</exception>
     public static InteractivePage Create(string html, HtmlPageOptions options, InteractionOptions? interaction = null, CancellationToken cancellationToken = default)
     {
-        HtmlPage page = HtmlPage.CreateWithStyles(html, options, out DocumentStyles styles, cancellationToken);
-        return new InteractivePage(page, styles, options, interaction ?? new InteractionOptions());
+        interaction ??= new InteractionOptions();
+        HtmlPage page = HtmlPage.CreateWithStyles(html, options, out DocumentStyles styles, cancellationToken, true, interaction.AnimationStartTime);
+        var created = new InteractivePage(page, styles, options, interaction);
+        created._motionNow = interaction.AnimationStartTime;
+        created.DispatchMotionEvents(page.Motion!);
+        return created;
     }
 
     /// <summary>The current page. It is replaced when a state change restyles the whole document, so read it again after an input reports <see cref="InputOutcome.Relaid"/>.</summary>
@@ -267,11 +271,16 @@ public sealed partial class InteractivePage
         _viewDepth = rebase ? 1 : _viewDepth + 1;
         if (differs)
         {
-            _page = _page.Rebuild(styles, ct);
+            _motionNow = Math.Max(_motionNow, _lastTime);
+            _page = _page.Rebuild(styles, ct, _motionNow);
             _hits = NewHitTester(_page);
             _queries = new LayoutQueries(_page, _hits);
             _generation++;
             outcome |= InputOutcome.Relaid;
+            if (_page.Motion is { } motion)
+            {
+                DispatchMotionEvents(motion);
+            }
         }
 
         return outcome;

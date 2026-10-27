@@ -141,11 +141,14 @@ public sealed partial class Painter
     private const byte PatchStickyKind = 1;
     private const byte PatchFixedKind = 2;
     private const byte PatchViewportKind = 3;
+    private const byte PatchAnimTransformKind = 4;
+    private const byte PatchAnimOpacityKind = 5;
 
     private struct PatchEntry
     {
         public byte Kind;
         public int Box;
+        public int Fragment;
         public ulong Id;
         public float LastX;
         public float LastY;
@@ -719,9 +722,15 @@ public sealed partial class Painter
             }
         }
 
-        if ((v.Opacity < 1.0 || v.MixBlendMode != BlendMode.Normal || v.Isolate) && (_flags[f] & FlagStackingContext) != 0 && _scopes < MaxScopes)
+        if ((v.Opacity < 1.0 || v.AnimatesOpacity || v.MixBlendMode != BlendMode.Normal || v.Isolate) && (_flags[f] & FlagStackingContext) != 0 && _scopes < MaxScopes)
         {
-            _list.PushGroup(Id(f, 4), (float)Math.Clamp(v.Opacity, 0.0, 1.0), v.MixBlendMode);
+            ItemId gid = Id(f, 4);
+            _list.PushGroup(gid, (float)Math.Clamp(v.Opacity, 0.0, 1.0), v.MixBlendMode);
+            if (v.AnimatesOpacity)
+            {
+                AddAnimEntry(PatchAnimOpacityKind, f, gid);
+            }
+
             _scopes++;
             _stack[top].Group = true;
         }
@@ -1036,6 +1045,11 @@ public sealed partial class Painter
         int changed = 0;
         for (int k = 0; k < _patchCount; k++)
         {
+            if (_patch[k].Kind >= PatchAnimTransformKind)
+            {
+                continue;
+            }
+
             ComputeEntry(k, out float tx, out float ty);
             if (tx == _patch[k].LastX && ty == _patch[k].LastY)
             {
@@ -1045,6 +1059,63 @@ public sealed partial class Painter
             list.PatchTransform(new ItemId(_patch[k].Id), Matrix3x2.CreateTranslation(tx, ty), damage);
             _patch[k].LastX = tx;
             _patch[k].LastY = ty;
+            changed++;
+        }
+
+        return changed;
+    }
+
+    private int[] _animStamp = new int[64];
+    private int _animStampValue;
+
+    /// <summary>
+    /// Updates the transforms and group opacities of animated boxes in place, from their current computed values: no layout, no repaint, no
+    /// allocation. Only boxes that were painted with an animated transform or opacity (<c>AnimatesTransform</c> / <c>AnimatesOpacity</c> in
+    /// their style) have items to patch; the host calls this after the animation controller changed their style rows.
+    /// </summary>
+    /// <param name="retained">The retained list holding the last painted frame.</param>
+    /// <param name="boxes">Indexes of the boxes whose animated values changed.</param>
+    /// <returns>The number of items patched.</returns>
+    public int PatchAnimated(RetainedDisplayList retained, ReadOnlySpan<int> boxes)
+    {
+        ArgumentNullException.ThrowIfNull(retained);
+        if (_boxes is null)
+        {
+            return 0;
+        }
+
+        _animStampValue++;
+        for (int i = 0; i < boxes.Length; i++)
+        {
+            int b = boxes[i];
+            if ((uint)b >= (uint)_animStamp.Length)
+            {
+                Array.Resize(ref _animStamp, Math.Max(b + 1, _animStamp.Length * 2));
+            }
+
+            _animStamp[b] = _animStampValue;
+        }
+
+        int changed = 0;
+        for (int k = 0; k < _patchCount; k++)
+        {
+            ref PatchEntry e = ref _patch[k];
+            if (e.Kind < PatchAnimTransformKind || (uint)e.Box >= (uint)_animStamp.Length || _animStamp[e.Box] != _animStampValue)
+            {
+                continue;
+            }
+
+            ref readonly ComputedValues v = ref _boxes.Make(e.Box).Values;
+            if (e.Kind == PatchAnimTransformKind)
+            {
+                ComputeBoxMatrix(e.Fragment, in v, out Matrix4x4 m);
+                retained.Current.PatchTransform3D(new ItemId(e.Id), m, retained.Damage);
+            }
+            else
+            {
+                retained.PatchOpacity(new ItemId(e.Id), (float)Math.Clamp(v.Opacity, 0.0, 1.0));
+            }
+
             changed++;
         }
 

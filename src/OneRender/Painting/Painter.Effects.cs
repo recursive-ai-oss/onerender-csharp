@@ -37,23 +37,7 @@ public sealed partial class Painter
         byte fx = 0;
         if (v.CreatesTransformContext || ParentHasPerspective(f))
         {
-            Rect bb = _tree.BorderBoxOf(f);
-            var border = new RectF(C(_absX[f]), C(_absY[f]), C(bb.Width), C(bb.Height));
-            Insets bw = _tree.BorderOf(f);
-            Insets pd = _tree.PaddingOf(f);
-            var content = new RectF(
-                C(_absX[f] + bw.Left + pd.Left),
-                C(_absY[f] + bw.Top + pd.Top),
-                C(Math.Max(0, bb.Width - bw.Left - bw.Right - pd.Left - pd.Right)),
-                C(Math.Max(0, bb.Height - bw.Top - bw.Bottom - pd.Top - pd.Bottom)));
-            bool has = TransformGeometry.Compute(in v, in border, in content, out Matrix4x4 m);
-            bool persp = TryParentPerspective(f, out Matrix4x4 pm);
-            if (persp)
-            {
-                m = m * pm;
-                has = true;
-            }
-
+            bool has = ComputeBoxMatrix(f, in v, out Matrix4x4 m);
             if (has && !(m.M14 != 0f || m.M24 != 0f) && !(m.M44 > 0f))
             {
                 // Without perspective the plane maps with a constant w; a w at or below zero puts it behind the viewer, so nothing is drawn.
@@ -69,10 +53,17 @@ public sealed partial class Painter
                     Diagnostics.Add(DiagnosticKind.Unsupported, "transform-style: preserve-3d is flattened; perspective projects each element on its own plane");
                 }
 
-                _list.PushTransform3D(Id2(f, PartTransform, 0), m);
+                ItemId tid = Id2(f, PartTransform, 0);
+                _list.PushTransform3D(tid, m);
                 _scopes++;
                 fx |= FxTransform;
-                if (v.BackfaceHidden && TransformGeometry.FacesAway(in m, in border) && _scopes < MaxScopes)
+                if (v.AnimatesTransform)
+                {
+                    // The host may patch this matrix in place while an animation runs (see PatchAnimated).
+                    AddAnimEntry(PatchAnimTransformKind, f, tid);
+                }
+
+                if (v.BackfaceHidden && TransformGeometry.FacesAway(in m, new RectF(C(_absX[f]), C(_absY[f]), C(_tree.BorderBoxOf(f).Width), C(_tree.BorderBoxOf(f).Height))) && _scopes < MaxScopes)
                 {
                     // Transforms 2 §11: a box whose back faces the viewer is not painted; an empty clip hides it and its descendants.
                     _list.PushClipRect(Id2(f, PartHidden, 0), RectF.Empty);
@@ -83,6 +74,34 @@ public sealed partial class Painter
         }
 
         return fx;
+    }
+
+    // The matrix of the box's transform properties, in root space, with the parent's perspective folded in. False when the box has neither.
+    private bool ComputeBoxMatrix(int f, in ComputedValues v, out Matrix4x4 m)
+    {
+        Rect bb = _tree.BorderBoxOf(f);
+        var border = new RectF(C(_absX[f]), C(_absY[f]), C(bb.Width), C(bb.Height));
+        Insets bw = _tree.BorderOf(f);
+        Insets pd = _tree.PaddingOf(f);
+        var content = new RectF(
+            C(_absX[f] + bw.Left + pd.Left),
+            C(_absY[f] + bw.Top + pd.Top),
+            C(Math.Max(0, bb.Width - bw.Left - bw.Right - pd.Left - pd.Right)),
+            C(Math.Max(0, bb.Height - bw.Top - bw.Bottom - pd.Top - pd.Bottom)));
+        bool has = TransformGeometry.Compute(in v, in border, in content, out m);
+        if (TryParentPerspective(f, out Matrix4x4 pm))
+        {
+            m = m * pm;
+            has = true;
+        }
+
+        return has;
+    }
+
+    private void AddAnimEntry(byte kind, int f, ItemId id)
+    {
+        int k = AddEntry(kind, _tree.BoxOf(f), id.Value);
+        _patch[k].Fragment = f;
     }
 
     private bool ParentHasPerspective(int f)

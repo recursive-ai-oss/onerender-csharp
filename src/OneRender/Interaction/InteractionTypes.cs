@@ -99,6 +99,12 @@ public enum InputOutcome : byte
 
     /// <summary>Focus moved to another element or was cleared.</summary>
     FocusChanged = 16,
+
+    /// <summary>
+    /// <see cref="InteractivePage.Advance"/> changed the page. Without <see cref="Relaid"/> only transform or opacity changed and
+    /// <see cref="InteractivePage.PatchAnimations"/> brings the display list up to date; with it, paint again.
+    /// </summary>
+    Animated = 32,
 }
 
 /// <summary>Values for the host-dependent numbers of input handling.</summary>
@@ -118,6 +124,9 @@ public sealed class InteractionOptions
 
     /// <summary>Whether Tab past the last (or first) focusable element wraps around to the other end. Default true; when false, focus is cleared instead so a host can move it to its own controls.</summary>
     public bool WrapTabNavigation { get; init; } = true;
+
+    /// <summary>The page's animation clock at creation, in the host's milliseconds. Animations and transitions started by the first style begin at this time. Default 0.</summary>
+    public double AnimationStartTime { get; init; }
 }
 
 /// <summary>The kind of a <see cref="PointerInput"/>.</summary>

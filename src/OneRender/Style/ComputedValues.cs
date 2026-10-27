@@ -1,3 +1,4 @@
+using OneRender.Animation;
 using OneRender.Painting;
 
 namespace OneRender.Style;
@@ -663,6 +664,55 @@ public partial struct ComputedValues
     /// <summary><c>column-rule-color</c>; <c>currentcolor</c> by default.</summary>
     public ColorValue ColumnRuleColor { get; internal set; }
 
+    /// <summary><c>transition-property</c>, one entry per transition (CSS Transitions 1 §2.1). Initially <c>all</c>.</summary>
+    internal TransitionTarget[] TransitionProperty { get; set; }
+
+    /// <summary><c>transition-duration</c> in seconds, repeated to the length of <see cref="TransitionProperty"/> when used.</summary>
+    internal double[] TransitionDuration { get; set; }
+
+    /// <summary><c>transition-timing-function</c>.</summary>
+    internal EasingFunction[] TransitionTimingFunction { get; set; }
+
+    /// <summary><c>transition-delay</c> in seconds.</summary>
+    internal double[] TransitionDelay { get; set; }
+
+    /// <summary><c>transition-behavior</c>: true for <c>allow-discrete</c>.</summary>
+    internal bool[] TransitionBehavior { get; set; }
+
+    /// <summary><c>animation-name</c>, one entry per animation; null for <c>none</c>.</summary>
+    internal string?[] AnimationName { get; set; }
+
+    /// <summary><c>animation-duration</c> in seconds; NaN for <c>auto</c>, which behaves as 0s on the document timeline.</summary>
+    internal double[] AnimationDuration { get; set; }
+
+    /// <summary><c>animation-timing-function</c>.</summary>
+    internal EasingFunction[] AnimationTimingFunction { get; set; }
+
+    /// <summary><c>animation-delay</c> in seconds.</summary>
+    internal double[] AnimationDelay { get; set; }
+
+    /// <summary><c>animation-iteration-count</c>; infinity for <c>infinite</c>.</summary>
+    internal double[] AnimationIterationCount { get; set; }
+
+    /// <summary><c>animation-direction</c>.</summary>
+    internal AnimationDirectionKind[] AnimationDirection { get; set; }
+
+    /// <summary><c>animation-fill-mode</c>.</summary>
+    internal AnimationFillKind[] AnimationFillMode { get; set; }
+
+    /// <summary><c>animation-play-state</c>: true for <c>running</c>.</summary>
+    internal bool[] AnimationPlayState { get; set; }
+
+    /// <summary>
+    /// True while an animation or transition drives <c>transform</c>, <c>translate</c>, <c>rotate</c> or <c>scale</c> on this element. The
+    /// element then has a transform context even when the current matrix is the identity, so the painter emits a transform scope the host can
+    /// patch in place (CSS Transforms 1 §2: an element with an animated transform is a stacking context for the animation's duration).
+    /// </summary>
+    internal bool AnimatesTransform { get; set; }
+
+    /// <summary>True while an animation or transition drives <c>opacity</c>; the element is a stacking context with a group the host can patch.</summary>
+    internal bool AnimatesOpacity { get; set; }
+
     private static ComputedValues CreateInitial()
     {
         var v = default(ComputedValues);
@@ -698,6 +748,7 @@ public partial struct ComputedValues
         InitGrid(ref v);
         InitPaint(ref v);
         InitInteraction(ref v);
+        InitMotion(ref v);
         return v;
     }
 }

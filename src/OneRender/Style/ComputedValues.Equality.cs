@@ -93,7 +93,8 @@ public partial struct ComputedValues
         GridEquals(in a, in b) &&
         PaintEquals(in a, in b) &&
         TableEquals(in a, in b) &&
-        InteractionEquals(in a, in b);
+        InteractionEquals(in a, in b) &&
+        MotionEquals(in a, in b);
 
     internal static int ValueHash(in ComputedValues v)
     {
@@ -189,6 +190,7 @@ public partial struct ComputedValues
         GridHash(ref h, in v);
         PaintHash(ref h, in v);
         InteractionHash(ref h, in v);
+        MotionHash(ref h, in v);
         return h.ToHashCode();
     }
 }
