@@ -780,6 +780,15 @@ public class InlineLayoutTests
     }
 
     [Fact]
+    public void AnEmptyPositionedInlineBoxStillContainsItsAbsoluteChild()
+    {
+        // css-position/nested-inline-abspos-child: the abs box is placed from the empty relative span, not the page corner.
+        Lay l = Run("<p>intro</p><div><span><span><span id=s style='position:relative'> <div id=a style='position:absolute;top:0;left:0;width:10px;height:10px'></div> </span></span></span></div>");
+        Assert.True(l["a"].Y >= 20 - 0.01, "y " + l["a"].Y);
+        Assert.True(l["a"].Y < 25, "y " + l["a"].Y);
+    }
+
+    [Fact]
     public void TheSameInputGivesTheSameFragments()
     {
         const string body = "<p id=a style='width:123px;text-align:justify'>Lorem ipsum <b>dolor</b> sit <i>amet, consectetur</i> adipiscing אבג elit.</p>";

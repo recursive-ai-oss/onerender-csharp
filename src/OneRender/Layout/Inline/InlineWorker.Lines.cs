@@ -312,11 +312,25 @@ internal sealed partial class InlineWorker
             if (!hasContent && _host is not null)
             {
                 // Out-of-flow boxes on a line that has nothing else: they sit at the start of the empty line.
+                int lastCb = -1, lastCbFrag = -1;
                 for (int k = e; k < ee && k < _elN; k++)
                 {
                     if (_el[k].Kind == EK.Float && (_el[k].Flags & EF.Abs) != 0)
                     {
-                        QueueAbs(in request, k, request.ContentLeft + xOff, request.ContentTop + top, -1);
+                        // A positioned inline box around it still contains it (CSS2 §10.1 item 4), even with nothing else in the
+                        // box: it is a box of no width at the start of the line, as tall as its font's content area.
+                        int cbBox = PositionedInlineAncestor(_el[k].Box);
+                        if (cbBox >= 0 && cbBox != lastCb)
+                        {
+                            Box ob = _boxes.Make(cbBox);
+                            FontBox(in ob.Values, ob.Style, out double fa, out double fd, out _, out _);
+                            double ctop = request.ContentTop + top + Math.Floor((strut - (fa + fd)) / 2);
+                            Fragment cf = _out.AddBox(_parent, ob, new Rect(request.ContentLeft + xOff, ctop, 0, fa + fd));
+                            lastCb = cbBox;
+                            lastCbFrag = cf.Index;
+                        }
+
+                        QueueAbs(in request, k, request.ContentLeft + xOff, request.ContentTop + top, cbBox >= 0 ? lastCbFrag : -1);
                     }
                 }
             }
@@ -334,6 +348,20 @@ internal sealed partial class InlineWorker
     private const int MaxLineAttempts = 1 << 16;
     private int[] _deferred = new int[8];
     private int _deferredN;
+
+    /// <summary>The innermost positioned inline box between a box and the container, or -1.</summary>
+    private int PositionedInlineAncestor(int box)
+    {
+        for (Box p = _boxes.Make(box).Parent; !p.IsNull && p.Index != _container.Index; p = p.Parent)
+        {
+            if (p.Kind == BoxKind.Inline && p.Values.Position != PositionKind.Static)
+            {
+                return p.Index;
+            }
+        }
+
+        return -1;
+    }
 
     private double StrutHeight()
     {
