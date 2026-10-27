@@ -700,7 +700,7 @@ public sealed partial class Painter
         if (Observer is { } observer)
         {
             bool stackingContext = (_flags[f] & FlagStackingContext) != 0;
-            observer.EnterUnit(_tree.Make(f), stackingContext || v.Position != PositionKind.Static, stackingContext, _list.Count);
+            observer.EnterUnit(_tree.Make(f), stackingContext || v.Position != PositionKind.Static || (_flags[f] & FlagClips) != 0, stackingContext, _list.Count);
         }
 
         if (_scroll is not null && PushOuterTransform(f, in v))

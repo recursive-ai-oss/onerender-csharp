@@ -9,7 +9,7 @@ namespace OneRender.Accessibility;
 /// new trace, so one instance serves any number of paints. The facts builder reads it afterwards.
 /// </summary>
 /// <remarks>
-/// A paint layer is a positioned box or a box that begins a stacking context (CSS 2.2 Appendix E). Layers are numbered from 1
+/// A paint layer is a positioned box, a box that begins a stacking context (CSS 2.2 Appendix E) or a box that clips its content. Layers are numbered from 1
 /// in the order they start painting, so a larger number paints later, and everything painted inside a layer without being a
 /// layer itself shares its number. Not thread-safe.
 /// </remarks>

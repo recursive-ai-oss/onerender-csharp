@@ -265,6 +265,29 @@ public class AccessibilityFactsTests
         Assert.True(Of(r, "o").OptionSelected);
     }
 
+    [Fact]
+    public void ASelectWithoutASelectedOptionSelectsTheFirstAndEveryInputHasAValue()
+    {
+        RenderedPage r = Render("<input id=e><input id=cb type=checkbox><select><option id=a>a</option><option id=b>b</option></select><select size=3><option id=c>c</option></select><select multiple><option id=d selected>d</option><option id=f selected>f</option></select>");
+        Assert.Equal(string.Empty, Of(r, "e").InputValue);
+        Assert.Equal("on", Of(r, "cb").InputValue);
+        Assert.True(Of(r, "a").OptionSelected);
+        Assert.False(Of(r, "b").OptionSelected);
+        Assert.False(Of(r, "c").OptionSelected);
+        Assert.True(Of(r, "d").OptionSelected);
+        Assert.True(Of(r, "f").OptionSelected);
+    }
+
+    [Fact]
+    public void TextTransformIsAppliedToTheLayoutTextAndBreaksAreTheirOwnTextBoxes()
+    {
+        RenderedPage r = Render("<p id=u style='text-transform:uppercase;margin:0'>day walks</p><pre id=pre style='margin:0'>ab\ncd\n</pre>");
+        Assert.Equal("DAY WALKS", r.Facts[r.Document.GetElementById("u").FirstChild].Layout.LayoutText);
+        BoxFacts pre = r.Facts[r.Document.GetElementById("pre").FirstChild].Layout;
+        Assert.Equal(new[] { (0, 2), (2, 1), (3, 2), (5, 1) }, pre.TextBoxes.ToArray().Select(t => (t.Start, t.Length)).ToArray());
+        Assert.Equal(0, pre.TextBoxes[1].Bounds.Width);
+    }
+
     // ------------------------------------------------------------------ levels
 
     [Fact]

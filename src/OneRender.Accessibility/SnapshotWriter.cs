@@ -32,7 +32,8 @@ internal sealed class SnapshotWriter
     private readonly List<string> _strings = [];
     private readonly Dictionary<string, int> _stringIndex = new(StringComparer.Ordinal);
 
-    // Fragment geometry in document coordinates, and the text fragments of every styled node, in logical order.
+    // Fragment geometry in document coordinates, and the text fragments of every styled node, in layout order (line by line,
+    // left to right), which is the order a browser lists text boxes in.
     private double[] _absX = [];
     private double[] _absY = [];
     private int[] _textFirst = [];
@@ -54,6 +55,7 @@ internal sealed class SnapshotWriter
     private readonly List<int> _textValue = [];
     private readonly List<int> _checkedNode = [];
     private readonly List<int> _selectedNode = [];
+    private readonly HashSet<int> _selectedOptions = [];
 
     // The layout table.
     private readonly List<int> _lNode = [];
@@ -78,17 +80,6 @@ internal sealed class SnapshotWriter
         public int ParentIndex;
         public StyledNode Styled;
         public StyledNode Cursor;
-    }
-
-    private sealed class ByTextStart : IComparer<Fragment>
-    {
-        public static readonly ByTextStart Instance = new();
-
-        public int Compare(Fragment x, Fragment y)
-        {
-            int c = x.TextStart.CompareTo(y.TextStart);
-            return c != 0 ? c : x.Index.CompareTo(y.Index);
-        }
     }
 
     public SnapshotWriter(HtmlPage page, LayoutQueries queries, DisplayList list, PaintTrace trace, FactsOptions options)
@@ -208,15 +199,6 @@ internal sealed class SnapshotWriter
                 f = f.Parent;
             }
         }
-
-        // Text boxes are listed in logical order: by start offset within their text.
-        for (int s = 0; s < _styled.Count; s++)
-        {
-            if (_textCount[s] > 1)
-            {
-                Array.Sort(_textFragments, _textFirst[s], _textCount[s], ByTextStart.Instance);
-            }
-        }
     }
 
     private void SetAbs(Fragment child, Fragment parent)
@@ -307,15 +289,11 @@ internal sealed class SnapshotWriter
         string tag = element.LocalName;
         if (string.Equals(tag, "input", StringComparison.Ordinal))
         {
+            // A browser lists a value for every input: the value attribute, the default "on" of a check box or radio button, or empty.
             string type = (element.GetAttribute("type") ?? string.Empty).ToLowerInvariant();
-            string? value = element.GetAttribute("value");
             bool toggle = type is "checkbox" or "radio";
-            if (value is not null || toggle)
-            {
-                _inputValueNode.Add(index);
-                _inputValue.Add(Str(value ?? "on"));
-            }
-
+            _inputValueNode.Add(index);
+            _inputValue.Add(Str(element.GetAttribute("value") ?? (toggle ? "on" : string.Empty)));
             if (toggle && element.HasAttribute("checked"))
             {
                 _checkedNode.Add(index);
@@ -328,9 +306,70 @@ internal sealed class SnapshotWriter
             _textValueNode.Add(index);
             _textValue.Add(Str(text));
         }
-        else if (string.Equals(tag, "option", StringComparison.Ordinal) && element.HasAttribute("selected"))
+        else if (string.Equals(tag, "select", StringComparison.Ordinal))
+        {
+            MarkSelectedOptions(element);
+        }
+        else if (string.Equals(tag, "option", StringComparison.Ordinal) && _selectedOptions.Contains(element.Index))
         {
             _selectedNode.Add(index);
+        }
+    }
+
+    // HTML §4.10.7 selectedness: options with the selected attribute are selected; a select that shows one row and is not
+    // multiple has exactly one selected option, the last one with the attribute or else the first that is not disabled.
+    private void MarkSelectedOptions(Node select)
+    {
+        bool multiple = select.HasAttribute("multiple");
+        bool oneRow = !multiple && !(int.TryParse(select.GetAttribute("size"), NumberStyles.None, CultureInfo.InvariantCulture, out int size) && size > 1);
+        Node lastSelected = default, firstEnabled = default;
+        for (Node n = select.FirstChild; !n.IsNull;)
+        {
+            if (n.IsElement && n.Namespace == ElementNamespace.Html && string.Equals(n.LocalName, "option", StringComparison.Ordinal))
+            {
+                if (n.HasAttribute("selected"))
+                {
+                    lastSelected = n;
+                    if (multiple)
+                    {
+                        _selectedOptions.Add(n.Index);
+                    }
+                }
+
+                if (firstEnabled.IsNull && !n.HasAttribute("disabled"))
+                {
+                    firstEnabled = n;
+                }
+            }
+
+            if (!n.FirstChild.IsNull)
+            {
+                n = n.FirstChild;
+                continue;
+            }
+
+            while (!n.IsNull && n.NextSibling.IsNull)
+            {
+                n = n.Parent;
+                if (n.Equals(select))
+                {
+                    n = default;
+                }
+            }
+
+            if (!n.IsNull)
+            {
+                n = n.NextSibling;
+            }
+        }
+
+        if (oneRow)
+        {
+            Node chosen = lastSelected.IsNull ? firstEnabled : lastSelected;
+            if (!chosen.IsNull)
+            {
+                _selectedOptions.Add(chosen.Index);
+            }
         }
     }
 
@@ -458,7 +497,7 @@ internal sealed class SnapshotWriter
         frame.Cursor = c.NextSibling;
         StyledNode owner = frame.Styled;
         BoxBounds(owner, out _, out Fragment ownerFragment);
-        EmitText(index, c, data.ToString(), owner, ownerFragment);
+        EmitText(index, c, TextTransforms.Apply(data.ToString(), c.Values.TextTransform), owner, ownerFragment);
     }
 
     private void AddPseudo(StyledNode p, int hostIndex)
@@ -506,6 +545,18 @@ internal sealed class SnapshotWriter
     private void AddElementItem(Node element, int node, StyledNode s, Fragment first, Rect bounds)
     {
         int rects = _lRects.Count;
+        if (element.Namespace == ElementNamespace.Html && element.LocalName is "br" or "wbr")
+        {
+            // A line break has no box of its own to measure in CSSOM View.
+            for (int k = 0; k < 12; k++)
+            {
+                _lRects.Add(0);
+            }
+
+            AddBoxItem(node, s, first, bounds, rects, false);
+            return;
+        }
+
         _lRects.Add(_queries.OffsetLeft(element));
         _lRects.Add(_queries.OffsetTop(element));
         _lRects.Add(_queries.OffsetWidth(element));
@@ -589,6 +640,8 @@ internal sealed class SnapshotWriter
         int item = _lNode.Count;
         bool any = false;
         Rect union = default;
+        WhiteSpaceCollapseKind collapse = textNode.Values.WhiteSpaceCollapse;
+        bool keepBreaks = collapse is WhiteSpaceCollapseKind.Preserve or WhiteSpaceCollapseKind.PreserveBreaks or WhiteSpaceCollapseKind.BreakSpaces;
         for (int k = 0; k < count; k++)
         {
             Fragment f = _textFragments[at + k];
@@ -602,13 +655,13 @@ internal sealed class SnapshotWriter
             Rect r = Absolute(f);
             union = any ? union.Union(r) : r;
             any = true;
-            _tbLayout.Add(item);
-            _tbBounds.Add(Finite(r.X));
-            _tbBounds.Add(Finite(r.Y));
-            _tbBounds.Add(Finite(r.Width));
-            _tbBounds.Add(Finite(r.Height));
-            _tbStart.Add(start);
-            _tbLength.Add(length);
+            AddTextBox(item, r, start, length);
+            // A forced break is a text box of its own, of no width, at the end of the line it ends.
+            int end = start + length;
+            if (keepBreaks && end < layoutText.Length && layoutText[end] == '\n' && !(k + 1 < count && _textFragments[at + k + 1].TextStart == end))
+            {
+                AddTextBox(item, new Rect(r.Right, r.Y, 0, r.Height), end, 1);
+            }
         }
 
         if (!any)
@@ -626,12 +679,32 @@ internal sealed class SnapshotWriter
         _lOpacity.Add(1);
     }
 
+    private void AddTextBox(int item, Rect r, int start, int length)
+    {
+        _tbLayout.Add(item);
+        _tbBounds.Add(Finite(r.X));
+        _tbBounds.Add(Finite(r.Y));
+        _tbBounds.Add(Finite(r.Width));
+        _tbBounds.Add(Finite(r.Height));
+        _tbStart.Add(start);
+        _tbLength.Add(length);
+    }
+
     // The color behind an element's own text and the opacity it is painted with, when it has text that is painted: a character
     // that is not white space, in a box that is visible.
     private bool TextBackground(StyledNode s, out int blended, out double opacity)
     {
         blended = -1;
         opacity = 1;
+        // A browser works this out only for an element whose children are all text (and generated content).
+        for (StyledNode c = s.FirstChild; !c.IsNull; c = c.NextSibling)
+        {
+            if (c.Kind == StyledNodeKind.Element)
+            {
+                return false;
+            }
+        }
+
         for (StyledNode c = s.FirstChild; !c.IsNull; c = c.NextSibling)
         {
             if (c.Kind != StyledNodeKind.Text || c.Values.Visibility != VisibilityKind.Visible)

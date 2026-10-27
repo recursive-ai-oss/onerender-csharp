@@ -16,7 +16,7 @@ public interface IPaintObserver
 {
     /// <summary>A unit starts painting.</summary>
     /// <param name="fragment">The fragment that owns the unit.</param>
-    /// <param name="isLayer">True when the unit is positioned or begins a stacking context: CSS 2.2 Appendix E treats it as its own paint layer.</param>
+    /// <param name="isLayer">True when the unit is positioned, begins a stacking context or clips its content (<c>overflow</c> other than <c>visible</c>): a box a compositor keeps a paint layer of.</param>
     /// <param name="isStackingContext">True when the unit begins a stacking context (CSS 2.2 §9.9.1, and opacity below 1).</param>
     /// <param name="firstItem">Index in the display list of the next item to be appended.</param>
     void EnterUnit(Fragment fragment, bool isLayer, bool isStackingContext, int firstItem);
