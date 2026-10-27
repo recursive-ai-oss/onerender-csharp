@@ -8,18 +8,17 @@
   "sampleStride": 1,
   "counts": {
     "total": 181,
-    "pass": 84,
-    "fail": 10,
+    "pass": 83,
+    "fail": 11,
     "blank": 0,
     "skipped": 87
   },
-  "rate": "0.8936",
+  "rate": "0.8830",
   "pass": [
     "css/css-borders/border-image-color-scheme.html",
     "css/css-borders/border-radius-currentcolor.html",
     "css/css-borders/border-radius-greater-than-width.html",
     "css/css-borders/border-shape-absolute-coords-shape.tentative.html",
-    "css/css-borders/border-shape/border-shape-background-origin-border-box.html",
     "css/css-borders/border-shape/border-shape-circle-extent-keywords.html",
     "css/css-borders/border-shape/border-shape-clips-background.html",
     "css/css-borders/border-shape/border-shape-collapsed-shape-clips-background.html",
@@ -102,6 +101,7 @@
   ],
   "blank": [],
   "fail": {
+    "css/css-borders/border-shape/border-shape-background-origin-border-box.html": "== border-shape-background-origin-border-box-ref.html differs (max 119, 500 px)",
     "css/css-borders/border-shape/border-shape-ellipse-corner-keywords.tentative.html": "== border-shape-ellipse-corner-keywords-ref.html differs (max 255, 94900 px)",
     "css/css-borders/corner-shape/corner-shape-box-shadow-spread-bevel.html": "== corner-shape-box-shadow-spread-bevel-ref.html differs (max 255, 382 px)",
     "css/css-borders/corner-shape/corner-shape-box-shadow-spread-elliptical.html": "== corner-shape-box-shadow-spread-elliptical-ref.html differs (max 159, 85 px)",

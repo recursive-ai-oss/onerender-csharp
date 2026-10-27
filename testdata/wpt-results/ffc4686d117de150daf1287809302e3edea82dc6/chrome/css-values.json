@@ -9,11 +9,11 @@
   "counts": {
     "total": 249,
     "pass": 83,
-    "fail": 3,
+    "fail": 4,
     "blank": 0,
-    "skipped": 163
+    "skipped": 162
   },
-  "rate": "0.9651",
+  "rate": "0.9540",
   "pass": [
     "css/css-values/angle-units-001.html",
     "css/css-values/angle-units-003.html",
@@ -68,7 +68,6 @@
     "css/css-values/ch-unit-017.html",
     "css/css-values/ch-unit-019.html",
     "css/css-values/ex-unit-001.html",
-    "css/css-values/ex-unit-003.html",
     "css/css-values/html-attr-case-insensitivity.html",
     "css/css-values/ic-unit-001.html",
     "css/css-values/ic-unit-003.html",
@@ -96,13 +95,15 @@
     "css/css-values/vh-support-transform-origin.html",
     "css/css-values/vh-support.html",
     "css/css-values/vh-zero-support.html",
+    "css/css-values/viewport-units-001-print.html",
     "css/css-values/viewport-units-scrollbars-scroll-vw-001.html",
     "css/css-values/viewport-units-scrollbars-scroll-vw-003.html"
   ],
   "blank": [],
   "fail": {
-    "css/css-values/attr-namespace-case-sensitivity.xhtml": "== attr-namespace-case-sensitivity-ref.xhtml differs (max 255, 482 px)",
+    "css/css-values/attr-namespace-case-sensitivity.xhtml": "== attr-namespace-case-sensitivity-ref.xhtml differs (max 255, 648 px)",
     "css/css-values/attr-namespace-valid.xhtml": "== ref-filled-green-100px-square.xht differs (max 255, 10000 px)",
+    "css/css-values/ex-unit-003.html": "error: TimeoutException: DevTools command Page.captureScreenshot timed out after 30s.",
     "css/css-values/urls/referrer-policy/no-referrer/url-image-set-referrer-policy.sub.html": "== ref-filled-green-100px-square.xht differs (max 255, 10000 px)"
   },
   "skipped": {
@@ -255,7 +256,6 @@
     "css/css-values/urls/url-request-modifiers-invalid.sub.html": "testharness.js test",
     "css/css-values/using-font-relative-units-in-font-properties.html": "testharness.js test",
     "css/css-values/viewport-relative-lengths-scaled-viewport.html": "testharness.js test",
-    "css/css-values/viewport-units-001-print.html": "print reftest (paged output)",
     "css/css-values/viewport-units-compute.html": "testharness.js test",
     "css/css-values/viewport-units-extreme-scale.html": "testharness.js test",
     "css/css-values/viewport-units-gutter-002.html": "testharness.js test",

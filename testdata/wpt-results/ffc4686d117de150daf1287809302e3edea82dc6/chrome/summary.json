@@ -5,6 +5,17 @@
   "rendererVersion": "Chrome/156.0.8078.47",
   "modules": [
     {
+      "module": "compositing",
+      "sampleStride": 1,
+      "discovered": 75,
+      "total": 75,
+      "pass": 43,
+      "fail": 9,
+      "blank": 0,
+      "skipped": 23,
+      "rate": "0.8269"
+    },
+    {
       "module": "css-animations",
       "sampleStride": 1,
       "discovered": 163,
@@ -20,154 +31,198 @@
       "sampleStride": 3,
       "discovered": 847,
       "total": 283,
-      "pass": 161,
-      "fail": 38,
+      "pass": 162,
+      "fail": 37,
       "blank": 2,
       "skipped": 82,
-      "rate": "0.8010"
+      "rate": "0.8060"
     },
     {
       "module": "css-borders",
       "sampleStride": 1,
       "discovered": 181,
       "total": 181,
-      "pass": 84,
-      "fail": 10,
+      "pass": 83,
+      "fail": 11,
       "blank": 0,
       "skipped": 87,
-      "rate": "0.8936"
+      "rate": "0.8830"
     },
     {
       "module": "css-break",
       "sampleStride": 3,
       "discovered": 1191,
       "total": 397,
-      "pass": 313,
-      "fail": 36,
+      "pass": 332,
+      "fail": 38,
       "blank": 0,
-      "skipped": 48,
-      "rate": "0.8968"
+      "skipped": 27,
+      "rate": "0.8973"
     },
     {
       "module": "css-color",
       "sampleStride": 1,
       "discovered": 377,
       "total": 377,
-      "pass": 287,
-      "fail": 9,
+      "pass": 286,
+      "fail": 10,
       "blank": 0,
       "skipped": 81,
-      "rate": "0.9696"
+      "rate": "0.9662"
     },
     {
       "module": "css-flexbox",
       "sampleStride": 4,
       "discovered": 1398,
       "total": 350,
-      "pass": 230,
-      "fail": 5,
+      "pass": 227,
+      "fail": 8,
       "blank": 3,
       "skipped": 112,
-      "rate": "0.9664"
+      "rate": "0.9538"
     },
     {
       "module": "css-fonts",
       "sampleStride": 2,
       "discovered": 551,
       "total": 276,
-      "pass": 139,
+      "pass": 140,
       "fail": 28,
       "blank": 0,
-      "skipped": 109,
-      "rate": "0.8323"
+      "skipped": 108,
+      "rate": "0.8333"
     },
     {
       "module": "css-grid",
       "sampleStride": 7,
       "discovered": 2481,
       "total": 355,
-      "pass": 111,
-      "fail": 117,
+      "pass": 112,
+      "fail": 116,
       "blank": 0,
       "skipped": 127,
-      "rate": "0.4868"
+      "rate": "0.4912"
+    },
+    {
+      "module": "css-images",
+      "sampleStride": 2,
+      "discovered": 510,
+      "total": 255,
+      "pass": 141,
+      "fail": 62,
+      "blank": 3,
+      "skipped": 49,
+      "rate": "0.6845"
     },
     {
       "module": "css-inline",
       "sampleStride": 1,
       "discovered": 255,
       "total": 255,
-      "pass": 135,
+      "pass": 138,
       "fail": 28,
       "blank": 0,
-      "skipped": 92,
-      "rate": "0.8282"
+      "skipped": 89,
+      "rate": "0.8313"
+    },
+    {
+      "module": "css-lists",
+      "sampleStride": 1,
+      "discovered": 212,
+      "total": 212,
+      "pass": 75,
+      "fail": 72,
+      "blank": 0,
+      "skipped": 65,
+      "rate": "0.5102"
+    },
+    {
+      "module": "css-masking",
+      "sampleStride": 2,
+      "discovered": 448,
+      "total": 224,
+      "pass": 134,
+      "fail": 5,
+      "blank": 1,
+      "skipped": 84,
+      "rate": "0.9571"
     },
     {
       "module": "css-multicol",
       "sampleStride": 2,
       "discovered": 563,
       "total": 282,
-      "pass": 196,
+      "pass": 199,
       "fail": 6,
       "blank": 0,
-      "skipped": 80,
-      "rate": "0.9703"
+      "skipped": 77,
+      "rate": "0.9707"
     },
     {
       "module": "css-overflow",
       "sampleStride": 3,
       "discovered": 892,
       "total": 298,
-      "pass": 86,
-      "fail": 89,
+      "pass": 87,
+      "fail": 88,
       "blank": 1,
       "skipped": 122,
-      "rate": "0.4886"
+      "rate": "0.4943"
     },
     {
       "module": "css-page",
       "sampleStride": 1,
       "discovered": 247,
       "total": 247,
-      "pass": 1,
-      "fail": 6,
-      "blank": 0,
-      "skipped": 240,
-      "rate": "0.1429"
+      "pass": 157,
+      "fail": 59,
+      "blank": 1,
+      "skipped": 30,
+      "rate": "0.7235"
     },
     {
       "module": "css-position",
       "sampleStride": 1,
       "discovered": 367,
       "total": 367,
-      "pass": 127,
-      "fail": 4,
+      "pass": 130,
+      "fail": 3,
       "blank": 0,
-      "skipped": 236,
-      "rate": "0.9695"
+      "skipped": 234,
+      "rate": "0.9774"
     },
     {
       "module": "css-tables",
       "sampleStride": 1,
       "discovered": 308,
       "total": 308,
-      "pass": 130,
+      "pass": 132,
       "fail": 8,
       "blank": 0,
-      "skipped": 170,
-      "rate": "0.9420"
+      "skipped": 168,
+      "rate": "0.9429"
+    },
+    {
+      "module": "css-text-decor",
+      "sampleStride": 1,
+      "discovered": 357,
+      "total": 357,
+      "pass": 189,
+      "fail": 95,
+      "blank": 1,
+      "skipped": 72,
+      "rate": "0.6632"
     },
     {
       "module": "css-text",
       "sampleStride": 5,
       "discovered": 1860,
       "total": 372,
-      "pass": 221,
-      "fail": 55,
+      "pass": 235,
+      "fail": 41,
       "blank": 0,
       "skipped": 96,
-      "rate": "0.8007"
+      "rate": "0.8514"
     },
     {
       "module": "css-transforms",
@@ -208,73 +263,84 @@
       "discovered": 497,
       "total": 249,
       "pass": 83,
-      "fail": 3,
+      "fail": 4,
       "blank": 0,
-      "skipped": 163,
-      "rate": "0.9651"
+      "skipped": 162,
+      "rate": "0.9540"
     },
     {
       "module": "css2-floats",
       "sampleStride": 1,
       "discovered": 345,
       "total": 345,
-      "pass": 302,
-      "fail": 12,
+      "pass": 301,
+      "fail": 13,
       "blank": 0,
       "skipped": 31,
-      "rate": "0.9618"
+      "rate": "0.9586"
     },
     {
       "module": "css2-flow",
       "sampleStride": 7,
       "discovered": 2415,
       "total": 345,
-      "pass": 313,
-      "fail": 11,
+      "pass": 316,
+      "fail": 8,
       "blank": 0,
       "skipped": 21,
-      "rate": "0.9660"
+      "rate": "0.9753"
     },
     {
       "module": "css2-generated",
       "sampleStride": 1,
       "discovered": 382,
       "total": 382,
-      "pass": 342,
-      "fail": 17,
+      "pass": 350,
+      "fail": 9,
       "blank": 0,
       "skipped": 23,
-      "rate": "0.9526"
+      "rate": "0.9749"
     },
     {
       "module": "css2-positioning",
       "sampleStride": 2,
       "discovered": 654,
       "total": 327,
-      "pass": 313,
-      "fail": 0,
+      "pass": 312,
+      "fail": 1,
       "blank": 0,
       "skipped": 14,
-      "rate": "1.0000"
+      "rate": "0.9968"
     },
     {
       "module": "css2-tables",
       "sampleStride": 1,
       "discovered": 375,
       "total": 375,
-      "pass": 235,
-      "fail": 14,
+      "pass": 237,
+      "fail": 12,
       "blank": 0,
       "skipped": 126,
-      "rate": "0.9438"
+      "rate": "0.9518"
+    },
+    {
+      "module": "filter-effects",
+      "sampleStride": 1,
+      "discovered": 367,
+      "total": 367,
+      "pass": 250,
+      "fail": 18,
+      "blank": 2,
+      "skipped": 97,
+      "rate": "0.9259"
     }
   ],
   "totals": {
-    "total": 7326,
-    "pass": 4096,
-    "fail": 503,
-    "blank": 7,
-    "skipped": 2720,
-    "rate": "0.8893"
+    "total": 8816,
+    "pass": 5138,
+    "fail": 796,
+    "blank": 15,
+    "skipped": 2867,
+    "rate": "0.8637"
   }
 }

@@ -8,12 +8,12 @@
   "sampleStride": 1,
   "counts": {
     "total": 2481,
-    "pass": 533,
-    "fail": 1032,
+    "pass": 532,
+    "fail": 1033,
     "blank": 8,
     "skipped": 908
   },
-  "rate": "0.3388",
+  "rate": "0.3382",
   "pass": [
     "css/css-grid/abspos/grid-abspos-staticpos-align-items-center-large-border-padding.html",
     "css/css-grid/abspos/grid-abspos-staticpos-align-items-center.html",
@@ -185,7 +185,6 @@
     "css/css-grid/grid-definition/grid-support-named-grid-lines-003.html",
     "css/css-grid/grid-flexible-track-fractional-flex-factor.html",
     "css/css-grid/grid-flexible-track-free-space-distribution.html",
-    "css/css-grid/grid-fragmentation-between-rows-001-print.tentative.html",
     "css/css-grid/grid-item-non-auto-height-stretch-001.html",
     "css/css-grid/grid-item-non-auto-height-stretch-002.html",
     "css/css-grid/grid-item-non-auto-height-stretch-003.html",
@@ -734,6 +733,7 @@
     "css/css-grid/grid-definition/grid-template-columns-fit-content-001.html": "== grid-template-columns-fit-content-001-ref.html differs (max 255, 52385 px)",
     "css/css-grid/grid-definition/grid-template-rows-fit-content-001.html": "== grid-template-rows-fit-content-001-ref.html differs (max 255, 75640 px)",
     "css/css-grid/grid-flex-spanning-items-001.html": "== grid-flex-spanning-items-001-ref.html differs (max 255, 5900 px)",
+    "css/css-grid/grid-fragmentation-between-rows-001-print.tentative.html": "== grid-fragmentation-between-rows-001-print-ref.tentative.html differs (page 1: max 255, 11858 px)",
     "css/css-grid/grid-in-table-cell-with-img.html": "== ref-filled-green-100px-square-only.html differs (max 255, 30000 px)",
     "css/css-grid/grid-items/aspect-ratio-001.html": "== ref-filled-green-100px-square-only.html differs (max 255, 10000 px)",
     "css/css-grid/grid-items/aspect-ratio-002.html": "== ref-filled-green-100px-square-only.html differs (max 255, 10000 px)",

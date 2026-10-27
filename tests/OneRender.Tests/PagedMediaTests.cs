@@ -16,6 +16,15 @@ public class PagedMediaTests
         string.Concat(Enumerable.Range(0, count).Select(i => $"<div class='{cls}' id='b{i}' style='height:{height}px'>block {i}</div>"));
 
     [Fact]
+    public void ADocumentWithNothingToPlaceIsOneEmptyPage()
+    {
+        // A frameset lays out no boxes, so the planner places nothing; the document still has one page.
+        PagedDocument d = PagedDocument.Create("<!DOCTYPE html><frameset cols='*,100'><frame src='about:blank'><frame src='about:blank'></frameset>", new PagedOptions(FontProviders.CreateDefault()) { DefaultPage = Small });
+        Assert.Equal(1, d.PageCount);
+        Assert.False(d.GetPage(0).IsBlank);
+    }
+
+    [Fact]
     public void PageSizeAndMarginsComeFromTheRule()
     {
         PagedDocument d = Doc("@page{size:200px 150px;margin:10px 20px 30px 40px}</style></head><body>" + Block(3, 50));

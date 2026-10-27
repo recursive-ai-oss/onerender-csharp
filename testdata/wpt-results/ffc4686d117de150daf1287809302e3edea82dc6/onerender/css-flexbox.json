@@ -9,11 +9,11 @@
   "counts": {
     "total": 1398,
     "pass": 655,
-    "fail": 282,
+    "fail": 285,
     "blank": 15,
-    "skipped": 446
+    "skipped": 443
   },
-  "rate": "0.6880",
+  "rate": "0.6859",
   "pass": [
     "css/css-flexbox/abspos/abspos-autopos-htb-ltr.html",
     "css/css-flexbox/abspos/abspos-autopos-htb-rtl.html",
@@ -748,6 +748,8 @@
     "css/css-flexbox/baseline-synthesis-003.html": "== ref-filled-green-100px-square.xht differs (max 255, 66560 px)",
     "css/css-flexbox/baseline-synthesis-004.html": "== ref-filled-green-100px-square.xht differs (max 255, 66560 px)",
     "css/css-flexbox/baseline-synthesis-vert-lr-line-under.html": "== ref-filled-green-100px-square.xht differs (max 255, 36700 px)",
+    "css/css-flexbox/break-nested-float-in-flex-item-001-print.html": "== break-nested-float-in-flex-item-print-ref.html differs (1 pages vs 3)",
+    "css/css-flexbox/break-nested-float-in-flex-item-002-print.html": "== break-nested-float-in-flex-item-print-ref.html differs (1 pages vs 3)",
     "css/css-flexbox/canvas-contain-size.html": "== ref-filled-green-100px-square-only.html differs (max 255, 8000 px)",
     "css/css-flexbox/content-height-with-scrollbars.html": "== content-height-with-scrollbars-ref.html differs (max 82, 69200 px)",
     "css/css-flexbox/cross-axis-scrollbar.html": "== cross-axis-scrollbar-ref.html differs (max 255, 29500 px)",
@@ -911,6 +913,7 @@
     "css/css-flexbox/gap-percentage-wrap.html": "== ref-filled-green-100px-square-only.html differs (max 255, 10000 px)",
     "css/css-flexbox/grid-flex-item-001.html": "== ref-filled-green-100px-square-only.html differs (max 255, 10000 px)",
     "css/css-flexbox/image-nested-within-definite-column-flexbox.html": "== ref-filled-green-100px-square-only.html differs (max 255, 20000 px)",
+    "css/css-flexbox/inline-flexbox-vertical-rl-image-flexitem-crash-print.html": "!= blank.html identical",
     "css/css-flexbox/intrinsic-size/auto-min-size-001.html": "== ref-filled-green-100px-square.xht differs (max 255, 35000 px)",
     "css/css-flexbox/intrinsic-size/col-wrap-001.html": "== ref-filled-green-100px-square.xht differs (max 255, 5000 px)",
     "css/css-flexbox/intrinsic-size/col-wrap-002.html": "== ref-filled-green-100px-square.xht differs (max 255, 5000 px)",
@@ -1118,8 +1121,6 @@
     "css/css-flexbox/balance/flex-wrap-valid.html": "testharness.js test",
     "css/css-flexbox/box-sizing-001.html": "testharness.js test",
     "css/css-flexbox/box-sizing-min-max-sizes-001.html": "testharness.js test",
-    "css/css-flexbox/break-nested-float-in-flex-item-001-print.html": "print reftest (paged output)",
-    "css/css-flexbox/break-nested-float-in-flex-item-002-print.html": "print reftest (paged output)",
     "css/css-flexbox/canvas-dynamic-change-001.html": "testharness.js test",
     "css/css-flexbox/change-column-flex-width.html": "testharness.js test",
     "css/css-flexbox/checkbox-percentage-width-in-flex.html": "testharness.js test",
@@ -1306,7 +1307,6 @@
     "css/css-flexbox/inheritance.html": "testharness.js test",
     "css/css-flexbox/inline-flex-column-image-load.html": "reftest-wait (needs script)",
     "css/css-flexbox/inline-flex.html": "testharness.js test",
-    "css/css-flexbox/inline-flexbox-vertical-rl-image-flexitem-crash-print.html": "print reftest (paged output)",
     "css/css-flexbox/inline-flexbox-wrap-vertically-width-calculation.html": "testharness.js test",
     "css/css-flexbox/intrinsic-size/col-wrap-004.html": "testharness.js test",
     "css/css-flexbox/intrinsic-size/col-wrap-005.html": "testharness.js test",

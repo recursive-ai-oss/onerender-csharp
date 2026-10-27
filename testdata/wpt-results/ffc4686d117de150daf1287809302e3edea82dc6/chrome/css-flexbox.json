@@ -8,12 +8,12 @@
   "sampleStride": 4,
   "counts": {
     "total": 350,
-    "pass": 230,
-    "fail": 5,
+    "pass": 227,
+    "fail": 8,
     "blank": 3,
     "skipped": 112
   },
-  "rate": "0.9664",
+  "rate": "0.9538",
   "pass": [
     "css/css-flexbox/abspos/abspos-autopos-htb-ltr.html",
     "css/css-flexbox/abspos/abspos-autopos-vrl-ltr.html",
@@ -170,7 +170,6 @@
     "css/css-flexbox/flexbox_flex-0-auto.html",
     "css/css-flexbox/flexbox_flex-1-0-N.html",
     "css/css-flexbox/flexbox_flex-1-0-auto.html",
-    "css/css-flexbox/flexbox_flex-1-1-N-shrink.html",
     "css/css-flexbox/flexbox_flex-1-1-auto-shrink.html",
     "css/css-flexbox/flexbox_flex-1-N-0.html",
     "css/css-flexbox/flexbox_flex-1-N-Npercent.html",
@@ -179,7 +178,6 @@
     "css/css-flexbox/flexbox_flex-N-0.html",
     "css/css-flexbox/flexbox_flex-N-1-N.html",
     "css/css-flexbox/flexbox_flex-N-1-auto.html",
-    "css/css-flexbox/flexbox_flex-N-N-N-shrink.html",
     "css/css-flexbox/flexbox_flex-N-N-auto-shrink.html",
     "css/css-flexbox/flexbox_flex-basis-shrink.html",
     "css/css-flexbox/flexbox_flex-initial.html",
@@ -211,7 +209,6 @@
     "css/css-flexbox/gap-015.html",
     "css/css-flexbox/gap-019.html",
     "css/css-flexbox/gap-percentage-wrap.html",
-    "css/css-flexbox/grandchild-span-height.html",
     "css/css-flexbox/grid-flex-item-004.html",
     "css/css-flexbox/inline-flex-min-content-height.html",
     "css/css-flexbox/intrinsic-size/auto-min-size-001.html",
@@ -255,8 +252,11 @@
     "css/css-flexbox/alignment/flow-start-flow-end-align-properties.html": "== flow-start-flow-end-align-properties-ref.html differs (max 255, 3200 px)",
     "css/css-flexbox/alignment/flow-start-flow-end-wrap-reverse.html": "== flow-start-flow-end-wrap-reverse-ref.html differs (max 255, 3200 px)",
     "css/css-flexbox/flex-container-max-content-001.html": "== flex-container-max-content-001-ref.html differs (max 255, 10668 px)",
-    "css/css-flexbox/flexbox-collapsed-item-baseline-001.html": "== flexbox-collapsed-item-baseline-001-ref.html differs (max 203, 310 px)",
-    "css/css-flexbox/flexbox_visibility-collapse.html": "== flexbox_visibility-collapse-ref.html differs (max 204, 1134 px)"
+    "css/css-flexbox/flexbox-collapsed-item-baseline-001.html": "== flexbox-collapsed-item-baseline-001-ref.html differs (max 240, 372 px)",
+    "css/css-flexbox/flexbox_flex-1-1-N-shrink.html": "== flexbox_flex-1-1-N-shrink-ref.html differs (max 252, 956 px)",
+    "css/css-flexbox/flexbox_flex-N-N-N-shrink.html": "== flexbox_flex-N-N-N-shrink-ref.html differs (max 252, 956 px)",
+    "css/css-flexbox/flexbox_visibility-collapse.html": "== flexbox_visibility-collapse-ref.html differs (max 204, 2160 px)",
+    "css/css-flexbox/grandchild-span-height.html": "== ref-filled-green-100px-square.xht differs (max 255, 100 px)"
   },
   "skipped": {
     "css/css-flexbox/abspos/flex-abspos-staticpos-align-self-001.html": "testharness.js test",
