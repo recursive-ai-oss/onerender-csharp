@@ -96,12 +96,8 @@ public readonly struct FlushResult
 public sealed class LivePage
 {
     private readonly LivePageOptions _options;
-    private readonly BlockLayoutEngine _engine;
+    private readonly PipelineUpdater _updater;
     private readonly Painter _painter = new();
-    private double _vw;
-    private double _vh;
-    private bool _dirtyAll;
-    private bool _boxesStale;
     private int _generation;
 
     /// <summary>Builds the boxes of <paramref name="tree"/>, lays them out and paints them. The tree starts recording edits from here.</summary>
@@ -117,19 +113,18 @@ public sealed class LivePage
         ArgumentOutOfRangeException.ThrowIfLessThan(options.ViewportWidth, 1);
         ArgumentOutOfRangeException.ThrowIfLessThan(options.ViewportHeight, 1);
         _options = options;
-        _vw = options.ViewportWidth;
-        _vh = options.ViewportHeight;
+        double vw = options.ViewportWidth, vh = options.ViewportHeight;
         Styled = tree;
         // Computed lengths embed the font metrics and the viewport, so a tree built under others is computed again.
         bool fontsChanged = !ReferenceEquals(tree.Styles.Fonts, options.Fonts);
-        bool viewportChanged = tree.Styles.ViewportWidth != _vw || tree.Styles.ViewportHeight != _vh;
+        bool viewportChanged = tree.Styles.ViewportWidth != vw || tree.Styles.ViewportHeight != vh;
         tree.Styles.Fonts = options.Fonts;
         if (fontsChanged)
         {
             tree.Styles.Reset();
         }
 
-        tree.Styles.SetViewport(_vw, _vh);
+        tree.Styles.SetViewport(vw, vh);
         tree.Tracking = true;
         if (fontsChanged || viewportChanged)
         {
@@ -143,26 +138,10 @@ public sealed class LivePage
         tree.ClearPending();
         Boxes = new BoxTree(tree);
         Fragments = new FragmentTree(Boxes);
-        _engine = new BlockLayoutEngine();
+        _updater = new PipelineUpdater(tree, Boxes, Fragments, new BlockLayoutEngine(), options.Fonts, vw, vh);
         Boxes.Build(cancellationToken);
-        LayoutAll(cancellationToken);
+        _updater.LayoutAll(cancellationToken);
         PaintAll(cancellationToken);
-    }
-
-    // An already laid-out page takes over (the interactive page's incremental path).
-    internal LivePage(StyledTree styled, BoxTree boxes, FragmentTree fragments, BlockLayoutEngine engine, LivePageOptions options)
-    {
-        _options = options;
-        _vw = options.ViewportWidth;
-        _vh = options.ViewportHeight;
-        Styled = styled;
-        Boxes = boxes;
-        Fragments = fragments;
-        _engine = engine;
-        styled.ClearPending();
-        styled.Tracking = true;
-        boxes.ClearDirty();
-        PaintAll(default);
     }
 
     /// <summary>The styled-node tree; edit it, then call <see cref="Flush"/>.</summary>
@@ -184,13 +163,13 @@ public sealed class LivePage
     public int Generation => _generation;
 
     /// <summary>The viewport width in CSS px.</summary>
-    public double ViewportWidth => _vw;
+    public double ViewportWidth => _updater.Width;
 
     /// <summary>The viewport height in CSS px.</summary>
-    public double ViewportHeight => _vh;
+    public double ViewportHeight => _updater.Height;
 
     /// <summary>True when edits are waiting for <see cref="Flush"/>.</summary>
-    public bool NeedsFlush => _dirtyAll || Styled.HasPending;
+    public bool NeedsFlush => _updater.NeedsFlush;
 
     /// <summary>Changes the viewport. Styles with viewport units resolve again, so the next flush recomputes everything.</summary>
     /// <param name="width">At least 1.</param>
@@ -200,14 +179,7 @@ public sealed class LivePage
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(width, 1);
         ArgumentOutOfRangeException.ThrowIfLessThan(height, 1);
-        if (width == _vw && height == _vh)
-        {
-            return;
-        }
-
-        _vw = width;
-        _vh = height;
-        _dirtyAll = true;
+        _updater.Resize(width, height);
     }
 
     /// <summary>
@@ -223,73 +195,18 @@ public sealed class LivePage
             return new FlushResult(FlushWork.None, 0);
         }
 
-        FlushWork work = FlushWork.Restyled;
-        try
-        {
-            if (_dirtyAll)
-            {
-                // Style rows are keyed by the viewport; everything is computed again.
-                Styled.Styles.SetViewport(_vw, _vh);
-                Styled.RestyleAll(force: true);
-                _boxesStale = true;
-            }
-            else
-            {
-                Styled.Restyle();
-            }
-
-            if (_boxesStale)
-            {
-                Boxes.Build(cancellationToken);
-                _boxesStale = false;
-                work |= FlushWork.BoxesRebuilt | FlushWork.Relaid;
-                LayoutAll(cancellationToken);
-            }
-            else
-            {
-                switch (Boxes.ApplyChanges(cancellationToken))
-                {
-                    case BoxUpdate.Rebuilt:
-                        work |= FlushWork.BoxesRebuilt | FlushWork.Relaid;
-                        LayoutAll(cancellationToken);
-                        break;
-                    case BoxUpdate.Patched:
-                        work |= FlushWork.BoxesPatched | FlushWork.Relaid;
-                        LayoutAll(cancellationToken);
-                        break;
-                    case BoxUpdate.PatchedPaintOnly:
-                        work |= FlushWork.BoxesPatched;
-                        break;
-                }
-            }
-
-            _dirtyAll = false;
-        }
-        catch (OperationCanceledException)
-        {
-            // The boxes or fragments may be half built; the next flush generates them again from the styled tree.
-            _boxesStale = true;
-            throw;
-        }
-
-        int reused = _engine.ReusedSubtrees;
+        _updater.Restyle();
+        FlushWork work = _updater.UpdateBoxesAndLayout(cancellationToken);
+        int reused = _updater.ReusedSubtrees;
         PaintAll(cancellationToken);
         work |= FlushWork.Repainted;
-        Styled.ClearPending();
         _generation++;
         return new FlushResult(work, reused);
     }
 
-    private void LayoutAll(CancellationToken cancellationToken)
-    {
-        var input = new LayoutInput(_vw, _vh, _options.Fonts) { Reuse = true };
-        _engine.Layout(Boxes, in input, Fragments, cancellationToken);
-        Boxes.ClearDirty();
-    }
-
     private void PaintAll(CancellationToken cancellationToken)
     {
-        var paint = new PaintOptions(_vw, _vh)
+        var paint = new PaintOptions(_updater.Width, _updater.Height)
         {
             Scroll = Scroll,
             Images = _options.Images,
