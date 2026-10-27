@@ -438,6 +438,62 @@ table, blockquote, pre { break-inside: avoid; }
     write("report", html, css)
 
 
+# ---------------------------------------------------------------- paged (running headers, contents with leaders, repeated table header)
+
+def paged():
+    r = rnd("paged")
+    titles = [words(r, 3).title() for _ in range(5)]
+    toc = "\n".join('<li><a href="#s%d">%s</a></li>' % (i + 1, t) for i, t in enumerate(titles))
+    body = []
+    for i, t in enumerate(titles):
+        body.append('<section>\n<h2 id="s%d">%s</h2>' % (i + 1, t))
+        for _ in range(4):
+            body.append("<p>%s</p>" % paragraph(r))
+        if i == 2:
+            rows = []
+            for n in range(1, 91):
+                rows.append('<tr><td>%d</td><td>%s</td><td class="num">%s</td></tr>' % (n, words(r, 3), money(r.randint(100, 900000) / 100)))
+            body.append('<table>\n<thead><tr><th>No</th><th>Description</th><th>Amount</th></tr></thead>\n<tbody>\n%s\n</tbody>\n</table>' % "\n".join(rows))
+        body.append("</section>")
+    html = head("Paged sample report") + """<body>
+<header class="cover">
+<h1>Paged sample report</h1>
+<p class="by">Running headers, a contents list with leaders and a table whose header repeats.</p>
+</header>
+<nav class="toc">
+<h2 class="plain">Contents</h2>
+<ol>
+%s
+</ol>
+</nav>
+%s
+</body>
+</html>
+""" % (toc, "\n".join(body))
+    css = """html { font: 12pt/1.4 "Liberation Serif", serif; color: #111; }
+body { margin: 0; }
+.cover { padding: 60px 0 40px; border-bottom: 3px solid #234; }
+.cover h1 { font-size: 30pt; margin: 0 0 8px; }
+.by { margin: 0; color: #555; }
+h2 { font-size: 18pt; margin: 0 0 10px; string-set: chapter content(text); break-after: avoid; }
+h2.plain { string-set: none; margin-top: 24px; }
+section { break-before: page; }
+p { margin: 0 0 10px; text-align: justify; orphans: 2; widows: 2; }
+.toc ol { list-style: none; padding: 0; margin: 0 0 24px; }
+.toc li { margin: 0 0 4px; }
+.toc a { color: inherit; text-decoration: none; }
+.toc a::after { content: leader(".") " " target-counter(attr(href url), page); }
+table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 11pt; }
+th, td { border: 1px solid #999; padding: 3px 8px; text-align: left; }
+thead th { background: #e8edf3; }
+td.num { text-align: right; }
+tr { break-inside: avoid; }
+@page { size: A4; margin: 25mm 20mm; @top-center { content: string(chapter, first); font-size: 9pt; color: #555; } @bottom-center { content: "Page " counter(page) " of " counter(pages); font-size: 9pt; color: #555; } }
+@page :first { @top-center { content: none; } }
+"""
+    write("paged", html, css)
+
+
 if __name__ == "__main__":
     invoice()
     statement()
@@ -445,3 +501,4 @@ if __name__ == "__main__":
     certificate()
     email()
     report()
+    paged()

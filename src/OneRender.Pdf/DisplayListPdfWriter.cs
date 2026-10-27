@@ -252,7 +252,7 @@ public sealed class DisplayListPdfWriter : IDisposable
         if (layer is not null)
         {
             // The page layer is in page coordinates: its origin is the page's top-left corner, with no margins.
-            EmitRegion(page, layer, new RectF(0, 0, (float)setup.Width, (float)setup.Height), 0, setup.Height * K, setup.Width, setup.Height, ct);
+            EmitRegion(page, layer, new RectF(0, 0, (float)setup.Width, (float)setup.Height), 0, setup.Height * K, setup.Width, setup.Height, ct, true);
         }
 
         double tx = (setup.MarginLeft - region.X) * K, ty = (setup.Height - setup.MarginTop + region.Y) * K;
@@ -262,7 +262,7 @@ public sealed class DisplayListPdfWriter : IDisposable
     }
 
     // Draws the part of a list inside region with the region's top-left at (tx, ty) in page points (y up), clipped to clipW x clipH.
-    private void EmitRegion(PdfStreamPageBuilder page, DisplayList list, in RectF region, double tx, double ty, double clipW, double clipH, CancellationToken ct)
+    private void EmitRegion(PdfStreamPageBuilder page, DisplayList list, in RectF region, double tx, double ty, double clipW, double clipH, CancellationToken ct, bool artifacts = false)
     {
         const double K = 0.75;
         int count = list.Count;
@@ -282,6 +282,11 @@ public sealed class DisplayListPdfWriter : IDisposable
         page.Clip();
         var toPoints = new Matrix3x2((float)K, 0, 0, (float)-K, (float)tx, (float)ty);
         var emitter = new PageEmitter(_shared, list, _mark, page, page, 0, toPoints, ct);
+        if (artifacts)
+        {
+            emitter.DrawAsArtifacts();
+        }
+
         emitter.EmitRange(0, count);
         emitter.Finish();
         page.Restore();
