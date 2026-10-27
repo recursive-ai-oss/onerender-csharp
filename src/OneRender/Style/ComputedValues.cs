@@ -343,6 +343,51 @@ public partial struct ComputedValues
     /// <summary><c>list-style-position</c>.</summary>
     public ListStylePositionKind ListStylePosition { get; internal set; }
 
+    /// <summary><c>grid-template-columns</c>.</summary>
+    public GridTrackList GridTemplateColumns { get; internal set; }
+
+    /// <summary><c>grid-template-rows</c>.</summary>
+    public GridTrackList GridTemplateRows { get; internal set; }
+
+    /// <summary><c>grid-template-areas</c>.</summary>
+    public GridAreas GridTemplateAreas { get; internal set; }
+
+    /// <summary><c>grid-auto-columns</c>: the pattern of implicit column sizes; never empty.</summary>
+    public GridTrackSize[] GridAutoColumns { get; internal set; }
+
+    /// <summary><c>grid-auto-rows</c>: the pattern of implicit row sizes; never empty.</summary>
+    public GridTrackSize[] GridAutoRows { get; internal set; }
+
+    /// <summary>The <c>row</c> or <c>column</c> part of <c>grid-auto-flow</c>.</summary>
+    public GridAutoFlowKind GridAutoFlow { get; internal set; }
+
+    /// <summary>True when <c>grid-auto-flow</c> has <c>dense</c>.</summary>
+    public bool GridAutoFlowDense { get; internal set; }
+
+    /// <summary><c>grid-row-start</c>.</summary>
+    public GridLine GridRowStart { get; internal set; }
+
+    /// <summary><c>grid-row-end</c>.</summary>
+    public GridLine GridRowEnd { get; internal set; }
+
+    /// <summary><c>grid-column-start</c>.</summary>
+    public GridLine GridColumnStart { get; internal set; }
+
+    /// <summary><c>grid-column-end</c>.</summary>
+    public GridLine GridColumnEnd { get; internal set; }
+
+    /// <summary><c>justify-items</c> (<c>legacy</c> computes to <c>normal</c>).</summary>
+    public AlignKind JustifyItems { get; internal set; }
+
+    /// <summary>The <c>safe</c> or <c>unsafe</c> keyword of <c>justify-items</c>.</summary>
+    public AlignOverflowKind JustifyItemsOverflow { get; internal set; }
+
+    /// <summary><c>justify-self</c>.</summary>
+    public AlignKind JustifySelf { get; internal set; }
+
+    /// <summary>The <c>safe</c> or <c>unsafe</c> keyword of <c>justify-self</c>.</summary>
+    public AlignOverflowKind JustifySelfOverflow { get; internal set; }
+
     /// <summary>The left and right border widths added.</summary>
     public readonly double BorderHorizontal => BorderLeftWidth + BorderRightWidth;
 
@@ -354,6 +399,57 @@ public partial struct ComputedValues
 
     /// <summary>True when the box is out of flow: floated, absolutely or fixed positioned (CSS2 §9.3.1 and §9.5).</summary>
     public readonly bool IsOutOfFlow => Floating != FloatKind.None || Position is PositionKind.Absolute or PositionKind.Fixed;
+
+    /// <summary><c>flex-direction</c>.</summary>
+    public FlexDirectionKind FlexDirection { get; internal set; }
+
+    /// <summary><c>flex-wrap</c>.</summary>
+    public FlexWrapKind FlexWrap { get; internal set; }
+
+    /// <summary><c>flex-grow</c>: a non-negative number, 0 initially.</summary>
+    public double FlexGrow { get; internal set; }
+
+    /// <summary><c>flex-shrink</c>: a non-negative number, 1 initially.</summary>
+    public double FlexShrink { get; internal set; }
+
+    /// <summary><c>flex-basis</c> when it is not <c>content</c>: <c>auto</c>, a length or percentage, or a sizing keyword.</summary>
+    public Length FlexBasis { get; internal set; }
+
+    /// <summary>True when <c>flex-basis</c> is <c>content</c> (CSS Flexible Box 1 §7.1.1).</summary>
+    public bool FlexBasisContent { get; internal set; }
+
+    /// <summary><c>order</c> (CSS Flexible Box 1 §5.4), 0 initially.</summary>
+    public int Order { get; internal set; }
+
+    /// <summary><c>justify-content</c>.</summary>
+    public AlignKind JustifyContent { get; internal set; }
+
+    /// <summary>The <c>safe</c> or <c>unsafe</c> keyword of <c>justify-content</c>.</summary>
+    public AlignOverflowKind JustifyContentOverflow { get; internal set; }
+
+    /// <summary><c>align-content</c>.</summary>
+    public AlignKind AlignContent { get; internal set; }
+
+    /// <summary>The <c>safe</c> or <c>unsafe</c> keyword of <c>align-content</c>.</summary>
+    public AlignOverflowKind AlignContentOverflow { get; internal set; }
+
+    /// <summary><c>align-items</c>.</summary>
+    public AlignKind AlignItems { get; internal set; }
+
+    /// <summary>The <c>safe</c> or <c>unsafe</c> keyword of <c>align-items</c>.</summary>
+    public AlignOverflowKind AlignItemsOverflow { get; internal set; }
+
+    /// <summary><c>align-self</c>.</summary>
+    public AlignKind AlignSelf { get; internal set; }
+
+    /// <summary>The <c>safe</c> or <c>unsafe</c> keyword of <c>align-self</c>.</summary>
+    public AlignOverflowKind AlignSelfOverflow { get; internal set; }
+
+    /// <summary><c>row-gap</c>: <c>normal</c> (0 in flex containers), a length or a percentage.</summary>
+    public Length RowGap { get; internal set; }
+
+    /// <summary><c>column-gap</c>.</summary>
+    public Length ColumnGap { get; internal set; }
 
     private static ComputedValues CreateInitial()
     {
@@ -383,6 +479,8 @@ public partial struct ComputedValues
         v.BackgroundColor = ColorValue.Transparent;
         v.ContentText = string.Empty;
         v.ListStyleType = "disc";
+        InitFlex(ref v);
+        InitGrid(ref v);
         return v;
     }
 }

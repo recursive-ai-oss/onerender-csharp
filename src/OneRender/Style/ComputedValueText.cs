@@ -98,8 +98,45 @@ internal static class ComputedValueText
             case PropertyId.ListStyleType:
                 return v.ListStyleTypeIsString ? "\"" + v.ListStyleType.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal) + "\"" : v.ListStyleType;
             case PropertyId.ListStylePosition: return v.ListStylePosition == ListStylePositionKind.Inside ? "inside" : "outside";
+            case PropertyId.FlexDirection: return v.FlexDirection switch { FlexDirectionKind.RowReverse => "row-reverse", FlexDirectionKind.Column => "column", FlexDirectionKind.ColumnReverse => "column-reverse", _ => "row" };
+            case PropertyId.FlexWrap: return v.FlexWrap switch { FlexWrapKind.Wrap => "wrap", FlexWrapKind.WrapReverse => "wrap-reverse", _ => "nowrap" };
+            case PropertyId.FlexGrow: return CssText.Number(v.FlexGrow);
+            case PropertyId.FlexShrink: return CssText.Number(v.FlexShrink);
+            case PropertyId.FlexBasis: return v.FlexBasisContent ? "content" : v.FlexBasis.ToCss();
+            case PropertyId.Order: return v.Order.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            case PropertyId.JustifyContent: return AlignText(v.JustifyContent, v.JustifyContentOverflow);
+            case PropertyId.AlignContent: return AlignText(v.AlignContent, v.AlignContentOverflow);
+            case PropertyId.AlignItems: return AlignText(v.AlignItems, v.AlignItemsOverflow);
+            case PropertyId.AlignSelf: return AlignText(v.AlignSelf, v.AlignSelfOverflow);
+            case PropertyId.RowGap: return v.RowGap.ToCss();
+            case PropertyId.ColumnGap: return v.ColumnGap.ToCss();
+            case PropertyId.GridTemplateColumns: return v.GridTemplateColumns.ToString();
+            case PropertyId.GridTemplateRows: return v.GridTemplateRows.ToString();
+            case PropertyId.GridTemplateAreas: return v.GridTemplateAreas.Text;
+            case PropertyId.GridAutoColumns: return string.Join(' ', Array.ConvertAll(v.GridAutoColumns, t => t.ToCss()));
+            case PropertyId.GridAutoRows: return string.Join(' ', Array.ConvertAll(v.GridAutoRows, t => t.ToCss()));
+            case PropertyId.GridAutoFlow: return (v.GridAutoFlow == GridAutoFlowKind.Column ? "column" : "row") + (v.GridAutoFlowDense ? " dense" : string.Empty);
+            case PropertyId.GridRowStart: return v.GridRowStart.ToCss();
+            case PropertyId.GridRowEnd: return v.GridRowEnd.ToCss();
+            case PropertyId.GridColumnStart: return v.GridColumnStart.ToCss();
+            case PropertyId.GridColumnEnd: return v.GridColumnEnd.ToCss();
+            case PropertyId.JustifyItems: return AlignText(v.JustifyItems, v.JustifyItemsOverflow);
+            case PropertyId.JustifySelf: return AlignText(v.JustifySelf, v.JustifySelfOverflow);
             default: return string.Empty;
         }
+    }
+
+    private static string AlignText(AlignKind k, AlignOverflowKind o)
+    {
+        string w = k switch
+        {
+            AlignKind.Auto => "auto", AlignKind.Normal => "normal", AlignKind.Stretch => "stretch", AlignKind.FlexStart => "flex-start",
+            AlignKind.FlexEnd => "flex-end", AlignKind.Start => "start", AlignKind.End => "end", AlignKind.SelfStart => "self-start",
+            AlignKind.SelfEnd => "self-end", AlignKind.Center => "center", AlignKind.Baseline => "baseline", AlignKind.LastBaseline => "last baseline",
+            AlignKind.Left => "left", AlignKind.Right => "right", AlignKind.SpaceBetween => "space-between", AlignKind.SpaceAround => "space-around",
+            _ => "space-evenly",
+        };
+        return o == AlignOverflowKind.Safe ? "safe " + w : o == AlignOverflowKind.Unsafe ? "unsafe " + w : w;
     }
 
     /// <summary>The serialization by property name; null for a property the engine does not compute.</summary>
