@@ -169,6 +169,7 @@ public sealed partial class BlockLayoutEngine
         double x = 0, y = 0;
         bool pending = false;
         bool clearedPending = false;
+        bool clearsFloats = false;
         double clearedEdge = double.NegativeInfinity;
         if (!isFloat)
         {
@@ -184,9 +185,11 @@ public sealed partial class BlockLayoutEngine
                 if (HasDeferred && DeferredClearedBy(v.Clear))
                 {
                     certain = true;
+                    clearsFloats = true;
                 }
                 else if (ClearEdge(in _bfcs[_bsp - 1], v.Clear) > double.NegativeInfinity)
                 {
+                    clearsFloats = true;
                     int j = SettledOf(pi);
                     certain = _frames[j].BfcTop + _frames[j].Cursor + CollapsedTopMargin(c, w, mt) < ClearEdge(in _bfcs[_bsp - 1], v.Clear);
                 }
@@ -316,6 +319,11 @@ public sealed partial class BlockLayoutEngine
         if (clearedPending)
         {
             flags |= FrameFlags.Cleared;
+        }
+
+        if (clearsFloats)
+        {
+            flags |= FrameFlags.ClearsFloats;
         }
 
         if (v.Direction == DirectionKind.Rtl)

@@ -514,3 +514,5 @@ css/css-values/random-item-computed.html	computed	color	random-item(fixed calc(1
 css/css-values/random-item-computed.html	computed	color	random-item(fixed 1, rgb(1, 0, 0))	random() and random-item() are not supported
 css/css-values/random-item-computed.html	computed	color	random-item(element-scoped --key, rgb(1, 0, 0), rgb(0, 1, 0))	random() and random-item() are not supported
 css/css-values/random-item-computed.html	computed	color	random-item(--, rgb(1, 0, 0), rgb(0, 1, 0))	random() and random-item() are not supported
+css/css-backgrounds/parsing/background-computed.html	computed	background-clip	border-area text	the two-keyword border-area text clip is not modelled
+css/css-backgrounds/parsing/background-computed.html	computed	background-clip	border-area text, content-box	the two-keyword border-area text clip is not modelled

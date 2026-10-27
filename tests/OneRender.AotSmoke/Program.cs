@@ -21,7 +21,7 @@ bool pageOk = page.Pixels[((5 * 32) + 5) * 4] == 255 && page.Pixels[((5 * 32) + 
 
 // Build a box tree from a small HTML string: parse, cascade, styled tree, box tree.
 Document doc = Document.Parse("<!DOCTYPE html><body><p style=\"width:50%;margin:1em auto\">Hello <b>world</b></p><div style=\"display:flex\"><span>a</span></div><img src=x.png>");
-DocumentStyles styles = DocumentStyles.Create(doc, new StyleContext(), new StyleSourceOptions { IncludeUserAgentSheet = true });
+DocumentStyles styles = DocumentStyles.Create(doc, new StyleContext(), new StyleSourceOptions { IncludeUserAgentSheet = true, DeclarationValidator = OneRender.Style.StyleValidation.Validator });
 var styled = new StyledTree();
 new HtmlFrontEnd(styled).Build(styles);
 var boxTree = new BoxTree(styled);
@@ -112,6 +112,18 @@ HtmlPage gridPage = HtmlPage.Create(
     "<body style='margin:0'><div style='display:grid;grid-template-columns:[a] 20px repeat(auto-fill,minmax(10px,1fr));gap:2px;width:100px'><div style='grid-column:a / span 2;display:grid;grid-template-columns:subgrid'><i style='display:block;height:5px'></i></div><i style='display:block;height:7px'></i></div></body>",
     new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 100, ViewportHeight = 50 });
 if (gridPage.Fragments.Root.IsNull || gridPage.Fragments.Root.BorderBox.Width != 100)
+{
+    return 7;
+}
+
+// The second paint area (layered backgrounds, gradients, shadows, border-image, outlines, decoration, text-shadow, markers) draws
+// through the same style parsers and painter code that must survive trimming and AOT.
+RgbaImage paintPage = HtmlRender.ToImage(
+    "<body style='margin:0;font:14px Arial'><div style='width:40px;height:20px;background:linear-gradient(#f00,#f00) 0 0/10px 10px space,radial-gradient(circle,#fff,#00f);border:3px solid;border-image:linear-gradient(#0f0,#00f) 1;box-shadow:2px 2px 3px #888,inset 0 0 4px #000;outline:2px auto'></div><p style='text-decoration:underline wavy #f00;text-shadow:1px 1px 2px #000;margin:2px'>Hi</p><ul><li>x</li></ul></body>",
+    new HtmlRenderOptions { Width = 80, Height = 80 });
+int paintAt = ((12 * 80) + 20) * 4;
+bool paintOk = paintPage.Pixels[paintAt] > 200 && paintPage.Pixels[paintAt + 1] < 40 && paintPage.Pixels[paintAt + 2] < 40;
+if (!paintOk)
 {
     return 7;
 }

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Plain text, preserved</title>
+<style>
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.5; margin: 0 auto; max-width: 820px; padding: 20px; color: #222; }
+  h1 { font-size: 26px; }
+  h2 { font-size: 18px; margin-top: 28px; }
+  pre, .mono { font-family: "Courier New", monospace; font-size: 13px; }
+  pre { background: #f6f6f4; border: 1px solid #ddd; padding: 10px 12px; margin: 10px 0; }
+  .scroll { overflow-x: auto; width: 480px; max-width: 100%; }
+  .wrap { white-space: pre-wrap; }
+  .line { white-space: pre-line; background: #fafaf2; border: 1px solid #e2e2cc; padding: 8px 12px; margin: 10px 0; }
+  .nowrap { white-space: nowrap; overflow: hidden; width: 300px; border: 1px solid #ccc; padding: 4px 8px; }
+  .tab8 { tab-size: 8; }
+  .tab2 { tab-size: 2; }
+  .brk { word-break: break-all; width: 220px; border: 1px solid #ccc; padding: 6px; }
+  .ow { overflow-wrap: anywhere; width: 220px; border: 1px solid #ccc; padding: 6px; }
+  .ellip { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 260px; border: 1px solid #ccc; padding: 4px 8px; }
+  .spacing { letter-spacing: 2px; word-spacing: 6px; }
+  code { font-family: "Courier New", monospace; font-size: .93em; }
+</style>
+</head>
+<body>
+<h1>Plain text, preserved</h1>
+<p>Whitespace is collapsed by default, but <code>white-space</code> offers several ways to keep it. Each block below uses a different one.</p>
+
+<h2>pre</h2>
+<pre>Invoice 2025-0417
+================================
+Item              Qty      Price
+--------------------------------
+Pencils (box)       4      12.00
+Notebook A5        10      45.50
+Stapler             1       8.25
+--------------------------------
+Total                      65.75
+</pre>
+
+<h2>pre with a long line in a scrolling box</h2>
+<div class="scroll"><pre>$ ./build --release --target=x86_64-linux --features=json,tls,compression --output=./dist/app-linux-x86_64
+Compiling 214 files ... done
+Linking ... done</pre></div>
+
+<h2>pre-wrap</h2>
+<p class="wrap">This text keeps   its   spaces and its
+line breaks, but is also allowed to wrap when a line is longer than the box, which makes it handy for user-submitted comments and log messages.
+    An indented line stays indented.</p>
+
+<h2>pre-line</h2>
+<div class="line">Spaces   collapse   here,
+but newlines
+survive.
+
+A blank line above makes a gap, and a really long line like this one will wrap at the edge of the container like normal text.</div>
+
+<h2>nowrap</h2>
+<div class="nowrap">This sentence never wraps, so it is clipped by its box instead.</div>
+
+<h2>Tabs</h2>
+<pre class="tab8">col1	col2	col3
+a	bb	ccc
+dddd	e	ff</pre>
+<pre class="tab2">if (x) {
+	do();
+		more();
+}</pre>
+
+<h2>Breaking rules</h2>
+<div class="brk">Supercalifragilisticexpialidocious_and_antidisestablishmentarianism_wrap</div>
+<p></p>
+<div class="ow">https://example.com/a/very/long/path/that/has/no/spaces/at/all/but/can/break</div>
+<p></p>
+<div class="ellip">A single line that is too long and ends in an ellipsis instead of wrapping</div>
+
+<h2>Spacing</h2>
+<p class="spacing">Letter and word spacing change the width of every run.</p>
+<p>A line with a <span style="white-space:pre">preserved   span</span> in the middle, and <span style="white-space:nowrap">a nowrap span that stays together</span> too.</p>
+<p>Line one<br>line two<br><br>line four after an empty line. A very long word follows: Pneumonoultramicroscopicsilicovolcanoconiosis.</p>
+</body>
+</html>

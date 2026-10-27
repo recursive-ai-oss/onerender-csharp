@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Release notes &mdash; Lantern 4.2</title>
+<style>
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.55; color: #24292f; margin: 0; }
+  .wrap { max-width: 800px; margin: 0 auto; padding: 24px 20px 56px; }
+  h1 { font-size: 32px; margin: 0 0 4px; }
+  h1 + p { color: #57606a; margin-top: 0; }
+  h2 { font-size: 24px; margin: 36px 0 8px; padding-bottom: 6px; border-bottom: 1px solid #d0d7de; }
+  h2 small { font-size: 14px; font-weight: normal; color: #57606a; margin-left: 8px; }
+  h3 { font-size: 17px; margin: 20px 0 4px; }
+  h4 { font-size: 15px; margin: 14px 0 2px; }
+  ul, ol { margin: 6px 0 10px; padding-left: 28px; }
+  li { margin: 3px 0; }
+  li > ul, li > ol { margin: 3px 0; }
+  code { font-family: "Courier New", monospace; font-size: 13px; background: #eff1f3; padding: 1px 5px; border-radius: 4px; }
+  .tag { display: inline-block; font-size: 11px; font-weight: bold; padding: 0 6px; border-radius: 8px; color: #fff; vertical-align: 1px; }
+  .new { background: #1a7f37; }
+  .fix { background: #0969da; }
+  .brk { background: #cf222e; }
+  dl { margin: 8px 0; }
+  dt { font-weight: bold; margin-top: 8px; }
+  dd { margin-left: 28px; }
+  .upgrade { border: 1px solid #d0d7de; border-radius: 6px; padding: 4px 16px 12px; margin: 16px 0; background: #f6f8fa; }
+  .upgrade h3 { margin-top: 12px; }
+  ol.steps { list-style: decimal-leading-zero; }
+  ul.plain { list-style: none; padding-left: 0; }
+  ul.circle { list-style: circle inside; }
+  ol.alpha { list-style-type: lower-alpha; }
+  ol.roman { list-style-type: upper-roman; }
+  .contrib { font-size: 13px; color: #57606a; }
+  hr { border: 0; border-top: 1px solid #d0d7de; margin: 28px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Lantern 4.2</h1>
+  <p>Released 21 October. Thank you to everyone who filed an issue.</p>
+
+  <div class="upgrade">
+    <h3>Upgrading from 4.1</h3>
+    <ol class="steps">
+      <li>Back up your <code>lantern.toml</code>.</li>
+      <li>Install the new package and restart the service.</li>
+      <li>Run <code>lantern doctor</code>; it lists any removed settings.
+        <ul>
+          <li>Settings marked <span class="tag brk">removed</span> must be deleted by hand.</li>
+          <li>Settings marked <span class="tag fix">renamed</span> are migrated for you.</li>
+        </ul>
+      </li>
+      <li>Check the dashboard once and confirm the version reads <code>4.2.0</code>.</li>
+    </ol>
+  </div>
+
+  <h2>Highlights</h2>
+  <ul>
+    <li><span class="tag new">new</span> Saved searches can be shared by link.</li>
+    <li><span class="tag new">new</span> The activity feed groups repeated events, so a noisy night produces one line rather than two hundred.</li>
+    <li><span class="tag fix">fix</span> Large imports no longer stall at 99 percent.</li>
+    <li><span class="tag brk">breaking</span> The legacy <code>/v1/events</code> endpoint is removed.</li>
+  </ul>
+
+  <h2>4.2.0 <small>21 October</small></h2>
+  <h3>Added</h3>
+  <ul>
+    <li>Shareable saved searches
+      <ul>
+        <li>Links expire after 30 days unless pinned.
+          <ul>
+            <li>Pinned links are listed under <code>Settings &rarr; Sharing</code>.</li>
+            <li>Revoking a link takes effect immediately.</li>
+          </ul>
+        </li>
+        <li>Read-only by default.</li>
+      </ul>
+    </li>
+    <li>Grouped activity feed, with a toggle to turn it off.</li>
+    <li>Keyboard shortcut <code>g</code> then <code>s</code> opens search.</li>
+  </ul>
+  <h3>Changed</h3>
+  <ol class="alpha">
+    <li>Default page size is now 50 instead of 25.</li>
+    <li>Timestamps use the viewer's time zone.</li>
+    <li>The sidebar remembers whether it was collapsed.</li>
+  </ol>
+  <h3>Fixed</h3>
+  <ul class="circle">
+    <li>Imports of more than 100,000 rows stalled at 99 percent.</li>
+    <li>Dates before 1970 were shown as blank.</li>
+    <li>A crash when a saved search had no name.</li>
+  </ul>
+
+  <h2>4.1.3 <small>2 October</small></h2>
+  <h4>Security</h4>
+  <p>Session tokens are now rotated on password change. Existing sessions are signed out once.</p>
+  <h4>Fixed</h4>
+  <ul class="plain">
+    <li>Export to CSV quoted fields incorrectly when they contained a line break.</li>
+    <li>The &ldquo;Back&rdquo; link on the settings page returned to the wrong screen.</li>
+  </ul>
+
+  <h2>Deprecations</h2>
+  <dl>
+    <dt><code>--legacy-auth</code></dt>
+    <dd>Will be removed in 5.0. Use token authentication instead.</dd>
+    <dt><code>/v1/events</code></dt>
+    <dd>Already removed in this release; see the highlights above.</dd>
+    <dt><code>feed.group_window</code></dt>
+    <dd>Accepts seconds only. Duration strings such as <code>"5m"</code> will be accepted from 4.3.</dd>
+  </dl>
+
+  <h2>Known issues</h2>
+  <ol class="roman">
+    <li>Grouped feed entries may show the earliest rather than the latest time until refreshed.</li>
+    <li>Shared links opened in a private window ask for a second sign-in.</li>
+    <li>Very long search names are cut off in the sidebar.</li>
+  </ol>
+  <hr>
+  <p class="contrib">Contributors this release: Ada, Bram, Chidi, Dara, Elio, Femi, Goro, Hana, Ines, Joss, Kavi, Lena, Mio, Nuno, Odile, Pavel.</p>
+</div>
+</body>
+</html>

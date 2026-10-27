@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Box model and positioning notes</title>
+<style>
+  body { margin: 0; font: 15px/1.4 Arial, Helvetica, sans-serif; color: #223; }
+  .wrap { width: 90%; max-width: 900px; margin: 0 auto; }
+  h1 { margin: 24px 0 8px; font-size: 26px; }
+  h2 { margin: 28px 0 6px; font-size: 18px; }
+  p { margin: 0 0 10px; }
+  .demo { background: #f2f4f8; border: 1px solid #c8cedd; padding: 10px; margin: 10px 0; }
+  .a { margin-top: 30px; margin-bottom: 20px; background: #dde; }
+  .b { margin-top: 10px; margin-bottom: 40px; background: #edd; }
+  .empty { margin: 25px 0; }
+  .neg { margin-top: -12px; background: #ded; }
+  .bs { width: 50%; padding: 10px; border: 5px solid #55a; background: #dde; }
+  .bs.border-box { box-sizing: border-box; }
+  .auto-center { width: 300px; margin: 0 auto; background: #cde; padding: 6px; }
+  .pct { width: 40%; height: 40px; background: #cdc; padding: 5% 3%; }
+  .minmax { min-height: 60px; max-height: 90px; min-width: 200px; max-width: 70%; background: #fdc; overflow: hidden; }
+  .rel { position: relative; top: 8px; left: 12px; background: #fec; }
+  .container { position: relative; height: 200px; background: #eef; border: 1px solid #99c; margin: 14px 0; }
+  .abs-tl { position: absolute; top: 10px; left: 10px; width: 120px; height: 50px; background: #aac; }
+  .abs-br { position: absolute; right: 10px; bottom: 10px; width: 30%; padding: 8px; background: #caa; }
+  .abs-stretch { position: absolute; top: 70px; bottom: 70px; left: 150px; right: 150px; background: #acb; }
+  .abs-auto { position: absolute; top: 20px; right: 20px; background: #fda; padding: 4px 8px; }
+  .z1 { position: absolute; top: 90px; left: 30px; width: 100px; height: 60px; background: rgba(200, 60, 60, .7); z-index: 2; }
+  .z2 { position: absolute; top: 110px; left: 60px; width: 100px; height: 60px; background: rgba(60, 60, 200, .7); z-index: 1; }
+  .scroll { height: 90px; overflow: auto; border: 1px solid #99a; padding: 6px; background: #fff; }
+  .hidden { height: 50px; overflow: hidden; border: 1px solid #99a; padding: 6px; background: #fff; }
+  .clip-wide { width: 220px; overflow: hidden; border: 1px solid #99a; }
+  .clip-wide div { width: 500px; background: #eee; }
+  .float-l { float: left; width: 120px; height: 80px; margin: 0 14px 8px 0; background: #bcd; }
+  .float-r { float: right; width: 90px; height: 60px; margin: 0 0 8px 14px; background: #dcb; }
+  .bfc { overflow: hidden; background: #efe; padding: 4px; }
+  .clear { clear: both; }
+  .inline-pos { position: relative; top: -4px; }
+  .sticky-bar { position: sticky; top: 0; background: #223; color: #fff; padding: 6px 12px; }
+  .fixed-tag { position: fixed; top: 8px; right: 8px; background: #fc6; padding: 2px 8px; font-size: 12px; }
+  .collapse-parent { background: #fed; }
+  .collapse-parent h3 { margin: 18px 0 18px; }
+  .pad-parent { background: #def; padding: 1px 0; }
+  .pad-parent h3 { margin: 18px 0; }
+  .border-row { border-left: 8px solid #77a; border-right: 4px dashed #a77; padding-left: 10px; margin: 6px 0; }
+</style>
+</head>
+<body>
+<div class="sticky-bar">Box model notes</div>
+<span class="fixed-tag">draft</span>
+<div class="wrap">
+  <h1>Box model and positioning notes</h1>
+
+  <h2>Margin collapsing</h2>
+  <div class="demo">
+    <div class="a">Block A, margins 30 above and 20 below.</div>
+    <div class="b">Block B, margins 10 above and 40 below: the gap is 40, not 50.</div>
+    <div class="empty"></div>
+    <div class="neg">Negative top margin pulls this block up.</div>
+  </div>
+  <div class="collapse-parent"><h3>Heading whose margins collapse through its parent</h3></div>
+  <div class="pad-parent"><h3>Heading inside a parent with padding</h3></div>
+
+  <h2>Sizing</h2>
+  <div class="bs">content-box: 50% wide plus padding and border.</div>
+  <div class="bs border-box">border-box: 50% wide in total.</div>
+  <div class="auto-center">Centred by auto margins at 300px.</div>
+  <div class="pct">Percent padding and width.</div>
+  <div class="minmax">Min and max constraints with overflow hidden and quite a lot of text so that the box would grow past its maximum height if it were allowed to: lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</div>
+  <div class="border-row">Row with left and right borders of different widths and styles.</div>
+
+  <h2>Positioning</h2>
+  <p class="rel">A relatively positioned paragraph, nudged 8px down and 12px right without moving its neighbours.</p>
+  <div class="container">
+    <div class="abs-tl">top-left</div>
+    <div class="abs-br">bottom-right, 30% wide with padding</div>
+    <div class="abs-stretch">stretched between all four offsets</div>
+    <div class="abs-auto">shrink to fit</div>
+    <div class="z1">z 2</div>
+    <div class="z2">z 1</div>
+  </div>
+  <p>Text with an <span class="inline-pos">inline relative</span> span in the middle of a sentence.</p>
+
+  <h2>Overflow</h2>
+  <div class="scroll">Scrolling box. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</div>
+  <div class="hidden">Hidden box. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</div>
+  <p></p>
+  <div class="clip-wide"><div>A wide child, clipped by the narrow parent that has overflow hidden.</div></div>
+
+  <h2>Floats</h2>
+  <div class="bfc">
+    <div class="float-l"></div>
+    <div class="float-r"></div>
+    <p>A block formatting context contains its floats, so its height includes them even when the text is shorter than the floats. Lorem ipsum dolor sit amet.</p>
+  </div>
+  <div class="demo">
+    <div class="float-l"></div>
+    <p>A clearing block keeps the box around the float. Another sentence follows so that the text is long enough to wrap beside the float.</p>
+    <div class="clear"></div>
+  </div>
+  <p style="margin-top:20px">Following paragraph after the floats and a spare sentence for good measure, with enough words that it needs more than one line to finish.</p>
+  <div style="height: 600px; background: linear-gradient(#fff, #ccd);">Tall spacer so the sticky bar has something to stick over.</div>
+</div>
+</body>
+</html>

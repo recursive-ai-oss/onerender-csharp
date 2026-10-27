@@ -1,13 +1,14 @@
 namespace OneRender.Style;
 
 /// <summary>Serializes computed values the way <c>getComputedStyle</c> does, for tests and debug dumps.</summary>
-internal static class ComputedValueText
+internal static partial class ComputedValueText
 {
     private static readonly string[] BorderStyles = ["none", "hidden", "dotted", "dashed", "solid", "double", "groove", "ridge", "inset", "outset"];
     private static readonly string[] Overflows = ["visible", "hidden", "clip", "scroll", "auto"];
     private static readonly string[] ClipMarginBoxes = ["padding-box", "content-box", "border-box"];
     private static readonly string[] VerticalAligns = ["baseline", "sub", "super", "text-top", "text-bottom", "middle", "top", "bottom"];
     private static readonly string[] Collapses = ["collapse", "preserve", "preserve-breaks", "preserve-spaces", "break-spaces"];
+    private static readonly string[] TextTransforms = ["none", "capitalize", "uppercase", "lowercase"];
     private static readonly string[] WordBreaks = ["normal", "break-all", "keep-all", "break-word"];
     private static readonly string[] OverflowWraps = ["normal", "break-word", "anywhere"];
     private static readonly string[] LineBreaks = ["auto", "loose", "normal", "strict", "anywhere"];
@@ -104,6 +105,7 @@ internal static class ComputedValueText
             case PropertyId.ListStyleType:
                 return v.ListStyleTypeIsString ? "\"" + v.ListStyleType.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal) + "\"" : v.ListStyleType;
             case PropertyId.ListStylePosition: return v.ListStylePosition == ListStylePositionKind.Inside ? "inside" : "outside";
+            case PropertyId.TextTransform: return TextTransforms[(int)v.TextTransform];
             case PropertyId.WordBreak: return WordBreaks[(int)v.WordBreak];
             case PropertyId.OverflowWrap: return OverflowWraps[(int)v.OverflowWrap];
             case PropertyId.LineBreak: return LineBreaks[(int)v.LineBreak];
@@ -153,7 +155,7 @@ internal static class ComputedValueText
             case PropertyId.EmptyCells: return v.EmptyCells == EmptyCellsKind.Hide ? "hide" : "show";
             case PropertyId.CaptionSide: return v.CaptionSide == CaptionSideKind.Bottom ? "bottom" : "top";
             case PropertyId.TableLayout: return v.TableLayout == TableLayoutKind.Fixed ? "fixed" : "auto";
-            default: return string.Empty;
+            default: return PaintText(id, in v) ?? string.Empty;
         }
     }
 

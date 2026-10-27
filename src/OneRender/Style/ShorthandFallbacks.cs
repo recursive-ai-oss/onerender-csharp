@@ -11,7 +11,7 @@ internal static partial class ShorthandFallbacks
     private static readonly string[] Collapse = ["collapse", "preserve", "preserve-breaks", "preserve-spaces", "break-spaces"];
 
     /// <summary>The shorthands this class expands, for callers that look at the cascade's declarations.</summary>
-    public static readonly string[] Names = ["white-space", "border-radius", "overflow", "flex", "flex-flow", "place-items", "place-content", "place-self", "columns", "column-rule", "page-break-before", "page-break-after", "page-break-inside", "grid-area", "grid-row", "grid-column", "grid-template", "grid"];
+    public static readonly string[] Names = ["white-space", "border-radius", "overflow", "flex", "flex-flow", "place-items", "place-content", "place-self", "columns", "column-rule", "page-break-before", "page-break-after", "page-break-inside", "grid-area", "grid-row", "grid-column", "grid-template", "grid", "border-image"];
 
     public static bool IsHandled(string name)
     {
@@ -53,6 +53,11 @@ internal static partial class ShorthandFallbacks
         if (name.Equals("border-radius", StringComparison.OrdinalIgnoreCase))
         {
             return ExpandRadius(value, output);
+        }
+
+        if (name.Equals("border-image", StringComparison.OrdinalIgnoreCase))
+        {
+            return ExpandBorderImage(value, output);
         }
 
         if (name.Equals("flex", StringComparison.OrdinalIgnoreCase))
@@ -103,6 +108,11 @@ internal static partial class ShorthandFallbacks
         if (name.Equals("border-radius", StringComparison.OrdinalIgnoreCase))
         {
             return new[] { PropertyId.BorderTopLeftRadius, PropertyId.BorderTopRightRadius, PropertyId.BorderBottomRightRadius, PropertyId.BorderBottomLeftRadius };
+        }
+
+        if (name.Equals("border-image", StringComparison.OrdinalIgnoreCase))
+        {
+            return BorderImageLonghands;
         }
 
         if (name.Equals("flex", StringComparison.OrdinalIgnoreCase))

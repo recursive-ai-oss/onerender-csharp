@@ -25,6 +25,7 @@ internal static class Program
         ["displaylist"] = DisplayListTarget.Run,
         ["fontdata"] = FontDataTarget.Run,
         ["grid"] = GridTarget.Run,
+        ["flow"] = FlowTarget.Run,
         ["table"] = TableTarget.Run,
     };
 
@@ -40,6 +41,11 @@ internal static class Program
             if (args[1] == "grid")
             {
                 return GridTarget.WriteSeeds(args[2]);
+            }
+
+            if (args[1] == "flow")
+            {
+                return FlowTarget.WriteSeeds(args[2]);
             }
 
             if (args[1] == "table")

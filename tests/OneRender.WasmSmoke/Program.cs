@@ -15,7 +15,7 @@ byte[] bytes = face.ReadAllBytes();
 Console.WriteLine($"{face} {bytes.Length}");
 
 Document doc = Document.Parse("<!DOCTYPE html><body><p>Hello <b>world</b></p><div style=\"display:flex\"><span>a</span></div>");
-DocumentStyles styles = DocumentStyles.Create(doc, new StyleContext(), new StyleSourceOptions { IncludeUserAgentSheet = true });
+DocumentStyles styles = DocumentStyles.Create(doc, new StyleContext(), new StyleSourceOptions { IncludeUserAgentSheet = true, DeclarationValidator = OneRender.Style.StyleValidation.Validator });
 var styled = new StyledTree();
 new HtmlFrontEnd(styled).Build(styles);
 var boxTree = new BoxTree(styled);
@@ -61,6 +61,14 @@ using System.IO.Stream woff2 = typeof(NoFonts).Assembly.GetManifestResourceStrea
 var woff2Bytes = new byte[woff2.Length];
 woff2.ReadExactly(woff2Bytes);
 Console.WriteLine($"woff2 {FontLoader.Load(woff2Bytes).Status}");
+
+// The second paint area through the HTML path: parsers and painter must trim cleanly for WebAssembly.
+HtmlPage paintPage = HtmlPage.Create(
+    "<body style='margin:0'><div style='width:40px;height:20px;background:linear-gradient(red,blue),url(a.png) space;border:3px solid;border-image:linear-gradient(red,blue) 1;box-shadow:2px 2px 3px gray,inset 0 0 4px black;outline:2px auto;text-decoration:underline wavy red;text-shadow:1px 1px 2px black'>Hi</div><ul><li>x</li></ul></body>",
+    new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 80, ViewportHeight = 80 });
+var paintList = new DisplayList();
+new Painter().Paint(paintPage.Fragments, paintList, new PaintOptions(80, 80));
+Console.WriteLine($"paint items {paintList.Count}");
 
 internal sealed class NoFonts : OneRender.Layout.IFontProvider
 {

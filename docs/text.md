@@ -55,6 +55,8 @@ palette tech are skipped; `variations` is accepted and the default instance is u
 character needs them. A face outside its `unicode-range` is skipped for that character. Failures become diagnostics, never
 exceptions.
 
+**In a document.** `HtmlPage.Create` removes the `@font-face` faces left by an earlier document from the provider's catalog, then walks the document's style sheets (top level, `@media`, `@supports` and `@layer` blocks that apply) and adds every rule. Font files are fetched through the page's `StylesheetBytes` lookup, the same host callback as style sheets, so a relative `src` resolves against the sheet's address. `HtmlRender`, `HtmlRenderSeam` and the WPT runner get this through `HtmlPage`. Faces load lazily during layout, so a font that first appears in a later incremental change is not loaded by it.
+
 `FontLoader.Load(bytes, limits)` reads TrueType/OpenType, WOFF (zlib) and WOFF2 (Brotli, with the glyf/loca and hmtx
 transforms). `FontLimits` bounds input size (32 MiB), decoded size (64 MiB) and table count (256) before anything is
 allocated. Runtimes without a native Brotli (browser WebAssembly) report WOFF2 as `UnsupportedFormat` with a message.

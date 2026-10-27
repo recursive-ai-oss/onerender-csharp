@@ -6,9 +6,9 @@
 
 | viewport | pages | elements | within tolerance | rate | position-only | size-only | position+size | text-run | missing-ours | missing-chrome | tag conflicts | pages at gate | median page |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1280x800 | 7 | 749 | 55 | 7.343% | 255 | 38 | 153 | 236 | 1 | 11 | 0 | 0 | 0.000% |
-| 390x844 | 7 | 727 | 24 | 3.301% | 221 | 35 | 184 | 251 | 1 | 11 | 0 | 0 | 0.000% |
-| all | 14 | 1476 | 79 | 5.352% | 476 | 73 | 337 | 487 | 2 | 22 | 0 | 0 | 0.000% |
+| 1280x800 | 7 | 749 | 55 | 7.343% | 260 | 38 | 151 | 233 | 1 | 11 | 0 | 0 | 0.000% |
+| 390x844 | 7 | 727 | 24 | 3.301% | 226 | 35 | 182 | 248 | 1 | 11 | 0 | 0 | 0.000% |
+| all | 14 | 1476 | 79 | 5.352% | 486 | 73 | 333 | 481 | 2 | 22 | 0 | 0 | 0.000% |
 
 Root causes (mismatches with no mismatching ancestor), all viewports: position-only 0, size-only 14, position+size 2, text-run 0.
 

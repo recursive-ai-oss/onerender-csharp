@@ -29,6 +29,7 @@ internal sealed partial class StyleComputer
     private static readonly string[] CollapseWords = ["collapse", "preserve", "preserve-breaks", "preserve-spaces", "break-spaces"];
     private static readonly string[] WrapModeWords = ["wrap", "nowrap"];
     private static readonly string[] TextAlignWords = ["start", "end", "left", "right", "center", "justify", "match-parent", "justify-all"];
+    private static readonly string[] TextTransformWords = ["none", "capitalize", "uppercase", "lowercase"];
     private static readonly string[] WordBreakWords = ["normal", "break-all", "keep-all", "break-word"];
     private static readonly string[] OverflowWrapWords = ["normal", "break-word", "anywhere"];
     private static readonly string[] LineBreakWords = ["auto", "loose", "normal", "strict", "anywhere"];
@@ -234,6 +235,14 @@ internal sealed partial class StyleComputer
                 return true;
             }
 
+            case PropertyId.TextTransform:
+            {
+                // The keyword forms only: full-width and full-size-kana are not implemented, and a combination with them is dropped.
+                if (!Word(v, TextTransformWords, out int k)) { return false; }
+                _r.TextTransform = (TextTransformKind)k;
+                return true;
+            }
+
             case PropertyId.WordBreak:
             {
                 if (!Word(v, WordBreakWords, out int k)) { return false; }
@@ -330,7 +339,7 @@ internal sealed partial class StyleComputer
             }
 
             default:
-                return id >= PropertyId.BorderCollapse ? ApplyTable(id, v) : id >= PropertyId.GridTemplateColumns ? ApplyGrid(id, v) : ApplyFlex(id, v);
+                return id >= PropertyId.BorderCollapse ? ApplyTable(id, v) : id >= PropertyId.BackgroundImage ? ApplyPaint(id, v) : id >= PropertyId.GridTemplateColumns ? ApplyGrid(id, v) : ApplyFlex(id, v);
         }
     }
 
@@ -697,7 +706,8 @@ internal sealed partial class StyleComputer
             return false;
         }
 
-        double px = fs.ResolvePx(in _parentCtx);
+        // Absolute-size keywords of a generic-monospace list scale from the smaller monospace medium (see MonospaceScale).
+        double px = fs.ResolvePx(in _parentCtx, IsMonospaceOnly(_r.FontFamily) ? 16 * MonospaceScale : 16);
         if (double.IsNaN(px))
         {
             return false;
@@ -715,8 +725,22 @@ internal sealed partial class StyleComputer
         }
 
         _r.FontSize = px;
+        _r.FontSizeKeyword = fs.Keyword is null ? (byte)0 : KeywordNumber(fs.Keyword);
         return true;
     }
+
+    private static byte KeywordNumber(string keyword) => keyword switch
+    {
+        "xx-small" => 1,
+        "x-small" => 2,
+        "small" => 3,
+        "medium" => MediumKeyword,
+        "large" => 5,
+        "x-large" => 6,
+        "xx-large" => 7,
+        "xxx-large" => 8,
+        _ => 0,
+    };
 
     private bool ParseFontWeight(ComponentValueList v)
     {
