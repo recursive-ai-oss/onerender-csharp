@@ -25,6 +25,13 @@ public sealed partial class BlockLayoutEngine
         public double AreaH;
         public double FracX;
         public double FracY;
+
+        // Grid 2 §10: the grid area that is the containing block, relative to the padding box (NaN: the padding edge).
+        public bool HasGridArea;
+        public double GridAreaL;
+        public double GridAreaT;
+        public double GridAreaR;
+        public double GridAreaB;
     }
 
     private const int MaxAbsolute = 1 << 22;
@@ -329,6 +336,16 @@ public sealed partial class BlockLayoutEngine
             cbw = Math.Max(0, cbb.Width - cbBorder.Horizontal);
             cbh = Math.Max(0, cbb.Height - cbBorder.Vertical);
             cbRtl = _boxes.Make(_out.BoxOf(a.Cb)).Values.Direction == DirectionKind.Rtl;
+            if (a.HasGridArea)
+            {
+                // Grid 2 §10.1: the containing block is the grid area; a missing line is the padding edge.
+                double x0 = double.IsNaN(a.GridAreaL) ? 0 : a.GridAreaL, x1 = double.IsNaN(a.GridAreaR) ? cbw : a.GridAreaR;
+                double y0 = double.IsNaN(a.GridAreaT) ? 0 : a.GridAreaT, y1 = double.IsNaN(a.GridAreaB) ? cbh : a.GridAreaB;
+                cbx += x0;
+                cby += y0;
+                cbw = Math.Max(0, x1 - x0);
+                cbh = Math.Max(0, y1 - y0);
+            }
         }
 
         double pl = Pad(v.PaddingLeft, cbw), pr = Pad(v.PaddingRight, cbw), pt = Pad(v.PaddingTop, cbw), pb = Pad(v.PaddingBottom, cbw);

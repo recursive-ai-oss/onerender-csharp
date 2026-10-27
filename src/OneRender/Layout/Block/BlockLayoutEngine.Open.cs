@@ -88,7 +88,14 @@ public sealed partial class BlockLayoutEngine
         {
             bfc = true;
             ReplacedContentSize(c, in v, w, f.SpecH, ph, pv, availContent, out replacedW, out replacedH);
-            if (parentIsFlex)
+            if (_gridReplacedForce)
+            {
+                // A grid item's used size was settled by the grid algorithm.
+                _gridReplacedForce = false;
+                replacedW = _absRepW;
+                replacedH = _absRepH;
+            }
+            else if (parentIsFlex)
             {
                 ForceReplaced(forceW, forceH, ph, pv, ref replacedW, ref replacedH);
             }
@@ -371,6 +378,11 @@ public sealed partial class BlockLayoutEngine
         if (c.Context == FormattingContext.Flex)
         {
             FlexOpen(ni, c);
+            return;
+        }
+
+        if (c.Context == FormattingContext.Grid && !replaced && GridOpen(ni, c))
+        {
             return;
         }
 

@@ -265,7 +265,7 @@ internal sealed partial class StyleComputer
             case PropertyId.TextAlignLast: d.TextAlignLast = s.TextAlignLast; break;
             case PropertyId.TextJustify: d.TextJustify = s.TextJustify; break;
             case PropertyId.OverflowClipMargin: d.OverflowClipMarginPx = s.OverflowClipMarginPx; d.OverflowClipMarginBox = s.OverflowClipMarginBox; break;
-            default: CopyFlexProperty(id, ref d, in s); break;
+            default: CopyFlexProperty(id, ref d, in s); CopyGridProperty(id, ref d, in s); break;
         }
     }
 

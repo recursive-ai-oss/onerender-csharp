@@ -6,12 +6,12 @@ namespace OneRender.Style;
 /// Shorthands the OneHtml cascade keeps as one token list (it has no grammar for them) but whose longhands the engine
 /// computes: <c>white-space</c>, <c>border-radius</c> and <c>overflow</c>. Both front ends expand them here.
 /// </summary>
-internal static class ShorthandFallbacks
+internal static partial class ShorthandFallbacks
 {
     private static readonly string[] Collapse = ["collapse", "preserve", "preserve-breaks", "preserve-spaces", "break-spaces"];
 
     /// <summary>The shorthands this class expands, for callers that look at the cascade's declarations.</summary>
-    public static readonly string[] Names = ["white-space", "border-radius", "overflow", "flex", "flex-flow", "place-items", "place-content", "place-self"];
+    public static readonly string[] Names = ["white-space", "border-radius", "overflow", "flex", "flex-flow", "place-items", "place-content", "place-self", "grid-area", "grid-row", "grid-column", "grid-template", "grid"];
 
     public static bool IsHandled(string name)
     {
@@ -38,6 +38,11 @@ internal static class ShorthandFallbacks
             }
 
             return true;
+        }
+
+        if (IsGridShorthand(name))
+        {
+            return ExpandGrid(name, value, output);
         }
 
         if (name.Equals("white-space", StringComparison.OrdinalIgnoreCase))
@@ -70,6 +75,11 @@ internal static class ShorthandFallbacks
 
     private static ReadOnlySpan<PropertyId> Longhands(string name)
     {
+        if (IsGridShorthand(name))
+        {
+            return GridLonghands(name);
+        }
+
         if (name.Equals("white-space", StringComparison.OrdinalIgnoreCase))
         {
             return new[] { PropertyId.WhiteSpaceCollapse, PropertyId.TextWrapMode };

@@ -229,11 +229,18 @@ public sealed partial class BlockLayoutEngine
         }
     }
 
-    private static bool NeedsDescent(Box b) => b.Kind == BoxKind.Container && b.ChildLayout == ChildLayout.Block;
+    private static bool NeedsDescent(Box b) => b.Kind == BoxKind.Container && b.ChildLayout == ChildLayout.Block && b.Context != FormattingContext.Grid;
 
     private void LeafIntrinsic(Box b)
     {
         double min = 0, max = 0;
+        if (b.Kind == BoxKind.Container && b.Context == FormattingContext.Grid && GridIntrinsicSizes(b, out min, out max))
+        {
+            _minContent[b.Index] = min;
+            _maxContent[b.Index] = max;
+            return;
+        }
+
         if (b.Kind == BoxKind.Replaced)
         {
             ref readonly ComputedValues v = ref b.Values;

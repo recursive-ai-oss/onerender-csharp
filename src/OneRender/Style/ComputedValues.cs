@@ -363,6 +363,50 @@ public partial struct ComputedValues
 
     /// <summary><c>text-justify</c>.</summary>
     public TextJustifyKind TextJustify { get; internal set; }
+    /// <summary><c>grid-template-columns</c>.</summary>
+    public GridTrackList GridTemplateColumns { get; internal set; }
+
+    /// <summary><c>grid-template-rows</c>.</summary>
+    public GridTrackList GridTemplateRows { get; internal set; }
+
+    /// <summary><c>grid-template-areas</c>.</summary>
+    public GridAreas GridTemplateAreas { get; internal set; }
+
+    /// <summary><c>grid-auto-columns</c>: the pattern of implicit column sizes; never empty.</summary>
+    public GridTrackSize[] GridAutoColumns { get; internal set; }
+
+    /// <summary><c>grid-auto-rows</c>: the pattern of implicit row sizes; never empty.</summary>
+    public GridTrackSize[] GridAutoRows { get; internal set; }
+
+    /// <summary>The <c>row</c> or <c>column</c> part of <c>grid-auto-flow</c>.</summary>
+    public GridAutoFlowKind GridAutoFlow { get; internal set; }
+
+    /// <summary>True when <c>grid-auto-flow</c> has <c>dense</c>.</summary>
+    public bool GridAutoFlowDense { get; internal set; }
+
+    /// <summary><c>grid-row-start</c>.</summary>
+    public GridLine GridRowStart { get; internal set; }
+
+    /// <summary><c>grid-row-end</c>.</summary>
+    public GridLine GridRowEnd { get; internal set; }
+
+    /// <summary><c>grid-column-start</c>.</summary>
+    public GridLine GridColumnStart { get; internal set; }
+
+    /// <summary><c>grid-column-end</c>.</summary>
+    public GridLine GridColumnEnd { get; internal set; }
+
+    /// <summary><c>justify-items</c> (<c>legacy</c> computes to <c>normal</c>).</summary>
+    public AlignKind JustifyItems { get; internal set; }
+
+    /// <summary>The <c>safe</c> or <c>unsafe</c> keyword of <c>justify-items</c>.</summary>
+    public AlignOverflowKind JustifyItemsOverflow { get; internal set; }
+
+    /// <summary><c>justify-self</c>.</summary>
+    public AlignKind JustifySelf { get; internal set; }
+
+    /// <summary>The <c>safe</c> or <c>unsafe</c> keyword of <c>justify-self</c>.</summary>
+    public AlignOverflowKind JustifySelfOverflow { get; internal set; }
 
     /// <summary>The left and right border widths added.</summary>
     public readonly double BorderHorizontal => BorderLeftWidth + BorderRightWidth;
@@ -457,6 +501,7 @@ public partial struct ComputedValues
         v.ListStyleType = "disc";
         v.TabSize = new Length(LengthKind.Number, 8);
         InitFlex(ref v);
+        InitGrid(ref v);
         return v;
     }
 }
