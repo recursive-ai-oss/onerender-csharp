@@ -426,7 +426,17 @@ internal sealed partial class Rasterizer : IDisposable
             return;
         }
 
-        Path merged = PathBoolean.Intersect(_clip.Path, devPath, IntersectionRule.NonZero, evenOdd ? IntersectionRule.EvenOdd : IntersectionRule.NonZero);
+        Path merged;
+        try
+        {
+            merged = PathBoolean.Intersect(_clip.Path, devPath, IntersectionRule.NonZero, evenOdd ? IntersectionRule.EvenOdd : IntersectionRule.NonZero);
+        }
+        catch (OneImage.ImageLimitException)
+        {
+            // A clip shape with coordinates beyond the boolean engine's range (a hostile clip-path or transform) keeps the clip it had.
+            return;
+        }
+
         _clip = new ClipState(merged, false, default, merged.IsEmpty);
     }
 
