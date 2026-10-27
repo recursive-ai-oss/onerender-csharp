@@ -1,0 +1,444 @@
+using OneFont;
+using OneRender.Style;
+using OneRender.Text;
+using OneRender.Tree;
+
+namespace OneRender.Layout;
+
+internal sealed partial class InlineWorker
+{
+    private enum PK : byte
+    {
+        Text,
+        Open,
+        Close,
+        Atomic,
+        Tab,
+        Hyphen,
+        Br,
+        Dead,
+    }
+
+    private struct Piece
+    {
+        public PK Kind;
+        public byte Level;
+        public byte VMode;     // atomic: 0 baseline-relative, 1 top, 2 bottom
+        public int Elem;
+        public int Ca;         // clusters [Ca, Cb) of the element, logical order
+        public int Cb;
+        public int Owner;      // box index of the innermost inline box (the container's own when none)
+        public int Seps;
+        public int Seg;
+        public double W;
+        public double X;
+        public double Shift;   // atomic: baseline shift relative to its owner's baseline
+        public double Base;    // atomic: its baseline y in line coordinates, set once the line height is known
+    }
+
+    private struct Seg
+    {
+        public int Box;
+        public int Parent;
+        public int Depth;
+        public double MinX;
+        public double MaxX;
+        public double OriginX;
+        public double OriginY;
+        public bool HasOpen;
+        public bool HasClose;
+    }
+
+    private struct BM
+    {
+        public int Stamp;
+        public int Parent;
+        public byte Mode;      // 0 aligned to the baseline chain, 1 top, 2 bottom
+        public bool Excl;      // inside a top- or bottom-aligned subtree: does not stretch the line
+        public double A;
+        public double D;
+        public double HL;
+        public double HB;
+        public double XH;
+        public double Size;
+        public double Shift;
+        public double Abs;     // baseline offset from the root inline box's baseline, y down
+        public double Base;    // baseline y in line coordinates
+    }
+
+    private Piece[] _pc = new Piece[32];
+    private int _pn;
+    private int[] _order = new int[32];
+    private byte[] _plv = new byte[32];
+    private Seg[] _sg = new Seg[16];
+    private int _sgn;
+    private BM[] _bm = [];
+    private int _stamp;
+    private int[] _touched = new int[16];
+    private int _tn;
+    private int[] _chain = new int[16];
+    private int[] _path = new int[16];
+
+    // Glyph scratch for building one text fragment.
+    private int[] _gid = new int[64];
+    private double[] _gx = new double[64];
+    private double[] _gy = new double[64];
+    private int[] _gc = new int[64];
+    private double[] _clx = new double[64];
+
+    // Font metrics cache, direct-mapped by style row.
+    private readonly int[] _mcStyle = new int[256];
+    private readonly int[] _mcVersion = new int[256];
+    private readonly double[] _mcA = new double[256];
+    private readonly double[] _mcD = new double[256];
+    private readonly double[] _mcGap = new double[256];
+    private readonly double[] _mcXh = new double[256];
+
+    private double _firstBaseline;
+    private double _lastBaseline;
+    private double _maxRight;
+
+    private static void Ensure<T>(ref T[] a, int n)
+    {
+        if (a.Length < n)
+        {
+            Array.Resize(ref a, Math.Max(n, a.Length * 2));
+        }
+    }
+
+    // ------------------------------------------------------------------ entry points
+
+    internal InlineLayoutResult Layout(in InlineLayoutRequest request, FragmentTree output, Fragment parent, IAtomicInlineHost? host, CancellationToken ct)
+    {
+        ResetState(request.Container, request.Fonts, host, true, ct);
+        _out = output;
+        _parent = parent;
+        _availW = Math.Max(0, request.AvailableWidth);
+        Collect();
+        if (_rawN == 0)
+        {
+            return new InlineLayoutResult(0, 0, double.NaN, double.NaN);
+        }
+
+        Prepare();
+        return LayoutLines(in request);
+    }
+
+    internal void Measure(Box container, IFontProvider fonts, IAtomicInlineHost? host, out double minContent, out double maxContent)
+    {
+        ResetState(container, fonts, host, false, default);
+        _availW = 0;
+        minContent = 0;
+        maxContent = 0;
+        Collect();
+        if (_rawN == 0)
+        {
+            return;
+        }
+
+        Prepare();
+        double indentBase = Edge(container.Values.TextIndent, 0);
+        for (int pass = 1; pass <= 2; pass++)
+        {
+            _measureWhich = pass;
+            _measureMin = pass == 1;
+            double avail = pass == 1 ? 0 : double.PositiveInfinity;
+            double widest = 0;
+            int e = 0, c = 0;
+            bool first = true;
+            while (e < _elN)
+            {
+                ScanLine(e, c, avail, IndentFor(in container.Values, first, first || _lastForced, indentBase));
+                widest = Math.Max(widest, _lineW);
+                _lastForced = _endForced;
+                first = false;
+                if (_endE == e && _endC == c)
+                {
+                    // No progress: take the element whole (cannot happen with a line that places something).
+                    _endE = e + 1;
+                    _endC = 0;
+                }
+
+                e = _endE;
+                c = _endC;
+            }
+
+            if (pass == 1)
+            {
+                minContent = widest;
+            }
+            else
+            {
+                maxContent = widest;
+            }
+        }
+
+        _measureWhich = 0;
+        _measureMin = false;
+        if (maxContent < minContent)
+        {
+            maxContent = minContent;
+        }
+    }
+
+    private bool _lastForced;
+
+    // CSS Text 3 §7.2: text-indent indents the first formatted line, and with each-line the lines after a forced break; hanging
+    // inverts which lines are indented.
+    private static double IndentFor(in ComputedValues v, bool firstLine, bool afterForced, double indent)
+    {
+        bool affected = firstLine || (v.TextIndentEachLine && afterForced);
+        return (v.TextIndentHanging ? !affected : affected) ? indent : 0;
+    }
+
+    // ------------------------------------------------------------------ lines
+
+    private InlineLayoutResult LayoutLines(in InlineLayoutRequest request)
+    {
+        ref readonly ComputedValues cv = ref _container.Values;
+        double indentBase = Edge(cv.TextIndent, _availW);
+        _measureWhich = 0;
+        _measureMin = false;
+        _firstBaseline = double.NaN;
+        _lastBaseline = double.NaN;
+        _maxRight = 0;
+        double y = 0;
+        int lines = 0;
+        int e = 0, c = 0;
+        bool first = true;
+        bool afterForced = true;
+        Ensure(ref _bm, _boxes.Count);
+        while (e < _elN)
+        {
+            _ct.ThrowIfCancellationRequested();
+            double indent = IndentFor(in cv, first, afterForced, indentBase);
+            ScanLine(e, c, _availW, indent);
+            int ee = _endE, ec = _endC;
+            if (ee == e && ec == c)
+            {
+                // A line always consumes something; this only guards against a bug turning into an endless loop.
+                ee = e + 1;
+                ec = 0;
+            }
+
+            bool hasContent = BuildPieces(e, c, ee, ec, _endHyphen, indent);
+            if (hasContent)
+            {
+                double h = EmitLine(in request, y, indent, _endForced || ee >= _elN, out double baseline);
+                if (lines == 0)
+                {
+                    _firstBaseline = y + baseline;
+                }
+
+                _lastBaseline = y + baseline;
+                y += h;
+                lines++;
+                first = false;
+            }
+
+            afterForced = _endForced;
+            e = ee;
+            c = ec;
+        }
+
+        return new InlineLayoutResult(y, lines, _firstBaseline, _lastBaseline);
+    }
+
+    private double TextWidth(int e, int ca, int cb, out int seps)
+    {
+        ref Elem el = ref _el[e];
+        ReadOnlySpan<GlyphCluster> cls = _shaped[e]!.Clusters;
+        int k = cls.Length;
+        bool rtl = (el.Flags & EF.Rtl) != 0;
+        double w = 0;
+        seps = 0;
+        for (int i = ca; i < cb; i++)
+        {
+            GlyphCluster cl = cls[rtl ? k - 1 - i : i];
+            byte fl = _cf[el.Start + cl.TextStart];
+            w += ClusterAdvance(in el, in cl, fl);
+            if ((fl & CfWordSep) != 0)
+            {
+                seps++;
+            }
+        }
+
+        return w;
+    }
+
+    private byte ClusterFlags(int e, int i)
+    {
+        ref Elem el = ref _el[e];
+        ReadOnlySpan<GlyphCluster> cls = _shaped[e]!.Clusters;
+        int k = cls.Length;
+        return _cf[el.Start + cls[(el.Flags & EF.Rtl) != 0 ? k - 1 - i : i].TextStart];
+    }
+
+    private void AddPiece(PK kind, int e, int ca, int cb, double w, int owner, byte level)
+    {
+        if (_pn == _pc.Length)
+        {
+            Array.Resize(ref _pc, _pc.Length * 2);
+        }
+
+        ref Piece p = ref _pc[_pn++];
+        p = default;
+        p.Kind = kind;
+        p.Elem = e;
+        p.Ca = ca;
+        p.Cb = cb;
+        p.W = w;
+        p.Owner = owner;
+        p.Level = level;
+    }
+
+    /// <summary>
+    /// Turns the elements of one line, [(<paramref name="e0"/>, <paramref name="c0"/>), (<paramref name="e1"/>, <paramref name="c1"/>)), into
+    /// pieces in logical order: leading collapsible spaces are skipped and trailing ones removed (CSS Text 3 §4.1.2).
+    /// </summary>
+    /// <returns>True when the line has anything that gives it height.</returns>
+    private bool BuildPieces(int e0, int c0, int e1, int c1, bool hyphen, double indent)
+    {
+        _pn = 0;
+        bool ink = false;
+        double x = indent;
+        for (int e = e0; e < _elN && (e < e1 || (e == e1 && c1 > 0)); e++)
+        {
+            ref Elem el = ref _el[e];
+            switch (el.Kind)
+            {
+                case EK.Open:
+                    AddPiece(PK.Open, e, 0, 0, el.W, el.Owner, el.Level);
+                    x += el.W;
+                    break;
+                case EK.Close:
+                    AddPiece(PK.Close, e, 0, 0, el.W, el.Owner, el.Level);
+                    x += el.W;
+                    break;
+                case EK.Atomic:
+                    AddPiece(PK.Atomic, e, 0, 0, el.W, el.Owner, el.Level);
+                    x += el.W;
+                    ink = true;
+                    break;
+                case EK.Tab:
+                {
+                    double tw = TabAdvance(in el, x);
+                    AddPiece(PK.Tab, e, 0, 0, tw, el.Owner, el.Level);
+                    x += tw;
+                    ink = true;
+                    break;
+                }
+
+                case EK.Newline:
+                    if ((el.Flags & EF.Br) != 0)
+                    {
+                        AddPiece(PK.Br, e, 0, 0, 0, el.Owner, el.Level);
+                    }
+
+                    ink = true;
+                    break;
+                default:
+                {
+                    int k = _shaped[e]!.Clusters.Length;
+                    int cs = e == e0 ? c0 : 0;
+                    int ce = e == e1 ? c1 : k;
+                    if (!ink)
+                    {
+                        while (cs < ce && (ClusterFlags(e, cs) & CfCollapsible) != 0)
+                        {
+                            cs++;
+                        }
+                    }
+
+                    if (cs >= ce)
+                    {
+                        break;
+                    }
+
+                    double tw = TextWidth(e, cs, ce, out int seps);
+                    AddPiece(PK.Text, e, cs, ce, tw, el.Owner, el.Level);
+                    _pc[_pn - 1].Seps = seps;
+                    ink = true;
+                    x += tw;
+                    break;
+                }
+            }
+        }
+
+        if (hyphen)
+        {
+            for (int j = _pn - 1; j >= 0; j--)
+            {
+                if (_pc[j].Kind == PK.Text)
+                {
+                    ref Elem pe = ref _el[_pc[j].Elem];
+                    AddPiece(PK.Hyphen, _pc[j].Elem, 0, 0, HyphenWidth(in pe), pe.Owner, pe.Level);
+                    // Ca of a hyphen piece is the source offset of the soft hyphen, right after the last character before the break.
+                    ReadOnlySpan<GlyphCluster> hc = _shaped[_pc[j].Elem]!.Clusters;
+                    GlyphCluster last = hc[(pe.Flags & EF.Rtl) != 0 ? hc.Length - _pc[j].Cb : _pc[j].Cb - 1];
+                    int lastPos = pe.Start + last.TextStart + Math.Max(1, last.TextLength) - 1;
+                    _pc[_pn - 1].Ca = _src[lastPos] + 1;
+                    break;
+                }
+            }
+        }
+
+        // Trailing collapsible spaces are removed, also those before the end edges of inline boxes (§4.1.2).
+        int t = _pn - 1;
+        while (t >= 0)
+        {
+            ref Piece p = ref _pc[t];
+            if (p.Kind == PK.Close)
+            {
+                t--;
+                continue;
+            }
+
+            if (p.Kind == PK.Text)
+            {
+                while (p.Cb > p.Ca && (ClusterFlags(p.Elem, p.Cb - 1) & CfCollapsible) != 0)
+                {
+                    p.Cb--;
+                }
+
+                if (p.Cb == p.Ca)
+                {
+                    p.Kind = PK.Dead;
+                    p.W = 0;
+                    t--;
+                    continue;
+                }
+
+                p.W = TextWidth(p.Elem, p.Ca, p.Cb, out p.Seps);
+            }
+
+            break;
+        }
+
+        bool content = false;
+        int m = 0;
+        for (int j = 0; j < _pn; j++)
+        {
+            if (_pc[j].Kind == PK.Dead)
+            {
+                continue;
+            }
+
+            if (m != j)
+            {
+                _pc[m] = _pc[j];
+            }
+
+            PK kind = _pc[m].Kind;
+            if (kind is PK.Text or PK.Atomic or PK.Tab or PK.Br or PK.Hyphen || (kind is PK.Open or PK.Close && _pc[m].W > 0))
+            {
+                content = true;
+            }
+
+            m++;
+        }
+
+        _pn = m;
+        return content;
+    }
+}

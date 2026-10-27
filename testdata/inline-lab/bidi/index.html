@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>bidi</title><style>body{margin:8px;font:16px Arial,sans-serif}p{margin:8px 0}.w{width:300px;border:1px solid #888}.w{width:240px}</style></head><body>
+<p class=w>English then עברית טקסט בעברית and back to English text that wraps over lines.</p>
+<p class=w dir=rtl>עברית טקסט בעברית with English words inside the sentence that wraps over lines.</p>
+<p class=w>Numbers 123 and العربية نص عربي 456 mixed in a line of text.</p>
+<p class=w dir=rtl style="text-align:left">שלום world שלום left aligned in rtl paragraph.</p>
+<p class=w>Embedded <span dir=rtl>עברית <b>bold</b> span</span> and <bdo dir=rtl>override text</bdo> end.</p>
+<p class=w>Isolate <span style="unicode-bidi:isolate;direction:rtl">עברית isolated</span> and <span style="unicode-bidi:embed;direction:rtl">embedded עברית</span> end.</p>
+<p class=w style="unicode-bidi:plaintext">עברית plaintext paragraph direction from first strong.</p>
+<p class=w dir=rtl>Padded <span style="padding:0 8px;border:1px solid">רווח בתוך span</span> in rtl.</p>
+</body></html>

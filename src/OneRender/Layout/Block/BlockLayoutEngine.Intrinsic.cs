@@ -18,6 +18,35 @@ public sealed partial class BlockLayoutEngine
         public double Max;
     }
 
+    private int _atomicMeasureDepth;
+
+    /// <inheritdoc />
+    Fragment IAtomicInlineHost.LayoutAtomic(Box box, Fragment parent, double containingWidth, out Insets margins) =>
+        LayoutIndependent(box, parent, containingWidth, double.NaN, true, out margins);
+
+    /// <inheritdoc />
+    void IAtomicInlineHost.GetAtomicContribution(Box box, out double minContent, out double maxContent)
+    {
+        // Atomic boxes nest (an inline-block holding text holding an inline-block ...); the measuring recursion is cut at a fixed
+        // depth so a hostile tree cannot reach the call stack. Past it an atomic box contributes nothing.
+        if (_atomicMeasureDepth >= MaxReentrancy || box.IsNull || !ReferenceEquals(box.Tree, _boxes))
+        {
+            minContent = maxContent = 0;
+            return;
+        }
+
+        _atomicMeasureDepth++;
+        try
+        {
+            GetIntrinsic(box, out _, out _);
+            Contribution(box, out minContent, out maxContent);
+        }
+        finally
+        {
+            _atomicMeasureDepth--;
+        }
+    }
+
     private void PrepareIntrinsicCache(int boxCount)
     {
         if (_minContent.Length < boxCount)

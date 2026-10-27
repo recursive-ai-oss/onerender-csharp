@@ -68,12 +68,19 @@ internal enum PropertyId : byte
     Content,
     ListStyleType,
     ListStylePosition,
+    WordBreak,
+    OverflowWrap,
+    LineBreak,
+    Hyphens,
+    TabSize,
+    TextAlignLast,
+    TextJustify,
 }
 
 /// <summary>Names and inheritance of <see cref="PropertyId"/> values.</summary>
 internal static class Properties
 {
-    public const int Count = (int)PropertyId.ListStylePosition + 1;
+    public const int Count = (int)PropertyId.TextJustify + 1;
 
     private static readonly string[] Names =
     [
@@ -89,6 +96,7 @@ internal static class Properties
         "font-family", "font-weight", "font-style", "font-stretch", "line-height", "vertical-align",
         "white-space-collapse", "text-wrap-mode", "text-align", "text-indent", "letter-spacing", "word-spacing",
         "direction", "unicode-bidi", "color", "opacity", "background-color", "content", "list-style-type", "list-style-position",
+        "word-break", "overflow-wrap", "line-break", "hyphens", "tab-size", "text-align-last", "text-justify",
     ];
 
     private static readonly Dictionary<string, PropertyId> ByName = BuildByName();
@@ -105,7 +113,9 @@ internal static class Properties
         PropertyId.Visibility or PropertyId.FontSize or PropertyId.FontFamily or PropertyId.FontWeight or PropertyId.FontStyle
             or PropertyId.FontStretch or PropertyId.LineHeight or PropertyId.WhiteSpaceCollapse or PropertyId.TextWrapMode
             or PropertyId.TextAlign or PropertyId.TextIndent or PropertyId.LetterSpacing or PropertyId.WordSpacing
-            or PropertyId.Direction or PropertyId.Color or PropertyId.ListStyleType or PropertyId.ListStylePosition => true,
+            or PropertyId.Direction or PropertyId.Color or PropertyId.ListStyleType or PropertyId.ListStylePosition
+            or PropertyId.WordBreak or PropertyId.OverflowWrap or PropertyId.LineBreak or PropertyId.Hyphens or PropertyId.TabSize
+            or PropertyId.TextAlignLast or PropertyId.TextJustify => true,
         _ => false,
     };
 
@@ -116,6 +126,9 @@ internal static class Properties
         {
             map[Names[i]] = (PropertyId)i;
         }
+
+        // CSS Text 3 §5.5: word-wrap is a legacy alias of overflow-wrap.
+        map["word-wrap"] = PropertyId.OverflowWrap;
 
         return map;
     }

@@ -76,7 +76,14 @@ public partial struct ComputedValues
         string.Equals(a.ContentText, b.ContentText, StringComparison.Ordinal) &&
         string.Equals(a.ListStyleType, b.ListStyleType, StringComparison.Ordinal) &&
         a.ListStyleTypeIsString.Equals(b.ListStyleTypeIsString) &&
-        a.ListStylePosition == b.ListStylePosition;
+        a.ListStylePosition == b.ListStylePosition &&
+        a.WordBreak == b.WordBreak &&
+        a.OverflowWrap == b.OverflowWrap &&
+        a.LineBreak == b.LineBreak &&
+        a.Hyphens == b.Hyphens &&
+        a.TabSize.Equals(b.TabSize) &&
+        a.TextAlignLast == b.TextAlignLast &&
+        a.TextJustify == b.TextJustify;
 
     internal static int ValueHash(in ComputedValues v)
     {
@@ -155,6 +162,13 @@ public partial struct ComputedValues
         h.Add(v.ListStyleType, StringComparer.Ordinal);
         h.Add(v.ListStyleTypeIsString);
         h.Add(v.ListStylePosition);
+        h.Add(v.WordBreak);
+        h.Add(v.OverflowWrap);
+        h.Add(v.LineBreak);
+        h.Add(v.Hyphens);
+        h.Add(v.TabSize);
+        h.Add(v.TextAlignLast);
+        h.Add(v.TextJustify);
         return h.ToHashCode();
     }
 }

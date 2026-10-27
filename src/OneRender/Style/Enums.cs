@@ -369,3 +369,108 @@ public enum ReplacedKind : byte
     /// <summary>Inline SVG.</summary>
     Svg,
 }
+
+/// <summary>The <c>word-break</c> property (CSS Text 3 §5.2).</summary>
+public enum WordBreakKind : byte
+{
+    /// <summary><c>normal</c>.</summary>
+    Normal,
+
+    /// <summary><c>break-all</c>: any typographic letter unit may break.</summary>
+    BreakAll,
+
+    /// <summary><c>keep-all</c>: no breaks inside CJK words.</summary>
+    KeepAll,
+
+    /// <summary><c>break-word</c>: <c>normal</c> plus <c>overflow-wrap: anywhere</c>.</summary>
+    BreakWord,
+}
+
+/// <summary>The <c>overflow-wrap</c> property (CSS Text 3 §5.5).</summary>
+public enum OverflowWrapKind : byte
+{
+    /// <summary><c>normal</c>.</summary>
+    Normal,
+
+    /// <summary><c>break-word</c>: an otherwise unbreakable word may break, but only when nothing else fits.</summary>
+    BreakWord,
+
+    /// <summary><c>anywhere</c>: like <c>break-word</c>, and the break points count for min-content.</summary>
+    Anywhere,
+}
+
+/// <summary>The <c>line-break</c> property (CSS Text 3 §5.3).</summary>
+public enum LineBreakKind : byte
+{
+    /// <summary><c>auto</c>.</summary>
+    Auto,
+
+    /// <summary><c>loose</c>.</summary>
+    Loose,
+
+    /// <summary><c>normal</c>.</summary>
+    Normal,
+
+    /// <summary><c>strict</c>.</summary>
+    Strict,
+
+    /// <summary><c>anywhere</c>: a break is allowed after every typographic character unit.</summary>
+    Anywhere,
+}
+
+/// <summary>The <c>hyphens</c> property (CSS Text 3 §6.1).</summary>
+public enum HyphensKind : byte
+{
+    /// <summary><c>manual</c>: only at U+00AD and U+2010-style explicit hyphens.</summary>
+    Manual,
+
+    /// <summary><c>none</c>: no breaks at soft hyphens either.</summary>
+    None,
+
+    /// <summary><c>auto</c>.</summary>
+    Auto,
+}
+
+/// <summary>The <c>text-align-last</c> property (CSS Text 3 §7.2).</summary>
+public enum TextAlignLastKind : byte
+{
+    /// <summary><c>auto</c>: follows <c>text-align</c>, with <c>justify</c> falling back to <c>start</c>.</summary>
+    Auto,
+
+    /// <summary><c>start</c>.</summary>
+    Start,
+
+    /// <summary><c>end</c>.</summary>
+    End,
+
+    /// <summary><c>left</c>.</summary>
+    Left,
+
+    /// <summary><c>right</c>.</summary>
+    Right,
+
+    /// <summary><c>center</c>.</summary>
+    Center,
+
+    /// <summary><c>justify</c>.</summary>
+    Justify,
+
+    /// <summary><c>match-parent</c>; resolved against the parent when the style is computed.</summary>
+    MatchParent,
+}
+
+/// <summary>The <c>text-justify</c> property (CSS Text 3 §7.3).</summary>
+public enum TextJustifyKind : byte
+{
+    /// <summary><c>auto</c>.</summary>
+    Auto,
+
+    /// <summary><c>none</c>: no justification.</summary>
+    None,
+
+    /// <summary><c>inter-word</c>.</summary>
+    InterWord,
+
+    /// <summary><c>inter-character</c>.</summary>
+    InterCharacter,
+}
