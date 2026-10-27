@@ -37,8 +37,8 @@ def money(v):
     return "{:,.2f}".format(v)
 
 
-def write(name, html, css):
-    d = os.path.join(HERE, name)
+def write(name, html, css, root=HERE):
+    d = os.path.join(root, name)
     os.makedirs(d, exist_ok=True)
     with open(os.path.join(d, "index.html"), "w", encoding="utf-8", newline="\n") as f:
         f.write(html)
@@ -146,6 +146,29 @@ table { border-collapse: collapse; width: 100%; }
 footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #d9dee5; text-align: center; color: #6b7280; font-size: 11px; }
 """
     write("invoice", html, css)
+
+
+# ---------------------------------------------------------------- invoice with spans
+
+def invoice_spanned():
+    """The invoice with spanned cells: a row-spanning cell in the body and the totals as a footer whose labels span four columns."""
+    import re
+    with open(os.path.join(HERE, "invoice", "index.html"), encoding="utf-8") as f:
+        html = f.read()
+    with open(os.path.join(HERE, "invoice", "styles.css"), encoding="utf-8") as f:
+        css = f.read()
+    html = html.replace("Invoice INV-2026-0418", "Invoice INV-2026-0418 with spans", 1)
+    # Lines 1 and 2 share one number cell.
+    html = html.replace('<tr><td class="num">1</td>', '<tr><td class="num" rowspan="2">1&ndash;2</td>', 1)
+    html = html.replace('<tr><td class="num">2</td>', '<tr>', 1)
+    totals = re.search(r'<table class="totals">(.*?)</table>', html, re.S)
+    foot = []
+    for m in re.finditer(r'<tr( class="grand")?><th>(.*?)</th><td>(.*?)</td></tr>', totals.group(1)):
+        foot.append('<tr%s><th colspan="4" scope="row" class="num">%s</th><td class="num">%s</td></tr>' % (m.group(1) or "", m.group(2), m.group(3)))
+    html = html.replace(totals.group(0), "")
+    html = html.replace("</tbody>", "</tbody>\n<tfoot>\n" + "\n".join(foot) + "\n</tfoot>", 1)
+    css += "tfoot th, tfoot td { padding: 6px 8px; border-top: 1px solid #ccc; }\ntfoot .grand th, tfoot .grand td { font-weight: bold; border-top: 2px solid #333; }\n"
+    write("invoice-spanned", html, css)
 
 
 # ---------------------------------------------------------------- statement
@@ -359,11 +382,12 @@ def email():
 
 # ---------------------------------------------------------------- report
 
-def report():
+def report(chapter_count=18, name="report", root=HERE):
+    # The defaults write the committed template; the document benchmark asks for a longer one.
     r = rnd("report")
     chapters = []
     toc = []
-    for c in range(1, 19):
+    for c in range(1, chapter_count + 1):
         title = words(r, r.randint(2, 4)).title()
         cid = "ch%d" % c
         toc.append('<li><a href="#%s">%s</a></li>' % (cid, title))
@@ -435,7 +459,7 @@ td:nth-child(n+2) { text-align: right; }
 h2, h3 { break-after: avoid; }
 table, blockquote, pre { break-inside: avoid; }
 """
-    write("report", html, css)
+    write(name, html, css, root)
 
 
 # ---------------------------------------------------------------- paged (running headers, contents with leaders, repeated table header)
@@ -496,6 +520,7 @@ tr { break-inside: avoid; }
 
 if __name__ == "__main__":
     invoice()
+    invoice_spanned()
     statement()
     receipt()
     certificate()

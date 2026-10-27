@@ -60,3 +60,48 @@ holds both sides. Differences to keep in mind when reading it:
 - the engine side runs the builder front end of the engine (`LivePage`), the way a game host would drive it;
 - OneGame.UI's hover goes through `UiTree.Dispatch` with a pointer move, which includes its hit test; the engine's hover sets the element
   states directly.
+
+# The document benchmark
+
+HTML to tagged PDF (`HtmlPdf.ToPdf`, default options) against headless Chrome print-to-PDF, with WeasyPrint run for information.
+One command on the benchmark host: `tools/bench/run-documents-gate.sh` (takes the benchmark lock inside the job, exits 3 if it is
+held, records CPU, cores and load before, during and after) or `tools/bench/run-documents-gate.sh --smoke` (no lock, short, not
+publishable). It writes `summary.md`, `machine.txt`, the raw per-run lines and the PDFs under `$ONERENDER_WORK/bench/`; a copy of a
+run's summary and raw lines is kept in `results/bench/documents/`.
+
+## The documents
+
+`tools/bench/documents/make-documents.py` writes them as single HTML files with the style sheets inlined:
+
+| Document | Source | Size |
+|---|---|---|
+| `invoice` | `testdata/templates/invoice` | 2 pages |
+| `report` | the report template's generator with 19 chapters | 50 pages |
+| `table10k` | one table of 10,000 rows with a repeating header | about 210 pages |
+| `tailwind` | a marketing page built with Tailwind 4.3.3 plus daisyUI and Flowbite (`tools/geomdiff/scripts/build-tailwind.sh`), 420 KB of CSS | 5 pages |
+
+## The tools and what is measured
+
+- **onerender, process**: `tools/bench/OneRender.PdfCli`, published as a NativeAOT executable, one fresh process per run. A command-line
+  or serverless host ships the engine this way. The same call under the JIT (`dotnet OneRender.Benchmarks.Documents.dll render`) is
+  measured too, for information; its first run includes JIT compilation of the whole pipeline.
+- **onerender, warm**: BenchmarkDotNet (`bench/OneRender.Benchmarks.Documents`, `MemoryDiagnoser`), one call in an already running
+  process: mean time and bytes allocated.
+- **Chrome**: `tools/bench/OneRender.ChromePdf` drives Chrome for Testing 156.0.8078.47 over the DevTools Protocol (the client of the
+  geometry differential) with `Page.printToPDF` on A4, half-inch margins, backgrounds, tagged output, `@page` size honoured. The
+  same launch flags as the differential (headless, no GPU, site isolation off). Fonts are limited by the fontconfig file to the font
+  files the fonts package ships. *Cold*: a new browser per run, timed from the start of its process to the arrival of the PDF. *Warm*:
+  further prints, each in a new tab, in the last cold browser.
+- **WeasyPrint**: a fresh `weasyprint` process per run from its own `uv` environment (version recorded in `machine.txt`), same fontconfig
+  file.
+- **Memory**: peak of the whole process tree, sampled every 10 ms from `/proc`: the proportional set size (shared pages divided among
+  the processes that map them; the figure the verdict uses) and the sum of resident sizes (shared pages counted in every process, so
+  it overstates a multi-process browser). Warm Chrome memory is not reported: closed tabs leave their processes behind, so it only grows.
+- **Verdict** for a document: onerender is ahead of Chrome on process wall time, warm time and peak PSS.
+
+The output page counts are in the table so a difference in pagination is visible; they are not required to match.
+
+## Changing what is compared
+
+Everything lives in the three scripts under `tools/bench/` and `tools/bench/documents/`; the number of runs is at the top of
+`run-documents-gate.sh`. The set of font files for Chrome and WeasyPrint is `tools/geomdiff/scripts/fetch-fonts.sh`.

@@ -1,0 +1,52 @@
+mode: smoke (NOT PUBLISHABLE: no lock, short job)
+cpu: AMD Ryzen 9 7950X3D 16-Core Processor
+cores: 32 logical; onerender and WeasyPrint pinned to 0-7; Chrome unpinned
+governor: powersave
+memory: 125 GB
+kernel: Linux 7.0.0-38-generic
+dotnet sdk: 10.0.402; runtime: 10.0.13
+chrome: Google Chrome for Testing 156.0.8078.47 
+weasyprint: WeasyPrint version 70.0
+fonts: fontset: 8768bf2774f6c8e8 (20 files)
+runs: onerender 3 processes, Chrome 2 cold + 3 warm, WeasyPrint 1; bdn: --warmupCount 2 --iterationCount 5 --launchCount 1 --invocationCount 1 --unrollFactor 1 --exporters json --memory true
+commit: unknown
+== load before 2026-10-27T11:20:06Z
+13.52 10.90 11.76 9/1213 3304373
+%CPU %MEM ELAPSED COMMAND
+ 193 37.9    1679 python
+ 107  0.1       7 dotnet
+ 105  0.0     592 dotnet
+ 101  0.1      64 dotnet
+ 101  0.1      64 dotnet
+== load during 2026-10-27T11:20:36Z
+12.65 10.92 11.74 11/1358 3306023
+%CPU %MEM ELAPSED COMMAND
+ 193 38.2    1709 python
+ 113  0.0       0 csc
+ 105  0.0     622 dotnet
+ 101  0.1      94 dotnet
+ 101  0.1      94 dotnet
+== load during 2026-10-27T11:21:06Z
+14.60 11.50 11.90 9/1417 3308375
+%CPU %MEM ELAPSED COMMAND
+ 193 38.6    1739 python
+ 105  0.0     652 dotnet
+ 101  0.1     124 dotnet
+ 101  0.1     124 dotnet
+ 101  0.1     124 dotnet
+== load during 2026-10-27T11:21:36Z
+12.57 11.30 11.82 11/1198 3313680
+%CPU %MEM ELAPSED COMMAND
+ 192 39.0    1769 python
+ 105  0.0     682 dotnet
+ 101  0.1     154 dotnet
+ 101  0.1     154 dotnet
+ 100  0.1     154 dotnet
+== load after 2026-10-27T11:21:57Z
+12.48 11.38 11.84 8/1194 3323692
+%CPU %MEM ELAPSED COMMAND
+ 192 39.3    1790 python
+ 105  0.0     703 dotnet
+ 101  0.1     175 dotnet
+ 101  0.1     175 dotnet
+ 100  0.1     175 dotnet

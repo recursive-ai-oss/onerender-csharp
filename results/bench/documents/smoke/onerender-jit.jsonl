@@ -1,0 +1,12 @@
+{"tool": "onerender-jit", "doc": "invoice", "mode": "process", "run": 1, "ms": 414.8, "rssPeakKb": 80628, "pssPeakKb": 40136, "maxrssKb": 78728, "exit": 0, "pages": 2}
+{"tool": "onerender-jit", "doc": "invoice", "mode": "process", "run": 2, "ms": 446.8, "rssPeakKb": 80764, "pssPeakKb": 51138, "maxrssKb": 78964, "exit": 0, "pages": 2}
+{"tool": "onerender-jit", "doc": "invoice", "mode": "process", "run": 3, "ms": 410.1, "rssPeakKb": 80252, "pssPeakKb": 51201, "maxrssKb": 78556, "exit": 0, "pages": 2}
+{"tool": "onerender-jit", "doc": "report", "mode": "process", "run": 1, "ms": 872.9, "rssPeakKb": 115872, "pssPeakKb": 86589, "maxrssKb": 113444, "exit": 0, "pages": 50}
+{"tool": "onerender-jit", "doc": "report", "mode": "process", "run": 2, "ms": 758.6, "rssPeakKb": 115952, "pssPeakKb": 78873, "maxrssKb": 114332, "exit": 0, "pages": 50}
+{"tool": "onerender-jit", "doc": "report", "mode": "process", "run": 3, "ms": 783.2, "rssPeakKb": 115992, "pssPeakKb": 80407, "maxrssKb": 113076, "exit": 0, "pages": 50}
+{"tool": "onerender-jit", "doc": "table10k", "mode": "process", "run": 1, "ms": 2868.3, "rssPeakKb": 362892, "pssPeakKb": 332983, "maxrssKb": 359560, "exit": 0, "pages": 213}
+{"tool": "onerender-jit", "doc": "table10k", "mode": "process", "run": 2, "ms": 2893.7, "rssPeakKb": 349464, "pssPeakKb": 314793, "maxrssKb": 346464, "exit": 0, "pages": 213}
+{"tool": "onerender-jit", "doc": "table10k", "mode": "process", "run": 3, "ms": 2830.5, "rssPeakKb": 354896, "pssPeakKb": 325016, "maxrssKb": 352612, "exit": 0, "pages": 213}
+{"tool": "onerender-jit", "doc": "tailwind", "mode": "process", "run": 1, "ms": 712.0, "rssPeakKb": 176452, "pssPeakKb": 124357, "maxrssKb": 175332, "exit": 0, "pages": 5}
+{"tool": "onerender-jit", "doc": "tailwind", "mode": "process", "run": 2, "ms": 742.1, "rssPeakKb": 178596, "pssPeakKb": 149243, "maxrssKb": 176220, "exit": 0, "pages": 5}
+{"tool": "onerender-jit", "doc": "tailwind", "mode": "process", "run": 3, "ms": 725.6, "rssPeakKb": 176024, "pssPeakKb": 113136, "maxrssKb": 175216, "exit": 0, "pages": 5}

@@ -9,7 +9,9 @@ namespace OneRender.Pdf;
 /// <param name="Alt">Alternative text, or null.</param>
 /// <param name="Link">Link destination, or null.</param>
 /// <param name="Lang">Language, or null.</param>
-internal readonly record struct TagRef(ulong Key, TagRole Role, string? Alt, string? Link, string? Lang);
+/// <param name="ColSpan">Columns a table cell covers; 1 otherwise.</param>
+/// <param name="RowSpan">Rows a table cell covers; 1 otherwise.</param>
+internal readonly record struct TagRef(ulong Key, TagRole Role, string? Alt, string? Link, string? Lang, int ColSpan = 1, int RowSpan = 1);
 
 /// <summary>
 /// Turns the stream of tag scopes in display lists into PDF structure elements (ISO 32000-2 14.7). An element is begun when the first
@@ -157,7 +159,11 @@ internal sealed class TagWriter
                 }
             }
 
-            attributes = PdfStructureAttributes.TableHeader(column ? "Column" : "Row");
+            attributes = PdfStructureAttributes.TableHeader(column ? "Column" : "Row", tag.ColSpan, tag.RowSpan);
+        }
+        else if (tag.Role == TagRole.TableDataCell && (tag.ColSpan > 1 || tag.RowSpan > 1))
+        {
+            attributes = PdfStructureAttributes.Table(tag.ColSpan, tag.RowSpan);
         }
 
         var options = new PdfStructureElementOptions

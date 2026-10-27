@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The one-shot converter the document benchmark times as a process: HTML file in, tagged PDF out, default options. Published as a native
+       executable (NativeAOT), which is how a command-line or serverless host would ship the engine; the JIT build of the same call is the
+       `render` command of the benchmark project. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <Description>HTML file to tagged PDF in one call.</Description>
+    <PublishAot>true</PublishAot>
+    <IsAotCompatible>true</IsAotCompatible>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../src/OneRender.Pdf/OneRender.Pdf.csproj" />
+    <ProjectReference Include="../../../src/OneRender.Fonts/OneRender.Fonts.csproj" />
+  </ItemGroup>
+
+</Project>
