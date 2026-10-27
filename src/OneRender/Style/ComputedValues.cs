@@ -1,0 +1,382 @@
+namespace OneRender.Style;
+
+/// <summary>An immutable <c>font-family</c> list: family names in order, generic keywords lower-cased (CSS Fonts 4 §2.1).</summary>
+public sealed class FontFamilyList : IEquatable<FontFamilyList>
+{
+    private readonly string[] _names;
+    private readonly bool[] _generic;
+
+    internal FontFamilyList(string[] names, bool[] generic)
+    {
+        _names = names;
+        _generic = generic;
+    }
+
+    /// <summary>The initial value: <c>serif</c>, the user agent's default family.</summary>
+    public static FontFamilyList Default { get; } = new(["serif"], [true]);
+
+    /// <summary>The number of entries; at least 1.</summary>
+    public int Count => _names.Length;
+
+    /// <summary>The family name or generic keyword at <paramref name="index"/>.</summary>
+    /// <param name="index">0 up to <see cref="Count"/> exclusive.</param>
+    public string this[int index] => _names[index];
+
+    /// <summary>Whether the entry at <paramref name="index"/> is a generic family keyword.</summary>
+    /// <param name="index">0 up to <see cref="Count"/> exclusive.</param>
+    public bool IsGeneric(int index) => _generic[index];
+
+    /// <summary>The list as CSS text.</summary>
+    public string ToCss()
+    {
+        var parts = new string[_names.Length];
+        for (int i = 0; i < parts.Length; i++)
+        {
+            parts[i] = _generic[i] || IsPlainIdentifierRun(_names[i]) ? _names[i] : "\"" + _names[i].Replace("\\", "\\\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal) + "\"";
+        }
+
+        return string.Join(", ", parts);
+    }
+
+    private static bool IsPlainIdentifierRun(string name)
+    {
+        if (name.Length == 0)
+        {
+            return false;
+        }
+
+        foreach (string word in name.Split(' '))
+        {
+            if (word.Length == 0 || char.IsAsciiDigit(word[0]) || (word[0] == '-' && (word.Length == 1 || char.IsAsciiDigit(word[1]))))
+            {
+                return false;
+            }
+
+            foreach (char c in word)
+            {
+                if (!(char.IsAsciiLetterOrDigit(c) || c is '-' or '_' || c > 0x7F))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /// <inheritdoc />
+    public bool Equals(FontFamilyList? other)
+    {
+        if (other is null || other._names.Length != _names.Length)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < _names.Length; i++)
+        {
+            if (!string.Equals(_names[i], other._names[i], StringComparison.Ordinal) || _generic[i] != other._generic[i])
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj) => Equals(obj as FontFamilyList);
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+    {
+        var h = new HashCode();
+        foreach (string n in _names)
+        {
+            h.Add(n, StringComparer.Ordinal);
+        }
+
+        return h.ToHashCode();
+    }
+
+    /// <inheritdoc />
+    public override string ToString() => ToCss();
+}
+
+/// <summary>
+/// The computed values of every property the engine reads, for one distinct style (CSS Cascade 5 §4.4 "computed value").
+/// Lengths are CSS px; percentages, <c>auto</c> and calculations with percentages stay unresolved. Instances live in a
+/// <see cref="StyleTable"/>, shared by every node with the same style; read them through <c>ref readonly</c>.
+/// </summary>
+public partial struct ComputedValues
+{
+    /// <summary>The initial values of all properties (the style of a node with no declarations and no parent).</summary>
+    public static readonly ComputedValues Initial = CreateInitial();
+
+    /// <summary><c>display</c>.</summary>
+    public DisplayType Display { get; internal set; }
+
+    /// <summary><c>position</c>.</summary>
+    public PositionKind Position { get; internal set; }
+
+    /// <summary><c>float</c>.</summary>
+    public FloatKind Floating { get; internal set; }
+
+    /// <summary><c>clear</c>.</summary>
+    public ClearKind Clear { get; internal set; }
+
+    /// <summary><c>box-sizing</c>.</summary>
+    public BoxSizingKind BoxSizing { get; internal set; }
+
+    /// <summary><c>top</c>.</summary>
+    public Length Top { get; internal set; }
+
+    /// <summary><c>right</c>.</summary>
+    public Length Right { get; internal set; }
+
+    /// <summary><c>bottom</c>.</summary>
+    public Length Bottom { get; internal set; }
+
+    /// <summary><c>left</c>.</summary>
+    public Length Left { get; internal set; }
+
+    /// <summary><c>width</c>.</summary>
+    public Length Width { get; internal set; }
+
+    /// <summary><c>height</c>.</summary>
+    public Length Height { get; internal set; }
+
+    /// <summary><c>min-width</c> (<c>auto</c> initially; layout resolves it by the box's formatting context).</summary>
+    public Length MinWidth { get; internal set; }
+
+    /// <summary><c>min-height</c>.</summary>
+    public Length MinHeight { get; internal set; }
+
+    /// <summary><c>max-width</c> (<c>none</c> initially).</summary>
+    public Length MaxWidth { get; internal set; }
+
+    /// <summary><c>max-height</c>.</summary>
+    public Length MaxHeight { get; internal set; }
+
+    /// <summary>True when <c>aspect-ratio</c> contains the keyword <c>auto</c>.</summary>
+    public bool AspectRatioAuto { get; internal set; }
+
+    /// <summary>The first number of the <c>aspect-ratio</c> ratio; 0 when the property is <c>auto</c> alone.</summary>
+    public double AspectRatioWidth { get; internal set; }
+
+    /// <summary>The second number of the <c>aspect-ratio</c> ratio (1 when only one number was written); 0 when the property is <c>auto</c> alone.</summary>
+    public double AspectRatioHeight { get; internal set; }
+
+    /// <summary>The preferred ratio of <c>aspect-ratio</c> as width divided by height; 0 when there is none (<c>auto</c> alone, or a ratio with a zero term, which is degenerate and counts as none).</summary>
+    public readonly double AspectRatio => AspectRatioWidth > 0 && AspectRatioHeight > 0 ? AspectRatioWidth / AspectRatioHeight : 0;
+
+    /// <summary><c>margin-top</c>.</summary>
+    public Length MarginTop { get; internal set; }
+
+    /// <summary><c>margin-right</c>.</summary>
+    public Length MarginRight { get; internal set; }
+
+    /// <summary><c>margin-bottom</c>.</summary>
+    public Length MarginBottom { get; internal set; }
+
+    /// <summary><c>margin-left</c>.</summary>
+    public Length MarginLeft { get; internal set; }
+
+    /// <summary><c>padding-top</c>.</summary>
+    public Length PaddingTop { get; internal set; }
+
+    /// <summary><c>padding-right</c>.</summary>
+    public Length PaddingRight { get; internal set; }
+
+    /// <summary><c>padding-bottom</c>.</summary>
+    public Length PaddingBottom { get; internal set; }
+
+    /// <summary><c>padding-left</c>.</summary>
+    public Length PaddingLeft { get; internal set; }
+
+    /// <summary><c>border-top-width</c> in px; 0 when the style is <c>none</c> or <c>hidden</c> (CSS Backgrounds 3 §4.1).</summary>
+    public double BorderTopWidth { get; internal set; }
+
+    /// <summary><c>border-right-width</c> in px.</summary>
+    public double BorderRightWidth { get; internal set; }
+
+    /// <summary><c>border-bottom-width</c> in px.</summary>
+    public double BorderBottomWidth { get; internal set; }
+
+    /// <summary><c>border-left-width</c> in px.</summary>
+    public double BorderLeftWidth { get; internal set; }
+
+    /// <summary><c>border-top-style</c>.</summary>
+    public BorderStyleKind BorderTopStyle { get; internal set; }
+
+    /// <summary><c>border-right-style</c>.</summary>
+    public BorderStyleKind BorderRightStyle { get; internal set; }
+
+    /// <summary><c>border-bottom-style</c>.</summary>
+    public BorderStyleKind BorderBottomStyle { get; internal set; }
+
+    /// <summary><c>border-left-style</c>.</summary>
+    public BorderStyleKind BorderLeftStyle { get; internal set; }
+
+    /// <summary><c>border-top-color</c> (initially <c>currentcolor</c>).</summary>
+    public ColorValue BorderTopColor { get; internal set; }
+
+    /// <summary><c>border-right-color</c>.</summary>
+    public ColorValue BorderRightColor { get; internal set; }
+
+    /// <summary><c>border-bottom-color</c>.</summary>
+    public ColorValue BorderBottomColor { get; internal set; }
+
+    /// <summary><c>border-left-color</c>.</summary>
+    public ColorValue BorderLeftColor { get; internal set; }
+
+    /// <summary><c>border-top-left-radius</c>.</summary>
+    public CornerRadius BorderTopLeftRadius { get; internal set; }
+
+    /// <summary><c>border-top-right-radius</c>.</summary>
+    public CornerRadius BorderTopRightRadius { get; internal set; }
+
+    /// <summary><c>border-bottom-right-radius</c>.</summary>
+    public CornerRadius BorderBottomRightRadius { get; internal set; }
+
+    /// <summary><c>border-bottom-left-radius</c>.</summary>
+    public CornerRadius BorderBottomLeftRadius { get; internal set; }
+
+    /// <summary><c>overflow-x</c>, after the visible/clip adjustment of CSS Overflow 3 §3.1.</summary>
+    public OverflowKind OverflowX { get; internal set; }
+
+    /// <summary><c>overflow-y</c>.</summary>
+    public OverflowKind OverflowY { get; internal set; }
+
+    /// <summary>True when <c>z-index</c> is <c>auto</c>.</summary>
+    public bool ZIndexAuto { get; internal set; }
+
+    /// <summary>The integer <c>z-index</c>; 0 when <see cref="ZIndexAuto"/>.</summary>
+    public int ZIndex { get; internal set; }
+
+    /// <summary><c>visibility</c>.</summary>
+    public VisibilityKind Visibility { get; internal set; }
+
+    /// <summary><c>font-family</c>.</summary>
+    public FontFamilyList FontFamily { get; internal set; }
+
+    /// <summary><c>font-size</c> in px.</summary>
+    public double FontSize { get; internal set; }
+
+    /// <summary><c>font-weight</c> as a number from 1 to 1000.</summary>
+    public double FontWeight { get; internal set; }
+
+    /// <summary><c>font-style</c>.</summary>
+    public FontStyleKind FontStyle { get; internal set; }
+
+    /// <summary>The slant angle in degrees when <see cref="FontStyle"/> is <see cref="FontStyleKind.Oblique"/> (14 when the keyword was written alone).</summary>
+    public double ObliqueAngle { get; internal set; }
+
+    /// <summary><c>font-stretch</c> as a percentage (<c>condensed</c> is 75, <c>normal</c> 100, <c>expanded</c> 125).</summary>
+    public double FontStretch { get; internal set; }
+
+    /// <summary><c>line-height</c>: <see cref="LengthKind.Normal"/>, a <see cref="LengthKind.Number"/> factor, or an absolute <see cref="LengthKind.Px"/> length (percentages are resolved against the font size).</summary>
+    public Length LineHeight { get; internal set; }
+
+    /// <summary>The keyword of <c>vertical-align</c>, or <see cref="VerticalAlignKind.Length"/>.</summary>
+    public VerticalAlignKind VerticalAlign { get; internal set; }
+
+    /// <summary>The length or percentage of <c>vertical-align</c> when it is not a keyword.</summary>
+    public Length VerticalAlignOffset { get; internal set; }
+
+    /// <summary><c>white-space-collapse</c>.</summary>
+    public WhiteSpaceCollapseKind WhiteSpaceCollapse { get; internal set; }
+
+    /// <summary><c>text-wrap-mode</c>.</summary>
+    public TextWrapModeKind TextWrapMode { get; internal set; }
+
+    /// <summary><c>text-align</c>.</summary>
+    public TextAlignKind TextAlign { get; internal set; }
+
+    /// <summary><c>text-indent</c> length or percentage.</summary>
+    public Length TextIndent { get; internal set; }
+
+    /// <summary>True when <c>text-indent</c> has <c>hanging</c>.</summary>
+    public bool TextIndentHanging { get; internal set; }
+
+    /// <summary>True when <c>text-indent</c> has <c>each-line</c>.</summary>
+    public bool TextIndentEachLine { get; internal set; }
+
+    /// <summary><c>letter-spacing</c>: <see cref="LengthKind.Normal"/> or an absolute length.</summary>
+    public Length LetterSpacing { get; internal set; }
+
+    /// <summary><c>word-spacing</c>: <see cref="LengthKind.Normal"/>, an absolute length or a percentage.</summary>
+    public Length WordSpacing { get; internal set; }
+
+    /// <summary><c>direction</c>.</summary>
+    public DirectionKind Direction { get; internal set; }
+
+    /// <summary><c>unicode-bidi</c>.</summary>
+    public UnicodeBidiKind UnicodeBidi { get; internal set; }
+
+    /// <summary><c>color</c>; never <c>currentcolor</c> (it inherits).</summary>
+    public ColorValue Color { get; internal set; }
+
+    /// <summary><c>opacity</c>, clamped to 0 to 1.</summary>
+    public double Opacity { get; internal set; }
+
+    /// <summary><c>background-color</c>.</summary>
+    public ColorValue BackgroundColor { get; internal set; }
+
+    /// <summary>How <c>content</c> generates boxes.</summary>
+    public ContentKind Content { get; internal set; }
+
+    /// <summary>The concatenated strings of <c>content</c> when <see cref="Content"/> is <see cref="ContentKind.Text"/>; the value as written when it is <see cref="ContentKind.Other"/>; otherwise empty.</summary>
+    public string ContentText { get; internal set; }
+
+    /// <summary><c>list-style-type</c>: a counter-style name, <c>none</c>, or the text of a string value when <see cref="ListStyleTypeIsString"/>.</summary>
+    public string ListStyleType { get; internal set; }
+
+    /// <summary>True when <see cref="ListStyleType"/> holds the text of a string value rather than a keyword.</summary>
+    public bool ListStyleTypeIsString { get; internal set; }
+
+    /// <summary><c>list-style-position</c>.</summary>
+    public ListStylePositionKind ListStylePosition { get; internal set; }
+
+    /// <summary>The left and right border widths added.</summary>
+    public readonly double BorderHorizontal => BorderLeftWidth + BorderRightWidth;
+
+    /// <summary>The top and bottom border widths added.</summary>
+    public readonly double BorderVertical => BorderTopWidth + BorderBottomWidth;
+
+    /// <summary>True when the style establishes a scroll container on either axis (CSS Overflow 3 §3).</summary>
+    public readonly bool IsScrollContainer => OverflowX is not (OverflowKind.Visible or OverflowKind.Clip) || OverflowY is not (OverflowKind.Visible or OverflowKind.Clip);
+
+    /// <summary>True when the box is out of flow: floated, absolutely or fixed positioned (CSS2 §9.3.1 and §9.5).</summary>
+    public readonly bool IsOutOfFlow => Floating != FloatKind.None || Position is PositionKind.Absolute or PositionKind.Fixed;
+
+    private static ComputedValues CreateInitial()
+    {
+        var v = default(ComputedValues);
+        v.Display = DisplayType.Inline;
+        v.Top = v.Right = v.Bottom = v.Left = Length.Auto;
+        v.Width = v.Height = v.MinWidth = v.MinHeight = Length.Auto;
+        v.MaxWidth = v.MaxHeight = Length.None;
+        v.MarginTop = v.MarginRight = v.MarginBottom = v.MarginLeft = Length.Zero;
+        v.PaddingTop = v.PaddingRight = v.PaddingBottom = v.PaddingLeft = Length.Zero;
+        v.BorderTopColor = v.BorderRightColor = v.BorderBottomColor = v.BorderLeftColor = ColorValue.CurrentColor;
+        var zero = new CornerRadius(Length.Zero, Length.Zero);
+        v.BorderTopLeftRadius = v.BorderTopRightRadius = v.BorderBottomRightRadius = v.BorderBottomLeftRadius = zero;
+        v.ZIndexAuto = true;
+        v.FontFamily = FontFamilyList.Default;
+        v.FontSize = 16;
+        v.FontWeight = 400;
+        v.ObliqueAngle = 14;
+        v.FontStretch = 100;
+        v.LineHeight = Length.Normal;
+        v.VerticalAlignOffset = Length.Zero;
+        v.TextIndent = Length.Zero;
+        v.LetterSpacing = Length.Normal;
+        v.WordSpacing = Length.Normal;
+        v.Color = ColorValue.Black;
+        v.Opacity = 1;
+        v.BackgroundColor = ColorValue.Transparent;
+        v.ContentText = string.Empty;
+        v.ListStyleType = "disc";
+        return v;
+    }
+}

@@ -13,7 +13,7 @@ public readonly struct GlyphCluster
         HasMissingGlyph = missing;
     }
 
-    /// <summary>The UTF-16 offset of the cluster's first character in <see cref="GlyphRun.Text"/>.</summary>
+    /// <summary>The UTF-16 offset of the cluster's first character in <see cref="ShapedText.Text"/>.</summary>
     public int TextStart { get; }
 
     /// <summary>The number of UTF-16 code units the cluster covers. A ligature covers several characters with one glyph; a character the font splits covers one with several.</summary>
@@ -33,9 +33,9 @@ public readonly struct GlyphCluster
 }
 
 /// <summary>A stretch of a shaped run drawn with one face. Display order.</summary>
-public readonly struct GlyphRunSegment
+public readonly struct ShapedTextSegment
 {
-    internal GlyphRunSegment(ResolvedFace face, int glyphStart, int glyphCount, int textStart, int textLength, int clusterStart, int clusterCount, float advance)
+    internal ShapedTextSegment(ResolvedFace face, int glyphStart, int glyphCount, int textStart, int textLength, int clusterStart, int clusterCount, float advance)
     {
         Face = face;
         GlyphStart = glyphStart;
@@ -56,13 +56,13 @@ public readonly struct GlyphRunSegment
     /// <summary>The number of glyphs.</summary>
     public int GlyphCount { get; }
 
-    /// <summary>The first character in <see cref="GlyphRun.Text"/> (logical order, whatever the direction).</summary>
+    /// <summary>The first character in <see cref="ShapedText.Text"/> (logical order, whatever the direction).</summary>
     public int TextStart { get; }
 
     /// <summary>The number of UTF-16 code units.</summary>
     public int TextLength { get; }
 
-    /// <summary>The index of the first cluster in <see cref="GlyphRun.Clusters"/>.</summary>
+    /// <summary>The index of the first cluster in <see cref="ShapedText.Clusters"/>.</summary>
     public int ClusterStart { get; }
 
     /// <summary>The number of clusters.</summary>
@@ -81,7 +81,7 @@ public readonly struct GlyphRunSegment
 /// A run from <see cref="TextShaper.Shape"/> is shared by the shaper's cache and must not be kept past the shaper's life or
 /// changed. A run filled by <see cref="TextShaper.ShapeInto"/> belongs to the caller and is replaced by the next call with it.
 /// </remarks>
-public sealed class GlyphRun
+public sealed class ShapedText
 {
     private char[] _text = [];
     private int _textLength;
@@ -93,11 +93,11 @@ public sealed class GlyphRun
     private int _glyphCount;
     private GlyphCluster[] _clusters = [];
     private int _clusterCount;
-    private GlyphRunSegment[] _segments = [];
+    private ShapedTextSegment[] _segments = [];
     private int _segmentCount;
 
     /// <summary>Creates an empty run. Fill it with <see cref="TextShaper.ShapeInto"/>.</summary>
-    public GlyphRun()
+    public ShapedText()
     {
     }
 
@@ -135,7 +135,7 @@ public sealed class GlyphRun
     public ReadOnlySpan<GlyphCluster> Clusters => new(_clusters, 0, _clusterCount);
 
     /// <summary>The stretches drawn with one face each, in display order. They cover all glyphs and clusters.</summary>
-    public ReadOnlySpan<GlyphRunSegment> Segments => new(_segments, 0, _segmentCount);
+    public ReadOnlySpan<ShapedTextSegment> Segments => new(_segments, 0, _segmentCount);
 
     /// <summary>The number of clusters that have no glyph in any face (drawn with a missing-glyph shape).</summary>
     public int MissingGlyphCount { get; private set; }
@@ -204,7 +204,7 @@ public sealed class GlyphRun
             Array.Resize(ref _segments, Grow(_segmentCount + 1, 4));
         }
 
-        _segments[_segmentCount++] = new GlyphRunSegment(face, glyphStart, glyphCount, textStart, textLength, clusterStart, clusterCount, advance);
+        _segments[_segmentCount++] = new ShapedTextSegment(face, glyphStart, glyphCount, textStart, textLength, clusterStart, clusterCount, advance);
     }
 
     internal void NoteMissing(in TextDiagnostic diagnostic)
@@ -236,8 +236,8 @@ public sealed class GlyphRun
             Array.Reverse(_segments, 0, s);
             for (int i = 0; i < s; i++)
             {
-                GlyphRunSegment g = _segments[i];
-                _segments[i] = new GlyphRunSegment(g.Face, n - (g.GlyphStart + g.GlyphCount), g.GlyphCount, g.TextStart, g.TextLength, c - (g.ClusterStart + g.ClusterCount), g.ClusterCount, g.Advance);
+                ShapedTextSegment g = _segments[i];
+                _segments[i] = new ShapedTextSegment(g.Face, n - (g.GlyphStart + g.GlyphCount), g.GlyphCount, g.TextStart, g.TextLength, c - (g.ClusterStart + g.ClusterCount), g.ClusterCount, g.Advance);
             }
         }
 

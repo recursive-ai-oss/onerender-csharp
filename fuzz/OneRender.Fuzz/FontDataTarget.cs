@@ -1,4 +1,9 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text;
+using OneRender.Style;
 using OneFont;
 using OneRender.Text;
 
@@ -137,17 +142,17 @@ internal static class FontDataTarget
     private static void Shape(FontCatalog catalog, FontRequest request, string text, bool rtl)
     {
         var shaper = new TextShaper(catalog, 64);
-        var run = new GlyphRun();
+        var run = new ShapedText();
         shaper.ShapeInto(run, text, request, rtl);
         CheckRun(run, text);
-        GlyphRun cached = shaper.Shape(text, request, rtl);
+        ShapedText cached = shaper.Shape(text, request, rtl);
         Check(cached.GlyphCount == run.GlyphCount, "cached and fresh runs differ");
         FontMetricsInfo m = catalog.Resolve(request).GetMetrics(16);
         Check(!float.IsNaN(m.Ascent) && !float.IsNaN(m.Descent), "metrics are NaN");
     }
 
     // The clusters must tile the text exactly once, the segments tile the glyphs, and positions must be finite.
-    private static void CheckRun(GlyphRun run, string text)
+    private static void CheckRun(ShapedText run, string text)
     {
         Check(run.Text.SequenceEqual(text), "run text differs");
         if (run.GlyphCount == 0 && run.Clusters.Length == 0)
@@ -173,7 +178,7 @@ internal static class FontDataTarget
         Check(seen.All(b => b), "clusters leave a gap");
         Check(glyphs == run.GlyphCount, "glyphs not covered once");
         int g = 0;
-        foreach (GlyphRunSegment s in run.Segments)
+        foreach (ShapedTextSegment s in run.Segments)
         {
             Check(s.GlyphStart == g, "segments do not tile the glyphs");
             g += s.GlyphCount;

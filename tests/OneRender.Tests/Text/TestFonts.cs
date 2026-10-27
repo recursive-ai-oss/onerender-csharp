@@ -1,3 +1,4 @@
+using OneRender.Style;
 using System.Linq;
 using System.IO;
 using System.Diagnostics.CodeAnalysis;
@@ -79,24 +80,4 @@ internal static class TestFonts
     }
 
     public static string FamilyOf(ResolvedFace face) => face.Face.FamilyName;
-
-    /// <summary>
-    /// Asserts that a warmed operation allocates nothing. Other tests run beside this one and a collection they trigger can
-    /// misattribute up to one allocation context's worth of bytes to this thread, so a measurement is repeated and one clean
-    /// pass is required; an operation that really allocates fails every time.
-    /// </summary>
-    public static void AssertAllocatesNothing(Action action, string what, int warmup = 3, int iterations = 10)
-    {
-        long last = 0;
-        for (int attempt = 0; attempt < 6; attempt++)
-        {
-            last = TestSupport.Allocation.Measure(action, warmup, iterations);
-            if (last == 0)
-            {
-                return;
-            }
-        }
-
-        Assert.Fail($"{what} allocated {last} bytes over {iterations} runs; expected 0.");
-    }
 }

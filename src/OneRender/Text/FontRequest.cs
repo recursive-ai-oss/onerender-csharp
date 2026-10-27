@@ -1,19 +1,7 @@
+using OneRender.Style;
 using OneFont;
 
 namespace OneRender.Text;
-
-/// <summary>The kind of <c>font-style</c> value (CSS Fonts 4 §2.3).</summary>
-public enum FontStyleKind : byte
-{
-    /// <summary>Upright.</summary>
-    Normal = 0,
-
-    /// <summary>Italic.</summary>
-    Italic = 1,
-
-    /// <summary>Oblique at an angle given beside the kind.</summary>
-    Oblique = 2,
-}
 
 /// <summary>CSS generic font families and the <c>system-ui</c> family (CSS Fonts 4 §2.1.1).</summary>
 public enum GenericFamily : byte

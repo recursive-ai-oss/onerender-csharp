@@ -1,3 +1,5 @@
+using OneRender.TestSupport;
+using OneRender.Style;
 using System.Linq;
 using OneFont;
 using OneRender.Text;
@@ -34,7 +36,7 @@ public class ShapingTests
         return list;
     }
 
-    private static void AssertMatchesOneFont(GlyphRun run, string text, FontFace face, float size, bool rtl = false, ShapingOptions? options = null)
+    private static void AssertMatchesOneFont(ShapedText run, string text, FontFace face, float size, bool rtl = false, ShapingOptions? options = null)
     {
         var expected = Direct(text, face, rtl, options);
         if (rtl)
@@ -64,15 +66,15 @@ public class ShapingTests
         var shaper = new TextShaper(TestFonts.Defaults());
         FontFace face = FontFace.Load(SansBytes);
         const string text = "AVATAR To Wa. office";
-        GlyphRun run = shaper.Shape(text, TestFonts.Request("Liberation Sans", 16));
+        ShapedText run = shaper.Shape(text, TestFonts.Request("Liberation Sans", 16));
         AssertMatchesOneFont(run, text, face, 16);
 
         // Kerning is on by default: "AV" is tighter than the two nominal advances.
-        GlyphRun av = shaper.Shape("AV", TestFonts.Request("Liberation Sans", 100));
+        ShapedText av = shaper.Shape("AV", TestFonts.Request("Liberation Sans", 100));
         float nominal = (face.GetAdvance(face.GetGlyphIndex('A')) + face.GetAdvance(face.GetGlyphIndex('V'))) * 100f / face.UnitsPerEm;
         Assert.True(av.Width < nominal - 1f, $"{av.Width} vs {nominal}");
 
-        GlyphRun off = shaper.Shape("AV", TestFonts.Request("Liberation Sans", 100, features: FontFeatureSettings.FromCss(kerning: "none")));
+        ShapedText off = shaper.Shape("AV", TestFonts.Request("Liberation Sans", 100, features: FontFeatureSettings.FromCss(kerning: "none")));
         Assert.Equal(nominal, off.Width, 2);
     }
 
@@ -83,7 +85,7 @@ public class ShapingTests
         FontFace face = FontFace.Load(TestFonts.Liberation("LiberationSans-Regular.ttf"));
         // Carlito's liga feature joins f and i; Liberation Sans only has a discretionary one.
         FontFace carlito = FontFace.Load(DefaultFontsBytes("Carlito-Regular.ttf"));
-        GlyphRun on = shaper.Shape("fi", TestFonts.Request("Carlito"));
+        ShapedText on = shaper.Shape("fi", TestFonts.Request("Carlito"));
         Assert.Equal(1, on.GlyphCount);
         GlyphCluster c = on.Clusters[0];
         Assert.Equal((0, 2, 1), (c.TextStart, c.TextLength, c.GlyphCount));
@@ -94,8 +96,8 @@ public class ShapingTests
         Assert.Equal(1, shaper.Shape("fi", TestFonts.Request("Carlito", features: FontFeatureSettings.FromCss(ligatures: "no-common-ligatures", featureSettings: "\"liga\", \"clig\" 1"))).GlyphCount); // font-feature-settings applies after the variant properties
 
         // A feature outside the defaults, switched on: Carlito's old-style figures replace the lining ones.
-        GlyphRun lining = shaper.Shape("1234", TestFonts.Request("Carlito"));
-        GlyphRun oldstyle = shaper.Shape("1234", TestFonts.Request("Carlito", features: FontFeatureSettings.FromCss(numeric: "oldstyle-nums")));
+        ShapedText lining = shaper.Shape("1234", TestFonts.Request("Carlito"));
+        ShapedText oldstyle = shaper.Shape("1234", TestFonts.Request("Carlito", features: FontFeatureSettings.FromCss(numeric: "oldstyle-nums")));
         Assert.Equal(lining.GlyphCount, oldstyle.GlyphCount);
         Assert.False(lining.GlyphIds.SequenceEqual(oldstyle.GlyphIds));
         _ = face;
@@ -124,7 +126,7 @@ public class ShapingTests
         FontFace face = c.Resolve(TestFonts.Request("Bidi")).PrimaryFace!.Face;
         const string text = "\u0627\u0644\u0633\u0644\u0627\u0645"; // al-salam: contains the lam-alef pair
 
-        GlyphRun run = shaper.Shape(text, TestFonts.Request("Bidi", 24), rightToLeft: true);
+        ShapedText run = shaper.Shape(text, TestFonts.Request("Bidi", 24), rightToLeft: true);
         AssertMatchesOneFont(run, text, face, 24, rtl: true);
         Assert.True(run.RightToLeft);
         Assert.Equal(0, run.MissingGlyphCount);
@@ -165,7 +167,7 @@ public class ShapingTests
     public void LamAlefIsOneGlyphCoveringTwoCharacters()
     {
         FontCatalog c = Bidi();
-        GlyphRun run = new TextShaper(c).Shape("\u0644\u0627", TestFonts.Request("Bidi"), rightToLeft: true);
+        ShapedText run = new TextShaper(c).Shape("\u0644\u0627", TestFonts.Request("Bidi"), rightToLeft: true);
         Assert.Equal(1, run.GlyphCount);
         Assert.Equal((0, 2), (run.Clusters[0].TextStart, run.Clusters[0].TextLength));
     }
@@ -190,7 +192,7 @@ public class ShapingTests
         foreach (BidiRun r in runs)
         {
             string piece = text.Substring(r.Start, r.Length);
-            GlyphRun g = shaper.Shape(piece, TestFonts.Request("Bidi", 20), r.RightToLeft);
+            ShapedText g = shaper.Shape(piece, TestFonts.Request("Bidi", 20), r.RightToLeft);
             AssertMatchesOneFont(g, piece, face, 20, r.RightToLeft);
             Assert.Equal(r.RightToLeft, g.RightToLeft);
         }
@@ -237,8 +239,8 @@ public class ShapingTests
         FontCatalog c2 = TestFonts.Defaults();
         FontRequest req = TestFonts.Request("Carlito, Liberation Serif", 13.5f, 700);
         const string text = "Déjà vu \u05D0\u05D1 fi ffl AVA";
-        GlyphRun a = new TextShaper(c1).Shape(text, req);
-        GlyphRun b = new TextShaper(c2, 8).Shape(text, req);
+        ShapedText a = new TextShaper(c1).Shape(text, req);
+        ShapedText b = new TextShaper(c2, 8).Shape(text, req);
         Assert.True(a.GlyphIds.SequenceEqual(b.GlyphIds));
         Assert.True(a.X.SequenceEqual(b.X));
         Assert.True(a.Advances.SequenceEqual(b.Advances));
@@ -252,11 +254,11 @@ public class ShapingTests
         var shaper = new TextShaper(TestFonts.Defaults());
         foreach (bool rtl in new[] { false, true })
         {
-            GlyphRun run = shaper.Shape("abc \u05D0\u05D1\u05D2 \u03B1\u03B2 e\u0301 \U0001F600 end", TestFonts.Request("Carlito"), rtl);
+            ShapedText run = shaper.Shape("abc \u05D0\u05D1\u05D2 \u03B1\u03B2 e\u0301 \U0001F600 end", TestFonts.Request("Carlito"), rtl);
             int g = 0;
             int k = 0;
             int textTotal = 0;
-            foreach (GlyphRunSegment s in run.Segments)
+            foreach (ShapedTextSegment s in run.Segments)
             {
                 Assert.Equal(g, s.GlyphStart);
                 Assert.Equal(k, s.ClusterStart);
@@ -324,7 +326,7 @@ public class ShapedRunCacheTests
     {
         var shaper = new TextShaper(TestFonts.Defaults());
         FontRequest r = TestFonts.Request("Arial", 16);
-        GlyphRun a = shaper.Shape("Hello", r);
+        ShapedText a = shaper.Shape("Hello", r);
         Assert.Same(a, shaper.Shape("Hello", r));
         Assert.Same(a, shaper.Shape("Hello", TestFonts.Request("arial", 16))); // an equal request
         Assert.NotSame(a, shaper.Shape("Hello", r.WithSize(17)));
@@ -355,7 +357,7 @@ public class ShapedRunCacheTests
                 total += shaper.Shape(words[i], r).Width;
             }
         };
-        TestFonts.AssertAllocatesNothing(hit, "a shaped-run cache hit", 2, 5);
+        Allocation.AssertZero(hit, "a shaped-run cache hit", 2, 5);
         Assert.True(total > 0);
     }
 
@@ -366,10 +368,10 @@ public class ShapedRunCacheTests
         string[] words = Words(1000);
         FontRequest r = TestFonts.Request("Arial", 14);
         FontRequest withFeatures = TestFonts.Request("Carlito, serif", 14, 700, features: FontFeatureSettings.FromCss(ligatures: "none", numeric: "oldstyle-nums"));
-        var runs = new GlyphRun[words.Length];
+        var runs = new ShapedText[words.Length];
         for (int i = 0; i < runs.Length; i++)
         {
-            runs[i] = new GlyphRun();
+            runs[i] = new ShapedText();
         }
 
         Action reshape = () =>
@@ -379,7 +381,7 @@ public class ShapedRunCacheTests
                 shaper.ShapeInto(runs[i], words[i], (i & 1) == 0 ? r : withFeatures);
             }
         };
-        TestFonts.AssertAllocatesNothing(reshape, "reshaping 1000 runs into retained buffers", 3, 5);
+        Allocation.AssertZero(reshape, "reshaping 1000 runs into retained buffers", 3, 5);
 
         // The same through a fallback mix (Hebrew and Greek need other faces) and a right-to-left run.
         string[] mixed = Enumerable.Range(0, 1000).Select(i => "ab\u05D0\u05D1" + i + "\u03B1").ToArray();
@@ -390,17 +392,17 @@ public class ShapedRunCacheTests
                 shaper.ShapeInto(runs[i], mixed[i], withFeatures, rightToLeft: (i & 2) != 0);
             }
         };
-        TestFonts.AssertAllocatesNothing(reshapeMixed, "reshaping mixed-script runs with fallback", 3, 5);
+        Allocation.AssertZero(reshapeMixed, "reshaping mixed-script runs with fallback", 3, 5);
     }
 
     [Fact]
     public void MissingGlyphsDoNotAllocateOnceReported()
     {
         var shaper = new TextShaper(TestFonts.Defaults());
-        var run = new GlyphRun();
+        var run = new ShapedText();
         FontRequest r = TestFonts.Request("serif", 14);
         Action a = () => shaper.ShapeInto(run, "x\u4E2D\U0001F600y", r);
-        TestFonts.AssertAllocatesNothing(a, "reshaping text with missing glyphs", 3, 20);
+        Allocation.AssertZero(a, "reshaping text with missing glyphs", 3, 20);
         Assert.Equal(2, run.MissingGlyphCount);
     }
 
@@ -412,7 +414,7 @@ public class ShapedRunCacheTests
         FontRequest r = TestFonts.Request("serif");
         for (int i = 0; i < 500; i++)
         {
-            GlyphRun run = shaper.Shape("n" + i, r);
+            ShapedText run = shaper.Shape("n" + i, r);
             Assert.Equal(1 + (i.ToString(System.Globalization.CultureInfo.InvariantCulture).Length), run.Clusters.Length);
         }
 
@@ -427,7 +429,7 @@ public class ShapedRunCacheTests
     {
         var shaper = new TextShaper(TestFonts.Defaults());
         string text = new('a', TextShaper.MaxCachedLength + 1);
-        GlyphRun run = shaper.Shape(text, TestFonts.Request("serif"));
+        ShapedText run = shaper.Shape(text, TestFonts.Request("serif"));
         Assert.Equal(text.Length, run.GlyphCount);
         Assert.Equal(0, shaper.CachedRuns);
         Assert.Throws<ArgumentException>(() => shaper.ShapeInto(run, new string('a', TextShaper.MaxRunLength + 1), TestFonts.Request("serif")));
@@ -439,10 +441,10 @@ public class ShapedRunCacheTests
         FontCatalog c = TestFonts.Defaults();
         var shaper = new TextShaper(c);
         FontRequest r = TestFonts.Request("Custom, serif");
-        GlyphRun before = shaper.Shape("abc", r);
+        ShapedText before = shaper.Shape("abc", r);
         Assert.Equal("Liberation Serif", before.Segments[0].Face.Face.FamilyName);
         c.AddFont(FontFace.Load(TestFonts.Liberation("LiberationMono-Regular.ttf")), "Custom", 400, FontStyleKind.Normal);
-        GlyphRun after = shaper.Shape("abc", r);
+        ShapedText after = shaper.Shape("abc", r);
         Assert.NotSame(before, after);
         Assert.Equal("Liberation Mono", after.Segments[0].Face.Face.FamilyName);
     }
@@ -451,7 +453,7 @@ public class ShapedRunCacheTests
     public void EmptyTextGivesAnEmptyRun()
     {
         var shaper = new TextShaper(TestFonts.Defaults());
-        GlyphRun run = shaper.Shape("", TestFonts.Request("serif"));
+        ShapedText run = shaper.Shape("", TestFonts.Request("serif"));
         Assert.Equal(0, run.GlyphCount);
         Assert.Equal(0f, run.Width);
         Assert.True(run.Segments.IsEmpty);

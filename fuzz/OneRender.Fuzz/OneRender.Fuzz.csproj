@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <RootNamespace>$(LibName).Fuzz</RootNamespace>
+    <IsPackable>false</IsPackable>
     <!-- The target runs under libFuzzer with SharpFuzz coverage instrumentation, not as a trimmed app. -->
     <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
@@ -12,6 +14,8 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/OneRender/OneRender.csproj" />
+    <ProjectReference Include="../../src/OneRender.Image/OneRender.Image.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts/OneRender.Fonts.csproj" />
   </ItemGroup>
 
 </Project>

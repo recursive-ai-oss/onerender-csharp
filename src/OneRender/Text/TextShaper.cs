@@ -4,7 +4,7 @@ namespace OneRender.Text;
 
 /// <summary>
 /// The text service inline layout calls: it chooses a face for every character (CSS Fonts 4 §5.2 to §5.4), shapes the text
-/// with OneFont and returns <see cref="GlyphRun"/>s, caching them by text, font, size, direction and features.
+/// with OneFont and returns <see cref="ShapedText"/>s, caching them by text, font, size, direction and features.
 /// </summary>
 /// <remarks>
 /// A shaper belongs to one thread at a time. Frame-path use is allocation-free: <see cref="Shape"/> returns a cached run
@@ -28,7 +28,7 @@ public sealed class TextShaper
         public float Size;
         public bool Rtl;
         public ResolvedFontList? List;
-        public GlyphRun? Run;
+        public ShapedText? Run;
     }
 
     private readonly FontCatalog _fonts;
@@ -85,12 +85,12 @@ public sealed class TextShaper
     /// <param name="rightToLeft">Whether the run is right to left.</param>
     /// <returns>The shared run; do not change it. An empty text gives an empty run.</returns>
     /// <exception cref="ArgumentException">The text is longer than <see cref="MaxRunLength"/>.</exception>
-    public GlyphRun Shape(ReadOnlySpan<char> text, FontRequest request, bool rightToLeft = false)
+    public ShapedText Shape(ReadOnlySpan<char> text, FontRequest request, bool rightToLeft = false)
     {
         ArgumentNullException.ThrowIfNull(request);
         if (text.Length > MaxCachedLength)
         {
-            var big = new GlyphRun();
+            var big = new ShapedText();
             ShapeInto(big, text, request, rightToLeft);
             return big;
         }
@@ -108,7 +108,7 @@ public sealed class TextShaper
             }
         }
 
-        var run = new GlyphRun();
+        var run = new ShapedText();
         ShapeInto(run, text, request, rightToLeft);
         list = _fonts.Resolve(request); // a font that failed to load while shaping makes the first list stale
 
@@ -146,7 +146,7 @@ public sealed class TextShaper
     /// <param name="request">The computed font properties, including the size.</param>
     /// <param name="rightToLeft">Whether the run is right to left.</param>
     /// <exception cref="ArgumentException">The text is longer than <see cref="MaxRunLength"/>.</exception>
-    public void ShapeInto(GlyphRun run, ReadOnlySpan<char> text, FontRequest request, bool rightToLeft = false)
+    public void ShapeInto(ShapedText run, ReadOnlySpan<char> text, FontRequest request, bool rightToLeft = false)
     {
         ArgumentNullException.ThrowIfNull(run);
         ArgumentNullException.ThrowIfNull(request);
@@ -383,7 +383,7 @@ public sealed class TextShaper
 
     // ---- shaping ---------------------------------------------------------------------------------------------------
 
-    private void ShapeSegments(GlyphRun run, ReadOnlySpan<char> text, ResolvedFontList list, float size, bool rtl)
+    private void ShapeSegments(ShapedText run, ReadOnlySpan<char> text, ResolvedFontList list, float size, bool rtl)
     {
         for (int s = 0; s < _segCount; s++)
         {
@@ -432,7 +432,7 @@ public sealed class TextShaper
         run.Finish(rtl);
     }
 
-    private void ReportMissing(GlyphRun run, ReadOnlySpan<char> text, int at, int length)
+    private void ReportMissing(ShapedText run, ReadOnlySpan<char> text, int at, int length)
     {
         // Name the first character of the cluster that draws something; controls and joiners never count as missing.
         for (int i = at; i < at + length && i < text.Length;)

@@ -1,3 +1,5 @@
+using OneRender.TestSupport;
+using OneRender.Style;
 using System.Linq;
 using OneFont;
 using OneRender.Fonts;
@@ -248,7 +250,7 @@ public class FontMatchingTests
         ResolvedFontList la = c.Resolve(a);
         Assert.Same(la, c.Resolve(b)); // size and name case do not matter
         Assert.NotSame(la, c.Resolve(TestFonts.Request("Arial, sans-serif", weight: 700)));
-        TestFonts.AssertAllocatesNothing(() => c.Resolve(b), "Resolve of a known request");
+        Allocation.AssertZero(() => c.Resolve(b), "Resolve of a known request");
     }
 
     [Fact]

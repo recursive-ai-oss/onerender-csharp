@@ -172,7 +172,22 @@ internal static class Woff2Decoder
 
         // §6: the table data block is one Brotli stream whose size must equal the sum of the stored lengths.
         byte[] block = new byte[storedTotal];
-        if (!BrotliDecoder.TryDecompress(data.AsSpan(pos, (int)compressedSize), block, out int written) || written != block.Length)
+        int written;
+        try
+        {
+            if (!BrotliDecoder.TryDecompress(data.AsSpan(pos, (int)compressedSize), block, out written))
+            {
+                written = -1;
+            }
+        }
+        catch (PlatformNotSupportedException)
+        {
+            // Runtimes without a native Brotli (the browser WebAssembly runtime) cannot decode WOFF2; say so instead of failing.
+            why = "This runtime has no Brotli decoder, so WOFF2 fonts cannot be decoded here.";
+            return FontLoadStatus.UnsupportedFormat;
+        }
+
+        if (written != block.Length)
         {
             why = "The WOFF2 data does not decompress to the declared size.";
             return FontLoadStatus.InvalidContainer;

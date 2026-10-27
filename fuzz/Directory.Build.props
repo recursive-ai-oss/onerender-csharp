@@ -1,19 +1,6 @@
 <Project>
-
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
-
-  <!-- Fuzz targets are developer tools: not packages, free to use the file system and the environment. -->
   <PropertyGroup>
     <IsPackable>false</IsPackable>
-    <AssemblyName>$(MSBuildProjectName)</AssemblyName>
-    <RootNamespace>$(MSBuildProjectName)</RootNamespace>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Using Include="System" />
-    <Using Include="System.Collections.Generic" />
-    <Using Include="System.IO" />
-    <Using Include="System.Linq" />
-  </ItemGroup>
-
 </Project>

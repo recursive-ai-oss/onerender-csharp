@@ -1,3 +1,4 @@
+using OneRender.Style;
 using System.Linq;
 using System.Text;
 using OneFont;
@@ -173,7 +174,7 @@ public class FontFaceTests
         Assert.Empty(resolver.Requests); // nothing is read until text needs it
 
         var shaper = new TextShaper(c);
-        GlyphRun run = shaper.Shape("abc", TestFonts.Request("W"));
+        ShapedText run = shaper.Shape("abc", TestFonts.Request("W"));
         Assert.Equal(["gone.woff2", "bad.ttf", "good.ttf"], resolver.Requests.Select(r => r.Url).ToArray());
         Assert.All(resolver.Requests, r => Assert.Equal("https://example.test/css/site.css", r.Base));
         Assert.Equal("W", run.Segments[0].Face.FamilyName);
@@ -199,12 +200,12 @@ public class FontFaceTests
         c.AddFontFace(TestFonts.Rule("Split", "url(hebrew.woff2) format(woff2)", ("unicode-range", "U+590-5FF")));
         var shaper = new TextShaper(c);
 
-        GlyphRun latinOnly = shaper.Shape("abc", TestFonts.Request("Split"));
+        ShapedText latinOnly = shaper.Shape("abc", TestFonts.Request("Split"));
         Assert.Equal(["latin.ttf"], resolver.Requests.Select(r => r.Url).ToArray());
         Assert.Single(latinOnly.Segments.ToArray());
 
-        GlyphRun mixed = shaper.Shape("ab \u05D0\u05D1 cd", TestFonts.Request("Split"));
-        GlyphRunSegment[] seg = mixed.Segments.ToArray();
+        ShapedText mixed = shaper.Shape("ab \u05D0\u05D1 cd", TestFonts.Request("Split"));
+        ShapedTextSegment[] seg = mixed.Segments.ToArray();
         Assert.Equal(["Liberation Sans", "Noto Sans Hebrew", "Liberation Sans"], seg.Select(s => s.Face.Face.FamilyName).ToArray());
         Assert.Equal([0, 3, 5], seg.Select(s => s.TextStart).ToArray());
         Assert.Equal(["latin.ttf", "hebrew.woff2"], resolver.Requests.Select(r => r.Url).ToArray());
@@ -219,7 +220,7 @@ public class FontFaceTests
         c.AddFontFace(TestFonts.Rule("O", "url(a.ttf)"));
         c.AddFontFace(TestFonts.Rule("O", "url(b.ttf)", ("unicode-range", "U+61-7A")));
         var shaper = new TextShaper(c);
-        GlyphRun run = shaper.Shape("aB", TestFonts.Request("O"));
+        ShapedText run = shaper.Shape("aB", TestFonts.Request("O"));
         Assert.Equal(["Liberation Serif", "Liberation Sans"], run.Segments.ToArray().Select(s => s.Face.Face.FamilyName).ToArray());
     }
 
@@ -229,7 +230,7 @@ public class FontFaceTests
         var resolver = new MapResolver().Add("f.ttf", Serif);
         FontCatalog c = TestFonts.Defaults(resolver);
         c.AddFontFace(TestFonts.Rule("L", "local(\"Liberation Sans\"), url(f.ttf)"));
-        GlyphRun run = new TextShaper(c).Shape("x", TestFonts.Request("L"));
+        ShapedText run = new TextShaper(c).Shape("x", TestFonts.Request("L"));
         // No provider: local() is skipped, even though the packaged font has that name; the url is used.
         Assert.Equal("Liberation Serif", run.Segments[0].Face.Face.FamilyName);
         Assert.Contains(c.Diagnostics.Items, d => d.Kind == TextDiagnosticKind.SourceSkipped && d.Subject == "Liberation Sans");
@@ -242,7 +243,7 @@ public class FontFaceTests
         system.Faces.Add(new SystemFontFace("Host Sans", 400, FontStyleKind.Normal, 100, "Host Sans Regular", "HostSans-Regular", () => Serif));
         FontCatalog c = TestFonts.Defaults(null, system);
         c.AddFontFace(TestFonts.Rule("L", "local(\"Host Sans Regular\")"));
-        GlyphRun run = new TextShaper(c).Shape("x", TestFonts.Request("L"));
+        ShapedText run = new TextShaper(c).Shape("x", TestFonts.Request("L"));
         Assert.Equal("Liberation Serif", run.Segments[0].Face.Face.FamilyName);
 
         // The provider's families are also reachable by name, only when a provider is set.
@@ -256,7 +257,7 @@ public class FontFaceTests
     {
         FontCatalog c = TestFonts.Defaults(new MapResolver());
         c.AddFontFace(TestFonts.Rule("Gone", "url(nope.woff2)"));
-        GlyphRun run = new TextShaper(c).Shape("hello", TestFonts.Request("Gone, serif"));
+        ShapedText run = new TextShaper(c).Shape("hello", TestFonts.Request("Gone, serif"));
         Assert.Equal(5, run.GlyphCount);
         Assert.Equal("Liberation Serif", run.Segments[0].Face.Face.FamilyName);
         TextDiagnostic d = c.Diagnostics.Items.First(x => x.Kind == TextDiagnosticKind.FontResourceMissing);
@@ -277,7 +278,7 @@ public class FontFaceTests
         var resolver = new MapResolver().Add("a.eot", Sans).Add("b.ttf", Serif).Add("c.ttf", Sans);
         FontCatalog c = TestFonts.Defaults(resolver);
         c.AddFontFace(TestFonts.Rule("U", "url(a.eot) format(\"embedded-opentype\"), url(b.ttf) tech(color-colrv1), url(c.ttf) format(\"truetype\") tech(features-opentype)"));
-        GlyphRun run = new TextShaper(c).Shape("x", TestFonts.Request("U"));
+        ShapedText run = new TextShaper(c).Shape("x", TestFonts.Request("U"));
         Assert.Equal(["c.ttf"], resolver.Requests.Select(r => r.Url).ToArray());
         Assert.Equal("Liberation Sans", run.Segments[0].Face.Face.FamilyName);
     }
@@ -289,7 +290,7 @@ public class FontFaceTests
         var c = new FontCatalog();
         c.AddFont(FontFace.Load(Sans), "Liberation Sans", 400, FontStyleKind.Normal);
         c.AddFontFace(TestFonts.Rule("D", "url(\"data:font/woff2;base64," + b64 + "\") format(woff2)"));
-        GlyphRun run = new TextShaper(c).Shape("\u05D0", TestFonts.Request("D"));
+        ShapedText run = new TextShaper(c).Shape("\u05D0", TestFonts.Request("D"));
         Assert.Equal("Noto Sans Hebrew", run.Segments[0].Face.Face.FamilyName);
         Assert.Equal(0, run.MissingGlyphCount);
     }
@@ -310,8 +311,8 @@ public class FontFaceTests
         FontCatalog c = TestFonts.Defaults(resolver);
         c.AddFontFace(TestFonts.Rule("Adj", "url(f.ttf)", ("size-adjust", "50%"), ("ascent-override", "100%"), ("descent-override", "20%"), ("line-gap-override", "0%")));
         var shaper = new TextShaper(c);
-        GlyphRun adj = shaper.Shape("Hello", TestFonts.Request("Adj", 20));
-        GlyphRun plain = shaper.Shape("Hello", TestFonts.Request("Liberation Sans", 20));
+        ShapedText adj = shaper.Shape("Hello", TestFonts.Request("Adj", 20));
+        ShapedText plain = shaper.Shape("Hello", TestFonts.Request("Liberation Sans", 20));
         Assert.Equal(plain.Width / 2, adj.Width, 3);
         FontMetricsInfo m = adj.Segments[0].Face.GetMetrics(20);
         Assert.Equal(20f, m.Ascent, 3);

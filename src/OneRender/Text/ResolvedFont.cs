@@ -132,7 +132,7 @@ public sealed class ResolvedFace
 
     internal FaceEntry Entry { get; }
 
-    /// <summary>The font. Never null for a face that appears in a <see cref="GlyphRun"/>.</summary>
+    /// <summary>The font. Never null for a face that appears in a <see cref="ShapedText"/>.</summary>
     public FontFace Face => Entry.Face ?? throw new InvalidOperationException("The face has not been loaded.");
 
     /// <summary>The family name the face was registered under.</summary>

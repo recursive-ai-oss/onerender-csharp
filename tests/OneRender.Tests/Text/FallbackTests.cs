@@ -1,3 +1,4 @@
+using OneRender.Style;
 using System.Linq;
 using OneFont;
 using OneRender.Text;
@@ -7,9 +8,9 @@ namespace OneRender.Tests.Text;
 // Per-character fallback (CSS Fonts 4 §5.3, §5.4) and the missing-glyph diagnostics.
 public class FallbackTests
 {
-    private static string[] Families(GlyphRun run) => run.Segments.ToArray().Select(s => s.Face.Face.FamilyName).ToArray();
+    private static string[] Families(ShapedText run) => run.Segments.ToArray().Select(s => s.Face.Face.FamilyName).ToArray();
 
-    private static string[] Slices(GlyphRun run) =>
+    private static string[] Slices(ShapedText run) =>
         run.Segments.ToArray().Select(s => run.Text.Slice(s.TextStart, s.TextLength).ToString()).ToArray();
 
     [Fact]
@@ -17,7 +18,7 @@ public class FallbackTests
     {
         var shaper = new TextShaper(TestFonts.Defaults());
         // Carlito has Latin and Greek but no Hebrew; Liberation Sans (the default sans) has all three.
-        GlyphRun run = shaper.Shape("abc \u03B1\u03B2 \u05D0\u05D1 def", TestFonts.Request("Carlito"));
+        ShapedText run = shaper.Shape("abc \u03B1\u03B2 \u05D0\u05D1 def", TestFonts.Request("Carlito"));
         Assert.Equal(["Carlito", "Liberation Sans", "Carlito"], Families(run));
         Assert.Equal(["abc \u03B1\u03B2 ", "\u05D0\u05D1", " def"], Slices(run));
         Assert.Equal(0, run.MissingGlyphCount);
@@ -29,7 +30,7 @@ public class FallbackTests
     {
         var shaper = new TextShaper(TestFonts.Defaults());
         // Caladea has no Greek: the next listed family (Carlito) takes it, not the default sans.
-        GlyphRun run = shaper.Shape("a\u03B1", TestFonts.Request("Caladea, Carlito"));
+        ShapedText run = shaper.Shape("a\u03B1", TestFonts.Request("Caladea, Carlito"));
         Assert.Equal(["Caladea", "Carlito"], Families(run));
     }
 
@@ -38,7 +39,7 @@ public class FallbackTests
     {
         var shaper = new TextShaper(TestFonts.Defaults());
         // Carlito has "e" but not the combining acute; Liberation Sans has both, so the whole cluster goes there (§5.3 step 1).
-        GlyphRun run = shaper.Shape("xe\u0301y", TestFonts.Request("Carlito"));
+        ShapedText run = shaper.Shape("xe\u0301y", TestFonts.Request("Carlito"));
         Assert.Equal(["Carlito", "Liberation Sans", "Carlito"], Families(run));
         Assert.Equal(["x", "e\u0301", "y"], Slices(run));
     }
@@ -52,7 +53,7 @@ public class FallbackTests
         c.Resolver = resolver;
         c.AddFontFace(TestFonts.Rule("A", "url(s.ttf)", ("unicode-range", "U+0-2FF")));
         c.AddFontFace(TestFonts.Rule("B", "url(s.ttf)", ("unicode-range", "U+300-36F")));
-        GlyphRun run = new TextShaper(c).Shape("e\u0301", TestFonts.Request("A, B"));
+        ShapedText run = new TextShaper(c).Shape("e\u0301", TestFonts.Request("A, B"));
         Assert.Equal(["e", "\u0301"], Slices(run));
         Assert.Equal(["A", "B"], run.Segments.ToArray().Select(s => s.Face.FamilyName).ToArray());
     }
@@ -61,7 +62,7 @@ public class FallbackTests
     public void InvisibleCharactersFollowTheFaceBeforeThem()
     {
         var shaper = new TextShaper(TestFonts.Defaults());
-        GlyphRun run = shaper.Shape("a\u05D0\n\u200Db\t", TestFonts.Request("Carlito"));
+        ShapedText run = shaper.Shape("a\u05D0\n\u200Db\t", TestFonts.Request("Carlito"));
         Assert.Equal(["a", "\u05D0\n\u200D", "b\t"], Slices(run));
         Assert.Equal(0, run.MissingGlyphCount);
     }
@@ -71,7 +72,7 @@ public class FallbackTests
     {
         FontCatalog c = TestFonts.Defaults();
         var shaper = new TextShaper(c);
-        GlyphRun run = shaper.Shape("a\U0001F600b", TestFonts.Request("sans-serif"));
+        ShapedText run = shaper.Shape("a\U0001F600b", TestFonts.Request("sans-serif"));
         Assert.Equal(1, run.MissingGlyphCount);
         TextDiagnostic d = run.FirstMissingGlyph!.Value;
         Assert.Equal(TextDiagnosticKind.MissingGlyph, d.Kind);
@@ -103,7 +104,7 @@ public class FallbackTests
     public void MissingScriptsNameTheirPackage(string text, int first, string package)
     {
         FontCatalog c = TestFonts.Defaults();
-        GlyphRun run = new TextShaper(c).Shape(text, TestFonts.Request("serif"));
+        ShapedText run = new TextShaper(c).Shape(text, TestFonts.Request("serif"));
         Assert.True(run.MissingGlyphCount > 0);
         Assert.Equal(first, run.FirstMissingGlyph!.Value.CodePoint);
         Assert.Equal(package, run.FirstMissingGlyph.Value.Package);
@@ -113,7 +114,7 @@ public class FallbackTests
     public void ACharacterNoPackageCoversHasANullPackage()
     {
         FontCatalog c = TestFonts.Defaults();
-        GlyphRun run = new TextShaper(c).Shape("\uE000", TestFonts.Request("serif")); // private use
+        ShapedText run = new TextShaper(c).Shape("\uE000", TestFonts.Request("serif")); // private use
         Assert.Equal(1, run.MissingGlyphCount);
         Assert.Null(run.FirstMissingGlyph!.Value.Package);
         Assert.Contains("No optional fonts package", run.FirstMissingGlyph.Value.Message, StringComparison.Ordinal);
@@ -126,7 +127,7 @@ public class FallbackTests
         var shaper = new TextShaper(c);
         for (int i = 0; i < 5; i++)
         {
-            shaper.ShapeInto(new GlyphRun(), "\u4E2D\u4E2D\u4E2D", TestFonts.Request("serif"));
+            shaper.ShapeInto(new ShapedText(), "\u4E2D\u4E2D\u4E2D", TestFonts.Request("serif"));
         }
 
         Assert.Single(c.Diagnostics.Items.Where(d => d.Kind == TextDiagnosticKind.MissingGlyph).ToArray());
@@ -138,7 +139,7 @@ public class FallbackTests
             sb.Append((char)cp);
         }
 
-        shaper.ShapeInto(new GlyphRun(), sb.ToString(), TestFonts.Request("serif"));
+        shaper.ShapeInto(new ShapedText(), sb.ToString(), TestFonts.Request("serif"));
         Assert.True(c.Diagnostics.Items.Count <= TextDiagnostics.Capacity);
         Assert.True(c.Diagnostics.Dropped > 0);
     }
@@ -147,7 +148,7 @@ public class FallbackTests
     public void AnEmptyCatalogReportsNoFontsInsteadOfThrowing()
     {
         var c = new FontCatalog();
-        GlyphRun run = new TextShaper(c).Shape("hello", TestFonts.Request("serif"));
+        ShapedText run = new TextShaper(c).Shape("hello", TestFonts.Request("serif"));
         Assert.Equal(0, run.GlyphCount);
         Assert.Contains(c.Diagnostics.Items, d => d.Kind == TextDiagnosticKind.NoFonts);
     }
@@ -158,7 +159,7 @@ public class FallbackTests
         // §5.4: a private-use character is matched only against named families of the list.
         var c = new FontCatalog(aliases: new DefaultFontAliases());
         c.AddFont(OneFont.FontFace.Load(TestFonts.Liberation("LiberationSans-Regular.ttf")), "Liberation Sans", 400, FontStyleKind.Normal);
-        GlyphRun run = new TextShaper(c).Shape("\uE000", TestFonts.Request("sans-serif"));
+        ShapedText run = new TextShaper(c).Shape("\uE000", TestFonts.Request("sans-serif"));
         Assert.Equal(1, run.MissingGlyphCount);
     }
 
@@ -168,16 +169,16 @@ public class FallbackTests
         var system = new FakeSystemFonts();
         system.Faces.Add(new SystemFontFace("Fallback Arabic", 400, FontStyleKind.Normal, 100, null, null, () => TestFonts.Data("NotoSansArabic-Subset-Regular.ttf")));
         FontCatalog c = TestFonts.Defaults(null, system);
-        GlyphRun run = new TextShaper(c).Shape("a \u0627\u0644", TestFonts.Request("serif"));
+        ShapedText run = new TextShaper(c).Shape("a \u0627\u0644", TestFonts.Request("serif"));
         Assert.Equal(0, run.MissingGlyphCount);
-        GlyphRunSegment[] seg = run.Segments.ToArray();
+        ShapedTextSegment[] seg = run.Segments.ToArray();
         Assert.Equal(2, seg.Length);
         Assert.Equal("Liberation Serif", seg[0].Face.Face.FamilyName);
         Assert.StartsWith("Noto Sans Arabic", seg[1].Face.Face.FamilyName, StringComparison.Ordinal);
 
         // Without the provider the same text reports Arabic as missing, naming the package.
         FontCatalog plain = TestFonts.Defaults();
-        GlyphRun missing = new TextShaper(plain).Shape("a \u0627\u0644", TestFonts.Request("serif"));
+        ShapedText missing = new TextShaper(plain).Shape("a \u0627\u0644", TestFonts.Request("serif"));
         Assert.Equal("RecursiveAI.OneRender.Fonts.Noto.Arabic", missing.FirstMissingGlyph!.Value.Package);
     }
 

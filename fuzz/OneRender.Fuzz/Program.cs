@@ -1,18 +1,28 @@
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using OneRender.Fuzz;
 using SharpFuzz;
 
-namespace OneRender.Fuzz;
-
-// One fuzz executable. libFuzzer's .NET host starts the program without arguments, so the target is chosen by the
-// ONERENDER_FUZZ_TARGET environment variable. Without a libFuzzer host there are two local modes:
-//   replay <target> <file>...             runs saved inputs once each (reproduces a finding)
-//   seeds <target> <out dir> <font dir>   writes starting inputs for a target (used by run.sh)
+// One fuzz executable, one target per input surface. The target is chosen by the ONERENDER_FUZZ_TARGET environment
+// variable because libFuzzer's .NET host starts the program without command-line arguments.
+//
+// To add a target: write a static method `Run(ReadOnlySpan<byte> data)` that lets only the library's typed exceptions
+// escape, then add one line to `Targets` below.
+//
+// Without a libFuzzer host there are two local modes:
+//   replay <target> <file>...        runs saved inputs once each (reproduces a finding)
+//   seeds <target> <out dir>         writes starting inputs for a target (used by run.sh)
+//   smoke <target> <count>           runs <count> pseudo-random inputs in this process, without coverage guidance
 internal static class Program
 {
     private delegate void Target(ReadOnlySpan<byte> data);
 
     private static readonly Dictionary<string, Target> Targets = new()
     {
+        ["displaylist"] = DisplayListTarget.Run,
         ["fontdata"] = FontDataTarget.Run,
     };
 
@@ -23,9 +33,16 @@ internal static class Program
             return Replay(args);
         }
 
-        if (args.Length > 3 && args[0] == "seeds")
+        if (args.Length > 2 && args[0] == "seeds")
         {
-            return FontDataTarget.WriteSeeds(args[2], args[3]);
+            return args[1] == "fontdata"
+                ? FontDataTarget.WriteSeeds(args[2], Environment.GetEnvironmentVariable("ONERENDER_FUZZ_FONTS") ?? "testdata/fonts")
+                : DisplayListTarget.WriteSeeds(args[2]);
+        }
+
+        if (args.Length > 2 && args[0] == "smoke" && Targets.TryGetValue(args[1], out Target? smoke))
+        {
+            return Smoke(smoke, int.Parse(args[2], System.Globalization.CultureInfo.InvariantCulture));
         }
 
         string? name = Environment.GetEnvironmentVariable("ONERENDER_FUZZ_TARGET") ?? (args.Length > 0 ? args[0] : null);
@@ -36,6 +53,21 @@ internal static class Program
         }
 
         Fuzzer.LibFuzzer.Run(data => target(data));
+        return 0;
+    }
+
+    private static int Smoke(Target target, int count)
+    {
+        Random rng = new(2026);
+        var sw = Stopwatch.StartNew();
+        for (int i = 0; i < count; i++)
+        {
+            byte[] data = new byte[rng.Next(2, 600)];
+            rng.NextBytes(data);
+            target(data);
+        }
+
+        Console.WriteLine($"{count} inputs, {sw.Elapsed.TotalSeconds:F1}s, no findings");
         return 0;
     }
 
