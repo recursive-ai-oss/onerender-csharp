@@ -25,6 +25,8 @@ Redistributions of source code must retain the above copyright notice, this list
 
 ## web-platform-tests parsing and computed-value files (committed test data)
 
+`tests/OneRender.Tests/testdata/wpt-block/css/` also holds unmodified copies of one reftest and its reference from `css/CSS2/normal-flow/`, used by the block layout tests. The licence notice below applies to them as well.
+
 `tests/OneRender.Tests/testdata/wpt-style/css/` holds unmodified copies of the web-platform-tests files named `*-valid.html`, `*-invalid.html` and `*-computed.html` that exercise a property the style pipeline models, taken at the commit in `tools/wpt/WPT_COMMIT` by `tools/wpt/select-style-tests.sh`. `expected-failures.tsv` beside them is ours. They are used only by the tests.
 
 - Source: https://github.com/web-platform-tests/wpt, `LICENSE.md` (3-Clause BSD)
