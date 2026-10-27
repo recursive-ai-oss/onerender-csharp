@@ -106,3 +106,7 @@ JOBS=6 ./run-set.sh <set> ~/onerender/corpus/<set> ../../../results/geometry --p
 ```
 
 `run-set.sh` takes `PHASES` (`a`, `b`, `compare`) to split a long set into separate jobs, and `NO_SANDBOX=1` for hosts that forbid Chrome's sandbox (only frozen offline content is loaded). Each command's options are listed by running the tool without arguments.
+
+## Non-finite engine boxes
+
+An engine box coordinate that is NaN or infinite is a defect. The comparison does not stop on it: the coordinate is replaced by 1e12, which mismatches any real box, and a line naming the page, viewport and element path goes to standard error.

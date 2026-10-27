@@ -83,6 +83,10 @@ Not adjusted: `a--b` (the browser breaks between the hyphens).
 
 **Closed `details`.** Everything in a `details` without `open` except its first `summary` has no box (HTML §15.5.5: the content slot is `content-visibility: hidden`). The engine applies `details:not([open]) > :not(summary:first-of-type) { display: none !important }` as a user-origin rule so an author's `display` on the hidden content cannot reveal it. Evidence: `tailwind/daisy-showcase` (a menu's dropdown `ul`).
 
+## Replaced elements
+
+**A ratio with nothing to share.** A replaced box with an aspect ratio, no natural size, no specified width or height and an indefinite available width (an image that has not loaded, in a shrink-to-fit or flex-item measurement) has a 0 by 0 starting size. CSS2 §10.4 then scales with the ratio, not with the starting size's own 0/0: `min-height: 120px` on a 7/3 box gives a width of 280px. The result is always finite; a box whose size would come out non-finite contributes 0 to the intrinsic sizes of its container. Before this, one such image turned the main size of every flex container around it into NaN and placed later grid items at a non-finite offset.
+
 ## Known deviations kept
 
 - **Initial quote and a space.** Chrome breaks after `« ` at the start of a text run; UAX #14 (LB15a, Unicode 15.1) does not, and OneFont follows the standard. A `float` whose text starts with `«` is wider in the engine in narrow containers. Pages avoid the pattern.

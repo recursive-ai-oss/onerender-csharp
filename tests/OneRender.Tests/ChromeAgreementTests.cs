@@ -142,4 +142,23 @@ public class ChromeAgreementTests
         Dictionary<string, ElementBox> m = Lay("<div>x</div>", css.ToString());
         Assert.Equal(0, m["0/1/0"].Height, 3);
     }
+
+    // CSS2 §10.4 with an aspect ratio and no size to share (an image of unknown size, a ratio, an indefinite width) and a minimum
+    // height: the width follows from the minimum height and the ratio. It used to come out as 0/0, a NaN that made every flex and grid
+    // container around it place later items at a non-finite offset.
+    [Fact]
+    public void RatioBoxWithMinHeightKeepsFiniteGeometry()
+    {
+        Dictionary<string, ElementBox> m = Lay(
+            "<div style='display:grid;grid-template-columns:repeat(auto-fit,minmax(20%,1fr))'><div style='display:flex;width:25%;margin-right:24px'>"
+            + "<div style='display:flex;flex:1 1 auto'><img style='aspect-ratio:7/3;width:100%;height:100%;min-height:120px'></div></div>"
+            + "<div style='display:flex;width:25%'><div style='display:flex;flex:1 1 auto'><img style='aspect-ratio:7/3;width:100%;height:100%;min-height:120px'></div></div></div>");
+        foreach (ElementBox b in m.Values)
+        {
+            Assert.True(double.IsFinite(b.X) && double.IsFinite(b.Y) && double.IsFinite(b.Width) && double.IsFinite(b.Height), b.Path);
+        }
+
+        Dictionary<string, ElementBox> inl = Lay("<div style='display:inline-block'><img style='aspect-ratio:7/3;min-height:120px'></div>");
+        Assert.Equal(280, inl["0/1/0"].Width, 3);
+    }
 }

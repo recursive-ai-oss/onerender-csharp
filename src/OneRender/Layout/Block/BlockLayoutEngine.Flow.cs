@@ -553,17 +553,19 @@ public sealed partial class BlockLayoutEngine
             h = 150;
         }
 
-        // CSS2 §10.4: the nine cases of the constraint table.
+        // CSS2 §10.4: the nine cases of the constraint table. The table works with the proportion w/h. A box with no width to take
+        // a share of (a ratio and an indefinite available width gives w = h = 0) would make that 0/0, so the ratio stands in for it.
+        double wh = h > 0 && w > 0 ? w / h : (ratio > 0 ? ratio : 1);
         if (w > maxW && h > maxH)
         {
             if (maxW / w <= maxH / h)
             {
                 width = maxW;
-                height = Math.Max(minH, maxW * h / w);
+                height = Math.Max(minH, maxW / wh);
             }
             else
             {
-                width = Math.Max(minW, maxH * w / h);
+                width = Math.Max(minW, maxH * wh);
                 height = maxH;
             }
         }
@@ -571,13 +573,13 @@ public sealed partial class BlockLayoutEngine
         {
             if (minW / w <= minH / h)
             {
-                width = Math.Min(maxW, minH * w / h);
+                width = Math.Min(maxW, minH * wh);
                 height = minH;
             }
             else
             {
                 width = minW;
-                height = Math.Min(maxH, minW * h / w);
+                height = Math.Min(maxH, minW / wh);
             }
         }
         else if (w < minW && h > maxH)
@@ -593,21 +595,21 @@ public sealed partial class BlockLayoutEngine
         else if (w > maxW)
         {
             width = maxW;
-            height = Math.Max(maxW * h / w, minH);
+            height = Math.Max(maxW / wh, minH);
         }
         else if (w < minW)
         {
             width = minW;
-            height = Math.Min(minW * h / w, maxH);
+            height = Math.Min(minW / wh, maxH);
         }
         else if (h > maxH)
         {
-            width = Math.Max(maxH * w / h, minW);
+            width = Math.Max(maxH * wh, minW);
             height = maxH;
         }
         else if (h < minH)
         {
-            width = Math.Min(minH * w / h, maxW);
+            width = Math.Min(minH * wh, maxW);
             height = minH;
         }
         else

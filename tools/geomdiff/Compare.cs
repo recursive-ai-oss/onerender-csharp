@@ -323,6 +323,8 @@ internal static class Comparer
 /// <summary>Our side: the engine, through <see cref="GeometryProbe"/>, with the default fonts.</summary>
 internal static class EngineSide
 {
+    private const double NonFiniteStandIn = 1e12;
+
     private static OneRender.Text.TextFontProvider Fonts => OneRender.Image.FontProviders.ForCurrentThread();
 
     public static GeometryCapture LayOut(string snapshotRoot, string pageId, ViewportSize vp, CancellationToken ct)
@@ -333,7 +335,18 @@ internal static class EngineSide
         GeometryCapture cap = new() { Source = "engine", Page = pageId, Viewport = vp };
         foreach (ElementBox b in boxes)
         {
-            cap.Elements.Add(new ElementRecord { Path = b.Path, Tag = b.Tag, Box = [b.X, b.Y, b.Width, b.Height] });
+            double[] box = [b.X, b.Y, b.Width, b.Height];
+            for (int i = 0; i < box.Length; i++)
+            {
+                if (!double.IsFinite(box[i]))
+                {
+                    // The engine should never produce one. Keep the run going: the huge stand-in is a mismatch against any real box, so
+                    // the element is flagged in the results instead of crashing the JSON writer.
+                    Console.Error.WriteLine($"non-finite box from the engine: page {pageId} {vp} path {b.Path} <{b.Tag}>");
+                    box[i] = double.IsNaN(box[i]) ? NonFiniteStandIn : Math.CopySign(NonFiniteStandIn, box[i]);
+                }
+            }
+            cap.Elements.Add(new ElementRecord { Path = b.Path, Tag = b.Tag, Box = box });
         }
         return cap;
     }
