@@ -119,7 +119,19 @@ internal sealed partial class Fragmenter
     {
         // §4.1: replaced content and scroll containers have no break points inside; flex, grid and table containers and nested
         // multi-column containers are treated the same until they learn to fragment.
-        if (b.Kind != BoxKind.Container || b.Context is not (FormattingContext.Block or FormattingContext.FlowRoot))
+        if (b.Kind != BoxKind.Container)
+        {
+            return true;
+        }
+
+        // §4.1: rows of a table row group are block-level siblings for breaking, so a table and its row groups fragment between
+        // rows. A row stays whole (its cells are not split), so a row taller than a fragmentainer overflows it.
+        if (b.Context is FormattingContext.Table or FormattingContext.TableRowGroup or FormattingContext.TableHeaderGroup or FormattingContext.TableFooterGroup)
+        {
+            return b.Values.IsScrollContainer || b.Values.IsMulticol;
+        }
+
+        if (b.Context is not (FormattingContext.Block or FormattingContext.FlowRoot))
         {
             return true;
         }

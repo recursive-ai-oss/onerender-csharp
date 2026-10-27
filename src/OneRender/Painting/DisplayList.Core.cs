@@ -151,8 +151,22 @@ public sealed partial class DisplayList
         return s;
     }
 
+    internal int TopIndex => _top;
+
+    internal bool TopIsTag => _top >= 0 && _items[_top].Kind == ItemKind.BeginTag;
+
     private void Pop(ItemKind popKind, ItemKind pushKind)
     {
+        // Tags carry no pixels and nest only for the sake of structure, so closing any other scope first closes the tags opened inside
+        // it: a painter that opens a tag lazily, when content needs it, never has to track which scope it is in.
+        if (popKind != ItemKind.EndTag)
+        {
+            while (_top >= 0 && _items[_top].Kind == ItemKind.BeginTag)
+            {
+                Pop(ItemKind.EndTag, ItemKind.BeginTag);
+            }
+        }
+
         int family = FamilyOf(pushKind);
         int top = _top;
         if (top < 0 || FamilyOf(_items[top].Kind) != family)

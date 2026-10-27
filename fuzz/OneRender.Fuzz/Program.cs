@@ -28,6 +28,7 @@ internal static class Program
         ["flow"] = FlowTarget.Run,
         ["table"] = TableTarget.Run,
         ["effects"] = EffectsTarget.Run,
+        ["pdf"] = PdfTarget.Run,
     };
 
     private static int Main(string[] args)
@@ -47,6 +48,11 @@ internal static class Program
             if (args[1] == "flow")
             {
                 return FlowTarget.WriteSeeds(args[2]);
+            }
+
+            if (args[1] == "pdf")
+            {
+                return DisplayListTarget.WriteSeeds(args[2]);
             }
 
             if (args[1] == "effects")

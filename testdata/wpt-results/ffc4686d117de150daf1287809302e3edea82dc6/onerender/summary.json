@@ -53,11 +53,11 @@
       "sampleStride": 1,
       "discovered": 1191,
       "total": 1191,
-      "pass": 158,
-      "fail": 886,
+      "pass": 163,
+      "fail": 881,
       "blank": 0,
       "skipped": 147,
-      "rate": "0.1513"
+      "rate": "0.1561"
     },
     {
       "module": "css-color",
@@ -337,10 +337,10 @@
   ],
   "totals": {
     "total": 20428,
-    "pass": 7583,
-    "fail": 6172,
+    "pass": 7588,
+    "fail": 6167,
     "blank": 154,
     "skipped": 6519,
-    "rate": "0.5452"
+    "rate": "0.5455"
   }
 }
