@@ -434,7 +434,7 @@ public sealed partial class Painter
                     }
 
                     double px = firstX + (tx * (tw + gapX)), py = firstY + (ty * (th + gapY));
-                    RectF cell = RectF.Intersect(new RectF(C(px), C(py), C(tw), C(th)), area);
+                    RectF cell = RectF.Intersect(SnapRect(px, py, tw, th), area); // tiles share snapped edges, so no seam shows between them
                     if (cell.IsEmpty)
                     {
                         continue;
