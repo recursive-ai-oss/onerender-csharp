@@ -335,6 +335,11 @@ public sealed partial class BlockLayoutEngine
             }
         }
 
+        if (L.Collapse)
+        {
+            _out.SetTableBorders(tableFrag, CollapsedPaint(in L.Tt, in L.Tr, in L.Tb, in L.Tl));
+        }
+
         ref Frame f = ref _frames[ni];
         f.Cursor = bottom;
         f.NextChild = -1;
@@ -347,6 +352,34 @@ public sealed partial class BlockLayoutEngine
         f.OvT = Math.Min(f.OvT, ovT);
         f.OvR = Math.Max(f.OvR, ovR);
         f.OvB = Math.Max(f.OvB, ovB);
+    }
+
+    private TableBorderPaint CollapsedPaint(in TableEdge top, in TableEdge right, in TableEdge bottom, in TableEdge left)
+    {
+        var p = default(TableBorderPaint);
+        p.StyleTop = EdgeStyle(in top);
+        p.StyleRight = EdgeStyle(in right);
+        p.StyleBottom = EdgeStyle(in bottom);
+        p.StyleLeft = EdgeStyle(in left);
+        p.ColorTop = EdgeColor(in top);
+        p.ColorRight = EdgeColor(in right);
+        p.ColorBottom = EdgeColor(in bottom);
+        p.ColorLeft = EdgeColor(in left);
+        return p;
+    }
+
+    private static BorderStyleKind EdgeStyle(in TableEdge e) => e.Prio == 0 ? BorderStyleKind.None : (BorderStyleKind)e.Style;
+
+    private ColorValue EdgeColor(in TableEdge e)
+    {
+        if (e.Prio == 0)
+        {
+            return ColorValue.Transparent;
+        }
+
+        ref readonly ComputedValues v = ref _boxes.Make(e.Box).Values;
+        ColorValue c = e.Side switch { 0 => v.BorderTopColor, 1 => v.BorderRightColor, 2 => v.BorderBottomColor, _ => v.BorderLeftColor };
+        return c.Resolve(v.Color);
     }
 
     private static int FirstVisibleRow(TableLevel L)
@@ -455,6 +488,11 @@ public sealed partial class BlockLayoutEngine
 
         h += L.SpacingV * Math.Max(0, n - 1);
         var frag = new Fragment(_out, cell.Frag);
+        if (L.Collapse)
+        {
+            _out.SetTableBorders(cell.Frag, CollapsedPaint(in cell.Et, in cell.Er, in cell.Eb, in cell.El));
+        }
+
         Rect old = _out.BorderBoxOf(cell.Frag);
         double cx = L.Columns[cell.Col].X;
         _out.SetBorderBox(frag, new Rect(cx - rowX, 0, cell.Width, h));

@@ -6,6 +6,7 @@
 |---|---|---|
 | `displaylist` | a mode byte and display list edit commands | the retained display list, patching and the raster backend |
 | `grid` | random grid pages built from the bytes: templates, areas, placements, alignment, subgrids, absolutely positioned children | grid layout end to end; boxes stay finite and non-negative |
+| `table` | random table pages built from the bytes: HTML tables and `display: table-*` boxes mixed (anonymous table objects), column groups and columns with huge spans, captions, header and footer groups, fixed, percentage and auto widths, separate and collapsing borders with conflicts, collapsed rows and columns, vertical alignment, nested tables | table layout end to end; boxes stay finite and non-negative |
 | `fontdata` | a mode byte, then a font file, `@font-face` descriptor text plus a font, CSS property text, or a `data:` URL payload | font loading (TrueType, OpenType, WOFF, WOFF2 with the glyf and hmtx transforms), `@font-face` and font property parsing, matching, fallback, shaping, the shaped-run cache; the clusters must tile the text and the segments the glyphs |
 
 Nothing may escape the library on hostile input except an `ArgumentException` for text over the shaper's limit. Any other exception, a failed invariant, a hang (`-timeout`) or a memory blow-up (`-rss_limit_mb`) is a finding.

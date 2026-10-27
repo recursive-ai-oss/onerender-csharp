@@ -1110,6 +1110,12 @@ public sealed class Painter
             return;
         }
 
+        // CSS2 §17.6.1.1: with separate borders, empty-cells: hide paints neither the background nor the borders of a cell without content.
+        if (v.EmptyCells == EmptyCellsKind.Hide && v.BorderCollapse == BorderCollapseKind.Separate && box.Context == FormattingContext.TableCell && _tree.FirstChildOf(f) < 0)
+        {
+            return;
+        }
+
         FragmentTraits traits = (FragmentTraits)_tree.TraitsOf(f);
         bool sliceStart = (traits & FragmentTraits.ContinuesBefore) != 0;
         bool sliceEnd = (traits & FragmentTraits.ContinuesAfter) != 0;
@@ -1129,7 +1135,7 @@ public sealed class Painter
             }
         }
 
-        Insets border = _tree.BorderOf(f);
+        Insets border = PaintTableBorders(f, rect) ? default : _tree.BorderOf(f);
         double top = SideWidth(border.Top, v.BorderTopStyle);
         double right = sliceEnd ? 0 : SideWidth(border.Right, v.BorderRightStyle);
         double bottom = SideWidth(border.Bottom, v.BorderBottomStyle);
@@ -1152,6 +1158,32 @@ public sealed class Painter
             PaintColumnRules(f, in v);
         }
     }
+
+    // CSS2 §17.6.2: a cell or table in the collapsing border model draws the borders that won the conflict on its sides, in the widths
+    // layout gave it (half of each shared border). Returns false when the box has no such borders.
+    private bool PaintTableBorders(int f, RectF rect)
+    {
+        if (!_tree.TryGetTableBorders(f, out TableBorderPaint p))
+        {
+            return false;
+        }
+
+        Insets b = _tree.BorderOf(f);
+        PaintColor cur = PaintColor.Black;
+        BorderSide top = TableSide(b.Top, p.StyleTop, p.ColorTop, cur);
+        BorderSide right = TableSide(b.Right, p.StyleRight, p.ColorRight, cur);
+        BorderSide bottom = TableSide(b.Bottom, p.StyleBottom, p.ColorBottom, cur);
+        BorderSide left = TableSide(b.Left, p.StyleLeft, p.ColorLeft, cur);
+        if (top.Width > 0 || right.Width > 0 || bottom.Width > 0 || left.Width > 0)
+        {
+            _list.DrawBorder(Id(f, 1), rect, default, top, right, bottom, left);
+        }
+
+        return true;
+    }
+
+    private static BorderSide TableSide(double width, BorderStyleKind style, ColorValue color, PaintColor current) =>
+        new(C(SideWidth(width, style)), MapStyle(style), ToColor(color, current));
 
     // Multicol 1 §4: a rule is drawn in the middle of the gap between two adjacent columns of a row, as high as the columns, above the
     // container's background and border and below its content. Rules separate columns that exist, so a row with fewer filled
