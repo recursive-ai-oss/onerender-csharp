@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>grid tracks</title>
+<style>
+body{margin:0;padding:8px;background:#fff}
+.g{display:grid;margin:0 0 12px;background:#eee}
+.g>div{background:#8ac;min-height:0}
+.h30>div:nth-child(odd){height:30px}.h30>div:nth-child(even){height:50px}
+.w{width:320px}
+</style></head><body>
+<div class="g w h30" style="grid-template-columns:100px 1fr 2fr;gap:10px"><div></div><div></div><div></div><div></div><div></div><div></div></div>
+<div class="g w" style="grid-template-columns:minmax(50px,100px) 1fr;grid-auto-rows:minmax(20px,auto)"><div></div><div style="height:40px"></div><div></div></div>
+<div class="g w" style="grid-template-columns:auto auto auto"><div style="width:30px;height:10px"></div><div style="width:60px;height:20px"></div><div style="width:20px;height:15px"></div></div>
+<div class="g w" style="grid-template-columns:fit-content(60px) 1fr min-content"><div style="width:100px;height:10px"></div><div style="height:10px"></div><div style="width:25px;height:10px"></div></div>
+<div class="g w" style="grid-template-columns:25% 1fr;column-gap:10%;row-gap:5px"><div style="height:10px"></div><div style="height:10px"></div><div style="height:20px"></div><div style="height:20px"></div></div>
+<div class="g" style="grid-template-columns:1fr 1fr 1fr;width:60%;height:120px;grid-template-rows:1fr 2fr"><div></div><div></div><div></div><div></div><div></div></div>
+<div class="g" style="grid-template-columns:repeat(3,minmax(0,1fr));width:300px"><div style="width:500px;height:10px"></div><div style="height:10px"></div><div style="height:10px"></div></div>
+<div class="g" style="grid-template-columns:repeat(3,1fr);width:300px"><div style="width:200px;height:10px"></div><div style="height:10px"></div><div style="height:10px"></div></div>
+<div class="g" style="grid-template-columns:1fr 1fr;width:300px"><div style="grid-column:1/3;width:250px;height:10px"></div><div style="height:10px"></div><div style="height:10px"></div></div>
+<div class="g" style="grid-template-rows:20px 30px;grid-auto-flow:column;grid-auto-columns:40px;width:200px"><div></div><div></div><div></div><div></div><div></div></div>
+</body></html>

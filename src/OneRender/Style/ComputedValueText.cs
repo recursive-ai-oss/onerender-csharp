@@ -110,6 +110,18 @@ internal static class ComputedValueText
             case PropertyId.AlignSelf: return AlignText(v.AlignSelf, v.AlignSelfOverflow);
             case PropertyId.RowGap: return v.RowGap.ToCss();
             case PropertyId.ColumnGap: return v.ColumnGap.ToCss();
+            case PropertyId.GridTemplateColumns: return v.GridTemplateColumns.ToString();
+            case PropertyId.GridTemplateRows: return v.GridTemplateRows.ToString();
+            case PropertyId.GridTemplateAreas: return v.GridTemplateAreas.Text;
+            case PropertyId.GridAutoColumns: return string.Join(' ', Array.ConvertAll(v.GridAutoColumns, t => t.ToCss()));
+            case PropertyId.GridAutoRows: return string.Join(' ', Array.ConvertAll(v.GridAutoRows, t => t.ToCss()));
+            case PropertyId.GridAutoFlow: return (v.GridAutoFlow == GridAutoFlowKind.Column ? "column" : "row") + (v.GridAutoFlowDense ? " dense" : string.Empty);
+            case PropertyId.GridRowStart: return v.GridRowStart.ToCss();
+            case PropertyId.GridRowEnd: return v.GridRowEnd.ToCss();
+            case PropertyId.GridColumnStart: return v.GridColumnStart.ToCss();
+            case PropertyId.GridColumnEnd: return v.GridColumnEnd.ToCss();
+            case PropertyId.JustifyItems: return AlignText(v.JustifyItems, v.JustifyItemsOverflow);
+            case PropertyId.JustifySelf: return AlignText(v.JustifySelf, v.JustifySelfOverflow);
             default: return string.Empty;
         }
     }

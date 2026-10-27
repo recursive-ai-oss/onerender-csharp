@@ -251,7 +251,7 @@ internal sealed partial class StyleComputer
             case PropertyId.ListStyleType: d.ListStyleType = s.ListStyleType; d.ListStyleTypeIsString = s.ListStyleTypeIsString; break;
             case PropertyId.ListStylePosition: d.ListStylePosition = s.ListStylePosition; break;
             case PropertyId.OverflowClipMargin: d.OverflowClipMarginPx = s.OverflowClipMarginPx; d.OverflowClipMarginBox = s.OverflowClipMarginBox; break;
-            default: CopyFlexProperty(id, ref d, in s); break;
+            default: CopyFlexProperty(id, ref d, in s); CopyGridProperty(id, ref d, in s); break;
         }
     }
 

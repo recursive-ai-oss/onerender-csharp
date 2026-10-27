@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>grid baselines without text</title>
+<style>
+body{margin:0;padding:8px;background:#fff}
+.g{display:grid;margin:0 0 12px;background:#eee;width:300px;grid-template-columns:repeat(3,1fr);align-items:baseline}
+.g>div{background:#8ac}
+</style></head><body>
+<div class="g"><div style="height:10px"></div><div style="height:30px"></div><div style="height:20px;margin-top:4px"></div></div>
+<div class="g"><div style="height:10px;align-self:start"></div><div style="height:30px"></div><div style="height:20px;margin-bottom:6px"></div></div>
+<div class="g" style="align-items:last baseline"><div style="height:10px"></div><div style="height:30px"></div><div style="height:20px"></div></div>
+<div class="g" style="grid-template-rows:60px"><div style="height:10px"></div><div style="height:30px"></div><div style="height:20px"></div></div>
+<div class="g" style="grid-auto-rows:40px"><div style="height:10px"></div><div style="height:30px;align-self:end"></div><div style="height:20px"></div><div style="height:10px"></div><div style="height:10px;align-self:baseline"></div><div style="height:25px;align-self:baseline"></div></div>
+<div class="g" style="align-items:center"><div style="height:10px"></div><div style="height:30px;align-self:baseline"></div><div style="height:20px;align-self:baseline;padding-top:8px"></div></div>
+<div class="g" style="gap:5px"><div style="height:10px;grid-row:1"></div><div style="height:50px;grid-row:1 / span 2;align-self:baseline"></div><div style="height:12px;grid-row:2"></div></div>
+</body></html>

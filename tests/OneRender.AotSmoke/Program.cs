@@ -54,6 +54,15 @@ if (flexPage.Fragments.Root.IsNull || flexPage.Fragments.Root.BorderBox.Width !=
     return 5;
 }
 
+// A grid with fr tracks, auto-fill, a subgrid and a named line: placement, track sizing and subgrid must survive trimming and AOT.
+HtmlPage gridPage = HtmlPage.Create(
+    "<body style='margin:0'><div style='display:grid;grid-template-columns:[a] 20px repeat(auto-fill,minmax(10px,1fr));gap:2px;width:100px'><div style='grid-column:a / span 2;display:grid;grid-template-columns:subgrid'><i style='display:block;height:5px'></i></div><i style='display:block;height:7px'></i></div></body>",
+    new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 100, ViewportHeight = 50 });
+if (gridPage.Fragments.Root.IsNull || gridPage.Fragments.Root.BorderBox.Width != 100)
+{
+    return 6;
+}
+
 Console.WriteLine($"{styled.Count} styled nodes, {boxTree.Count} boxes, scroll patch {scrollOk}");
 if (boxTree.Count < 8 || !dump.Contains("flex", StringComparison.Ordinal))
 {
