@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/OneRender/OneRender.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts/OneRender.Fonts.csproj" />
   </ItemGroup>
 
 </Project>
