@@ -107,6 +107,11 @@ public sealed partial class BlockLayoutEngine
         int ti = _sp - 1;
         int pi = ti - 1;
         ref Frame t = ref _frames[ti];
+        if (t.MemoRec)
+        {
+            MemoClose(in t);
+        }
+
         FrameFlags fl = t.Flags;
         bool emptyClearing = (fl & (FrameFlags.Cleared | FrameFlags.ClearsFloats)) != 0 && (fl & FrameFlags.Bfc) == 0
             && (double.IsNaN(t.SpecH) || (t.SpecH == 0 && (fl & FrameFlags.AnyChild) == 0))

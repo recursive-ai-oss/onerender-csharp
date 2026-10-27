@@ -33,6 +33,7 @@ public sealed partial class BoxTree
         _top = -1;
         if (st.Count == 0)
         {
+            PrepareIncremental();
             return;
         }
 
@@ -55,6 +56,8 @@ public sealed partial class BoxTree
             _frames[_top].Next = st.NextSiblingOf(child);
             Visit(child);
         }
+
+        PrepareIncremental();
     }
 
     private void Visit(int s)

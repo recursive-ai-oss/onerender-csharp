@@ -42,6 +42,9 @@ public sealed class StyleTable
     /// <summary>The most distinct styles one table holds. Further requests reuse the parent's row and raise a diagnostic.</summary>
     public const int MaxStyles = 1 << 16;
 
+    /// <summary>Counts the resets of any table; caches keyed by style row drop their entries when it changes.</summary>
+    internal static int ResetGeneration { get; private set; }
+
     private readonly StyleComputer _computer = new();
     private readonly Dictionary<StyleKey, int> _intern = new(256);
     private readonly Dictionary<long, int> _anonymous = new(16);
@@ -95,6 +98,7 @@ public sealed class StyleTable
     /// <summary>Drops every cached style. Handles obtained before the call must not be used afterwards.</summary>
     public void Reset()
     {
+        ResetGeneration++;
         _intern.Clear();
         _anonymous.Clear();
         _byHash.Clear();
@@ -110,6 +114,9 @@ public sealed class StyleTable
     }
 
     /// <summary>Records which style is the root's, so <c>rem</c> units in later styles resolve against its font size.</summary>
+    /// <summary>The font size that <c>rem</c> units currently resolve against.</summary>
+    internal double RootFontSizeValue => _rootFontSize;
+
     internal void NoteRoot(StyleId root) => _rootFontSize = _rows[root.Index].FontSize;
 
     internal bool TryGetCached(object source, int version, StyleId parent, out StyleId id)

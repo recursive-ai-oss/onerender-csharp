@@ -13,7 +13,7 @@ internal sealed partial class InlineWorker
     {
         int slot = style.Index & 255;
         int version = _fonts.Catalog.Version;
-        if (_mcStyle[slot] == style.Index && _mcVersion[slot] == version && style.Index != 0)
+        if (_mcStyle[slot] == style.Index && _mcVersion[slot] == version && _mcReset[slot] == StyleTable.ResetGeneration && style.Index != 0)
         {
             a = _mcA[slot]; d = _mcD[slot]; gap = _mcGap[slot]; xh = _mcXh[slot];
             return;
@@ -28,6 +28,7 @@ internal sealed partial class InlineWorker
         xh = m.XHeight > 0 ? m.XHeight : v.FontSize * 0.5;
         _mcStyle[slot] = style.Index;
         _mcVersion[slot] = version;
+        _mcReset[slot] = StyleTable.ResetGeneration;
         _mcA[slot] = a; _mcD[slot] = d; _mcGap[slot] = gap; _mcXh[slot] = xh;
     }
 

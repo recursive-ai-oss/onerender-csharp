@@ -421,6 +421,10 @@ public sealed partial class BlockLayoutEngine
         if (bfc)
         {
             PushBfc();
+            if (MemoOpen(ni, c))
+            {
+                return;
+            }
         }
 
         if (tableLevel is not null)

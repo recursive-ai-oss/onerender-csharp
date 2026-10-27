@@ -142,6 +142,10 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace, 
         public double McColW;
         public double McGap;
         public int McCount;
+
+        // Whether the result of this block formatting context root is recorded when it closes, and the inputs it was laid out with.
+        public bool MemoRec;
+        public MemoKey MemoKey;
     }
 
     /// <inheritdoc />
@@ -156,6 +160,7 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace, 
         }
 
         _out = output;
+        _recording = false;
         _boxes = boxes;
         _fonts = input.Fonts;
         _token = cancellationToken;
@@ -168,9 +173,27 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace, 
         _floatCount = 0;
         _liveCount = 0;
         _defCount = 0;
+        bool reuseRun = input.Reuse && !boxes.Root.IsNull;
+        if (reuseRun)
+        {
+            BeginReuse(boxes, in input, output);
+        }
+        else
+        {
+            _memoValid = false;
+        }
+
         PrepareFlex(boxes.Count);
-        PrepareIntrinsicCache(boxes.Count);
-        output.Clear();
+        if (reuseRun)
+        {
+            PrepareIntrinsicCacheForReuse(boxes.Count);
+        }
+        else
+        {
+            PrepareIntrinsicCache(boxes.Count);
+        }
+
+        _out.Clear();
         _frag.ClearPlans();
         if (boxes.Root.IsNull)
         {
@@ -196,6 +219,10 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace, 
 
         ResolveAbsolutes();
         ApplyColumns();
+        if (reuseRun)
+        {
+            EndReuse(boxes, in input, output);
+        }
     }
 
     /// <summary>
