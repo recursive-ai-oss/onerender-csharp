@@ -219,14 +219,14 @@ internal sealed partial class InlineWorker
                     // box's edges stay next to its content when the line is reordered.
                     int p = e.Start;
                     e.Level = e.Kind == EK.Open ? LevelAt(p) : LevelAt(p - 1);
-                    e.Flags = (e.Level & 1) != 0 ? EF.Rtl : EF.None;
+                    e.Flags |= (e.Level & 1) != 0 ? EF.Rtl : EF.None;
                     AddElem(in e, null);
                     break;
                 }
 
                 case EK.Atomic:
                     e.Level = _lv[e.Start];
-                    e.Flags = (e.Level & 1) != 0 ? EF.Rtl : EF.None;
+                    e.Flags |= (e.Level & 1) != 0 ? EF.Rtl : EF.None;
                     PrepareAtomic(ref e);
                     AddElem(in e, null);
                     break;

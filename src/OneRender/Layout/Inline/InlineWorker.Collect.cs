@@ -46,6 +46,7 @@ internal sealed partial class InlineWorker
         Rtl = 8,
         Br = 16,
         WsPercent = 32,
+        NoEdge = 64,
     }
 
     private struct Elem
@@ -360,6 +361,13 @@ internal sealed partial class InlineWorker
         ref Elem e = ref AddRaw(EK.Open, b.Index, b.Index, _n, 0);
         e.Outer = margin;
         e.W = margin + inner;
+        if ((b.Flags & BoxTraits.Continuation) != 0)
+        {
+            // A later piece of an inline box split around a block continues the box: no start edge (CSS2 §9.2.1.1, slice).
+            e.Outer = 0;
+            e.W = 0;
+            e.Flags |= EF.NoEdge;
+        }
         PutBidiOpen(in v);
     }
 
@@ -374,6 +382,12 @@ internal sealed partial class InlineWorker
         ref Elem e = ref AddRaw(EK.Close, b.Index, b.Index, _n, 0);
         e.Outer = margin;
         e.W = margin + inner;
+        if (!b.NextPiece.IsNull)
+        {
+            e.Outer = 0;
+            e.W = 0;
+            e.Flags |= EF.NoEdge;
+        }
     }
 
     /// <summary>CSS Text 3 §4.1: collapse, preserve and transform the white space of one text box into the paragraph text.</summary>

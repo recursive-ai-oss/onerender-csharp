@@ -479,12 +479,12 @@ internal sealed partial class InlineWorker
             double lo = p.X, hi = p.X + p.W;
             if (p.Kind == PK.Open)
             {
-                s.HasOpen = true;
+                s.HasOpen = (_el[p.Elem].Flags & EF.NoEdge) == 0;
                 if (V(s.Box).Direction == DirectionKind.Ltr) { lo += _el[p.Elem].Outer; } else { hi -= _el[p.Elem].Outer; }
             }
             else if (p.Kind == PK.Close)
             {
-                s.HasClose = true;
+                s.HasClose = (_el[p.Elem].Flags & EF.NoEdge) == 0;
                 if (V(s.Box).Direction == DirectionKind.Ltr) { hi -= _el[p.Elem].Outer; } else { lo += _el[p.Elem].Outer; }
             }
 
