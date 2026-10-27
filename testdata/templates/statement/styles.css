@@ -1,0 +1,19 @@
+body { margin: 0; font: 13px/1.4 "Helvetica Neue", Helvetica, Arial, sans-serif; color: #222; background: #fff; }
+main { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+h1 { margin: 0; font-size: 26px; color: #0b5d3b; }
+.sub { margin: 4px 0 20px; color: #555; }
+.summary { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+.card { flex: 1 1 180px; border: 1px solid #cfd8d3; border-left: 4px solid #0b5d3b; padding: 10px 14px; border-radius: 4px; }
+.card span { display: block; font-size: 11px; text-transform: uppercase; color: #667; }
+.card strong { font-size: 18px; }
+.addr { line-height: 1.5; }
+h2 { font-size: 18px; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+caption { text-align: left; font-style: italic; color: #666; padding: 4px 0 8px; caption-side: top; }
+th { text-align: left; background: #e8f1ec; padding: 6px 8px; border-bottom: 2px solid #0b5d3b; }
+td { padding: 4px 8px; border-bottom: 1px solid #e3e6e4; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.ref { font-family: "Courier New", Courier, monospace; color: #555; }
+tr.cr td:nth-child(5) { color: #0b5d3b; font-weight: bold; }
+tr.dr td:nth-child(4) { color: #9b1c1c; }
+.legal { margin-top: 24px; font-size: 11px; color: #777; text-align: justify; }

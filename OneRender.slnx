@@ -9,8 +9,12 @@
   <Folder Name="/tests/">
     <Project Path="tests/OneRender.TestSupport/OneRender.TestSupport.csproj" />
     <Project Path="tests/OneRender.Tests/OneRender.Tests.csproj" />
+    <Project Path="tests/OneRender.GeomDiff.Tests/OneRender.GeomDiff.Tests.csproj" />
     <Project Path="tests/OneRender.AotSmoke/OneRender.AotSmoke.csproj" />
     <Project Path="tests/OneRender.WasmSmoke/OneRender.WasmSmoke.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/geomdiff/OneRender.GeomDiff.csproj" />
   </Folder>
   <Folder Name="/bench/">
     <Project Path="bench/OneRender.Benchmarks/OneRender.Benchmarks.csproj" />

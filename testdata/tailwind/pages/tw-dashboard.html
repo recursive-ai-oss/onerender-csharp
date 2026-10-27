@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-100 text-gray-800">
+<div class="flex min-h-screen">
+  <aside class="hidden w-64 shrink-0 flex-col bg-gray-900 p-4 text-gray-300 lg:flex">
+    <div class="mb-8 px-2 text-xl font-bold text-white">Atlas</div>
+    <nav class="flex flex-col gap-1 text-sm">
+      <a href="#" class="rounded-md bg-gray-800 px-3 py-2 font-medium text-white">Overview</a>
+      <a href="#" class="rounded-md px-3 py-2 hover:bg-gray-800">Customers</a>
+      <a href="#" class="rounded-md px-3 py-2 hover:bg-gray-800">Orders</a>
+      <a href="#" class="rounded-md px-3 py-2 hover:bg-gray-800">Products</a>
+      <a href="#" class="rounded-md px-3 py-2 hover:bg-gray-800">Reports</a>
+      <a href="#" class="rounded-md px-3 py-2 hover:bg-gray-800">Settings</a>
+    </nav>
+    <div class="mt-auto rounded-lg bg-gray-800 p-3 text-xs">Storage 72% used<div class="mt-2 h-2 rounded-full bg-gray-700"><div class="h-2 w-3/4 rounded-full bg-emerald-400"></div></div></div>
+  </aside>
+  <div class="flex min-w-0 flex-1 flex-col">
+    <header class="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
+      <h1 class="text-xl font-semibold">Overview</h1>
+      <div class="flex items-center gap-4"><input type="search" placeholder="Search" class="w-48 rounded-md border border-gray-300 px-3 py-1.5 text-sm"><span class="h-9 w-9 rounded-full bg-amber-400"></span></div>
+    </header>
+    <main class="flex-1 space-y-6 p-6">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="rounded-xl bg-white p-5 shadow"><p class="text-sm text-gray-500">Revenue</p><p class="mt-1 text-3xl font-bold">$48,210</p><p class="mt-1 text-sm text-emerald-600">+12.4% vs last month</p></div>
+        <div class="rounded-xl bg-white p-5 shadow"><p class="text-sm text-gray-500">Orders</p><p class="mt-1 text-3xl font-bold">1,284</p><p class="mt-1 text-sm text-emerald-600">+4.1%</p></div>
+        <div class="rounded-xl bg-white p-5 shadow"><p class="text-sm text-gray-500">Refunds</p><p class="mt-1 text-3xl font-bold">37</p><p class="mt-1 text-sm text-red-600">+9 this week</p></div>
+        <div class="rounded-xl bg-white p-5 shadow"><p class="text-sm text-gray-500">Conversion</p><p class="mt-1 text-3xl font-bold">3.8%</p><p class="mt-1 text-sm text-gray-500">no change</p></div>
+      </div>
+      <div class="grid gap-6 lg:grid-cols-3">
+        <section class="rounded-xl bg-white p-5 shadow lg:col-span-2"><h2 class="mb-4 font-semibold">Sales by week</h2><div class="flex h-56 items-end gap-3"><div class="h-1/3 flex-1 rounded-t bg-indigo-300"></div><div class="h-1/2 flex-1 rounded-t bg-indigo-300"></div><div class="h-2/3 flex-1 rounded-t bg-indigo-400"></div><div class="h-3/5 flex-1 rounded-t bg-indigo-400"></div><div class="h-4/5 flex-1 rounded-t bg-indigo-500"></div><div class="h-full flex-1 rounded-t bg-indigo-600"></div><div class="h-3/4 flex-1 rounded-t bg-indigo-500"></div></div></section>
+        <section class="rounded-xl bg-white p-5 shadow"><h2 class="mb-4 font-semibold">Top products</h2><ul class="divide-y divide-gray-100 text-sm"><li class="flex justify-between py-2"><span>Canvas tote</span><span class="font-medium">412</span></li><li class="flex justify-between py-2"><span>Ceramic mug</span><span class="font-medium">388</span></li><li class="flex justify-between py-2"><span>Linen shirt</span><span class="font-medium">251</span></li><li class="flex justify-between py-2"><span>Desk lamp</span><span class="font-medium">190</span></li></ul></section>
+      </div>
+      <section class="overflow-hidden rounded-xl bg-white shadow">
+        <h2 class="border-b border-gray-100 px-5 py-4 font-semibold">Recent orders</h2>
+        <table class="w-full text-left text-sm"><thead class="bg-gray-50 text-xs uppercase text-gray-500"><tr><th class="px-5 py-3">Order</th><th class="px-5 py-3">Customer</th><th class="px-5 py-3">Status</th><th class="px-5 py-3 text-right">Total</th></tr></thead>
+        <tbody class="divide-y divide-gray-100"><tr><td class="px-5 py-3">#10452</td><td class="px-5 py-3">Rina Patel</td><td class="px-5 py-3"><span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700">Paid</span></td><td class="px-5 py-3 text-right">$129.00</td></tr><tr><td class="px-5 py-3">#10451</td><td class="px-5 py-3">Tomas Berg</td><td class="px-5 py-3"><span class="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700">Pending</span></td><td class="px-5 py-3 text-right">$54.50</td></tr><tr><td class="px-5 py-3">#10450</td><td class="px-5 py-3">Aiko Mori</td><td class="px-5 py-3"><span class="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-700">Refunded</span></td><td class="px-5 py-3 text-right">$18.20</td></tr><tr><td class="px-5 py-3">#10449</td><td class="px-5 py-3">Lena Fischer</td><td class="px-5 py-3"><span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700">Paid</span></td><td class="px-5 py-3 text-right">$312.75</td></tr></tbody></table>
+      </section>
+    </main>
+  </div>
+</div>
+</body>
+</html>

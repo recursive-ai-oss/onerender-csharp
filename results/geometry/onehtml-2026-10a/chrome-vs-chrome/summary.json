@@ -1,0 +1,126 @@
+{
+  "format": "onerender-geometry-summary/1",
+  "set": "onehtml-2026-10a",
+  "label": "chrome-vs-chrome",
+  "ours": "capture",
+  "tolerancePx": 1,
+  "tolerancePercent": 0.5,
+  "gateRate": 0.99,
+  "browser": "Chrome/156.0.8078.47",
+  "fontSet": "8768bf2774f6c8e8 (20 files)",
+  "viewports": [
+    {
+      "viewport": "1280x800",
+      "pages": 600,
+      "elements": 379995,
+      "matched": 379921,
+      "rate": 0.9998052605955342,
+      "classes": {
+        "positionOnly": 40,
+        "sizeOnly": 0,
+        "positionAndSize": 0,
+        "textRun": 34,
+        "missingOurs": 0,
+        "missingChrome": 0
+      },
+      "rootCauses": {
+        "positionOnly": 40,
+        "sizeOnly": 0,
+        "positionAndSize": 0,
+        "textRun": 34,
+        "missingOurs": 0,
+        "missingChrome": 0
+      },
+      "tagConflicts": 0,
+      "pagesAtGate": 598,
+      "medianPageRate": 1,
+      "minPageRate": 0.957983193277311,
+      "worstTags": [
+        {
+          "tag": "span",
+          "mismatches": 40,
+          "elements": 61759
+        },
+        {
+          "tag": "path",
+          "mismatches": 34,
+          "elements": 8847
+        }
+      ]
+    },
+    {
+      "viewport": "390x844",
+      "pages": 600,
+      "elements": 359156,
+      "matched": 359122,
+      "rate": 0.9999053336154763,
+      "classes": {
+        "positionOnly": 0,
+        "sizeOnly": 0,
+        "positionAndSize": 0,
+        "textRun": 34,
+        "missingOurs": 0,
+        "missingChrome": 0
+      },
+      "rootCauses": {
+        "positionOnly": 0,
+        "sizeOnly": 0,
+        "positionAndSize": 0,
+        "textRun": 34,
+        "missingOurs": 0,
+        "missingChrome": 0
+      },
+      "tagConflicts": 0,
+      "pagesAtGate": 599,
+      "medianPageRate": 1,
+      "minPageRate": 0.9872084273890143,
+      "worstTags": [
+        {
+          "tag": "path",
+          "mismatches": 34,
+          "elements": 8847
+        }
+      ]
+    }
+  ],
+  "total": {
+    "viewport": "all",
+    "pages": 1200,
+    "elements": 739151,
+    "matched": 739043,
+    "rate": 0.9998538864183367,
+    "classes": {
+      "positionOnly": 40,
+      "sizeOnly": 0,
+      "positionAndSize": 0,
+      "textRun": 68,
+      "missingOurs": 0,
+      "missingChrome": 0
+    },
+    "rootCauses": {
+      "positionOnly": 40,
+      "sizeOnly": 0,
+      "positionAndSize": 0,
+      "textRun": 68,
+      "missingOurs": 0,
+      "missingChrome": 0
+    },
+    "tagConflicts": 0,
+    "pagesAtGate": 1197,
+    "medianPageRate": 1,
+    "minPageRate": 0.957983193277311,
+    "worstTags": [
+      {
+        "tag": "path",
+        "mismatches": 68,
+        "elements": 17694
+      },
+      {
+        "tag": "span",
+        "mismatches": 40,
+        "elements": 123518
+      }
+    ]
+  },
+  "gateMet": true
+}
