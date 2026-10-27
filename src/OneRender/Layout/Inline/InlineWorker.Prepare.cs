@@ -176,10 +176,34 @@ internal sealed partial class InlineWorker
         _paraLevel = rtl ? 1 : 0;
         if (n > 0)
         {
-            TextShaping.GetBidiLevels(text, dir, _lv.AsSpan(0, n), out _paraLevel);
+            if (!rtl && dir == TextDirection.LeftToRight && IsPlainLeftToRight(text))
+            {
+                // UAX #9: with a left-to-right base and no character that is right-to-left, Arabic, or a format control (all are at
+                // U+0590 and above), every rule resolves to level 0. Skipping the algorithm keeps the common case allocation-free.
+                _lv.AsSpan(0, n).Clear();
+                _paraLevel = 0;
+            }
+            else
+            {
+                TextShaping.GetBidiLevels(text, dir, _lv.AsSpan(0, n), out _paraLevel);
+            }
         }
 
         BuildElements();
+    }
+
+    /// <summary>True when UAX #9 resolves every character to level 0 under a left-to-right base: nothing at U+0590 or above except the object replacement character (neutral).</summary>
+    private static bool IsPlainLeftToRight(ReadOnlySpan<char> text)
+    {
+        foreach (char c in text)
+        {
+            if (c >= '\u0590' && c != '\uFFFC')
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private byte LevelAt(int p) => p >= 0 && p < _n ? _lv[p] : (byte)_paraLevel;

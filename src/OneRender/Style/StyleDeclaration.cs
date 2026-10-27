@@ -243,6 +243,14 @@ internal sealed class OneHtmlSource : DeclarationSource
             return ValueOrigin.Inherit;
         }
 
+        if (id is PropertyId.LineHeight or PropertyId.LetterSpacing or PropertyId.WordSpacing or PropertyId.TextIndent or PropertyId.TabSize
+            && _style is not null && !_style.IsDeclared(Properties.NameOf(id)))
+        {
+            // The cascade hands a descendant the ancestor's specified text. Values with relative lengths (em, a line-height percentage)
+            // inherit as the ancestor's computed value (CSS Values 4 §7.1), not as text to resolve against the descendant's own font.
+            return ValueOrigin.Unset;
+        }
+
         if (sv.IsInitial || sv.Tokens.IsEmpty)
         {
             return ValueOrigin.Initial;
