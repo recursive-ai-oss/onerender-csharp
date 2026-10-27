@@ -623,7 +623,7 @@ public sealed class FontCatalog
                 _systemFallback[sf] = rf;
             }
 
-            if (rf.Entry.EnsureLoaded(this) && rf.Entry.Face!.HasGlyph(codePoint))
+            if (rf.Entry.EnsureLoaded(this) && rf.Entry.HasGlyph(codePoint, this))
             {
                 return rf;
             }

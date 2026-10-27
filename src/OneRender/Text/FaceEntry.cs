@@ -248,10 +248,45 @@ internal sealed class FaceEntry
 
     public bool IsFailed => _state == LoadState.Failed;
 
+    // Glyph coverage that survives damaged tables: a font whose cmap is corrupt loads fine (tables are read lazily) and then
+    // throws on first lookup. That marks the face failed, reports it, and counts as "no glyph".
+    public bool HasGlyph(int codePoint, FontCatalog owner)
+    {
+        if (_state != LoadState.Loaded)
+        {
+            return false;
+        }
+
+        try
+        {
+            return Face!.HasGlyph(codePoint);
+        }
+        catch (FontFormatException)
+        {
+            _state = LoadState.Failed;
+            owner.Diagnostics.Report(new TextDiagnostic(TextDiagnosticKind.FontLoadFailed, Subject: Family, Detail: "The font data is damaged."));
+            owner.NoteFaceFailed();
+            return false;
+        }
+    }
+
+    private static FontMetricsBase ReadMetricsOrDefault(FontFace face)
+    {
+        try
+        {
+            return FontMetricsBase.Read(face);
+        }
+        catch (FontFormatException)
+        {
+            // Damaged header tables: plausible fixed metrics so layout still gets a line height.
+            return new FontMetricsBase { UnitsPerEm = 1000, Ascent = 800, Descent = 200, UnderlinePosition = 100, UnderlineThickness = 70, StrikeoutPosition = 250, StrikeoutThickness = 70 };
+        }
+    }
+
     public FontMetricsInfo GetMetrics(float size)
     {
         FontFace face = Face ?? throw new InvalidOperationException("The face has not been loaded.");
-        _metrics ??= FontMetricsBase.Read(face);
+        _metrics ??= ReadMetricsOrDefault(face);
         FontMetricsBase m = _metrics;
         float scale = size * SizeAdjust / m.UnitsPerEm;
         float ascent = float.IsNaN(AscentOverride) ? m.Ascent * scale : AscentOverride * size;

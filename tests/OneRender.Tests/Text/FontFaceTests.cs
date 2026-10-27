@@ -422,6 +422,22 @@ public class FontLoaderTests
     }
 
     [Fact]
+    public void ACorruptCmapMarksTheFaceFailedInsteadOfThrowing()
+    {
+        // Found by the font-data fuzz target: the font loads, then its cmap throws on the first lookup. The first byte is the
+        // fuzz target's mode byte; the font follows.
+        byte[] input = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "testdata", "fuzz", "damaged-cmap.bin"));
+        FontCatalog catalog = TestFonts.Defaults();
+        string url = "data:font/ttf;base64," + Convert.ToBase64String(input.AsSpan(1));
+        FontFaceRule rule = FontFaceRule.Create([new("font-family", "D"), new("src", "url(\"" + url + "\")")], null, catalog.Diagnostics)!;
+        Assert.True(catalog.AddFontFace(rule));
+        var shaper = new TextShaper(catalog);
+        ShapedText run = shaper.Shape("Hello", TestFonts.Request("D, Liberation Sans"));
+        Assert.True(run.GlyphCount > 0);
+        Assert.Contains(catalog.Diagnostics.Items, d => d.Kind == TextDiagnosticKind.FontLoadFailed);
+    }
+
+    [Fact]
     public void TruncatedFilesFailCleanly()
     {
         foreach (byte[] file in new[] { Ttf, Woff, Woff2 })

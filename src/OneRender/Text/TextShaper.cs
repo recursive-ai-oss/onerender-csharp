@@ -281,7 +281,7 @@ public sealed class TextShaper
 
         // §5.3 step 3: the longest prefix one face supports stays together; the rest are matched one character at a time.
         int split = baseIndex + 1;
-        while (split < count && (IsInvisible(cps[split]) || (cover.Entry.InRange(cps[split]) && cover.Face.HasGlyph(cps[split]))))
+        while (split < count && (IsInvisible(cps[split]) || (cover.Entry.InRange(cps[split]) && cover.Entry.HasGlyph(cps[split], _fonts))))
         {
             split++;
         }
@@ -300,7 +300,7 @@ public sealed class TextShaper
         return cover;
     }
 
-    private static bool CoversAll(ResolvedFace f, Span<int> cps, int count, int baseIndex)
+    private bool CoversAll(ResolvedFace f, Span<int> cps, int count, int baseIndex)
     {
         for (int i = 0; i < count; i++)
         {
@@ -309,7 +309,7 @@ public sealed class TextShaper
                 continue;
             }
 
-            if (!f.Entry.InRange(cps[i]) || !f.Face.HasGlyph(cps[i]))
+            if (!f.Entry.InRange(cps[i]) || !f.Entry.HasGlyph(cps[i], _fonts))
             {
                 return false;
             }

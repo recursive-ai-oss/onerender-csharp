@@ -290,7 +290,7 @@ internal sealed class FontSlot(FaceEntry[] group, ResolvedFace[] faces, bool isG
                 continue;
             }
 
-            if (e.Face!.HasGlyph(codePoint))
+            if (e.HasGlyph(codePoint, list.Owner))
             {
                 return Faces[i];
             }
