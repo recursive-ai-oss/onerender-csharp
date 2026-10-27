@@ -55,6 +55,33 @@ internal sealed partial class StyleComputer
     private int _floatLogical;
     private int _clearLogical;
 
+    /// <summary>
+    /// The text service that answers font metrics for <c>ex</c>, <c>ch</c> and <c>ic</c> units, or null to use the fallbacks
+    /// CSS Values 4 §6.1.1 gives (half an em for <c>ex</c> and <c>ch</c>, one em for <c>ic</c>).
+    /// </summary>
+    internal Layout.IFontProvider? Fonts { get; set; }
+
+    // CSS Values 4 §6.1.1: ex is the x-height and ch the advance of "0" in the first available font of the element, ic the advance of
+    // U+6C34; each falls back to the ratio the default context carries when the font has no such measure.
+    private void ApplyFontRelativeRatios() => _ctx = WithFontRatios(_ctx, in _r);
+
+    private LengthContext WithFontRatios(LengthContext ctx, in ComputedValues font)
+    {
+        if (Fonts is null || !(font.FontSize > 0))
+        {
+            return ctx;
+        }
+
+        Text.FontMetricsInfo m = Fonts.GetMetrics(in font);
+        double size = font.FontSize;
+        return ctx with
+        {
+            ExRatio = m.XHeight > 0 ? m.XHeight / size : LengthContext.Default.ExRatio,
+            ChRatio = m.ZeroAdvance > 0 ? m.ZeroAdvance / size : LengthContext.Default.ChRatio,
+            IcRatio = m.IdeographicAdvance > 0 ? m.IdeographicAdvance / size : LengthContext.Default.IcRatio,
+        };
+    }
+
     /// <summary>Counts declarations that did not parse, in the last <see cref="Compute"/>.</summary>
     public int InvalidCount { get; private set; }
 
@@ -87,24 +114,28 @@ internal sealed partial class StyleComputer
             ViewportWidth = env.ViewportWidth,
             ViewportHeight = env.ViewportHeight,
         };
+        // font-size itself is computed in the parent's font, so its ex and ch come from the parent's face (CSS Values 4 §6.1.1).
+        _parentCtx = WithFontRatios(_parentCtx, in _parent);
         _ctx = _parentCtx;
         // font-family is resolved first because the size of a generic `monospace` list depends on it (see MonospaceScale).
         Step(PropertyId.FontFamily, hasParent);
+        Step(PropertyId.FontSize, hasParent);
+        // Everything after font-size resolves em against the element's own size (CSS Values 4 §6.1.1).
+        _r.FontSize = Math.Max(0, _r.FontSize);
+        _ctx = _parentCtx with { FontSize = _r.FontSize, RootFontSize = isRoot ? _r.FontSize : _parentCtx.RootFontSize };
+        Step(PropertyId.FontWeight, hasParent);
+        Step(PropertyId.FontStyle, hasParent);
+        Step(PropertyId.FontStretch, hasParent);
+        ApplyFontRelativeRatios();
         for (int i = 0; i < Properties.Count; i++)
         {
             var id = (PropertyId)i;
-            if (id == PropertyId.FontFamily)
+            if (id is PropertyId.FontFamily or PropertyId.FontSize or PropertyId.FontWeight or PropertyId.FontStyle or PropertyId.FontStretch)
             {
                 continue;
             }
 
             Step(id, hasParent);
-            if (id == PropertyId.FontSize)
-            {
-                // Everything after font-size resolves em against the element's own size (CSS Values 4 §6.1.1).
-                _r.FontSize = Math.Max(0, _r.FontSize);
-                _ctx = _parentCtx with { FontSize = _r.FontSize, RootFontSize = isRoot ? _r.FontSize : _parentCtx.RootFontSize };
-            }
         }
 
         Finalize(isRoot);

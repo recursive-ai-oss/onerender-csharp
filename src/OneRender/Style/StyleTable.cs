@@ -102,6 +102,13 @@ public sealed class StyleTable
         _rootFontSize = 16;
     }
 
+    /// <summary>The text service whose metrics resolve <c>ex</c>, <c>ch</c> and <c>ic</c>; set before building, since cached styles keep the numbers they were computed with.</summary>
+    internal Layout.IFontProvider? Fonts
+    {
+        get => _computer.Fonts;
+        set => _computer.Fonts = value;
+    }
+
     /// <summary>Records which style is the root's, so <c>rem</c> units in later styles resolve against its font size.</summary>
     internal void NoteRoot(StyleId root) => _rootFontSize = _rows[root.Index].FontSize;
 

@@ -12,13 +12,12 @@
 | css-borders | 1 | 181 | 17 | 77 | 0 | 87 | 0.1809 |
 | css-break | 1 | 1191 | 82 | 962 | 0 | 147 | 0.0785 |
 | css-color | 1 | 377 | 196 | 99 | 1 | 81 | 0.6622 |
-| css-flexbox | 1 | 1398 | 471 | 462 | 19 | 446 | 0.4947 |
+| css-flexbox | 1 | 1398 | 461 | 472 | 19 | 446 | 0.4842 |
 | css-fonts | 1 | 551 | 155 | 158 | 25 | 213 | 0.4586 |
 | css-grid | 1 | 2481 | 393 | 1170 | 10 | 908 | 0.2498 |
 | css-images | 1 | 510 | 221 | 170 | 20 | 99 | 0.5377 |
 | css-inline | 1 | 255 | 14 | 149 | 0 | 92 | 0.0859 |
-| css-lists | 1 | 212 | 65 | 75 | 7 | 65 | 0.4422 |
-| css-multicol | 1 | 563 | 49 | 351 | 0 | 163 | 0.1225 |
+| css-multicol | 1 | 563 | 50 | 350 | 0 | 163 | 0.1250 |
 | css-overflow | 1 | 892 | 113 | 382 | 11 | 386 | 0.2233 |
 | css-page | 1 | 247 | 2 | 5 | 0 | 240 | 0.2857 |
 | css-position | 1 | 367 | 26 | 104 | 1 | 236 | 0.1985 |
@@ -30,11 +29,11 @@
 | css-ui | 1 | 1075 | 52 | 57 | 4 | 962 | 0.4602 |
 | css-values | 1 | 497 | 73 | 94 | 0 | 330 | 0.4371 |
 | css2-floats | 1 | 345 | 91 | 223 | 0 | 31 | 0.2898 |
-| css2-flow | 1 | 2415 | 829 | 1434 | 3 | 149 | 0.3658 |
+| css2-flow | 1 | 2415 | 828 | 1435 | 3 | 149 | 0.3654 |
 | css2-generated | 1 | 382 | 93 | 266 | 0 | 23 | 0.2591 |
 | css2-positioning | 1 | 654 | 108 | 512 | 0 | 34 | 0.1742 |
 | css2-tables | 1 | 375 | 95 | 154 | 0 | 126 | 0.3815 |
-| **all** | | 19538 | 4548 | 8611 | 146 | 6233 | 0.3418 |
+| **all** | | 19326 | 4473 | 8546 | 139 | 6168 | 0.3399 |
 
 ## Why tests failed or were skipped
 
@@ -60,7 +59,7 @@
 - Skipped: 69 × testharness.js test; 7 × reftest-wait (needs script); 5 × script-dependent
 ### css-flexbox
 
-- Failures: 462 × == reference differs
+- Failures: 472 × == reference differs
 - Skipped: 376 × testharness.js test; 62 × script-dependent; 5 × reftest-wait (needs script); 3 × print reftest (paged output)
 ### css-fonts
 
@@ -78,13 +77,9 @@
 
 - Failures: 149 × == reference differs
 - Skipped: 59 × testharness.js test; 25 × script-dependent; 5 × reftest-wait (needs script); 3 × print reftest (paged output)
-### css-lists
-
-- Failures: 75 × == reference differs
-- Skipped: 37 × testharness.js test; 20 × script-dependent; 8 × reftest-wait (needs script)
 ### css-multicol
 
-- Failures: 349 × == reference differs; 1 × error: DisplayListException: Item id 21475491840 is used twice in one list.; 1 × error: DisplayListException: Item id 47245295616 is used twice in one list.
+- Failures: 350 × == reference differs
 - Skipped: 95 × testharness.js test; 43 × reftest-wait (needs script); 21 × script-dependent; 4 × print reftest (paged output)
 ### css-overflow
 
@@ -131,7 +126,7 @@
 - Skipped: 20 × testharness.js test; 7 × script-dependent; 4 × reftest-wait (needs script)
 ### css2-flow
 
-- Failures: 1434 × == reference differs
+- Failures: 1435 × == reference differs
 - Skipped: 83 × script-dependent; 35 × reftest-wait (needs script); 31 × testharness.js test
 ### css2-generated
 
