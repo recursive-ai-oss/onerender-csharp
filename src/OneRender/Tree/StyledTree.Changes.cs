@@ -191,6 +191,20 @@ public sealed partial class StyledTree
         _deadCount = 0;
     }
 
+    /// <summary>Marks the rows of every live node (and the old rows of nodes with a pending change) for <see cref="StyleTable.Reclaim"/>.</summary>
+    void IStyleHolder.MarkStyles(StyleTable table)
+    {
+        for (int i = 0; i < _count; i++)
+        {
+            table.Mark(_style[i]);
+        }
+
+        for (int k = 0; k < PendingCount; k++)
+        {
+            table.Mark(_oldStyle[PendingNode(k)]);
+        }
+    }
+
     private void FreeSlot(int n)
     {
         _gen[n]++;

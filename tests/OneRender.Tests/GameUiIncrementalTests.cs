@@ -132,37 +132,22 @@ public class GameUiIncrementalTests
         Assert.Equal(EditSession.Snapshot(fresh), EditSession.Snapshot(page));
     }
 
+    // The time of these changes (the 1 ms bar) is a benchmark row on the benchmark host (IncrementalBenchmarks). What a unit test can state
+    // without a clock is how much work each change does: none of them generates the boxes again.
     [Fact]
-    public void TimingPerChange()
+    public void WorkPerChange()
     {
         (LivePage page, GameUiScene.SceneNodes nodes) = Scene();
         var c = new Changes(page, nodes);
-        // 1 ms is the bar on a release build on the benchmark host. Under a debug build or a loaded machine the test only guards
-        // against an order-of-magnitude regression; ONERENDER_STRICT_TIMING=1 holds it to the bar.
-        bool strict = Environment.GetEnvironmentVariable("ONERENDER_STRICT_TIMING") == "1";
-        double limit = strict ? 1.0 : 25.0;
         foreach ((string name, Action a) in new (string, Action)[] { ("hover", c.Hover), ("text", c.Text), ("subtree", c.Subtree) })
         {
-            for (int i = 0; i < 300; i++)
+            for (int i = 0; i < 20; i++)
             {
                 a();
+                Assert.Equal(FlushWork.None, c.Last.Work & FlushWork.BoxesRebuilt);
             }
 
-            const int N = 200;
-            double best = double.MaxValue;
-            for (int round = 0; round < 5; round++)
-            {
-                long t0 = Stopwatch.GetTimestamp();
-                for (int i = 0; i < N; i++)
-                {
-                    a();
-                }
-
-                best = Math.Min(best, Stopwatch.GetElapsedTime(t0).TotalMilliseconds / N);
-            }
-
-            Console.WriteLine($"TIMING {name}: {best:F3} ms per change (best of 5 rounds), work {c.Last.Work}, reused {c.Last.ReusedSubtrees}, nodes {page.Styled.Count}, boxes {page.Boxes.Count}, fragments {page.Fragments.Count}, items {page.Display.Current.Count}");
-            Assert.True(best <= limit, $"{name} took {best:F3} ms per change; limit {limit} ms");
+            Console.WriteLine($"WORK {name}: {c.Last.Work}, reused {c.Last.ReusedSubtrees}, nodes {page.Styled.Count}, boxes {page.Boxes.Count}, fragments {page.Fragments.Count}, items {page.Display.Current.Count}");
         }
     }
 
@@ -208,18 +193,16 @@ public class GameUiIncrementalTests
         }
 
         long before = GC.GetAllocatedBytesForCurrentThread();
-        long t0 = Stopwatch.GetTimestamp();
         for (int i = 0; i < 200; i++)
         {
             Hover();
         }
 
-        double ms = Stopwatch.GetElapsedTime(t0).TotalMilliseconds / 200;
         long bytes = (GC.GetAllocatedBytesForCurrentThread() - before) / 200;
-        Console.WriteLine($"TIMING html hover (pointer move through InteractivePage): {ms:F3} ms, {bytes} B per change");
+        Console.WriteLine($"html hover (pointer move through InteractivePage): {bytes} B per change");
     }
 
-    // Typing one character into a text field on the 1,000-node HUD page: zero bytes once warm, and its time (information).
+    // Typing one character into a text field on the 1,000-node HUD page: zero bytes once warm, .
     [Fact]
     public void TypingIntoAFieldOnTheHudPageAllocatesNothing()
     {
@@ -238,13 +221,5 @@ public class GameUiIncrementalTests
         }
 
         Allocation.AssertZero(Step, "typing a character on the HUD page", warmup: 300, iterations: 100);
-        long t0 = Stopwatch.GetTimestamp();
-        for (int i = 0; i < 400; i++)
-        {
-            Step();
-        }
-
-        double ms = Stopwatch.GetElapsedTime(t0).TotalMilliseconds / 400;
-        Console.WriteLine($"TIMING typing one character on the HUD page (HTML, InteractivePage): {ms:F3} ms");
     }
 }

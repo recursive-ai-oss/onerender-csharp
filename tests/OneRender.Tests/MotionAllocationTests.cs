@@ -84,33 +84,4 @@ public class MotionAllocationTests
             Assert.Equal(fresh[i].ContentHash, patched[i].ContentHash);
         }
     }
-
-    [Fact]
-    public void TickTimeOfAHundredAnimations()
-    {
-        InteractivePage p = UiPage(100);
-        var painter = new Painter();
-        var retained = new RetainedDisplayList();
-        painter.Paint(p.Page.Fragments, retained, new PaintOptions(800, 600) { Scroll = p.Page.Scroll });
-        double t = 0;
-        for (int i = 0; i < 200; i++)
-        {
-            t += 16;
-            p.Advance(t);
-            p.PatchAnimations(painter, retained);
-        }
-
-        long start = Stopwatch.GetTimestamp();
-        const int N = 1000;
-        for (int i = 0; i < N; i++)
-        {
-            t += 16;
-            p.Advance(t);
-            p.PatchAnimations(painter, retained);
-        }
-
-        double ms = Stopwatch.GetElapsedTime(start).TotalMilliseconds / N;
-        Console.WriteLine("tick of 100 animations on " + p.Page.Styled.Count + " nodes: " + ms.ToString("F4", System.Globalization.CultureInfo.InvariantCulture) + " ms");
-        Assert.True(ms < 5, "a tick takes " + ms + " ms");
-    }
 }

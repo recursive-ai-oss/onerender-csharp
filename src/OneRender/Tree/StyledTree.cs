@@ -12,7 +12,7 @@ namespace OneRender.Tree;
 /// The tree is retained: <see cref="Clear"/> keeps the columns, the style table and the interned names, so building the
 /// same content again allocates nothing. Not thread-safe.
 /// </remarks>
-public sealed partial class StyledTree
+public sealed partial class StyledTree : IStyleHolder
 {
     private static readonly string[] ReplacedTags = ["img", "video", "canvas", "iframe", "embed", "object", "svg"];
 
@@ -56,6 +56,7 @@ public sealed partial class StyledTree
     public StyledTree(StyleTable? styles = null, TreeLimits? limits = null)
     {
         Styles = styles ?? new StyleTable();
+        Styles.AddHolder(this);
         Limits = limits ?? TreeLimits.Default;
         _kind = new byte[64];
         _gen = new int[64];

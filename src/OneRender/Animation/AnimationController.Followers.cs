@@ -14,7 +14,7 @@ internal sealed partial class AnimationController
     // A descendant that sets the property itself, or has effects of its own, keeps its value and cuts the walk below it. Properties
     // whose descendants depend on the value through relative units (font-size and em) are copied as computed values, which text
     // follows exactly; em lengths of element descendants are not recomputed.
-    private static void BuildFollowers(StyledTree tree, ElementEffects e, int node)
+    private void BuildFollowers(StyledTree tree, ElementEffects e, int node)
     {
         e.FollowerNodes = [];
         e.FollowerRows = [];
@@ -54,7 +54,7 @@ internal sealed partial class AnimationController
         while (d >= 0 && nodes.Count < MaxFollowers)
         {
             bool follows = FollowsParent(tree, table, d, e, inherited);
-            if (follows && table.TryAllocatePrivate(in table[tree.StyleOf(d)], out StyleId row))
+            if (follows && AllocateRow(table, in table[tree.StyleOf(d)], out StyleId row))
             {
                 tree.ReplaceStyle(d, row);
                 nodes.Add(d);

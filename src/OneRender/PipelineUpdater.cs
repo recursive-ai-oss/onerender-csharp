@@ -113,6 +113,9 @@ internal sealed class PipelineUpdater
         }
 
         Styled.ClearPending();
+
+        // The one point where no style id is in flight: rows nothing refers to any more are freed for reuse.
+        Styled.Styles.ReclaimIfNeeded();
         return work;
     }
 

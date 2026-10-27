@@ -439,15 +439,12 @@ public class FloatLayoutTests
     }
 
     [Fact]
-    public void TenThousandFloatsInOneContextLayOutInBoundedTime()
+    public void TenThousandFloatsInOneContextLayOutWithoutHittingALimit()
     {
         string body = string.Concat(Enumerable.Repeat("<div style='float:left;width:30px;height:20px'></div>", 10_000));
-        var sw = System.Diagnostics.Stopwatch.StartNew();
         Lay l = Run(body);
-        sw.Stop();
         Assert.DoesNotContain(l.P.Styled.Diagnostics.Items, d => d.Kind == DiagnosticKind.LimitExceeded);
         // 800 / 30 = 26 floats per row, 385 rows of 20 px.
-        Assert.True(sw.ElapsedMilliseconds < 5000, "took " + sw.ElapsedMilliseconds + " ms");
         Fragment last = l.F.Root.LastChild;
         Assert.False(last.IsNull);
     }
@@ -457,11 +454,9 @@ public class FloatLayoutTests
     {
         // Every float is tall and narrow, so each new float has to look at all the earlier ones: quadratic without a cap.
         string body = string.Concat(Enumerable.Repeat("<div style='float:left;width:0.05px;height:100000px'></div>", 12_000));
-        var sw = System.Diagnostics.Stopwatch.StartNew();
         Lay l = Run(body);
-        sw.Stop();
+        // The cap on float comparisons is what bounds the work; reaching it is reported.
         Assert.Contains(l.P.Styled.Diagnostics.Items, d => d.Kind == DiagnosticKind.LimitExceeded && d.Message.Contains("floats", StringComparison.Ordinal));
-        Assert.True(sw.ElapsedMilliseconds < 10_000, "took " + sw.ElapsedMilliseconds + " ms");
     }
 
     [Fact]

@@ -12,7 +12,7 @@ namespace OneRender.Tree;
 /// <see cref="Build"/> regenerates every box. The columns, work stacks and style rows are kept between builds, so building the
 /// same styled tree again allocates nothing. Not thread-safe.
 /// </remarks>
-public sealed partial class BoxTree
+public sealed partial class BoxTree : IStyleHolder
 {
     private byte[] _kind;
     private byte[] _level;
@@ -44,6 +44,7 @@ public sealed partial class BoxTree
     {
         ArgumentNullException.ThrowIfNull(styled);
         Styled = styled;
+        styled.Styles.AddHolder(this);
         _kind = new byte[64];
         _level = new byte[64];
         _ctx = new byte[64];
@@ -57,6 +58,15 @@ public sealed partial class BoxTree
         _next = new int[64];
         _prev = new int[64];
         _nextPiece = new int[64];
+    }
+
+    /// <summary>Marks the rows of every box, anonymous boxes included, for <see cref="StyleTable.Reclaim"/>.</summary>
+    void IStyleHolder.MarkStyles(StyleTable table)
+    {
+        for (int i = 0; i < _count; i++)
+        {
+            table.Mark(_style[i]);
+        }
     }
 
     /// <summary>The styled tree the boxes were generated from.</summary>

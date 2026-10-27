@@ -23,13 +23,16 @@ public sealed class ChurnSoak
     private readonly StyleDeclaration[] _rows = new StyleDeclaration[Variants];
     private readonly StyleDeclaration[] _cells = new StyleDeclaration[Variants];
     private readonly string[] _numbers = new string[Variants];
+    private readonly StyledNode _mover;
+    private readonly StyledNode _moverLabel;
     private StyledNode _previous;
     private int _frame;
 
     /// <summary>Builds the page.</summary>
     /// <param name="fonts">The text service.</param>
+    /// <param name="moving">True to add an element whose style takes a new value every frame (its <c>left</c> is the frame number in px, its label's width is the frame number modulo 997), the way a host moves an element or sizes a timer label through styles. Every such value is a style never seen before.</param>
     /// <param name="fresh">True to give every inserted node a declaration made for it, as a host that builds styles on the fly does; false to share a fixed set, which is what a host that keeps its styles does.</param>
-    public ChurnSoak(IFontProvider fonts, bool fresh)
+    public ChurnSoak(IFontProvider fonts, bool fresh, bool moving = false)
     {
         _fresh = fresh;
         _tree = new StyledTree();
@@ -37,6 +40,15 @@ public sealed class ChurnSoak
         Page = new LivePage(_tree, new LivePageOptions(fonts) { ViewportWidth = GameUiScene.Width, ViewportHeight = GameUiScene.Height });
         _chat = nodes["quest3"].Parent.Parent.Parent.LastChild.LastChild; // the chat log of the bottom bar
         _layer = GameUiScene.Declaration("position:absolute;left:400px;top:120px;width:300px;height:300px;display:flex;flex-direction:column;");
+        if (moving)
+        {
+            _mover = _tree.AddElement(_tree.Root, "div", GameUiScene.Declaration("position:absolute;left:0px;top:40px;width:120px;height:30px;"));
+            _tree.AddText(_mover, "m");
+            _moverLabel = _tree.AddElement(_mover, "span", GameUiScene.Declaration("width:1px;height:10px;"));
+            _tree.AddText(_moverLabel, "t");
+            Page.Flush();
+        }
+
         _chatLine = GameUiScene.Declaration("display:flex;gap:6px;height:16px;font-size:12px;");
         _chatName = GameUiScene.Declaration("display:block;color:#7fd09a;white-space:nowrap;");
         _chatText = GameUiScene.Declaration("display:block;white-space:nowrap;");
@@ -122,7 +134,31 @@ public sealed class ChurnSoak
     /// <summary>Runs one frame: churn, then flush.</summary>
     public void Frame()
     {
+        Edit();
+        FlushEdits();
+    }
+
+    /// <summary>Runs the flush of a frame whose edits <see cref="Edit"/> made. Together they are <see cref="Frame"/>; apart, a test can measure the engine's share of a frame without the host's own work of building values.</summary>
+    public void FlushEdits()
+    {
+        long before = GC.GetAllocatedBytesForCurrentThread();
+        Page.Flush();
+        FlushBytes += GC.GetAllocatedBytesForCurrentThread() - before;
+    }
+
+    /// <summary>Bytes the engine allocated in the flushes so far, leaving out the host's own work in <see cref="Edit"/> (building declarations, parsing values).</summary>
+    public long FlushBytes { get; private set; }
+
+    /// <summary>Makes one frame's edits without flushing.</summary>
+    public void Edit()
+    {
         int f = _frame++;
+        if (!_mover.IsNull)
+        {
+            _tree.SetProperty(_mover, "left", Px(f));
+            _tree.SetProperty(_moverLabel, "width", Px((f % 997) + 1));
+        }
+
         if (!_previous.IsNull)
         {
             _tree.Remove(_previous);
@@ -135,8 +171,9 @@ public sealed class ChurnSoak
         StyledNode line = _tree.AddElement(_chat, "div", _chatLine);
         _tree.AddText(_tree.AddElement(line, "span", _chatName), _numbers[f % Variants]);
         _tree.AddText(_tree.AddElement(line, "span", _chatText), _numbers[(f + 3) % Variants]);
-        Page.Flush();
     }
+
+    private static string Px(int n) => n.ToString(System.Globalization.CultureInfo.InvariantCulture) + "px";
 
     /// <summary>The nodes the tree holds, the most it has ever needed at once, the columns' capacity and the style rows.</summary>
     public string Describe() =>
