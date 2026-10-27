@@ -105,6 +105,9 @@ public enum InputOutcome : byte
     /// <see cref="InteractivePage.PatchAnimations"/> brings the display list up to date; with it, paint again.
     /// </summary>
     Animated = 32,
+
+    /// <summary>The caret, selection or IME preedit of a text control changed (or the caret blinked): paint again. <see cref="Relaid"/> is set as well when the text itself changed.</summary>
+    EditChanged = 64,
 }
 
 /// <summary>Values for the host-dependent numbers of input handling.</summary>

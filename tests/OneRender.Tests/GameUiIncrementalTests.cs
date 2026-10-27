@@ -218,4 +218,33 @@ public class GameUiIncrementalTests
         long bytes = (GC.GetAllocatedBytesForCurrentThread() - before) / 200;
         Console.WriteLine($"TIMING html hover (pointer move through InteractivePage): {ms:F3} ms, {bytes} B per change");
     }
+
+    // Typing one character into a text field on the 1,000-node HUD page: zero bytes once warm, and its time (information).
+    [Fact]
+    public void TypingIntoAFieldOnTheHudPageAllocatesNothing()
+    {
+        string html = GameUiScene.Html().Replace("<body>", "<body><input id=tf value='hello' style='position:absolute;left:4px;top:4px;width:160px'>", StringComparison.Ordinal);
+        var options = new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = GameUiScene.Width, ViewportHeight = GameUiScene.Height };
+        InteractivePage page = InteractivePage.Create(html, options);
+        RecursiveAI.OneHtml.Node field = page.Page.Document.GetElementById("tf");
+        page.Focus(field, FocusReason.Script);
+        page.SetSelection(field, 5, 5);
+        KeyInput add = Ix.Key("a"), back = Ix.Key("Backspace");
+        bool flip = false;
+        void Step()
+        {
+            flip = !flip;
+            page.HandleKey(flip ? add : back);
+        }
+
+        Allocation.AssertZero(Step, "typing a character on the HUD page", warmup: 300, iterations: 100);
+        long t0 = Stopwatch.GetTimestamp();
+        for (int i = 0; i < 400; i++)
+        {
+            Step();
+        }
+
+        double ms = Stopwatch.GetElapsedTime(t0).TotalMilliseconds / 400;
+        Console.WriteLine($"TIMING typing one character on the HUD page (HTML, InteractivePage): {ms:F3} ms");
+    }
 }

@@ -190,6 +190,18 @@ public sealed partial class InteractivePage
     /// <returns>What happened.</returns>
     public InputOutcome HandleWheel(in WheelInput input, CancellationToken cancellationToken = default)
     {
+        // A wheel turn anywhere but over the open drop-down's list closes it, as scrolling the page does in a browser.
+        InputOutcome closed = InputOutcome.None;
+        if (_page.Form.OpenIndex >= 0 && _hits.HitTest(input.X, input.Y, out HitResult over))
+        {
+            closed = CloseDropdownOnOutsidePress(over.Node, cancellationToken);
+        }
+
+        return closed | HandleWheelCore(in input, cancellationToken);
+    }
+
+    private InputOutcome HandleWheelCore(in WheelInput input, CancellationToken cancellationToken)
+    {
         _lastX = input.X;
         _lastY = input.Y;
         _lastButtons = input.Buttons;

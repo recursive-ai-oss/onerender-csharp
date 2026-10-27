@@ -60,14 +60,15 @@ public sealed partial class InteractivePage
         AnimationController? motion = _page.Motion;
         _patchCount = 0;
         _lastMotion = MotionLevel.None;
+        InputOutcome caret = TickCaret(_motionNow);
         if (motion is null)
         {
-            return InputOutcome.None;
+            return caret;
         }
 
         MotionLevel level = motion.Tick(_motionNow);
         _lastMotion = level;
-        InputOutcome outcome = InputOutcome.None;
+        InputOutcome outcome = caret;
         switch (level)
         {
             case MotionLevel.Compositor:

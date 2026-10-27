@@ -14,7 +14,7 @@ public sealed partial class Painter
     private byte[] _wavVerbs = new byte[64];
     private float[] _wavCoords = new float[256];
 
-    private void PaintText(int f)
+    private void PaintTextCore(int f)
     {
         Observer?.Content(_tree.Make(f), _list.Count);
         Box box = _boxes.Make(_tree.BoxOf(f));
@@ -56,6 +56,12 @@ public sealed partial class Painter
 
         PaintColor color = new(v.Color.R, v.Color.G, v.Color.B, v.Color.A);
         float ox = C(_absX[f]), oy = C(_baseY[f]);
+        if (_recolor)
+        {
+            // Editing: the selected glyphs again in the ::selection color, clipped to the highlight by the caller.
+            DrawRun(_recolorId, in run, ox, oy, _recolorColor, count, text, 0f);
+            return;
+        }
 
         // Text Decoration 4 §4: shadows first (the first one on top), then underline and overline, the text, then line-through.
         ShadowList shadows = v.TextShadow;

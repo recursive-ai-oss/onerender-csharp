@@ -84,7 +84,7 @@ public sealed partial class Painter
 
     // ------------------------------------------------------------------ the box
 
-    private void PaintBoxDecoration(int f)
+    private void PaintBoxDecorationCore(int f)
     {
         Observer?.Content(_tree.Make(f), _list.Count);
         Box box = _boxes.Make(_tree.BoxOf(f));

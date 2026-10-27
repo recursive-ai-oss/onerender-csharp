@@ -50,6 +50,9 @@ public enum ControlKind : byte
 
     /// <summary>The rendered legend of a fieldset (its first <c>legend</c> child).</summary>
     Legend,
+
+    /// <summary>The list of an open drop-down select: painted and hit-tested in the top layer, above everything else of the page.</summary>
+    SelectPopup,
 }
 
 /// <summary>The state of a control that the way it is drawn depends on.</summary>

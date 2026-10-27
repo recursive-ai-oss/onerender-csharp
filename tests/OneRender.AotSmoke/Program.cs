@@ -224,6 +224,18 @@ var fmList = new DisplayList();
 fm.Page.Paint(fmList);
 bool formsOk = fm.IsChecked(fmBox) && fm.IsDropdownOpen(fmSelect) && fmList.Count > 10;
 
+// Text editing: type into a field, compose through the IME, undo and read the value back.
+Node fmText = fm.Page.Document.GetElementById("t");
+fm.Focus(fmText, FocusReason.Script);
+fm.SetSelection(fmText, 5, 5);
+fm.HandleKey(new KeyInput { Key = "!", Down = true });
+fm.CompositionStart();
+fm.CompositionUpdate("ab", 1);
+fm.CompositionEnd("ab");
+bool editOk = fm.GetValue(fmText) == "hello!ab";
+fm.Undo();
+editOk = editOk && fm.GetValue(fmText).Length < 8;
+
 // Animations: a keyframe animation and a transition, ticked with the host clock; the events and the animated value must come out.
 InteractivePage mo = InteractivePage.Create(
     "<style>@keyframes f{from{opacity:0;transform:rotate(0deg)}to{opacity:1;transform:rotate(90deg)}}#a{width:20px;height:20px;animation:f 1s linear both}#b{width:10px;height:10px;opacity:0;transition:opacity 1s linear}#b:focus{opacity:1}</style><body style='margin:0'><div id=a></div><div id=b tabindex=0></div></body>",
@@ -271,7 +283,7 @@ OneRender.Paged.PagedDocument paged = OneRender.Paged.PagedDocument.Create(
     new OneRender.Paged.PagedOptions(FontProviders.CreateDefault()));
 bool pagedOk = paged.PageCount >= 3 && paged.Destinations.Count == 1 && paged.GetPageLayer(0) is not null;
 
-return moOk && liveOk && pdfOk && pagedOk && factsOk && ixOk && formsOk && names.Length == 3 && tableOk && sfnt && painted && pageOk && boxes >= 3 && scrollOk && shaped && again && woff2Ok ? 0 : 1;
+return editOk && moOk && liveOk && pdfOk && pagedOk && factsOk && ixOk && formsOk && names.Length == 3 && tableOk && sfnt && painted && pageOk && boxes >= 3 && scrollOk && shaped && again && woff2Ok ? 0 : 1;
 
 internal sealed class NoFonts : OneRender.Layout.IFontProvider
 {

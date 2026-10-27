@@ -446,6 +446,7 @@ public sealed partial class HtmlFrontEnd
         v.BorderTopColor = v.BorderRightColor = v.BorderBottomColor = v.BorderLeftColor = line;
         v.MaxHeight = Length.FromPx(300);
         v.OverflowY = OverflowKind.Auto;
+        v.Control = ControlKind.SelectPopup;
         int popup = _tree.NewNode(StyledNodeKind.Element, idx, table.Derive(anon, in v), -1);
         _popupParent = popup;
         return popup;
@@ -662,7 +663,7 @@ public sealed partial class HtmlFrontEnd
     }
 
     /// <summary>HTML §4.10.10: an option's label is its label attribute when that is not empty, otherwise its text with white space stripped and collapsed.</summary>
-    private static string OptionLabel(Node option)
+    internal static string OptionLabel(Node option)
     {
         string? label = option.GetAttribute("label");
         if (!string.IsNullOrEmpty(label))
@@ -738,28 +739,16 @@ public sealed partial class HtmlFrontEnd
 
     private void AddControlContent(Node element, int idx, ControlKind kind)
     {
+        if (kind is ControlKind.TextField or ControlKind.Password or ControlKind.TextArea)
+        {
+            AddTextControlContent(element, idx, kind);
+            return;
+        }
+
         string? text = null;
         bool placeholder = false;
         switch (kind)
         {
-            case ControlKind.TextField:
-            case ControlKind.Password:
-            {
-                string value = Sanitize(element.GetAttribute("value"));
-                if (value.Length == 0)
-                {
-                    value = Sanitize(element.GetAttribute("placeholder"));
-                    placeholder = value.Length > 0;
-                }
-                else if (kind == ControlKind.Password)
-                {
-                    value = new string('\u2022', value.Length);
-                }
-
-                text = value;
-                break;
-            }
-
             case ControlKind.ButtonInput:
             {
                 string? value = element.GetAttribute("value");
@@ -772,19 +761,6 @@ public sealed partial class HtmlFrontEnd
                 }
 
                 text = Sanitize(value);
-                break;
-            }
-
-            case ControlKind.TextArea:
-            {
-                // HTML §4.10.11: the placeholder shows while the value is empty. The value is the element's text.
-                string? ph = element.GetAttribute("placeholder");
-                if (!string.IsNullOrEmpty(ph) && element.FirstChild.IsNull)
-                {
-                    text = ph.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n');
-                    placeholder = true;
-                }
-
                 break;
             }
 
@@ -818,6 +794,74 @@ public sealed partial class HtmlFrontEnd
             _tree.SetText(t, text);
         }
     }
+
+    // The text of an editable control: one text node with the value (empty when there is none, so an edit can fill it without changing
+    // the shape of the tree) and, when the control has a placeholder, a second node with the placeholder in Chrome's placeholder color.
+    // It holds the placeholder text only while the value is empty (HTML §4.10.5.1.1 and §4.10.11).
+    private void AddTextControlContent(Node element, int idx, ControlKind kind)
+    {
+        TextEditSession? session = null;
+        Form?.TryGetText(element, out session);
+        ReadOnlySpan<char> shown;
+        string value = string.Empty;
+        if (session is not null)
+        {
+            shown = session.Display;
+        }
+        else
+        {
+            value = InitialValue(element, kind);
+            shown = kind == ControlKind.Password ? new string('•', value.Length) : value;
+        }
+
+        string placeholder = PlaceholderOf(element, kind);
+        StyleTable table = _tree.Styles;
+        StyleId owner = _tree.StyleOf(idx);
+        StyleId ts = table.GetAnonymous(owner, DisplayType.Inline);
+        int t = _tree.NewNode(StyledNodeKind.Text, idx, ts, -1);
+        if (t >= 0)
+        {
+            _tree.SetText(t, shown);
+        }
+
+        if (placeholder.Length > 0)
+        {
+            // Chrome's placeholder color (darkgray at 75% luminance).
+            ComputedValues tv = table[ts];
+            tv.Color = new ColorValue(117 / 255f, 117 / 255f, 117 / 255f, 1);
+            int p = _tree.NewNode(StyledNodeKind.Text, idx, table.Derive(ts, in tv), -1);
+            if (p >= 0)
+            {
+                _tree.SetText(p, shown.IsEmpty ? placeholder : string.Empty);
+            }
+        }
+    }
+
+    /// <summary>The value a text control starts with: the <c>value</c> attribute, or for a textarea its text (HTML §4.10.11 raw value, line breaks normalized).</summary>
+    internal static string InitialValue(Node element, ControlKind kind)
+    {
+        if (kind == ControlKind.TextArea)
+        {
+            return NormalizeNewlines(element.TextContent ?? string.Empty);
+        }
+
+        return Sanitize(element.GetAttribute("value"));
+    }
+
+    /// <summary>The placeholder of a text control, with line breaks as the control allows (none in a single-line field).</summary>
+    internal static string PlaceholderOf(Node element, ControlKind kind)
+    {
+        string? ph = element.GetAttribute("placeholder");
+        if (string.IsNullOrEmpty(ph))
+        {
+            return string.Empty;
+        }
+
+        return kind == ControlKind.TextArea ? NormalizeNewlines(ph) : Sanitize(ph);
+    }
+
+    private static string NormalizeNewlines(string s) =>
+        s.AsSpan().IndexOf('\r') < 0 ? s : s.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n');
 
     // HTML §4.10.5.1.x value sanitization algorithm for single-line fields: line breaks are removed.
     private static string Sanitize(string? value)

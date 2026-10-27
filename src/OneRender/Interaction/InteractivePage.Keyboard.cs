@@ -58,7 +58,12 @@ public sealed partial class InteractivePage
             return outcome;
         }
 
-        if (input.Down && (plain || input.Modifiers == KeyModifiers.Alt) && TrySelectKey(key, input.Modifiers == KeyModifiers.Alt, cancellationToken, out InputOutcome selectOutcome))
+        if (TryEditKey(in input, cancellationToken, out InputOutcome editOutcome))
+        {
+            return outcome | editOutcome | FlushStates(cancellationToken);
+        }
+
+        if (input.Down && TrySelectKey(key, input.Modifiers, cancellationToken, out InputOutcome selectOutcome))
         {
             return outcome | selectOutcome | FlushStates(cancellationToken);
         }

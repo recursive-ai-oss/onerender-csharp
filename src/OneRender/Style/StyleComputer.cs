@@ -307,6 +307,8 @@ internal sealed partial class StyleComputer
         v.PointerEvents = p.PointerEvents;
         v.AccentColor = p.AccentColor;
         v.AccentColorAuto = p.AccentColorAuto;
+        v.CaretColor = p.CaretColor;
+        v.CaretColorAuto = p.CaretColorAuto;
         v.FontFamily = p.FontFamily;
         v.FontSize = p.FontSize;
         v.FontSizeKeyword = p.FontSizeKeyword;
