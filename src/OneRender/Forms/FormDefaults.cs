@@ -34,7 +34,11 @@ internal static class FormDefaults
         "meter{display:inline-block;box-sizing:border-box;width:5em;height:1em;vertical-align:-0.2em;}" +
         "fieldset{border-color:#efefef;}" +
         "fieldset>legend{width:fit-content;}" +
+        "input:is([type=checkbox i],[type=radio i]):focus-visible{outline-offset:2px;}" +
+        "button:enabled:hover,input:is([type=button i],[type=submit i],[type=reset i]):enabled:hover{background-color:#e5e5e5;border-color:#4f4f4f;}" +
+        "button:enabled:active,input:is([type=button i],[type=submit i],[type=reset i]):enabled:active{background-color:#f5f5f5;border-color:#464646;}" +
         "input:disabled,textarea:disabled,select:disabled{color:#545454;}" +
-        "input:disabled:not([type=checkbox i],[type=radio i],[type=range i],[type=button i],[type=submit i],[type=reset i]),textarea:disabled{background-color:rgba(239,239,239,.3);}" +
-        "button:disabled,input:is([type=button i],[type=submit i],[type=reset i]):disabled{color:rgba(16,16,16,.3);background-color:rgba(239,239,239,.3);border-color:rgba(118,118,118,.3);}";
+        "input:disabled:not([type=checkbox i],[type=radio i],[type=range i],[type=button i],[type=submit i],[type=reset i]),textarea:disabled{background-color:rgba(239,239,239,.3);border-color:rgba(118,118,118,.3);}" +
+        "button:disabled,input:is([type=button i],[type=submit i],[type=reset i]):disabled{color:rgba(16,16,16,.35);background-color:#eee;border-color:rgba(118,118,118,.3);}" +
+        "select:disabled{color:rgba(16,16,16,.38);background-color:rgba(239,239,239,.3);border-color:rgba(118,118,118,.3);}";
 }

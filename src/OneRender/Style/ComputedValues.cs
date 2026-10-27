@@ -373,6 +373,15 @@ public partial struct ComputedValues
     /// </summary>
     internal double LegendGap { get; set; }
 
+    /// <summary>Which form control the element is, for painting it natively; <see cref="Forms.ControlKind.None"/> for everything else. Set by the front end.</summary>
+    internal Forms.ControlKind Control { get; set; }
+
+    /// <summary>The state flags of the control that its native look depends on. Set by the front end; not a CSS property.</summary>
+    internal Forms.ControlStates ControlState { get; set; }
+
+    /// <summary>For a range, progress or meter: how far along the track the value is, 0 to 1 (NaN for a progress bar without a value). Set by the front end.</summary>
+    internal double ControlFraction { get; set; }
+
     /// <summary>
     /// The horizontal padding in px that the front end added inside a drop-down select for its arrow and text inset. It is part of the
     /// widget, not of the author's box, so a percentage width does not count it toward a minimum size. 0 for every other box.

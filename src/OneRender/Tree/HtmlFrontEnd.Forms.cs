@@ -1,6 +1,7 @@
 using OneRender.Forms;
 using OneRender.Style;
 using RecursiveAI.OneHtml;
+using RecursiveAI.OneHtml.Selectors;
 
 namespace OneRender.Tree;
 
@@ -12,6 +13,13 @@ public sealed partial class HtmlFrontEnd
 {
     // Set by AddElement for the element it has just added: its children are the control's own insides and are not boxes.
     private bool _noDescend;
+
+    // The form state the user changed (checkedness, a range value, a selection); null when the document's attributes are all there is.
+    internal Forms.FormState? Form { get; set; }
+
+    private static readonly SelectorList DisabledSelector = SelectorList.Parse(":disabled");
+    private static readonly SelectorList CheckedSelector = SelectorList.Parse(":checked");
+    private static readonly SelectorList IndeterminateSelector = SelectorList.Parse(":indeterminate");
 
     private static bool IsHtmlTag(Node element, string tag) => element.Namespace == ElementNamespace.Html && element.LocalName.Equals(tag, StringComparison.Ordinal);
 
@@ -34,6 +42,7 @@ public sealed partial class HtmlFrontEnd
                 return IsListbox(element) ? ControlKind.SelectList : ControlKind.SelectMenu;
             case "progress": return ControlKind.Progress;
             case "meter": return ControlKind.Meter;
+            case "fieldset": return ControlKind.Fieldset;
             default: return ControlKind.None;
         }
     }
@@ -98,6 +107,11 @@ public sealed partial class HtmlFrontEnd
         ControlKind kind = Classify(element);
         if (kind == ControlKind.None)
         {
+            if (IsHtmlTag(element, "option"))
+            {
+                return AdjustOption(element, style);
+            }
+
             return IsRenderedLegend(element) ? AdjustLegend(style, parentStyle) : style;
         }
 
@@ -205,6 +219,7 @@ public sealed partial class HtmlFrontEnd
             }
         }
 
+        StampControl(element, kind, ref v);
         if (kind is ControlKind.TextField or ControlKind.Password or ControlKind.ButtonInput or ControlKind.SelectMenu)
         {
             v.InnerBaseline = InnerBaselineOf(fonts, in v, kind == ControlKind.SelectMenu);
@@ -212,6 +227,93 @@ public sealed partial class HtmlFrontEnd
 
         return table.Derive(style, in v);
     }
+
+    // What the native look of a control depends on, from its attributes and the state the user changed (HTML §4.10.5.1 and §4.10.13-14).
+    private void StampControl(Node element, ControlKind kind, ref ComputedValues v)
+    {
+        v.Control = kind;
+        ControlStates st = ControlStates.None;
+        if (element.Matches(DisabledSelector))
+        {
+            st |= ControlStates.Disabled;
+        }
+
+        if (element.HasAttribute("readonly"))
+        {
+            st |= ControlStates.ReadOnly;
+        }
+
+        v.ControlFraction = 0;
+        switch (kind)
+        {
+            case ControlKind.Checkbox:
+            case ControlKind.Radio:
+                if (Form is not null && Form.TryGetChecked(element, out bool on) ? on : element.Matches(CheckedSelector))
+                {
+                    st |= ControlStates.Checked;
+                }
+
+                if (kind == ControlKind.Checkbox && Form is not null && Form.IsIndeterminate(element))
+                {
+                    st |= ControlStates.Indeterminate;
+                }
+
+                break;
+            case ControlKind.Range:
+                v.ControlFraction = Form is not null && Form.TryGetRangeFraction(element, out double rf)
+                    ? rf
+                    : FormValues.RangeFraction(element.GetAttribute("value"), element.GetAttribute("min"), element.GetAttribute("max"), element.GetAttribute("step"));
+                break;
+            case ControlKind.Progress:
+                v.ControlFraction = FormValues.ProgressFraction(element.GetAttribute("value"), element.GetAttribute("max"));
+                if (double.IsNaN(v.ControlFraction))
+                {
+                    st |= ControlStates.Indeterminate;
+                    v.ControlFraction = 0;
+                }
+
+                break;
+            case ControlKind.Meter:
+                v.ControlFraction = FormValues.MeterFraction(element.GetAttribute("value"), element.GetAttribute("min"), element.GetAttribute("max"), element.GetAttribute("low"), element.GetAttribute("high"), element.GetAttribute("optimum"), out FormValues.MeterRegion region);
+                st |= region == FormValues.MeterRegion.Suboptimum ? ControlStates.MeterSuboptimum : region == FormValues.MeterRegion.EvenLessGood ? ControlStates.MeterBad : ControlStates.None;
+                break;
+        }
+
+        if (Form is not null && Form.IsOpen(element))
+        {
+            st |= ControlStates.Open;
+        }
+
+        v.ControlState = st;
+    }
+
+    // A selected option of a list box shows the selection color (Chrome: #cbcbcb while the list is unfocused).
+    private StyleId AdjustOption(Node option, StyleId style)
+    {
+        Node select = option.Parent;
+        if (!select.IsNull && IsHtmlTag(select, "optgroup"))
+        {
+            select = select.Parent;
+        }
+
+        if (select.IsNull || !IsHtmlTag(select, "select") || !IsListbox(select) || !IsOptionSelected(option))
+        {
+            return style;
+        }
+
+        StyleTable table = _tree.Styles;
+        ComputedValues v = table[style];
+        v.Control = ControlKind.Option;
+        v.ControlState = ControlStates.Checked;
+        if (v.BackgroundColor.A == 0)
+        {
+            v.BackgroundColor = new ColorValue(203 / 255f, 203 / 255f, 203 / 255f, 1);
+        }
+
+        return table.Derive(style, in v);
+    }
+
+    private bool IsOptionSelected(Node option) => Form is not null && Form.TryGetSelected(option, out bool on) ? on : option.HasAttribute("selected");
 
     // The baseline of a line of the control's text, from the top of its content box: the rounded ascent, moved by half the difference
     // between the used line height and the face's line spacing. Probe: 12 px below the content top for Arial 13.33 px (input baseline 15).
@@ -240,6 +342,7 @@ public sealed partial class HtmlFrontEnd
         double pad = FormMetrics.Px(p.PaddingTop);
         v.MarginTop = Length.FromPx(-(p.BorderTopWidth + pad));
         v.LegendGap = pad;
+        v.Control = ControlKind.Legend;
         return table.Derive(style, in v);
     }
 
@@ -445,7 +548,7 @@ public sealed partial class HtmlFrontEnd
     }
 
     /// <summary>The option a drop-down shows: the last one with the selected attribute, else the first (HTML §4.10.7, selectedness setting algorithm).</summary>
-    private static Node SelectedOption(Node select)
+    private Node SelectedOption(Node select)
     {
         Node first = default;
         Node chosen = default;
@@ -456,7 +559,7 @@ public sealed partial class HtmlFrontEnd
                 first = o;
             }
 
-            if (o.HasAttribute("selected"))
+            if (IsOptionSelected(o))
             {
                 chosen = o;
             }
@@ -503,6 +606,19 @@ public sealed partial class HtmlFrontEnd
                 }
 
                 text = Sanitize(value);
+                break;
+            }
+
+            case ControlKind.TextArea:
+            {
+                // HTML §4.10.11: the placeholder shows while the value is empty. The value is the element's text.
+                string? ph = element.GetAttribute("placeholder");
+                if (!string.IsNullOrEmpty(ph) && element.FirstChild.IsNull)
+                {
+                    text = ph.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n');
+                    placeholder = true;
+                }
+
                 break;
             }
 
