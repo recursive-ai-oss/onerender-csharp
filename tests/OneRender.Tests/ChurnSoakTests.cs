@@ -8,7 +8,7 @@ namespace OneRender.Tests;
 
 /// <summary>Runs alone: the heap figures are the whole process's, so other tests running beside it would blur them.</summary>
 [CollectionDefinition("ChurnSoak", DisableParallelization = true)]
-public sealed class ChurnSoakCollection;
+public sealed class ChurnSoakSerial;
 
 /// <summary>A tree that adds and removes nodes for as long as the program runs stays the size of what is live.</summary>
 [Collection("ChurnSoak")]
