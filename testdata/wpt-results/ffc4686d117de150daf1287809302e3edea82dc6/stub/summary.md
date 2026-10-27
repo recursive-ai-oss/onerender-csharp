@@ -1,0 +1,119 @@
+# WPT reftest results: stub
+
+- WPT commit: `ffc4686d117de150daf1287809302e3edea82dc6`
+- Renderer: stub (onerender seam (provisional))
+- Rate = pass / (total - skipped). Blank = the comparison held but nothing was painted; it never counts as a pass.
+- Stride N means every Nth discovered test was run.
+
+| Module | Stride | Total | Pass | Fail | Blank | Skipped | Rate |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| css-animations | 1 | 163 | 0 | 0 | 16 | 147 | 0.0000 |
+| css-backgrounds | 1 | 847 | 0 | 12 | 607 | 228 | 0.0000 |
+| css-borders | 1 | 181 | 0 | 0 | 94 | 87 | 0.0000 |
+| css-break | 1 | 1191 | 0 | 0 | 1044 | 147 | 0.0000 |
+| css-color | 1 | 377 | 0 | 1 | 295 | 81 | 0.0000 |
+| css-flexbox | 1 | 1398 | 0 | 0 | 952 | 446 | 0.0000 |
+| css-fonts | 1 | 551 | 0 | 48 | 290 | 213 | 0.0000 |
+| css-grid | 1 | 2481 | 0 | 0 | 1573 | 908 | 0.0000 |
+| css-inline | 1 | 255 | 0 | 0 | 163 | 92 | 0.0000 |
+| css-multicol | 1 | 563 | 0 | 0 | 400 | 163 | 0.0000 |
+| css-overflow | 1 | 892 | 0 | 4 | 502 | 386 | 0.0000 |
+| css-page | 1 | 247 | 0 | 0 | 7 | 240 | 0.0000 |
+| css-position | 1 | 367 | 0 | 0 | 131 | 236 | 0.0000 |
+| css-tables | 1 | 308 | 0 | 1 | 137 | 170 | 0.0000 |
+| css-text | 1 | 1860 | 0 | 123 | 1262 | 475 | 0.0000 |
+| css-transforms | 1 | 904 | 0 | 81 | 630 | 193 | 0.0000 |
+| css-transitions | 1 | 131 | 0 | 0 | 1 | 130 | 0.0000 |
+| css-ui | 1 | 1075 | 0 | 9 | 104 | 962 | 0.0000 |
+| css-values | 1 | 497 | 0 | 0 | 167 | 330 | 0.0000 |
+| css2-floats | 1 | 345 | 0 | 12 | 302 | 31 | 0.0000 |
+| css2-flow | 1 | 2415 | 0 | 23 | 2243 | 149 | 0.0000 |
+| css2-generated | 1 | 382 | 0 | 0 | 359 | 23 | 0.0000 |
+| css2-positioning | 1 | 654 | 0 | 0 | 620 | 34 | 0.0000 |
+| css2-tables | 1 | 375 | 0 | 0 | 249 | 126 | 0.0000 |
+| **all** | | 18459 | 0 | 314 | 12148 | 5997 | 0.0000 |
+
+## Why tests failed or were skipped
+
+### css-animations
+
+- Skipped: 127 × testharness.js test; 16 × reftest-wait (needs script); 4 × script-dependent
+### css-backgrounds
+
+- Failures: 10 × != reference identical; 2 × == reference differs
+- Skipped: 132 × testharness.js test; 71 × reftest-wait (needs script); 25 × script-dependent
+### css-borders
+
+- Skipped: 79 × testharness.js test; 4 × reftest-wait (needs script); 4 × script-dependent
+### css-break
+
+- Skipped: 66 × print reftest (paged output); 48 × testharness.js test; 26 × script-dependent; 7 × reftest-wait (needs script)
+### css-color
+
+- Failures: 1 × != reference identical
+- Skipped: 69 × testharness.js test; 7 × reftest-wait (needs script); 5 × script-dependent
+### css-flexbox
+
+- Skipped: 376 × testharness.js test; 62 × script-dependent; 5 × reftest-wait (needs script); 3 × print reftest (paged output)
+### css-fonts
+
+- Failures: 48 × != reference identical
+- Skipped: 172 × testharness.js test; 30 × reftest-wait (needs script); 9 × script-dependent; 2 × print reftest (paged output)
+### css-grid
+
+- Skipped: 758 × testharness.js test; 129 × script-dependent; 19 × reftest-wait (needs script); 2 × reference file missing
+### css-inline
+
+- Skipped: 59 × testharness.js test; 25 × script-dependent; 5 × reftest-wait (needs script); 3 × print reftest (paged output)
+### css-multicol
+
+- Skipped: 95 × testharness.js test; 43 × reftest-wait (needs script); 21 × script-dependent; 4 × print reftest (paged output)
+### css-overflow
+
+- Failures: 4 × != reference identical
+- Skipped: 228 × testharness.js test; 84 × reftest-wait (needs script); 73 × script-dependent; 1 × reference file missing
+### css-page
+
+- Skipped: 217 × print reftest (paged output); 23 × testharness.js test
+### css-position
+
+- Skipped: 115 × testharness.js test; 81 × script-dependent; 37 × reftest-wait (needs script); 3 × print reftest (paged output)
+### css-tables
+
+- Failures: 1 × != reference identical
+- Skipped: 137 × testharness.js test; 20 × script-dependent; 9 × reftest-wait (needs script); 4 × print reftest (paged output)
+### css-text
+
+- Failures: 123 × != reference identical
+- Skipped: 366 × testharness.js test; 89 × script-dependent; 20 × reftest-wait (needs script)
+### css-transforms
+
+- Failures: 74 × != reference identical; 7 × == reference differs
+- Skipped: 108 × testharness.js test; 60 × reftest-wait (needs script); 23 × script-dependent; 2 × reference file missing
+### css-transitions
+
+- Skipped: 125 × testharness.js test; 3 × reftest-wait (needs script); 2 × script-dependent
+### css-ui
+
+- Failures: 9 × != reference identical
+- Skipped: 818 × script-dependent; 115 × testharness.js test; 29 × reftest-wait (needs script)
+### css-values
+
+- Skipped: 284 × testharness.js test; 27 × script-dependent; 17 × reftest-wait (needs script); 2 × print reftest (paged output)
+### css2-floats
+
+- Failures: 12 × != reference identical
+- Skipped: 20 × testharness.js test; 7 × script-dependent; 4 × reftest-wait (needs script)
+### css2-flow
+
+- Failures: 23 × != reference identical
+- Skipped: 83 × script-dependent; 35 × reftest-wait (needs script); 31 × testharness.js test
+### css2-generated
+
+- Skipped: 19 × script-dependent; 3 × reftest-wait (needs script); 1 × reference file missing
+### css2-positioning
+
+- Skipped: 15 × script-dependent; 13 × testharness.js test; 6 × reftest-wait (needs script)
+### css2-tables
+
+- Skipped: 120 × script-dependent; 3 × reftest-wait (needs script); 2 × testharness.js test; 1 × reference file missing
