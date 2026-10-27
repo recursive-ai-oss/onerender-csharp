@@ -1,0 +1,280 @@
+{
+  "formatVersion": 1,
+  "wptCommit": "ffc4686d117de150daf1287809302e3edea82dc6",
+  "renderer": "stub",
+  "rendererVersion": "onerender seam (provisional)",
+  "modules": [
+    {
+      "module": "css-animations",
+      "sampleStride": 1,
+      "discovered": 163,
+      "total": 163,
+      "pass": 0,
+      "fail": 0,
+      "blank": 16,
+      "skipped": 147,
+      "rate": "0.0000"
+    },
+    {
+      "module": "css-backgrounds",
+      "sampleStride": 1,
+      "discovered": 847,
+      "total": 847,
+      "pass": 0,
+      "fail": 12,
+      "blank": 607,
+      "skipped": 228,
+      "rate": "0.0000"
+    },
+    {
+      "module": "css-borders",
+      "sampleStride": 1,
+      "discovered": 181,
+      "total": 181,
+      "pass": 0,
+      "fail": 0,
+      "blank": 94,
+      "skipped": 87,
+      "rate": "0.0000"
+    },
+    {
+      "module": "css-break",
+      "sampleStride": 1,
+      "discovered": 1191,
+      "total": 1191,
+      "pass": 0,
+      "fail": 0,
+      "blank": 1044,
+      "skipped": 147,
+      "rate": "0.0000"
+    },
+    {
+      "module": "css-color",
+      "sampleStride": 1,
+      "discovered": 377,
+      "total": 377,
+      "pass": 0,
+      "fail": 1,
+      "blank": 295,
+      "skipped": 81,
+      "rate": "0.0000"
+    },
+    {
+      "module": "css-flexbox",
+      "sampleStride": 1,
+      "discovered": 1398,
+      "total": 1398,
+      "pass": 0,
+      "fail": 0,
+      "blank": 952,
+      "skipped": 446,
+      "rate": "0.0000"
+    },
+    {
+      "module": "css-fonts",
+      "sampleStride": 1,
+      "discovered": 551,
+      "total": 551,
+      "pass": 0,
+      "fail": 48,
+      "blank": 290,
+      "skipped": 213,
+      "rate": "0.0000"
+    },
+    {
+      "module": "css-grid",
+      "sampleStride": 1,
+      "discovered": 2481,
+      "total": 2481,
+      "pass": 0,
+      "fail": 0,
+      "blank": 1573,
+      "skipped": 908,
+      "rate": "0.0000"
+    },
+    {
+      "module": "css-inline",
+      "sampleStride": 1,
+      "discovered": 255,
+      "total": 255,
+      "pass": 0,
+      "fail": 0,
+      "blank": 163,
+      "skipped": 92,
+      "rate": "0.0000"
+    },
+    {
+      "module": "css-multicol",
+      "sampleStride": 1,
+      "discovered": 563,
+      "total": 563,
+      "pass": 0,
+      "fail": 0,
+      "blank": 400,
+      "skipped": 163,
+      "rate": "0.0000"
+    },
+    {
+      "module": "css-overflow",
+      "sampleStride": 1,
+      "discovered": 892,
+      "total": 892,
+      "pass": 0,
+      "fail": 4,
+      "blank": 502,
+      "skipped": 386,
+      "rate": "0.0000"
+    },
+    {
+      "module": "css-page",
+      "sampleStride": 1,
+      "discovered": 247,
+      "total": 247,
+      "pass": 0,
+      "fail": 0,
+      "blank": 7,
+      "skipped": 240,
+      "rate": "0.0000"
+    },
+    {
+      "module": "css-position",
+      "sampleStride": 1,
+      "discovered": 367,
+      "total": 367,
+      "pass": 0,
+      "fail": 0,
+      "blank": 131,
+      "skipped": 236,
+      "rate": "0.0000"
+    },
+    {
+      "module": "css-tables",
+      "sampleStride": 1,
+      "discovered": 308,
+      "total": 308,
+      "pass": 0,
+      "fail": 1,
+      "blank": 137,
+      "skipped": 170,
+      "rate": "0.0000"
+    },
+    {
+      "module": "css-text",
+      "sampleStride": 1,
+      "discovered": 1860,
+      "total": 1860,
+      "pass": 0,
+      "fail": 123,
+      "blank": 1262,
+      "skipped": 475,
+      "rate": "0.0000"
+    },
+    {
+      "module": "css-transforms",
+      "sampleStride": 1,
+      "discovered": 904,
+      "total": 904,
+      "pass": 0,
+      "fail": 81,
+      "blank": 630,
+      "skipped": 193,
+      "rate": "0.0000"
+    },
+    {
+      "module": "css-transitions",
+      "sampleStride": 1,
+      "discovered": 131,
+      "total": 131,
+      "pass": 0,
+      "fail": 0,
+      "blank": 1,
+      "skipped": 130,
+      "rate": "0.0000"
+    },
+    {
+      "module": "css-ui",
+      "sampleStride": 1,
+      "discovered": 1075,
+      "total": 1075,
+      "pass": 0,
+      "fail": 9,
+      "blank": 104,
+      "skipped": 962,
+      "rate": "0.0000"
+    },
+    {
+      "module": "css-values",
+      "sampleStride": 1,
+      "discovered": 497,
+      "total": 497,
+      "pass": 0,
+      "fail": 0,
+      "blank": 167,
+      "skipped": 330,
+      "rate": "0.0000"
+    },
+    {
+      "module": "css2-floats",
+      "sampleStride": 1,
+      "discovered": 345,
+      "total": 345,
+      "pass": 0,
+      "fail": 12,
+      "blank": 302,
+      "skipped": 31,
+      "rate": "0.0000"
+    },
+    {
+      "module": "css2-flow",
+      "sampleStride": 1,
+      "discovered": 2415,
+      "total": 2415,
+      "pass": 0,
+      "fail": 23,
+      "blank": 2243,
+      "skipped": 149,
+      "rate": "0.0000"
+    },
+    {
+      "module": "css2-generated",
+      "sampleStride": 1,
+      "discovered": 382,
+      "total": 382,
+      "pass": 0,
+      "fail": 0,
+      "blank": 359,
+      "skipped": 23,
+      "rate": "0.0000"
+    },
+    {
+      "module": "css2-positioning",
+      "sampleStride": 1,
+      "discovered": 654,
+      "total": 654,
+      "pass": 0,
+      "fail": 0,
+      "blank": 620,
+      "skipped": 34,
+      "rate": "0.0000"
+    },
+    {
+      "module": "css2-tables",
+      "sampleStride": 1,
+      "discovered": 375,
+      "total": 375,
+      "pass": 0,
+      "fail": 0,
+      "blank": 249,
+      "skipped": 126,
+      "rate": "0.0000"
+    }
+  ],
+  "totals": {
+    "total": 18459,
+    "pass": 0,
+    "fail": 314,
+    "blank": 12148,
+    "skipped": 5997,
+    "rate": "0.0000"
+  }
+}
