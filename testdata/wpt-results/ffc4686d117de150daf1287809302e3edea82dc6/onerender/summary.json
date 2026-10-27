@@ -16,6 +16,17 @@
       "rate": "0.2908"
     },
     {
+      "module": "css-break",
+      "sampleStride": 1,
+      "discovered": 1191,
+      "total": 1191,
+      "pass": 88,
+      "fail": 956,
+      "blank": 0,
+      "skipped": 147,
+      "rate": "0.0843"
+    },
+    {
       "module": "css-flexbox",
       "sampleStride": 1,
       "discovered": 1398,
@@ -47,6 +58,17 @@
       "blank": 0,
       "skipped": 92,
       "rate": "0.0675"
+    },
+    {
+      "module": "css-multicol",
+      "sampleStride": 1,
+      "discovered": 563,
+      "total": 563,
+      "pass": 51,
+      "fail": 349,
+      "blank": 0,
+      "skipped": 163,
+      "rate": "0.1275"
     },
     {
       "module": "css-overflow",
@@ -86,11 +108,11 @@
       "sampleStride": 1,
       "discovered": 345,
       "total": 345,
-      "pass": 86,
-      "fail": 228,
+      "pass": 82,
+      "fail": 232,
       "blank": 0,
       "skipped": 31,
-      "rate": "0.2739"
+      "rate": "0.2611"
     },
     {
       "module": "css2-flow",
@@ -116,11 +138,11 @@
     }
   ],
   "totals": {
-    "total": 11514,
-    "pass": 2209,
-    "fail": 6227,
+    "total": 13268,
+    "pass": 2344,
+    "fail": 7536,
     "blank": 93,
-    "skipped": 2985,
-    "rate": "0.2590"
+    "skipped": 3295,
+    "rate": "0.2350"
   }
 }
