@@ -84,7 +84,19 @@ public static class HtmlPdf
         int pages = PageFragmentation.Paginate(page.Fragments, setup.ContentWidth, setup.ContentHeight, cancellationToken);
         var list = new DisplayList();
         var painter = new Painter();
-        page.Paint(list, painter, cancellationToken);
+        painter.Paint(
+            page.Fragments,
+            list,
+            new PaintOptions(setup.ContentWidth, setup.ContentHeight)
+            {
+                Scroll = page.Scroll,
+                Images = images,
+                Fonts = page.Options.Fonts,
+                DevicePixelRatio = 1,
+                Tags = options.Output.Tagged,
+                BaseUrl = options.BaseUrl,
+            },
+            cancellationToken);
 
         PdfOutputOptions o = Complete(options.Output, page);
         double stride = PageFragmentation.PageStride(setup.ContentWidth);

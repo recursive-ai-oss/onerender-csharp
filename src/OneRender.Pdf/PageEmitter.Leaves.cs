@@ -81,6 +81,8 @@ internal sealed partial class PageEmitter
         {
             if (paint.Color.IsTransparent)
             {
+                // Structure anchors (empty table cells) are transparent rectangles: they make the elements around them exist.
+                EnsureStructure();
                 return;
             }
 

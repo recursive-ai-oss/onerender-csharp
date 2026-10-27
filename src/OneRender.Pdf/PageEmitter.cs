@@ -455,6 +455,15 @@ internal sealed partial class PageEmitter
         NoteLink(in rootBounds, text);
     }
 
+    private void EnsureStructure()
+    {
+        if (Tagging && _artifactTags == 0 && _chainN > 0)
+        {
+            CloseMc();
+            _s.Tags.Reconcile(new ReadOnlySpan<TagRef>(_chain, 0, _chainN), _page);
+        }
+    }
+
     private void NoteLink(in RectF root, ReadOnlySpan<char> text)
     {
         if (root.IsEmpty)

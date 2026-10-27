@@ -309,6 +309,7 @@ public sealed partial class Painter
     // CSS Lists 3 §3: the marker is painted inside the box layout reserved for it. Shapes for the symbolic styles, text for the others.
     private void PaintMarker(int f, Box box, in ComputedValues v, in BoxGeometry g)
     {
+        SyncTags(f, true);
         RectF r = g.Border;
         int parent = _tree.ParentOf(f);
         int index = parent >= 0 ? Math.Max(1, _listIndex[parent]) : 1;
@@ -531,6 +532,7 @@ public sealed partial class Painter
     // Images 3 §5.5 and §5.6: object-fit sizes the image within the content box and object-position places it.
     private void PaintReplaced(int f, Box box, in ComputedValues v, in BoxGeometry g)
     {
+        SyncTags(f, true);
         if (box.Node.Replaced == ReplacedKind.Svg)
         {
             PaintSvg(f, box, in v, in g);
