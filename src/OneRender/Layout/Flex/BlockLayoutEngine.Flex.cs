@@ -152,6 +152,7 @@ public sealed partial class BlockLayoutEngine
     private FlexMemo[] _memoSpare = [];
     private int _memoUsed;
     private bool[] _pctBlock = [];
+    private int[] _pctOrder = [];
     private bool _pctReady;
     private int[] _absBoxes = new int[16];
     private int _absTop;
@@ -554,8 +555,34 @@ public sealed partial class BlockLayoutEngine
         }
 
         Array.Clear(_pctBlock, 0, n);
-        for (int i = n - 1; i >= 0; i--)
+        if (n == 0)
         {
+            _pctReady = true;
+            return;
+        }
+
+        // Parents are visited before their children, whatever the box numbers are (boxes added by an edit reuse freed numbers), and the
+        // flag then travels up from the last visited box to the first.
+        if (_pctOrder.Length < n)
+        {
+            _pctOrder = new int[Math.Max(n, _pctOrder.Length * 2)];
+        }
+
+        int count = 0;
+        _pctOrder[count++] = 0;
+        int top = 0;
+        while (top < count)
+        {
+            int p = _pctOrder[top++];
+            for (int c = _boxes.FirstChildOf(p); c >= 0; c = _boxes.NextSiblingOf(c))
+            {
+                _pctOrder[count++] = c;
+            }
+        }
+
+        for (int k = count - 1; k >= 0; k--)
+        {
+            int i = _pctOrder[k];
             Box b = _boxes.Make(i);
             if (b.Kind is BoxKind.Container or BoxKind.Replaced)
             {

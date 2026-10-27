@@ -97,13 +97,16 @@ public readonly struct ScrollRange : IEquatable<ScrollRange>
 /// </summary>
 /// <remarks>
 /// Offsets are stored as requested and clamped to the scrollable overflow when used, so a position set before layout, or kept
-/// across a relayout that shrinks the content, is always valid. Containers are keyed by box index, which is stable until the box tree
-/// is rebuilt; call <see cref="Clear"/> then. The viewport's scrollable area is the root element's scrollable overflow.
+/// across a relayout that shrinks the content, is always valid. A container is keyed by its element (the styled node and the
+/// generation of its slot), so its position follows it when boxes are made again around it, when siblings are inserted, removed or moved,
+/// and is forgotten when the node is removed. The viewport's scrollable area is the root element's scrollable overflow.
 /// </remarks>
 public sealed class ScrollState
 {
     private double[] _x = new double[16];
     private double[] _y = new double[16];
+    // Generation of the node's slot plus one when the position was set; 0 for never set.
+    private int[] _gen = new int[16];
 
     /// <summary>The requested horizontal viewport offset in px; 0 initially.</summary>
     public double ViewportX { get; private set; }
@@ -132,15 +135,23 @@ public sealed class ScrollState
             throw new ArgumentException("The box is the null handle.", nameof(box));
         }
 
-        if (box.Index >= _x.Length)
+        int node = box.Tree!.NodeIndexOf(box.Index);
+        if (node < 0)
         {
-            int size = Math.Max(box.Index + 1, _x.Length * 2);
-            Array.Resize(ref _x, size);
-            Array.Resize(ref _y, size);
+            return; // an anonymous box is never a scroll container
         }
 
-        _x[box.Index] = double.IsNaN(x) ? 0 : x;
-        _y[box.Index] = double.IsNaN(y) ? 0 : y;
+        if (node >= _x.Length)
+        {
+            int size = Math.Max(node + 1, _x.Length * 2);
+            Array.Resize(ref _x, size);
+            Array.Resize(ref _y, size);
+            Array.Resize(ref _gen, size);
+        }
+
+        _x[node] = double.IsNaN(x) ? 0 : x;
+        _y[node] = double.IsNaN(y) ? 0 : y;
+        _gen[node] = box.Tree.Styled.GenerationOf(node) + 1;
     }
 
     /// <summary>Forgets every position, including the viewport's.</summary>
@@ -148,12 +159,25 @@ public sealed class ScrollState
     {
         Array.Clear(_x);
         Array.Clear(_y);
+        Array.Clear(_gen);
         ViewportX = ViewportY = 0;
     }
 
-    internal double RequestedX(int boxIndex) => (uint)boxIndex < (uint)_x.Length ? _x[boxIndex] : 0;
+    internal double RequestedX(int node, int generation) => (uint)node < (uint)_x.Length && _gen[node] == generation + 1 ? _x[node] : 0;
 
-    internal double RequestedY(int boxIndex) => (uint)boxIndex < (uint)_y.Length ? _y[boxIndex] : 0;
+    internal double RequestedY(int node, int generation) => (uint)node < (uint)_y.Length && _gen[node] == generation + 1 ? _y[node] : 0;
+
+    internal double RequestedX(BoxTree boxes, int box)
+    {
+        int node = boxes.NodeIndexOf(box);
+        return node < 0 ? 0 : RequestedX(node, boxes.Styled.GenerationOf(node));
+    }
+
+    internal double RequestedY(BoxTree boxes, int box)
+    {
+        int node = boxes.NodeIndexOf(box);
+        return node < 0 ? 0 : RequestedY(node, boxes.Styled.GenerationOf(node));
+    }
 
     /// <summary>The offsets a scroll container can be scrolled to after the last layout.</summary>
     /// <param name="fragments">The laid-out tree.</param>
@@ -195,6 +219,6 @@ public sealed class ScrollState
     public (double X, double Y) GetOffset(FragmentTree fragments, Box box)
     {
         ScrollRange r = GetRange(fragments, box);
-        return (r.ClampX(RequestedX(box.Index)), r.ClampY(RequestedY(box.Index)));
+        return (r.ClampX(RequestedX(fragments.Boxes, box.Index)), r.ClampY(RequestedY(fragments.Boxes, box.Index)));
     }
 }

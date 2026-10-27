@@ -164,6 +164,8 @@ public sealed partial class Painter
     {
         public byte Kind;
         public int Box;
+        public int Node;
+        public int Generation;
         public int Fragment;
         public ulong Id;
         public float LastX;
@@ -944,7 +946,8 @@ public sealed partial class Painter
             Array.Resize(ref _patch, _patch.Length * 2);
         }
 
-        _patch[_patchCount] = new PatchEntry { Kind = kind, Box = box, Id = id, ParentEntry = -1, ScrollerEntry = -1 };
+        int scrollNode = box >= 0 ? _boxes.NodeIndexOf(box) : -1;
+        _patch[_patchCount] = new PatchEntry { Kind = kind, Box = box, Node = scrollNode, Generation = scrollNode >= 0 ? _boxes.Styled.GenerationOf(scrollNode) : -1, Id = id, ParentEntry = -1, ScrollerEntry = -1 };
         return _patchCount++;
     }
 
@@ -1110,8 +1113,8 @@ public sealed partial class Painter
         }
         else
         {
-            x = e.Range.ClampX(_scroll.RequestedX(e.Box));
-            y = e.Range.ClampY(_scroll.RequestedY(e.Box));
+            x = e.Range.ClampX(_scroll.RequestedX(e.Node, e.Generation));
+            y = e.Range.ClampY(_scroll.RequestedY(e.Node, e.Generation));
         }
     }
 

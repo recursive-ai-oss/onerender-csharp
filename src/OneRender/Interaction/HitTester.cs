@@ -712,8 +712,8 @@ public sealed class HitTester
     {
         ScrollRange r = _range[a];
         int bi = _tree.BoxOf(a);
-        x = r.ClampX(_scroll!.RequestedX(bi));
-        y = r.ClampY(_scroll.RequestedY(bi));
+        x = r.ClampX(_scroll!.RequestedX(_tree.Boxes, bi));
+        y = r.ClampY(_scroll.RequestedY(_tree.Boxes, bi));
     }
 
     private bool TransformOf(int a, out System.Numerics.Matrix4x4 m)

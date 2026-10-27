@@ -44,7 +44,7 @@ public sealed partial class BoxTree
             // A column has no content.
             while (_first[box] >= 0)
             {
-                Unlink(_first[box]);
+                Discard(_first[box]);
             }
 
             _childLayout[box] = (byte)ChildLayout.Empty;
@@ -58,7 +58,7 @@ public sealed partial class BoxTree
                 int next = _next[c];
                 if (RoleOf(c) != RoleColumn)
                 {
-                    Unlink(c);
+                    Discard(c);
                 }
 
                 c = next;

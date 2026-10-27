@@ -61,15 +61,8 @@ public sealed class ChurnSoak
 
     private static StyleDeclaration Cell(int i) => GameUiScene.Declaration($"display:block;opacity:{(i % 10) / 10.0 + 0.05:0.00};");
 
-    /// <summary>Runs one frame: churn, then flush.</summary>
-    public void Frame()
+    private StyledNode BuildLayer(int f)
     {
-        int f = _frame++;
-        if (!_previous.IsNull)
-        {
-            _tree.Remove(_previous);
-        }
-
         StyledNode layer = _tree.AddElement(_tree.Root, "div", _layer);
         for (int i = 0; i < Rows; i++)
         {
@@ -79,7 +72,63 @@ public sealed class ChurnSoak
             _tree.AddText(cell, _numbers[v]);
         }
 
-        _previous = layer;
+        return layer;
+    }
+
+    /// <summary>Adds the floating layer (about fifty nodes) and flushes. Does nothing when it is already there.</summary>
+    public void InsertLayer()
+    {
+        if (_previous.IsNull)
+        {
+            _previous = BuildLayer(_frame++);
+            Page.Flush();
+        }
+    }
+
+    /// <summary>Removes the floating layer and flushes. Does nothing when it is not there.</summary>
+    public void RemoveLayer()
+    {
+        if (!_previous.IsNull)
+        {
+            _tree.Remove(_previous);
+            _previous = default;
+            Page.Flush();
+        }
+    }
+
+    /// <summary>Moves the floating layer to the other end of the root's children, or into the chat log and back, and flushes. Does nothing when it is not there.</summary>
+    public void MoveLayer()
+    {
+        if (_previous.IsNull)
+        {
+            return;
+        }
+
+        _moved = !_moved;
+        if (_moved)
+        {
+            _tree.Move(_previous, _chat.Parent);
+        }
+        else
+        {
+            _tree.Move(_previous, _tree.Root);
+        }
+
+        Page.Flush();
+    }
+
+    private bool _moved;
+
+    /// <summary>Runs one frame: churn, then flush.</summary>
+    public void Frame()
+    {
+        int f = _frame++;
+        if (!_previous.IsNull)
+        {
+            _tree.Remove(_previous);
+        }
+
+        _previous = BuildLayer(f);
 
         // One chat line in, the oldest out.
         _tree.Remove(_chat.FirstChild);
