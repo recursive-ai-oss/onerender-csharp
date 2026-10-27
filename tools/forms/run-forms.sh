@@ -11,7 +11,7 @@ cd "$GEOMDIFF_SCRIPTS"
 if [ "${COMPARE_ONLY:-}" != 1 ]; then
   rm -rf "$snaps"
   [ "${RECAPTURE:-}" = 1 ] && rm -rf "$ONERENDER_HOME/captures/$set_name"
-  ./geomdiff.sh snapshot-static --src "$GEOMDIFF_REPO/testdata/$set_name" --out "$snaps" > /dev/null
+  ./geomdiff.sh snapshot-static --src "${SRC_DIR:-$GEOMDIFF_REPO/testdata/$set_name}" --out "$snaps" > /dev/null
   for v in ${VIEWPORTS:-1280x800 390x844}; do
     NO_SANDBOX=1 JOBS=2 VIEWPORTS="$v" PHASES="a" ./run-set.sh "$set_name" "$snaps" "$GEOMDIFF_REPO/results/geometry" > /dev/null
   done
