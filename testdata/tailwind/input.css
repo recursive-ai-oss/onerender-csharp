@@ -1,0 +1,9 @@
+/* Input for the Tailwind standalone CLI. Pages are scanned for class names; daisyUI and the Flowbite theme come from the
+   pinned npm release tarballs that build-tailwind.sh unpacks beside this file's build copy. Flowbite's JavaScript plugin does
+   not load in the standalone CLI, so it is not used. */
+@import "tailwindcss";
+@source "./pages";
+@import "flowbite/src/themes/default";
+@plugin "daisyui" {
+  themes: light --default;
+}

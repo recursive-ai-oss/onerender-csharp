@@ -1,0 +1,31 @@
+* { box-sizing: border-box; }
+body { margin: 0; background: #eef0f3; color: #1c2430; font: 14px/1.45 Arial, Helvetica, sans-serif; }
+.sheet { width: 794px; max-width: 100%; margin: 0 auto; padding: 48px 56px; background: #fff; }
+.top { display: flex; align-items: flex-start; gap: 20px; border-bottom: 3px solid #1f4e79; padding-bottom: 20px; }
+.logo { flex: none; }
+.from { flex: 1; }
+.from h1 { margin: 0 0 4px; font-size: 22px; color: #1f4e79; }
+.from p { margin: 0; color: #4a5568; }
+.meta { text-align: right; }
+.meta h2 { margin: 0 0 8px; font-size: 26px; letter-spacing: 0.12em; color: #1f4e79; }
+.meta dl { display: grid; grid-template-columns: auto auto; gap: 2px 14px; margin: 0; }
+.meta dt { color: #6b7280; text-align: right; }
+.meta dd { margin: 0; font-weight: bold; text-align: right; }
+.parties { display: flex; gap: 24px; margin: 24px 0; }
+.parties > div { flex: 1; }
+.parties h3, .notes h3 { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #6b7280; }
+.parties p { margin: 0; }
+table { border-collapse: collapse; width: 100%; }
+.lines th { background: #1f4e79; color: #fff; text-align: left; padding: 8px 10px; font-size: 12px; }
+.lines td { padding: 8px 10px; border-bottom: 1px solid #d9dee5; vertical-align: top; }
+.lines tbody tr:nth-child(even) td { background: #f6f8fa; }
+.num { text-align: right !important; white-space: nowrap; }
+.muted { color: #6b7280; font-size: 12px; }
+.totals { width: 320px; margin: 20px 0 0 auto; }
+.totals th { text-align: left; font-weight: normal; padding: 5px 10px; }
+.totals td { text-align: right; padding: 5px 10px; }
+.totals .grand th, .totals .grand td { font-size: 16px; font-weight: bold; border-top: 2px solid #1f4e79; padding-top: 9px; }
+.notes { margin-top: 28px; }
+.notes p { margin: 0 0 8px; }
+.notes code { font-family: "Courier New", monospace; background: #f1f3f5; padding: 1px 4px; }
+footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #d9dee5; text-align: center; color: #6b7280; font-size: 11px; }

@@ -8,6 +8,8 @@ using OneRender.Pdf;
 
 string[] names = [EngineInfo.Name, ImageBackendInfo.Name, PdfBackendInfo.Name];
 Console.WriteLine(string.Join(' ', names));
+// The provisional geometry entry point must survive trimming and AOT as well.
+int boxes = GeometryProbe.LayOut("<p>x</p>", null, null, 800, 600).Count;
 
 // Load one embedded face and check it is a TrueType file ('true' or 0x00010000 sfnt version) of the declared size.
 if (!DefaultFonts.TryResolveFamily("Arial", out string? family))
@@ -33,4 +35,4 @@ list.DrawGlyphRun(ItemId.Of(4), font, 12f, 4f, 14f, new PaintColor(0f, 0f, 0f, 1
 RgbaImage image = DisplayListRasterizer.Render(list, 32, 32);
 bool painted = image.Pixels[((16 * 32) + 16) * 4 + 3] == 255 && image.Pixels[(((5 * 32) + 10) * 4) + 1] < 50;
 Console.WriteLine($"rasterized {image.Width}x{image.Height} painted={painted}");
-return names.Length == 3 && sfnt && painted ? 0 : 1;
+return names.Length == 3 && sfnt && painted && boxes == 0 ? 0 : 1;

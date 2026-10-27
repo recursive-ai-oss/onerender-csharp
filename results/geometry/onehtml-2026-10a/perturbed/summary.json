@@ -1,0 +1,251 @@
+{
+  "format": "onerender-geometry-summary/1",
+  "set": "onehtml-2026-10a",
+  "label": "perturbed",
+  "ours": "capture",
+  "tolerancePx": 1,
+  "tolerancePercent": 0.5,
+  "gateRate": 0.99,
+  "browser": "Chrome/156.0.8078.47",
+  "fontSet": "8768bf2774f6c8e8 (20 files)",
+  "viewports": [
+    {
+      "viewport": "1280x800",
+      "pages": 600,
+      "elements": 380595,
+      "matched": 349409,
+      "rate": 0.9180598799248545,
+      "classes": {
+        "positionOnly": 7695,
+        "sizeOnly": 3752,
+        "positionAndSize": 3711,
+        "textRun": 11625,
+        "missingOurs": 3803,
+        "missingChrome": 600
+      },
+      "rootCauses": {
+        "positionOnly": 4030,
+        "sizeOnly": 2018,
+        "positionAndSize": 2012,
+        "textRun": 5663,
+        "missingOurs": 3803,
+        "missingChrome": 600
+      },
+      "tagConflicts": 0,
+      "pagesAtGate": 0,
+      "medianPageRate": 0.917981072555205,
+      "minPageRate": 0.5,
+      "worstTags": [
+        {
+          "tag": "a",
+          "mismatches": 6911,
+          "elements": 120657
+        },
+        {
+          "tag": "div",
+          "mismatches": 6259,
+          "elements": 107005
+        },
+        {
+          "tag": "span",
+          "mismatches": 4118,
+          "elements": 61759
+        },
+        {
+          "tag": "li",
+          "mismatches": 3844,
+          "elements": 94364
+        },
+        {
+          "tag": "p",
+          "mismatches": 1173,
+          "elements": 15874
+        },
+        {
+          "tag": "ul",
+          "mismatches": 845,
+          "elements": 18363
+        },
+        {
+          "tag": "img",
+          "mismatches": 796,
+          "elements": 10082
+        },
+        {
+          "tag": "svg",
+          "mismatches": 739,
+          "elements": 11727
+        },
+        {
+          "tag": "path",
+          "mismatches": 512,
+          "elements": 8847
+        },
+        {
+          "tag": "use",
+          "mismatches": 486,
+          "elements": 6598
+        }
+      ]
+    },
+    {
+      "viewport": "390x844",
+      "pages": 600,
+      "elements": 359756,
+      "matched": 330144,
+      "rate": 0.9176886556443812,
+      "classes": {
+        "positionOnly": 7285,
+        "sizeOnly": 3533,
+        "positionAndSize": 3497,
+        "textRun": 11122,
+        "missingOurs": 3575,
+        "missingChrome": 600
+      },
+      "rootCauses": {
+        "positionOnly": 3793,
+        "sizeOnly": 1917,
+        "positionAndSize": 1892,
+        "textRun": 5455,
+        "missingOurs": 3575,
+        "missingChrome": 600
+      },
+      "tagConflicts": 0,
+      "pagesAtGate": 0,
+      "medianPageRate": 0.9176470588235294,
+      "minPageRate": 0.5,
+      "worstTags": [
+        {
+          "tag": "a",
+          "mismatches": 6288,
+          "elements": 120657
+        },
+        {
+          "tag": "div",
+          "mismatches": 6121,
+          "elements": 107005
+        },
+        {
+          "tag": "span",
+          "mismatches": 4009,
+          "elements": 61759
+        },
+        {
+          "tag": "li",
+          "mismatches": 3332,
+          "elements": 94364
+        },
+        {
+          "tag": "p",
+          "mismatches": 1180,
+          "elements": 15874
+        },
+        {
+          "tag": "img",
+          "mismatches": 773,
+          "elements": 10082
+        },
+        {
+          "tag": "ul",
+          "mismatches": 769,
+          "elements": 18363
+        },
+        {
+          "tag": "svg",
+          "mismatches": 726,
+          "elements": 11727
+        },
+        {
+          "tag": "path",
+          "mismatches": 497,
+          "elements": 8847
+        },
+        {
+          "tag": "use",
+          "mismatches": 488,
+          "elements": 6598
+        }
+      ]
+    }
+  ],
+  "total": {
+    "viewport": "all",
+    "pages": 1200,
+    "elements": 740351,
+    "matched": 679553,
+    "rate": 0.917879492294871,
+    "classes": {
+      "positionOnly": 14980,
+      "sizeOnly": 7285,
+      "positionAndSize": 7208,
+      "textRun": 22747,
+      "missingOurs": 7378,
+      "missingChrome": 1200
+    },
+    "rootCauses": {
+      "positionOnly": 7823,
+      "sizeOnly": 3935,
+      "positionAndSize": 3904,
+      "textRun": 11118,
+      "missingOurs": 7378,
+      "missingChrome": 1200
+    },
+    "tagConflicts": 0,
+    "pagesAtGate": 0,
+    "medianPageRate": 0.9178571428571428,
+    "minPageRate": 0.5,
+    "worstTags": [
+      {
+        "tag": "a",
+        "mismatches": 13199,
+        "elements": 241314
+      },
+      {
+        "tag": "div",
+        "mismatches": 12380,
+        "elements": 214010
+      },
+      {
+        "tag": "span",
+        "mismatches": 8127,
+        "elements": 123518
+      },
+      {
+        "tag": "li",
+        "mismatches": 7176,
+        "elements": 188728
+      },
+      {
+        "tag": "p",
+        "mismatches": 2353,
+        "elements": 31748
+      },
+      {
+        "tag": "ul",
+        "mismatches": 1614,
+        "elements": 36726
+      },
+      {
+        "tag": "img",
+        "mismatches": 1569,
+        "elements": 20164
+      },
+      {
+        "tag": "svg",
+        "mismatches": 1465,
+        "elements": 23454
+      },
+      {
+        "tag": "path",
+        "mismatches": 1009,
+        "elements": 17694
+      },
+      {
+        "tag": "use",
+        "mismatches": 974,
+        "elements": 13196
+      }
+    ]
+  },
+  "gateMet": false
+}

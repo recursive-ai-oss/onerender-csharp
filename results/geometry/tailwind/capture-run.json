@@ -1,0 +1,41 @@
+{
+  "format": "onerender-geometry-run/1",
+  "source": "chrome",
+  "browser": "Chrome/156.0.8078.47",
+  "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+  "flags": [
+    "--headless=new",
+    "--remote-debugging-port=0",
+    "--no-first-run",
+    "--no-default-browser-check",
+    "--disable-gpu",
+    "--disable-background-networking",
+    "--disable-component-update",
+    "--disable-sync",
+    "--disable-extensions",
+    "--disable-default-apps",
+    "--disable-breakpad",
+    "--disable-client-side-phishing-detection",
+    "--metrics-recording-only",
+    "--mute-audio",
+    "--force-color-profile=srgb",
+    "--force-device-scale-factor=1",
+    "--lang=en-US",
+    "--hide-scrollbars",
+    "--font-render-hinting=none",
+    "--disable-lcd-text",
+    "--disable-features=IsolateOrigins,site-per-process,Translate,OptimizationHints,MediaRouter,HttpsUpgrades,HttpsFirstBalancedModeAutoEnable",
+    "--disable-site-isolation-trials",
+    "--proxy-server=http://127.0.0.1:9",
+    "--host-resolver-rules=MAP * ~NOTFOUND",
+    "(sandbox if available)"
+  ],
+  "fontSet": "8768bf2774f6c8e8 (20 files)",
+  "viewports": [
+    "1280x800",
+    "390x844"
+  ],
+  "pages": 7,
+  "captured": 7,
+  "failures": []
+}
