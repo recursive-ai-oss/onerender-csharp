@@ -230,6 +230,10 @@ internal sealed partial class InlineWorker
                     PrepareAtomic(ref e);
                     AddElem(in e, null);
                     break;
+                case EK.Float:
+                    e.Level = LevelAt(e.Start);
+                    AddElem(in e, null);
+                    break;
                 case EK.Tab:
                 {
                     ref readonly ComputedValues v = ref V(e.Box);

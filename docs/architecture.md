@@ -124,8 +124,8 @@ fragmentation are separate implementations behind this one entry.
 §9.4.1, widths (§10.3.3, replaced §10.3.2/§10.3.4 with the constraint table of §10.4), heights (§10.5 percentages that
 behave as `auto`, §10.6.3, min/max §10.7), `box-sizing`, `aspect-ratio` (Sizing 4 §5), margin collapsing (§8.3.1) and
 intrinsic sizes (Sizing 3 §5). Flex, grid and table containers are laid out as plain block containers until their own
-layout exists; floats, positioned boxes and `clear` are not handled yet (floats and absolutely positioned boxes get no
-fragment).
+layout exists; floats and `clear` are described under "Floats" below; absolutely positioned boxes are not handled yet (they
+get no fragment).
 
 - **No recursion.** One explicit stack of frames (a struct array kept between runs) walks the box tree; a frame is a box
   whose children are being placed. Depth is capped at 262,144 levels (a diagnostic, and the deeper boxes get no fragment).
@@ -151,7 +151,7 @@ fragment).
   uses it for inline-block and other atomic boxes (`shrinkToFit` selects CSS2 §10.3.5 widths).
 - **List items.** An outside `::marker` box gets a fragment one `font-size` wide and one line high just outside the item's
   start edge, at the content top. This is a placeholder until real markers.
-- **Not yet:** the `overflow` propagation from `body` to the viewport, `clear`, floats, and the block-axis `fit-content`.
+- **Not yet:** the `overflow` propagation from `body` to the viewport and the block-axis `fit-content`.
 
 ### The inline seam (`IInlineLayout`)
 
@@ -164,11 +164,66 @@ void Measure(Box container, IFontProvider fonts, out double minContent, out doub
 
 - The request carries the container, the content-box width to fill, the content box's offset inside the container's border
   box (`ContentLeft`, `ContentTop`, where lines are added as children of `parent`), the content box's origin in the BFC
-  root's content box (`BfcLeft`, `BfcTop`, where float exclusions will be looked up) and the font provider. New fields can be
-  added for exclusions without changing implementations.
+  root's content box (`BfcLeft`, `BfcTop`, where float exclusions are looked up), the font provider and the exclusion space
+  (`Exclusions`, see "Floats"). A request built without one has the empty `NoExclusions` space.
 - The result is the total line height, the line count and the first and last baselines from the content top. A container
   with lines counts as having content for margin collapsing; the block layout settles the margin run before the call.
 - `Measure` returns the content-box min-content and max-content widths.
 - `PlaceholderInlineLayout` is the stand-in used until inline layout lands: a container with any non-blank text, replaced or
   atomic inline child gets one empty line box as tall as `line-height` (`normal` is 1.2 × font size) and the intrinsic
   inline sizes are 0.
+
+### Floats
+
+Floats, `clear` and the boxes that avoid floats live in `Layout/Block/BlockLayoutEngine.Floats.cs` and `.Open.cs`.
+
+- **Placement (CSS2 §9.5.1).** Each block formatting context keeps its floats as margin boxes in the coordinates of its root's
+  content box, sorted by top (rule 5 makes the tops non-decreasing). A float is laid out first, as the root of a context of
+  its own, so its size is known; its position is then the highest one (rule 8) that is as far left, or right, as the earlier
+  floats allow (rules 2, 3, 7 and 9), not above the flow position it was met at, the top of its containing block or the line
+  it sits on (rules 4 to 6). Rule 3 is measured against the other side's floats wherever they are; rule 7 applies whenever
+  another float on the same side is in the way, even outside the containing block, and a float with none to its side may stick
+  out of its containing block. `float: inline-start | inline-end` and the logical `clear` values are resolved to left and
+  right by the computed style.
+- **Width and height.** A float's `auto` width is shrink-to-fit (§10.3.5, from the intrinsic-size cache) and its auto margins
+  are 0; a floated replaced box uses §10.3.6. The auto height of a block formatting context root reaches the bottom margin
+  edge of its lowest float (§10.6.7); floats are also added to the root's scrollable overflow. Intrinsic sizes count floats
+  (Sizing 3 §5.2): the widest float for min-content, and the sum of consecutive floats (broken by `clear`) for max-content.
+- **Floats and margins.** A float is placed where a block would be, after the margins collected so far. While the top margin
+  of the box that holds it is still pending (§8.3.1) the float is held until that position is settled, so that a larger
+  margin collapsing through the container moves the float with it. A box that starts a formatting context is separated from
+  adjoining floats: a margin that would pull them down does not.
+- **Clearance (§9.5.2).** A box with `clear` gets clearance when its hypothetical position, with its own top margin and the
+  margins of the first children that adjoin it collapsed into the run, is above the bottom edge of the floats it clears, or
+  when a float adjoining it would otherwise be pulled down with it. The margins before the box end there; its border edge goes
+  to the bottom edge of the floats whatever its own margin is. A cleared box that is still pending keeps the margin
+  collapsing with its first child, and its position is raised to the floats' edge when the pending chain is settled.
+- **Boxes beside floats (§9.5).** An in-flow block that is a block formatting context root, and block-level replaced boxes,
+  are put beside the floats at their top edge. An `auto` width shrinks to the room between the floats (not below its
+  min-content width); a definite width fits when its border box and start margin do (an over-constrained end margin is
+  dropped). If the box does not fit it moves down to the next float edge, and with no float edge left it stays.
+- **The exclusion space.** `IExclusionSpace`, reached through `InlineLayoutRequest.Exclusions`, is what inline layout asks:
+  - `Query(bfcTop, height, bfcLeft, bfcRight, out start, out end, out nextEdge)` returns the usable inline range of a band
+    (floats whose margin box overlaps the band; with height 0 the single line at `bfcTop`) and the smallest bottom edge
+    among them, the next y where more room can appear (`+Infinity` when no float intersects). `start == end` means no room.
+  - `PlaceFloat(request, container, floatBox, minBfcTop, out marginBox)` lays out and places a float met in inline content.
+    `minBfcTop` is the top of the current line when the float fits on that line and the line's bottom when it does not; the
+    inline layout decides, which is the hook for rule 6 and 7 of §9.5.1. The float's fragment is added to the container's
+    fragment and the margin box comes back in block-formatting-context coordinates.
+  - `PlaceholderInlineLayout` places the floats of its container at the top of the content box, then puts its one line in the
+    room beside them, below the next float edge when there is none.
+- **Fragments.** A float's fragment is a child of its containing block's fragment, in tree order; painting orders it
+  (Appendix E step 5).
+- **Bounds.** No recursion on tree depth: floats in the block flow are frames of the same explicit stack (nested floats
+  need no call depth), and floats in inline content nest one engine call each, at most 32 deep (then a diagnostic and no
+  fragment). A context stops searching after 50 million float visits or 262,144 floats: later floats are stacked below
+  everything placed so far, lines ignore floats, and a diagnostic says so. Placement only scans the floats that can still
+  matter (those ending below the lowest float top), so rows of thousands of floats cost about linear time. The margin-collapse
+  look-ahead for clearance follows at most 64 first children. All storage is kept between layouts.
+- **Chosen where the specs leave room.** Floats in a settled position use the margins collected so far (matching what
+  browsers do); a cleared box's border edge ignores its own margin when clearance applies; the 'separated from adjoining
+  floats' rule for formatting-context boxes uses the smaller of the two outcomes (pulled down or not).
+- **Checked by.** `FloatLayoutTests` (spec examples by fragment border boxes, allocation and limits) and `WptFloatReftests`:
+  58 CSS2 `floats` and `floats-clear` reftests whose page and reference render to the same pixels through `HtmlRender`,
+  with the whole-pixel line height injected. The test with `ONERENDER_FLOAT_SWEEP` set sweeps the whole
+  directories of a web-platform-tests checkout and writes one result per test.

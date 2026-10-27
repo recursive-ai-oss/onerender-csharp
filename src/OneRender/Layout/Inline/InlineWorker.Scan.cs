@@ -119,6 +119,11 @@ internal sealed partial class InlineWorker
                     break;
                 }
 
+                case EK.Float:
+                    el.W2 = wTrim; // how much of the line is before the float, for the "does it fit here" test
+                    e++;
+                    c = 0;
+                    break;
                 case EK.Tab:
                     w += TabAdvance(in el, w);
                     wTrim = w;

@@ -216,12 +216,12 @@ internal sealed partial class InlineWorker
         _ => rtl ? 1 : 0, // start, match-parent (resolved when computed)
     };
 
-    /// <summary>Places the pieces built by <see cref="BuildPieces"/> as one line box and adds its fragments.</summary>
-    /// <returns>The line box height.</returns>
-    private double EmitLine(in InlineLayoutRequest request, double y, double indent, bool lastLine, out double baseline)
+    /// <summary>
+    /// Vertical metrics of the line in <c>_pc</c> (CSS2 §10.8, CSS Inline 3 §4): the box and atomic baselines, the line box height
+    /// and the baseline's distance from the line top.
+    /// </summary>
+    private void VerticalMetrics(out double rb, out double lineH)
     {
-        ref readonly ComputedValues cv = ref _container.Values;
-        bool baseRtl = (_paraLevel & 1) != 0;
         int root = _container.Index;
         _stamp++;
         _tn = 0;
@@ -273,8 +273,8 @@ internal sealed partial class InlineWorker
             }
         }
 
-        double rb = -minTop;
-        double lineH = Math.Max(maxBottom - minTop, tallAligned);
+        rb = -minTop;
+        lineH = Math.Max(maxBottom - minTop, tallAligned);
         for (int i = 0; i < _tn; i++)
         {
             ref BM m = ref _bm[_touched[i]];
@@ -309,6 +309,17 @@ internal sealed partial class InlineWorker
                 _ => _bm[p.Owner].Base + p.Shift,
             };
         }
+
+    }
+
+    /// <summary>Places the pieces built by <see cref="BuildPieces"/> as one line box and adds its fragments.</summary>
+    /// <returns>The line box height.</returns>
+    private double EmitLine(in InlineLayoutRequest request, double y, double xOff, double lineW, double indent, bool lastLine, out double baseline)
+    {
+        ref readonly ComputedValues cv = ref _container.Values;
+        bool baseRtl = (_paraLevel & 1) != 0;
+        int root = _container.Index;
+        VerticalMetrics(out double rb, out double lineH);
 
         // ---- alignment and justification (CSS Text 3 §7)
         double total = 0, hang = 0;
@@ -376,7 +387,6 @@ internal sealed partial class InlineWorker
             ta = baseRtl ? 1 : 0;
         }
 
-        double lineW = _availW;
         double regionLeft = baseRtl ? 0 : indent;
         double regionW = lineW - indent;
         double content = total - hang;
@@ -488,7 +498,7 @@ internal sealed partial class InlineWorker
         }
 
         // ---- fragments
-        Fragment line = _out.AddLine(_parent, new Rect(request.ContentLeft, request.ContentTop + y, lineW, lineH), rb);
+        Fragment line = _out.AddLine(_parent, new Rect(request.ContentLeft + xOff, request.ContentTop + y, lineW, lineH), rb);
         int cur = -1;
         Fragment curFrag = line;
         double ox = 0, oy = 0;

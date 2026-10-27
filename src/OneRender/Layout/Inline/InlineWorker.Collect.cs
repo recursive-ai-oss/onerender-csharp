@@ -33,6 +33,7 @@ internal sealed partial class InlineWorker
         Atomic,
         Tab,
         Newline,
+        Float,
     }
 
     [Flags]
@@ -82,6 +83,7 @@ internal sealed partial class InlineWorker
     private FragmentTree _out = null!;
     private Fragment _parent;
     private double _availW;
+    private InlineLayoutRequest _req;
     private bool _layout;
     private int _tick;
 
@@ -244,8 +246,29 @@ internal sealed partial class InlineWorker
                 }
 
                 case BoxKind.Container or BoxKind.Replaced:
-                    if ((flags & (BoxTraits.OutOfFlow | BoxTraits.OutsideMarker)) != 0)
+                    if ((flags & BoxTraits.OutsideMarker) != 0)
                     {
+                        break;
+                    }
+
+                    if ((flags & BoxTraits.OutOfFlow) != 0)
+                    {
+                        if (ch.Values.Floating == FloatKind.None)
+                        {
+                            break; // absolutely positioned boxes take no part in the line
+                        }
+
+                        if (_layout)
+                        {
+                            // A float is placed by the exclusion space when its line is known (CSS2 §9.5.1 rules 6 and 7).
+                            AddRaw(EK.Float, ch.Index, fb, _n, 0);
+                            break;
+                        }
+
+                        // Intrinsic sizes count a float like an atomic inline on the line (CSS Sizing 3 §5.2).
+                        int fp = Put('￼', -1, 0);
+                        AddRaw(EK.Atomic, ch.Index, fb, fp, 1);
+                        _prevSpace = false;
                         break;
                     }
 

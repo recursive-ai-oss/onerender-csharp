@@ -10,16 +10,16 @@ namespace OneRender.Layout;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Every box is laid out as a block-level box in normal flow. Inline content goes through <see cref="IInlineLayout"/>.
-/// Floats, absolutely positioned boxes and out-of-flow boxes in general get no fragment yet, flex, grid and table containers are laid
-/// out as plain block containers, and <c>clear</c> is ignored; those arrive with their own layout.
+/// Every box is laid out as a block-level box in normal flow, or as a float (CSS2 §9.5, see <see cref="IExclusionSpace"/>).
+/// Inline content goes through <see cref="IInlineLayout"/>. Absolutely positioned boxes get no fragment yet, and flex, grid and
+/// table containers are laid out as plain block containers; those arrive with their own layout.
 /// </para>
 /// <para>
 /// The engine keeps its working storage between runs, so laying out an unchanged tree again allocates nothing. An
 /// instance is not thread-safe; use one per thread.
 /// </para>
 /// </remarks>
-public sealed partial class BlockLayoutEngine : ILayoutEngine, IAtomicInlineHost
+public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace, IAtomicInlineHost
 {
     private const int MaxDepth = 1 << 18;
     private const int MaxReentrancy = 32;
@@ -57,7 +57,7 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IAtomicInlineHost
     }
 
     [Flags]
-    private enum FrameFlags : byte
+    private enum FrameFlags : ushort
     {
         None = 0,
         TopPending = 1,
@@ -67,6 +67,8 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IAtomicInlineHost
         AnyChild = 16,
         ScrollContainer = 32,
         Marker = 64,
+        Float = 128,
+        Cleared = 256,
     }
 
     private struct Frame
@@ -109,6 +111,16 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IAtomicInlineHost
         public double OvT;
         public double OvR;
         public double OvB;
+
+        // For a box whose top margin is still pending: the nearest ancestor with a settled top.
+        public int Settled;
+
+        // For a float: the margin run of the flow it sits in, set aside while its own content is laid out.
+        public double SavedPos;
+        public double SavedNeg;
+
+        // For a box with clearance whose top is still pending: the bottom edge of the floats it clears, in block-formatting-context coordinates.
+        public double ClearBfc;
     }
 
     /// <inheritdoc />
@@ -131,6 +143,10 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IAtomicInlineHost
         _depthReported = false;
         _sp = 0;
         _pos = _neg = 0;
+        _bsp = 0;
+        _floatCount = 0;
+        _liveCount = 0;
+        _defCount = 0;
         PrepareIntrinsicCache(boxes.Count);
         output.Clear();
         if (boxes.Root.IsNull)
@@ -178,6 +194,7 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IAtomicInlineHost
         double savedPos = _pos, savedNeg = _neg;
         _pos = _neg = 0;
         int baseSp = _sp;
+        int savedBsp = _bsp, savedFloats = _floatCount, savedLive = _liveCount, savedDef = _defCount;
         PushFrame(new Frame
         {
             Box = -1,
@@ -219,6 +236,10 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IAtomicInlineHost
         Fragment result = _lastFragment;
         margins = _lastMargins;
         _sp = baseSp;
+        _bsp = savedBsp;
+        _floatCount = savedFloats;
+        _liveCount = savedLive;
+        _defCount = savedDef;
         _pos = savedPos;
         _neg = savedNeg;
         _depth--;
@@ -278,6 +299,12 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IAtomicInlineHost
             ref Frame q = ref _frames[j];
             ref Frame pp = ref _frames[j - 1];
             q.Y = j == i + 1 ? pp.ContentTop + pp.Cursor + s : pp.ContentTop + pp.Cursor;
+            if ((q.Flags & FrameFlags.Cleared) != 0)
+            {
+                // CSS2 §9.5.2: with clearance the border edge sits at the bottom edge of the floats, whatever margins pile up above it.
+                q.Y = Math.Max(pp.ContentTop + pp.Cursor, pp.ContentTop + (q.ClearBfc - pp.BfcTop));
+            }
+
             if ((q.Flags & FrameFlags.Bfc) == 0)
             {
                 q.BfcTop = pp.BfcTop + (q.Y - pp.ContentTop) + q.ContentTop;
@@ -287,6 +314,12 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IAtomicInlineHost
 
         ref Frame outer = ref _frames[i + 1];
         _out.SetBorderBox(new Fragment(_out, outer.Frag), new Rect(outer.X, outer.Y, outer.W, 0));
+        if (HasDeferred)
+        {
+            // Floats that waited for this position: they sit at the top of the chain that has just been settled (CSS2 §9.5.1 rule 4).
+            FlushDeferred(_frames[i].BfcTop + (outer.Y - _frames[i].ContentTop));
+        }
+
         return 0;
     }
 }

@@ -17,6 +17,7 @@
   <ItemGroup>
     <None Include="testdata/wpt-style/**" CopyToOutputDirectory="PreserveNewest" />
     <None Include="testdata/wpt-block/**" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="testdata/wpt-floats/**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

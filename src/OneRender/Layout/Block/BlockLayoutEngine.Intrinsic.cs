@@ -16,6 +16,9 @@ public sealed partial class BlockLayoutEngine
         public int Next;
         public double Min;
         public double Max;
+
+        // Sum of the max-content contributions of the floats since the last clear.
+        public double FloatRun;
     }
 
     private int _atomicMeasureDepth;
@@ -65,7 +68,7 @@ public sealed partial class BlockLayoutEngine
     /// The intrinsic inline sizes of a box's content (CSS Sizing 3 §5): the content-box width it needs when it breaks at every
     /// opportunity (min-content) and when it never breaks (max-content). The sizes are cached per box until the next
     /// <see cref="Layout"/>, so shrink-to-fit, flex and grid can ask repeatedly. Percentages inside the box count as auto; floats
-    /// do not contribute yet. Inline-level children are measured by <see cref="IInlineLayout.Measure"/>.
+    /// contribute as CSS Sizing 3 §5.2 describes: the min-content size is at least that of the widest float, and consecutive floats (not separated by a <c>clear</c>) add up in the max-content size. Inline-level children are measured by <see cref="IInlineLayout.Measure"/>.
     /// </summary>
     /// <param name="box">A box of the tree last laid out.</param>
     /// <param name="minContent">Receives the min-content width in px.</param>
@@ -92,7 +95,30 @@ public sealed partial class BlockLayoutEngine
     }
 
     private static bool IsFlowChild(Box c) =>
-        c.Kind is BoxKind.Container or BoxKind.Replaced && (c.Flags & (BoxTraits.OutOfFlow | BoxTraits.OutsideMarker)) == 0;
+        c.Kind is BoxKind.Container or BoxKind.Replaced && ((c.Flags & (BoxTraits.OutOfFlow | BoxTraits.OutsideMarker)) == 0 || IsFloat(c));
+
+    private static bool IsFloat(Box c) =>
+        c.Kind is BoxKind.Container or BoxKind.Replaced && (c.Flags & BoxTraits.OutOfFlow) != 0 && c.Values.Floating != FloatKind.None;
+
+    /// <summary>Adds a child's contribution to its parent's running sizes (CSS Sizing 3 §5.1 for blocks, §5.2 for floats).</summary>
+    private static void Merge(ref IntrinsicFrame parent, Box child, double minC, double maxC)
+    {
+        if (child.Values.Clear != ClearKind.None)
+        {
+            parent.Max = Math.Max(parent.Max, parent.FloatRun);
+            parent.FloatRun = 0;
+        }
+
+        parent.Min = Math.Max(parent.Min, minC);
+        if (IsFloat(child))
+        {
+            parent.FloatRun += maxC;
+        }
+        else
+        {
+            parent.Max = Math.Max(parent.Max, maxC);
+        }
+    }
 
     private void PushIntrinsic(Box b)
     {
@@ -145,22 +171,19 @@ public sealed partial class BlockLayoutEngine
                 }
 
                 Contribution(c, out double a, out double b);
-                _istack[top].Min = Math.Max(_istack[top].Min, a);
-                _istack[top].Max = Math.Max(_istack[top].Max, b);
+                Merge(ref _istack[top], c, a, b);
                 continue;
             }
 
             IntrinsicFrame done = _istack[top];
             _minContent[done.Box] = Math.Max(0, done.Min);
-            _maxContent[done.Box] = Math.Max(0, done.Max);
+            _maxContent[done.Box] = Math.Max(0, Math.Max(done.Max, done.FloatRun));
             _isp--;
             if (_isp > baseSp)
             {
                 Box d = _boxes.Make(done.Box);
                 Contribution(d, out double a, out double b);
-                int parent = _isp - 1;
-                _istack[parent].Min = Math.Max(_istack[parent].Min, a);
-                _istack[parent].Max = Math.Max(_istack[parent].Max, b);
+                Merge(ref _istack[_isp - 1], d, a, b);
             }
         }
     }

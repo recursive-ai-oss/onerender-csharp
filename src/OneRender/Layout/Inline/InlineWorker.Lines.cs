@@ -111,6 +111,7 @@ internal sealed partial class InlineWorker
     internal InlineLayoutResult Layout(in InlineLayoutRequest request, FragmentTree output, Fragment parent, IAtomicInlineHost? host, CancellationToken ct)
     {
         ResetState(request.Container, request.Fonts, host, true, ct);
+        _req = request;
         _out = output;
         _parent = parent;
         _availW = Math.Max(0, request.AvailableWidth);
@@ -202,46 +203,170 @@ internal sealed partial class InlineWorker
         _firstBaseline = double.NaN;
         _lastBaseline = double.NaN;
         _maxRight = 0;
+        IExclusionSpace ex = request.Exclusions;
         double y = 0;
         int lines = 0;
         int e = 0, c = 0;
         bool first = true;
         bool afterForced = true;
         Ensure(ref _bm, _boxes.Count);
+        double strut = StrutHeight();
         while (e < _elN)
         {
             _ct.ThrowIfCancellationRequested();
             double indent = IndentFor(in cv, first, afterForced, indentBase);
-            ScanLine(e, c, _availW, indent);
-            int ee = _endE, ec = _endC;
-            if (ee == e && ec == c)
+            double top = y;
+            double xOff = 0, avail = _availW;
+            int ee = e, ec = c;
+            double band = strut;
+            bool hasContent = false;
+            for (int guard = 0; guard < MaxLineAttempts; guard++)
             {
-                // A line always consumes something; this only guards against a bug turning into an endless loop.
-                ee = e + 1;
-                ec = 0;
-            }
-
-            bool hasContent = BuildPieces(e, c, ee, ec, _endHyphen, indent);
-            if (hasContent)
-            {
-                double h = EmitLine(in request, y, indent, _endForced || ee >= _elN, out double baseline);
-                if (lines == 0)
+                // CSS2 §9.4.2: the line box is as wide as the room between the floats that meet its whole height.
+                ex.Query(request.BfcTop + top, band, request.BfcLeft, request.BfcLeft + _availW, out double start, out double end, out double next);
+                xOff = start - request.BfcLeft;
+                avail = end - start;
+                if (avail <= 0 && !double.IsPositiveInfinity(next))
                 {
-                    _firstBaseline = y + baseline;
+                    top = next - request.BfcTop;
+                    continue;
                 }
 
-                _lastBaseline = y + baseline;
-                y += h;
+                ScanLine(e, c, avail, indent);
+                ee = _endE;
+                ec = _endC;
+                if (PlaceLineFloats(in request, ex, e, c, ee, ec, avail, top))
+                {
+                    continue; // a float joined this line: it is narrower now
+                }
+
+                // A line too narrow for its first unbreakable piece moves down to where there is more room (§9.5).
+                if (_lineW > avail + Eps && avail < _availW - Eps && !double.IsPositiveInfinity(next))
+                {
+                    top = next - request.BfcTop;
+                    continue;
+                }
+
+                if (ee == e && ec == c)
+                {
+                    // A line always consumes something; this only guards against a bug turning into an endless loop.
+                    ee = e + 1;
+                    ec = 0;
+                }
+
+                hasContent = BuildPieces(e, c, ee, ec, _endHyphen, indent);
+                if (hasContent)
+                {
+                    // The line is as tall as its content needs; floats that start lower than the strut but inside that height narrow it too.
+                    VerticalMetrics(out _, out double h);
+                    if (Math.Abs(h - band) > Eps)
+                    {
+                        band = h;
+                        ex.Query(request.BfcTop + top, band, request.BfcLeft, request.BfcLeft + _availW, out double s2, out double e2, out _);
+                        if (Math.Abs(s2 - start) > Eps || Math.Abs(e2 - end) > Eps)
+                        {
+                            continue;
+                        }
+                    }
+                }
+
+                break;
+            }
+
+            double lineHeight = 0;
+            if (hasContent)
+            {
+                lineHeight = EmitLine(in request, top, xOff, avail, indent, _endForced || ee >= _elN, out double baseline);
+                if (lines == 0)
+                {
+                    _firstBaseline = top + baseline;
+                }
+
+                _lastBaseline = top + baseline;
                 lines++;
                 first = false;
             }
 
+            y = top + lineHeight;
+            PlaceDeferredFloats(in request, ex, y);
             afterForced = _endForced;
             e = ee;
             c = ec;
         }
 
         return new InlineLayoutResult(y, lines, _firstBaseline, _lastBaseline);
+    }
+
+    private const int MaxLineAttempts = 1 << 16;
+    private int[] _deferred = new int[8];
+    private int _deferredN;
+
+    private double StrutHeight()
+    {
+        ref readonly ComputedValues cv = ref _container.Values;
+        FontBox(in cv, _container.Style, out double a, out double d, out double gap, out _);
+        return Math.Max(0, LineHeightOf(in cv, a, d, gap));
+    }
+
+    /// <summary>
+    /// CSS2 §9.5.1 rule 6: floats met on this line go at its top if they fit beside what is on the line, and below it otherwise.
+    /// Floats that fit are placed now (the caller scans the line again, since they narrow it); the others wait for the line's height.
+    /// </summary>
+    /// <returns>True when a float was placed on this line.</returns>
+    private bool PlaceLineFloats(in InlineLayoutRequest request, IExclusionSpace ex, int e0, int c0, int e1, int c1, double avail, double top)
+    {
+        _deferredN = 0;
+        bool placed = false;
+        for (int k = e0; k < _elN && (k < e1 || (k == e1 && c1 > 0)); k++)
+        {
+            ref Elem el = ref _el[k];
+            if (el.Kind != EK.Float || el.Frag >= 0)
+            {
+                continue;
+            }
+
+            double fw = 0;
+            if (_host is not null)
+            {
+                _host.GetAtomicContribution(_boxes.Make(el.Box), out double min, out double max);
+                fw = Math.Min(Math.Max(min, _availW), max); // shrink-to-fit, CSS2 §10.3.5
+            }
+
+            if (el.W2 <= Eps || el.W2 + fw <= avail + Eps)
+            {
+                Fragment f = ex.PlaceFloat(in request, _parent, _boxes.Make(el.Box), request.BfcTop + top, out _);
+                el.Frag = f.IsNull ? int.MaxValue : f.Index;
+                placed = true;
+            }
+            else
+            {
+                if (_deferredN == _deferred.Length)
+                {
+                    Array.Resize(ref _deferred, _deferredN * 2);
+                }
+
+                _deferred[_deferredN++] = k;
+            }
+        }
+
+        return placed;
+    }
+
+    private void PlaceDeferredFloats(in InlineLayoutRequest request, IExclusionSpace ex, double lineBottom)
+    {
+        for (int i = 0; i < _deferredN; i++)
+        {
+            ref Elem el = ref _el[_deferred[i]];
+            if (el.Frag >= 0)
+            {
+                continue;
+            }
+
+            Fragment f = ex.PlaceFloat(in request, _parent, _boxes.Make(el.Box), request.BfcTop + lineBottom, out _);
+            el.Frag = f.IsNull ? int.MaxValue : f.Index;
+        }
+
+        _deferredN = 0;
     }
 
     private double TextWidth(int e, int ca, int cb, out int seps)
@@ -319,6 +444,8 @@ internal sealed partial class InlineWorker
                     AddPiece(PK.Atomic, e, 0, 0, el.W, el.Owner, el.Level);
                     x += el.W;
                     ink = true;
+                    break;
+                case EK.Float:
                     break;
                 case EK.Tab:
                 {
