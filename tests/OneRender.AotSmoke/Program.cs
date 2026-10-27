@@ -1,3 +1,4 @@
+using OneRender.Interaction;
 using System;
 using System.IO;
 using OneRender;
@@ -175,7 +176,27 @@ bool woff2Ok = decoded.Status == FontLoadStatus.Ok && decoded.Face!.HasGlyph(0x0
 Console.WriteLine($"shaped {run.GlyphCount} glyphs, width {run.Width:F2}, cached {again}, woff2 {decoded.Status}");
 
 
-return names.Length == 3 && sfnt && painted && pageOk && boxes >= 3 && scrollOk && shaped && again && woff2Ok ? 0 : 1;
+// Tables: anonymous table objects, spans, collapsed borders and their painting must survive trimming and AOT as well.
+HtmlPage tablePage = HtmlPage.Create(
+    "<body style='margin:0'><table style='border-collapse:collapse;width:100px'><tr><td colspan=2 style='border:1px solid #000;height:10px'></td></tr><tr><td style='border:2px solid #f00'></td><td style='display:table-cell;border:1px solid #000'></td></tr></table><div style='display:table-cell;height:4px'></div></body>",
+    new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 200, ViewportHeight = 100 });
+var tableList = new DisplayList();
+new Painter().Paint(tablePage.Fragments, tableList, new PaintOptions(200, 100));
+bool tableOk = tablePage.Fragments.Count > 8 && tableList.Count > 0;
+
+// Interaction: a hit test, a dispatched pointer sequence with a listener, and a focus change.
+InteractivePage ix = InteractivePage.Create(
+    "<body style='margin:0'><div id=a style='width:40px;height:40px'><button id=b style='width:20px;height:20px'>x</button></div></body>",
+    new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 100, ViewportHeight = 100 });
+Node ixButton = ix.Page.Document.GetElementById("b");
+int ixClicks = 0;
+ix.Events.AddEventListener(ixButton, "click", _ => ixClicks++);
+bool ixHit = ix.ElementFromPoint(5, 5).Equals(ixButton);
+ix.HandlePointer(new PointerInput { Action = PointerAction.Down, X = 5, Y = 5, Button = 0, Buttons = MouseButtons.Primary, Time = 1 });
+ix.HandlePointer(new PointerInput { Action = PointerAction.Up, X = 5, Y = 5, Button = 0, Time = 2 });
+bool ixOk = ixHit && ixClicks == 1 && ix.FocusedElement.Equals(ixButton);
+
+return ixOk && names.Length == 3 && tableOk && sfnt && painted && pageOk && boxes >= 3 && scrollOk && shaped && again && woff2Ok ? 0 : 1;
 
 internal sealed class NoFonts : OneRender.Layout.IFontProvider
 {

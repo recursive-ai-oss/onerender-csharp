@@ -331,6 +331,9 @@ public partial struct ComputedValues
     /// <summary><c>color</c>; never <c>currentcolor</c> (it inherits).</summary>
     public ColorValue Color { get; internal set; }
 
+    /// <summary><c>pointer-events</c>; inherited.</summary>
+    public PointerEventsKind PointerEvents { get; internal set; }
+
     /// <summary><c>opacity</c>, clamped to 0 to 1.</summary>
     public double Opacity { get; internal set; }
 
@@ -624,6 +627,24 @@ public partial struct ComputedValues
     /// <summary><c>column-span</c>.</summary>
     public ColumnSpanKind ColumnSpan { get; internal set; }
 
+    /// <summary><c>border-collapse</c> (inherited).</summary>
+    public BorderCollapseKind BorderCollapse { get; internal set; }
+
+    /// <summary>The horizontal component of <c>border-spacing</c> in px (inherited; initial 0).</summary>
+    public double BorderSpacingH { get; internal set; }
+
+    /// <summary>The vertical component of <c>border-spacing</c> in px (inherited; initial 0).</summary>
+    public double BorderSpacingV { get; internal set; }
+
+    /// <summary><c>empty-cells</c> (inherited).</summary>
+    public EmptyCellsKind EmptyCells { get; internal set; }
+
+    /// <summary><c>caption-side</c> (inherited).</summary>
+    public CaptionSideKind CaptionSide { get; internal set; }
+
+    /// <summary><c>table-layout</c>.</summary>
+    public TableLayoutKind TableLayout { get; internal set; }
+
     /// <summary><c>column-rule-width</c> in px; 0 when the rule style is <c>none</c> or <c>hidden</c>.</summary>
     public double ColumnRuleWidth { get; internal set; }
 
@@ -667,6 +688,7 @@ public partial struct ComputedValues
         InitFragmentation(ref v);
         InitGrid(ref v);
         InitPaint(ref v);
+        InitInteraction(ref v);
         return v;
     }
 }

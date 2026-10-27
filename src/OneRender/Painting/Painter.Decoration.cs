@@ -98,6 +98,12 @@ public sealed partial class Painter
             return;
         }
 
+        // CSS2 §17.6.1.1: with separate borders, empty-cells: hide paints neither the background nor the borders of a cell without content.
+        if (v.EmptyCells == EmptyCellsKind.Hide && v.BorderCollapse == BorderCollapseKind.Separate && box.Context == FormattingContext.TableCell && _tree.FirstChildOf(f) < 0)
+        {
+            return;
+        }
+
         BoxGeometry g = GeometryOf(f, in v);
         FragmentTraits traits = (FragmentTraits)_tree.TraitsOf(f);
         bool sliceStart = (traits & FragmentTraits.ContinuesBefore) != 0;
@@ -113,7 +119,7 @@ public sealed partial class Painter
 
         PaintInsetShadows(f, in v, in g, cur);
 
-        Insets border = _tree.BorderOf(f);
+        Insets border = PaintTableBorders(f, g.Border) ? default : _tree.BorderOf(f);
         double top = SideWidth(border.Top, v.BorderTopStyle);
         double right = sliceEnd ? 0 : SideWidth(border.Right, v.BorderRightStyle);
         double bottom = SideWidth(border.Bottom, v.BorderBottomStyle);

@@ -35,6 +35,7 @@ public sealed partial class StyledTree
     private double[] _naturalW;
     private double[] _naturalH;
     private double[] _naturalRatio;
+    private int[] _span;
     private string?[] _src;
     private char[] _text;
     private int[] _sourceToNode = [];
@@ -66,6 +67,7 @@ public sealed partial class StyledTree
         _naturalW = new double[64];
         _naturalH = new double[64];
         _naturalRatio = new double[64];
+        _span = new int[64];
         _src = new string?[64];
         _text = new char[256];
         _tagIds[""] = 0;
@@ -294,6 +296,44 @@ public sealed partial class StyledTree
 
     internal double NaturalWidthOf(int i) => _naturalW[i];
 
+    private const int DefaultSpan = 1 | (1 << 11);
+
+    /// <summary>The most columns a <c>colspan</c> or <c>span</c> may cover (HTML Standard §4.9.11 clamps to 1000).</summary>
+    public const int MaxColumnSpan = 1000;
+
+    /// <summary>The most rows a <c>rowspan</c> may cover (HTML Standard §4.9.11 clamps to 65534).</summary>
+    public const int MaxRowSpan = 65534;
+
+    /// <summary>
+    /// Sets the table spans of a cell (<c>colspan</c>, <c>rowspan</c>) or the <c>span</c> of a column or column group. The values are
+    /// clamped to the HTML limits; a column span below 1 counts as 1. A row span of 0 means "to the end of the row group".
+    /// </summary>
+    /// <param name="node">The element.</param>
+    /// <param name="columns">The column span (or the <c>span</c> of a column), at least 1.</param>
+    /// <param name="rows">The row span, 0 for the rest of the row group.</param>
+    public void SetTableSpans(StyledNode node, int columns, int rows)
+    {
+        if (node.IsNull || !ReferenceEquals(node.Tree, this))
+        {
+            throw new ArgumentException("The node does not belong to this tree.", nameof(node));
+        }
+
+        SetSpans(node.Index, columns, rows);
+    }
+
+    internal void SetSpans(int i, int columns, int rows)
+    {
+        int c = Math.Clamp(columns, 1, MaxColumnSpan);
+        int r = Math.Clamp(rows, 0, MaxRowSpan);
+        _span[i] = c | (r << 11);
+    }
+
+    internal void ReplaceStyle(int i, StyleId style) => _style[i] = style.Index;
+
+    internal int ColumnSpanOf(int i) => _span[i] & 0x7FF;
+
+    internal int RowSpanOf(int i) => _span[i] >> 11;
+
     internal double NaturalHeightOf(int i) => _naturalH[i];
 
     internal double NaturalRatioOf(int i) => _naturalRatio[i];
@@ -356,6 +396,7 @@ public sealed partial class StyledTree
         _naturalW[i] = double.NaN;
         _naturalH[i] = double.NaN;
         _naturalRatio[i] = 0;
+        _span[i] = DefaultSpan;
         _src[i] = null;
         if (parent >= 0)
         {
@@ -516,6 +557,7 @@ public sealed partial class StyledTree
         Array.Resize(ref _textLength, n);
         Array.Resize(ref _replaced, n);
         Array.Resize(ref _naturalW, n);
+        Array.Resize(ref _span, n);
         Array.Resize(ref _naturalH, n);
         Array.Resize(ref _naturalRatio, n);
         Array.Resize(ref _src, n);
