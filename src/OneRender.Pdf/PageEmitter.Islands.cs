@@ -143,24 +143,48 @@ internal sealed partial class PageEmitter
 
         int pw = (int)Math.Clamp(Math.Ceiling(b.Width * scale), 1, DisplayListRasterizer.MaxDimension);
         int ph = (int)Math.Clamp(Math.Ceiling(b.Height * scale), 1, DisplayListRasterizer.MaxDimension);
-        if (_s.IslandPixels + ((long)pw * ph) > PdfShared.MaxIslandPixels)
+        // Cards, buttons and list rows repeat the same shadow many times; the picture depends only on the shadow's own geometry and the
+        // resolution, so equal shadows share one picture (and one image in the file).
+        ShadowKey key = default;
+        PdfCreatedImage? image = null;
+        if (shadow)
         {
-            _s.Diagnostics.Add(DiagnosticKind.LimitExceeded, what + " (item " + _list[from].Id.Value + ") is not drawn: the document already holds " + PdfShared.MaxIslandPixels + " pixels of rasterized content");
-            return;
+            DisplayItem head = _list[from];
+            key = ShadowKey.Of(in head, b, pw, ph, scale);
+            _s.ShadowImages.TryGetValue(key, out image);
         }
 
-        _s.IslandPixels += (long)pw * ph;
-        var sub = new DisplayList();
-        sub.PushTransform(ItemId.Of(uint.MaxValue, ushort.MaxValue, ushort.MaxValue), Matrix3x2.CreateTranslation(-b.X, -b.Y));
-        DisplayListCopier.Copy(_list, from, to, sub);
-        sub.PopTransform();
-        RgbaImage pixels = DisplayListRasterizer.Render(
-            sub,
-            pw,
-            ph,
-            new RasterOptions { DevicePixelRatio = (float)scale, Background = PaintColor.Transparent, Images = _s.Images, Diagnostics = _s.Diagnostics },
-            _token);
-        PdfCreatedImage image = _s.Embed(pixels);
+        if (image is null)
+        {
+            if (_s.IslandPixels + ((long)pw * ph) > PdfShared.MaxIslandPixels)
+            {
+                _s.Diagnostics.Add(DiagnosticKind.LimitExceeded, what + " (item " + _list[from].Id.Value + ") is not drawn: the document already holds " + PdfShared.MaxIslandPixels + " pixels of rasterized content");
+                return;
+            }
+
+            _s.IslandPixels += (long)pw * ph;
+            if (shadow)
+            {
+                DisplayItem item = _list[from];
+                image = _s.EmbedShadow(ShadowPicture.Render(in item, b, pw, ph), pw, ph, item.ShadowColor);
+                _s.ShadowImages[key] = image;
+            }
+            else
+            {
+                var sub = new DisplayList();
+                sub.PushTransform(ItemId.Of(uint.MaxValue, ushort.MaxValue, ushort.MaxValue), Matrix3x2.CreateTranslation(-b.X, -b.Y));
+                DisplayListCopier.Copy(_list, from, to, sub);
+                sub.PopTransform();
+                RgbaImage pixels = DisplayListRasterizer.Render(
+                    sub,
+                    pw,
+                    ph,
+                    new RasterOptions { DevicePixelRatio = (float)scale, Background = PaintColor.Transparent, Images = _s.Images, Diagnostics = _s.Diagnostics },
+                    _token);
+                image = _s.Embed(pixels);
+            }
+        }
+
         if (report)
         {
             _s.Diagnostics.Add(
@@ -184,6 +208,33 @@ internal sealed partial class PageEmitter
         }
 
         EndAlpha(saved);
+    }
+
+    // What a blurred box shadow's picture depends on, with positions relative to the picture's corner in 1/64 px so that the same shadow
+    // at different places on the page compares equal.
+    internal readonly record struct ShadowKey(
+        long RectX, long RectY, long RectW, long RectH,
+        long R0, long R1, long R2, long R3, long R4, long R5, long R6, long R7,
+        long OffsetX, long OffsetY, long Spread, long Blur,
+        long IslandW, long IslandH,
+        int ColorR, int ColorG, int ColorB, int ColorA,
+        int PixelWidth, int PixelHeight, long Scale, bool Inset)
+    {
+        private static long Snap(double v) => (long)Math.Round(v * 64.0);
+
+        public static ShadowKey Of(in DisplayItem it, RectF island, int pw, int ph, double scale)
+        {
+            RectF r = it.Rect;
+            CornerRadii c = it.Radii;
+            PaintColor col = it.ShadowColor;
+            return new ShadowKey(
+                Snap(r.X - island.X), Snap(r.Y - island.Y), Snap(r.Width), Snap(r.Height),
+                Snap(c.TopLeftX), Snap(c.TopLeftY), Snap(c.TopRightX), Snap(c.TopRightY), Snap(c.BottomRightX), Snap(c.BottomRightY), Snap(c.BottomLeftX), Snap(c.BottomLeftY),
+                Snap(it.ShadowOffsetX), Snap(it.ShadowOffsetY), Snap(it.ShadowSpread), Snap(it.ShadowBlur),
+                Snap(island.Width), Snap(island.Height),
+                BitConverter.SingleToInt32Bits(col.R), BitConverter.SingleToInt32Bits(col.G), BitConverter.SingleToInt32Bits(col.B), BitConverter.SingleToInt32Bits(col.A),
+                pw, ph, BitConverter.DoubleToInt64Bits(scale), it.ShadowInset);
+        }
     }
 
     // Samples per standard deviation of a blurred shadow's picture: enough for a smooth ramp when the viewer enlarges it.
