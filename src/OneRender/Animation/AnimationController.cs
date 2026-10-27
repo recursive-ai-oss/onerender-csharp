@@ -306,7 +306,13 @@ internal sealed partial class AnimationController
     {
         if (e.IsEmpty)
         {
-            // Nothing left to animate: the element shows its cascaded style.
+            // Nothing left to animate: the element shows its cascaded style. Rows of a table that is still in use go back for reuse; the
+            // restyle that led here already gave the element and its followers their cascaded styles.
+            if (e.HasRow && _sameTable)
+            {
+                ReleaseRows(tree.Styles, e);
+            }
+
             e.HasRow = false;
             _active.Remove(e);
             _effects.Remove(e.Key);
@@ -327,6 +333,12 @@ internal sealed partial class AnimationController
             e.Row = row;
             e.HasRow = true;
         }
+        else
+        {
+            // The row keeps what the last tick wrote; the cascaded values of the properties no effect touches may have changed.
+            table.MutableRow(e.Row) = e.Base;
+            ReleaseFollowerRows(table, e);
+        }
 
         RebuildTouched(e);
         BuildFollowers(tree, e, node);
@@ -338,6 +350,23 @@ internal sealed partial class AnimationController
 
         SampleElement(e, now, true);
         AddChanged(node);
+    }
+
+    private static void ReleaseFollowerRows(StyleTable table, ElementEffects e)
+    {
+        foreach (StyleId row in e.FollowerRows)
+        {
+            table.ReleasePrivate(row);
+        }
+
+        e.FollowerRows = [];
+        e.FollowerNodes = [];
+    }
+
+    private static void ReleaseRows(StyleTable table, ElementEffects e)
+    {
+        ReleaseFollowerRows(table, e);
+        table.ReleasePrivate(e.Row);
     }
 
     private void AddChanged(int node)

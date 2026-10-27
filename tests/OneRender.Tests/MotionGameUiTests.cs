@@ -190,4 +190,53 @@ public partial class MotionGameUiTests
             }
         }
     }
+
+    [Fact]
+    public void HoverTransitionsInPlaceEqualARebuild()
+    {
+        // Hovering starts width and color transitions on some elements; the in-place restyle and the page rebuilt from scratch at each
+        // input must show the same boxes and the same display list at every sampled time.
+        string html = GameUiScene.Html().Replace("</style>",
+            "#slot3,#slot20,#quest3{transition:width 400ms linear,background-color 400ms linear,color 400ms linear}" +
+            "#slot3:hover,#slot20:hover{width:90px;background-color:#808000}#quest3:hover{color:#ff0000;background-color:#335577}</style>", StringComparison.Ordinal);
+        InteractivePage fast = Create(html);
+        InteractivePage slow = Create(html);
+        slow.DisableInPlaceRestyle = true;
+        var options = new PaintOptions(GameUiScene.Width, GameUiScene.Height);
+        var rng = new Random(7);
+        string[] ids = ["slot3", "slot20", "quest3"];
+        double t = 0;
+        for (int step = 0; step < 30; step++)
+        {
+            string id = ids[rng.Next(ids.Length)];
+            OneRender.Layout.Rect r = fast.Page.Fragments.TryGetBorderBox(fast.Page.Document.GetElementById(id), out OneRender.Layout.Rect box) ? box : default;
+            double x = rng.Next(3) == 0 ? 2000 : r.X + 1, y = rng.Next(3) == 0 ? 2000 : r.Y + 1;
+            t += rng.Next(1, 300);
+            fast.HandlePointer(Ix.Move(x, y, t));
+            slow.HandlePointer(Ix.Move(x, y, t));
+            for (int k = 0; k < 3; k++)
+            {
+                t += rng.Next(5, 200);
+                fast.Advance(t);
+                slow.Advance(t);
+            }
+
+            IReadOnlyList<ElementBox> a = fast.Page.ElementBoxes(), b = slow.Page.ElementBoxes();
+            Assert.Equal(b.Count, a.Count);
+            for (int i = 0; i < a.Count; i++)
+            {
+                Assert.True(b[i] == a[i], "step " + step + " t=" + t + " id=" + id + " at " + x + "," + y + ": " + a[i] + " vs " + b[i]);
+            }
+
+            var mine = new DisplayList();
+            var theirs = new DisplayList();
+            new Painter().Paint(fast.Page.Fragments, mine, options);
+            new Painter().Paint(slow.Page.Fragments, theirs, options);
+            Assert.Equal(theirs.Count, mine.Count);
+            for (int i = 0; i < mine.Count; i++)
+            {
+                Assert.Equal(theirs[i].ContentHash, mine[i].ContentHash);
+            }
+        }
+    }
 }
