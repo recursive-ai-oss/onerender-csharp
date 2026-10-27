@@ -1,0 +1,8 @@
+# Upstream provenance of every shipped file. Columns are tab-separated.
+# archive<TAB>url<TAB>sha256   a download that holds several files
+# file<TAB>path<TAB>url<TAB>member<TAB>sha256   path is relative to this folder; member is the name inside the archive, or - for a direct download
+# Tools: tools/fonts/optional_fonts.py verify
+archive	https://github.com/notofonts/hebrew/releases/download/NotoSansHebrew-v3.001/NotoSansHebrew-v3.001.zip	df0a71814b4e63644cf40fcc4529111b61266b7a2dafbe95068b29a7520cc3cb
+file	NotoSansHebrew-Bold.ttf	https://github.com/notofonts/hebrew/releases/download/NotoSansHebrew-v3.001/NotoSansHebrew-v3.001.zip	NotoSansHebrew/unhinted/ttf/NotoSansHebrew-Bold.ttf	dfdb3056de1f4542b888c77a1a8a750548a802e271479f56e52152423b64dde8
+file	NotoSansHebrew-Regular.ttf	https://github.com/notofonts/hebrew/releases/download/NotoSansHebrew-v3.001/NotoSansHebrew-v3.001.zip	NotoSansHebrew/unhinted/ttf/NotoSansHebrew-Regular.ttf	04272f5600d0ec816d31d0df73b23aa8d3501ea359ebe820da31c11ffcf00853
+file	OFL.txt	https://github.com/notofonts/hebrew/releases/download/NotoSansHebrew-v3.001/NotoSansHebrew-v3.001.zip	OFL.txt	9b9fe028b5ba74d231659a1bbaf0ed09b11e759d1ca6a070999e16d151616b47

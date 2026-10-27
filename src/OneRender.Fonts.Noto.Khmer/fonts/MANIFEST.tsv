@@ -1,0 +1,8 @@
+# Upstream provenance of every shipped file. Columns are tab-separated.
+# archive<TAB>url<TAB>sha256   a download that holds several files
+# file<TAB>path<TAB>url<TAB>member<TAB>sha256   path is relative to this folder; member is the name inside the archive, or - for a direct download
+# Tools: tools/fonts/optional_fonts.py verify
+archive	https://github.com/notofonts/khmer/releases/download/NotoSansKhmer-v2.004/NotoSansKhmer-v2.004.zip	19382ca97d62febea1c735ebee35a5aa4f03beca9b6ea6f6d86b7a7a0025a688
+file	NotoSansKhmer-Bold.ttf	https://github.com/notofonts/khmer/releases/download/NotoSansKhmer-v2.004/NotoSansKhmer-v2.004.zip	NotoSansKhmer/unhinted/ttf/NotoSansKhmer-Bold.ttf	817382a538f299eb809ee9313ef5c52e0049e3487eb4d02678349755ed607ddf
+file	NotoSansKhmer-Regular.ttf	https://github.com/notofonts/khmer/releases/download/NotoSansKhmer-v2.004/NotoSansKhmer-v2.004.zip	NotoSansKhmer/unhinted/ttf/NotoSansKhmer-Regular.ttf	60c10dbfae33a44f1897cd939789bd173aedb7c7dc0a9af389a737e33cb7e548
+file	OFL.txt	https://github.com/notofonts/khmer/releases/download/NotoSansKhmer-v2.004/NotoSansKhmer-v2.004.zip	OFL.txt	be0407f060aea48787ff9e75d8d3aedef70aef113b3ce9aca26fdaacd10b1870

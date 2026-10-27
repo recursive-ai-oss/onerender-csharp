@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Noto Color Emoji for OneRender: the upstream CBDT/CBLC color bitmap font (the build with an empty glyf table, which every TrueType reader accepts), embedded byte-for-byte.</Description>
+    <PackageLicenseExpression>(MIT OR Apache-2.0) AND OFL-1.1</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../OneRender.Fonts/OneRender.Fonts.csproj" />
+  </ItemGroup>
+
+  <!-- The font files, licence and manifest are embedded unmodified; the logical names are fixed so lookup never depends on the build host. -->
+  <ItemGroup>
+    <EmbeddedResource Include="fonts/*" LogicalName="fonts/%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <!-- The licence also travels as a plain file in the package. -->
+  <ItemGroup>
+    <None Include="fonts/OFL.txt" Pack="true" PackagePath="licenses/" />
+  </ItemGroup>
+
+  <!-- An application that references the package registers it at start-up: the build adds a module initializer to the application. -->
+  <ItemGroup>
+    <Compile Remove="build/**" />
+    <None Include="build/$(PackageId).targets" Pack="true" PackagePath="buildTransitive/" />
+    <None Include="build/$(PackageId).AutoRegister.cs" Pack="true" PackagePath="buildTransitive/" />
+  </ItemGroup>
+
+</Project>

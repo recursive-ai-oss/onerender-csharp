@@ -1,0 +1,8 @@
+# Upstream provenance of every shipped file. Columns are tab-separated.
+# archive<TAB>url<TAB>sha256   a download that holds several files
+# file<TAB>path<TAB>url<TAB>member<TAB>sha256   path is relative to this folder; member is the name inside the archive, or - for a direct download
+# Tools: tools/fonts/optional_fonts.py verify
+archive	https://github.com/notofonts/gujarati/releases/download/NotoSansGujarati-v2.106/NotoSansGujarati-v2.106.zip	a4ff1dd03a4998ba08ee7ee43be2aca7594a884982049e48c25ccc48991474ed
+file	NotoSansGujarati-Bold.ttf	https://github.com/notofonts/gujarati/releases/download/NotoSansGujarati-v2.106/NotoSansGujarati-v2.106.zip	NotoSansGujarati/unhinted/ttf/NotoSansGujarati-Bold.ttf	3ce0cf6e1d0bfe2ef5823772eeb2f25da28ec0c2c1d99c0fce529025723e61a1
+file	NotoSansGujarati-Regular.ttf	https://github.com/notofonts/gujarati/releases/download/NotoSansGujarati-v2.106/NotoSansGujarati-v2.106.zip	NotoSansGujarati/unhinted/ttf/NotoSansGujarati-Regular.ttf	18727143b8eadade0a59dca80959ef784bf8d55e07285d1b4096594dbf829f0a
+file	OFL.txt	https://github.com/notofonts/gujarati/releases/download/NotoSansGujarati-v2.106/NotoSansGujarati-v2.106.zip	OFL.txt	c0b88977aa18b5e4fd05d646d560da89fde61b6581fa4507cb00dd90bd1bf7d4

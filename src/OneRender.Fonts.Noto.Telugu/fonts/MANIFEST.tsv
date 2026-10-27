@@ -1,0 +1,8 @@
+# Upstream provenance of every shipped file. Columns are tab-separated.
+# archive<TAB>url<TAB>sha256   a download that holds several files
+# file<TAB>path<TAB>url<TAB>member<TAB>sha256   path is relative to this folder; member is the name inside the archive, or - for a direct download
+# Tools: tools/fonts/optional_fonts.py verify
+archive	https://github.com/notofonts/telugu/releases/download/NotoSansTelugu-v2.005/NotoSansTelugu-v2.005.zip	3553e00ca341dc06f4a143c604dd93a1342553169b5a06dc8b0ff50ab6eba0a2
+file	NotoSansTelugu-Bold.ttf	https://github.com/notofonts/telugu/releases/download/NotoSansTelugu-v2.005/NotoSansTelugu-v2.005.zip	NotoSansTelugu/unhinted/ttf/NotoSansTelugu-Bold.ttf	44393b05a863057cc2cbfe86623fc20b906b00cf19a2ae9304cdd0f3608889db
+file	NotoSansTelugu-Regular.ttf	https://github.com/notofonts/telugu/releases/download/NotoSansTelugu-v2.005/NotoSansTelugu-v2.005.zip	NotoSansTelugu/unhinted/ttf/NotoSansTelugu-Regular.ttf	dcb86a5da09365a2d73d725e429403dca988e6d50c1b1d564579a25dbc18bd29
+file	OFL.txt	https://github.com/notofonts/telugu/releases/download/NotoSansTelugu-v2.005/NotoSansTelugu-v2.005.zip	OFL.txt	481c72a8f1b4f645a7e6b10326be41b2da2c15cb470ff48a07fab773eed00102

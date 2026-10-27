@@ -1,0 +1,7 @@
+# Upstream provenance of every shipped file. Columns are tab-separated.
+# archive<TAB>url<TAB>sha256   a download that holds several files
+# file<TAB>path<TAB>url<TAB>member<TAB>sha256   path is relative to this folder; member is the name inside the archive, or - for a direct download
+# Tools: tools/fonts/optional_fonts.py verify
+archive	https://github.com/notofonts/mongolian/releases/download/NotoSansMongolian-v3.103/NotoSansMongolian-v3.103.zip	ab4ef0e294a7784e4a418523b0b214cda27dc876c03f7501f49ca8a8ba36756c
+file	NotoSansMongolian-Regular.ttf	https://github.com/notofonts/mongolian/releases/download/NotoSansMongolian-v3.103/NotoSansMongolian-v3.103.zip	NotoSansMongolian/unhinted/ttf/NotoSansMongolian-Regular.ttf	2986e50b7c66b7cbc42a0d82cc8143697a25ef56e134fe19adfd685c5f4ea57f
+file	OFL.txt	https://github.com/notofonts/mongolian/releases/download/NotoSansMongolian-v3.103/NotoSansMongolian-v3.103.zip	OFL.txt	b0158b3c0b16c20e22ea662850503a7980111c5c704501e942cc1a7ed12dc011
