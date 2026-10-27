@@ -392,14 +392,16 @@ internal sealed partial class Fragmenter
     }
 
     // §3.1.1: a break-before on the first in-flow child counts for its parent, a break-after on the last for its parent, all the way up.
-    private BreakBits ChainBits(int frag, bool first)
+    private BreakBits ChainBits(int frag, bool first, out string? pageName)
     {
         BreakBits bits = BreakBits.None;
+        pageName = null;
         int x = frag;
         for (int n = 0; x >= 0 && n < 1_000_000; n++)
         {
             Box box = _boxes.Make(_t.BoxOf(x));
             bits |= Map(first ? box.Values.BreakBefore : box.Values.BreakAfter);
+            pageName = box.Values.PageName;
             if (Monolithic(box))
             {
                 break;
@@ -438,7 +440,13 @@ internal sealed partial class Fragmenter
     private void ClassA(int wi, int c, double cTop, in ComputedValues cv)
     {
         ref Walk w = ref _walk[wi];
-        BreakBits bits = ChainBits(w.PrevFrag, false) | ChainBits(c, true);
+        BreakBits bits = ChainBits(w.PrevFrag, false, out string? prevName) | ChainBits(c, true, out string? nextName);
+        if (_kind == FragmentationKind.Page && !string.Equals(prevName, nextName, StringComparison.Ordinal))
+        {
+            // Paged Media 3 §7.2: a change of used page name between consecutive boxes forces a page break.
+            bits |= BreakBits.ForcePage;
+        }
+
         double ye = Math.Min(w.PrevBottom, cTop), ys = cTop;
         bool forced = (bits & ForcedMask) != 0;
         int level = 0;

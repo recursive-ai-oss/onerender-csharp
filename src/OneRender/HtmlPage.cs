@@ -52,6 +52,9 @@ public sealed class HtmlPageOptions
 
     /// <summary>Whether the user agent style sheet applies. Default true.</summary>
     public bool UserAgentStyles { get; init; } = true;
+
+    /// <summary>Whether media queries see the <c>print</c> media type instead of <c>screen</c> (CSS Media Queries 5 §2.3). Default false.</summary>
+    public bool PrintMedia { get; init; }
 }
 
 /// <summary>
@@ -84,6 +87,9 @@ public sealed partial class HtmlPage
 
     /// <summary>The options the page was created with.</summary>
     public HtmlPageOptions Options { get; }
+
+    // Whether generated content read page numbers, so a second build with known pages can change the text.
+    internal bool UsedPageReferences { get; private init; }
 
     /// <summary>
     /// The scroll positions of the viewport and of scroll containers. <see cref="Paint"/> applies them; change them and call
@@ -137,12 +143,19 @@ public sealed partial class HtmlPage
 
     internal static HtmlPage CreateWithStyles(Document document, HtmlPageOptions options, out DocumentStyles styles, CancellationToken cancellationToken)
     {
+        styles = CreateStyles(document, options, cancellationToken);
+        return BuildFromStyles(document, styles, options, null, cancellationToken);
+    }
+
+    // The cascade of a document for the given viewport and media; @property initial values are fed back as a user sheet.
+    internal static DocumentStyles CreateStyles(Document document, HtmlPageOptions options, CancellationToken cancellationToken)
+    {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(options);
         ArgumentOutOfRangeException.ThrowIfLessThan(options.ViewportWidth, 1);
         ArgumentOutOfRangeException.ThrowIfLessThan(options.ViewportHeight, 1);
         cancellationToken.ThrowIfCancellationRequested();
-        var context = new StyleContext { Media = new MediaFeatures { Width = options.ViewportWidth, Height = options.ViewportHeight } };
+        var context = new StyleContext { Media = new MediaFeatures { Width = options.ViewportWidth, Height = options.ViewportHeight, Type = options.PrintMedia ? MediaType.Print : MediaType.Screen } };
         Func<string, byte[]?>? bytes = options.StylesheetBytes;
         StyleSourceOptions MakeOptions(string? registered)
         {
@@ -171,7 +184,7 @@ public sealed partial class HtmlPage
             };
         }
 
-        styles = DocumentStyles.Create(document, context, MakeOptions(null), cancellationToken);
+        DocumentStyles styles = DocumentStyles.Create(document, context, MakeOptions(null), cancellationToken);
 
         // @property registrations are not part of the cascade, so their initial values are fed back as a user-origin sheet. Only a
         // document that registers something pays for the second pass.
@@ -179,6 +192,15 @@ public sealed partial class HtmlPage
         {
             styles = DocumentStyles.Create(document, context, MakeOptions(registered), cancellationToken);
         }
+
+        return styles;
+    }
+
+    // Builds the trees of a cascaded document; the references carry targets between the passes of a paged document.
+    internal static HtmlPage BuildFromStyles(Document document, DocumentStyles styles, HtmlPageOptions options, ReferenceTable? references, CancellationToken cancellationToken)
+    {
+        Func<string, byte[]?>? bytes = options.StylesheetBytes;
+        var media = styles.Context.Media;
 
         // @font-face rules of the document's sheets belong to this document only; the files come through the same host lookup as sheets.
         FontCatalog catalog = options.Fonts.Catalog;
@@ -191,8 +213,8 @@ public sealed partial class HtmlPage
 
         try
         {
-            AddFontFaces(styles, catalog, context.Media, cancellationToken);
-            return Build(document, styles, options, null, cancellationToken);
+            AddFontFaces(styles, catalog, media, cancellationToken);
+            return Build(document, styles, options, null, references, cancellationToken);
         }
         finally
         {
@@ -200,19 +222,20 @@ public sealed partial class HtmlPage
         }
     }
 
-    private static HtmlPage Build(Document document, DocumentStyles styles, HtmlPageOptions options, ScrollState? scroll, CancellationToken cancellationToken)
+    private static HtmlPage Build(Document document, DocumentStyles styles, HtmlPageOptions options, ScrollState? scroll, ReferenceTable? references, CancellationToken cancellationToken)
     {
         var table = new StyleTable();
         table.SetViewport(options.ViewportWidth, options.ViewportHeight);
         table.Fonts = options.Fonts;
         var styled = new StyledTree(table) { Resolver = options.Replaced };
-        new HtmlFrontEnd(styled).Build(styles, cancellationToken);
+        var frontEnd = new HtmlFrontEnd(styled) { References = references };
+        frontEnd.Build(styles, cancellationToken);
         var boxes = new BoxTree(styled);
         boxes.Build(cancellationToken);
         var fragments = new FragmentTree(boxes);
         ILayoutEngine engine = options.Layout ?? new BlockLayoutEngine();
         engine.Layout(boxes, new LayoutInput(options.ViewportWidth, options.ViewportHeight, options.Fonts), fragments, cancellationToken);
-        var page = new HtmlPage(document, styled, boxes, fragments, options);
+        var page = new HtmlPage(document, styled, boxes, fragments, options) { UsedPageReferences = frontEnd.UsedPageReferences };
         if (scroll is not null)
         {
             page.Scroll = scroll;

@@ -57,6 +57,23 @@ internal sealed partial class StyleComputer
                 return true;
             }
 
+            case PropertyId.Page:
+            {
+                // Paged Media 3 §7.3: auto is the parent's used name (and none at the root), so it keeps the inherited value.
+                if (!SinglePart(v, out ComponentValue pn) || pn.Kind != ComponentValueKind.Token || pn.Token.Kind != CssTokenKind.Ident)
+                {
+                    return false;
+                }
+
+                string word = pn.Token.Value;
+                if (!word.Equals("auto", StringComparison.OrdinalIgnoreCase))
+                {
+                    _r.PageName = word;
+                }
+
+                return true;
+            }
+
             case PropertyId.Orphans:
             case PropertyId.Widows:
             {
@@ -225,6 +242,7 @@ internal sealed partial class StyleComputer
             case PropertyId.BreakInside: d.BreakInside = s.BreakInside; break;
             case PropertyId.Orphans: d.Orphans = s.Orphans; break;
             case PropertyId.Widows: d.Widows = s.Widows; break;
+            case PropertyId.Page: d.PageName = s.PageName; break;
             case PropertyId.BoxDecorationBreak: d.BoxDecorationBreak = s.BoxDecorationBreak; break;
             case PropertyId.ColumnCount: d.ColumnCount = s.ColumnCount; break;
             case PropertyId.ColumnWidth: d.ColumnWidth = s.ColumnWidth; break;

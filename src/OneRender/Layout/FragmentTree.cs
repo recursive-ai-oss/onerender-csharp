@@ -460,6 +460,44 @@ public sealed partial class FragmentTree
         return !s.IsNull && TryGetBorderBox(s, out borderBox);
     }
 
+    /// <summary>
+    /// The border box of the first fragment of an element's principal box in document coordinates: where the element starts. For a box
+    /// that a break split (across pages or columns) this is the piece the box begins in, not the union of all pieces.
+    /// </summary>
+    /// <param name="node">An element of the document the styled tree was built from.</param>
+    /// <param name="borderBox">The border box of the first fragment.</param>
+    /// <returns>False when the node is not from that document, generated no box, or has no fragment.</returns>
+    public bool TryGetFirstBorderBox(Node node, out Rect borderBox)
+    {
+        borderBox = default;
+        StyledTree styled = Boxes.Styled;
+        if (node.IsNull || !ReferenceEquals(node.Document, styled.SourceDocument))
+        {
+            return false;
+        }
+
+        StyledNode s = styled.FindBySource(node.Index);
+        if (s.IsNull)
+        {
+            return false;
+        }
+
+        Box box = Boxes.PrincipalBox(s);
+        if (box.IsNull)
+        {
+            return false;
+        }
+
+        Fragment f = FragmentOf(box);
+        if (f.IsNull)
+        {
+            return false;
+        }
+
+        borderBox = AbsoluteBorderBox(f);
+        return true;
+    }
+
     /// <summary>A text outline of the tree for tests: one fragment per line, two spaces of indent per level.</summary>
     public string Dump()
     {

@@ -334,6 +334,7 @@ internal sealed partial class StyleComputer
         v.ListStyleImage = p.ListStyleImage;
         v.Orphans = p.Orphans;
         v.Widows = p.Widows;
+        v.PageName = p.PageName;
         v.WordBreak = p.WordBreak;
         v.TextTransform = p.TextTransform;
         v.OverflowWrap = p.OverflowWrap;

@@ -20,6 +20,7 @@ public partial struct ComputedValues
         a.BreakInside == b.BreakInside &&
         a.Orphans == b.Orphans &&
         a.Widows == b.Widows &&
+        string.Equals(a.PageName, b.PageName, StringComparison.Ordinal) &&
         a.BoxDecorationBreak == b.BoxDecorationBreak &&
         a.ColumnCount == b.ColumnCount &&
         a.ColumnWidth.Equals(b.ColumnWidth) &&
@@ -36,6 +37,7 @@ public partial struct ComputedValues
         h.Add(v.BreakInside);
         h.Add(v.Orphans);
         h.Add(v.Widows);
+        h.Add(v.PageName, StringComparer.Ordinal);
         h.Add(v.BoxDecorationBreak);
         h.Add(v.ColumnCount);
         h.Add(v.ColumnWidth);
