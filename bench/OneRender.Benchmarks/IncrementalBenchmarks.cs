@@ -20,7 +20,6 @@ public class IncrementalBenchmarks
     private readonly string[] _texts = ["Gold 100", "Gold 1000", "Gold 7"];
     private bool _flip;
     private int _t;
-    public int BoxCount => _page.Boxes.Count;
 
     [GlobalSetup]
     public void Setup()
@@ -74,31 +73,5 @@ public class IncrementalBenchmarks
         _flip = !_flip;
         _page.Styled.SetDeclaration(_row, _flip ? _tall : _normal);
         return _page.Flush();
-    }
-}
-public static class StageProbe
-{
-    public static void Loop(string which)
-    {
-        var b = new IncrementalBenchmarks(); b.Setup();
-        long end = System.Diagnostics.Stopwatch.GetTimestamp() + 12 * System.Diagnostics.Stopwatch.Frequency;
-        while (System.Diagnostics.Stopwatch.GetTimestamp() < end)
-            for (int i = 0; i < 200; i++) { if (which == "text") b.TextChange(); else if (which == "hover") b.HoverRestyle(); else b.SubtreeRelayout(); }
-    }
-
-    public static void Run()
-    {
-        var b = new IncrementalBenchmarks(); b.Setup();
-        System.Console.WriteLine($"text reused {b.TextChange().ReusedSubtrees} sub {b.SubtreeRelayout().ReusedSubtrees} hover {b.HoverRestyle().ReusedSubtrees} boxes {b.BoxCount}");
-        foreach (var (name, act) in new (string, System.Action)[]{("hover",()=>b.HoverRestyle()),("text",()=>b.TextChange()),("subtree",()=>b.SubtreeRelayout())})
-        {
-            for (int i=0;i<20000;i++) act();
-            LivePage.TRestyle=LivePage.TLayout=LivePage.TPaint=LivePage.TCount=0;
-            for (int i=0;i<20000;i++) act();
-            double f=1e6/System.Diagnostics.Stopwatch.Frequency/LivePage.TCount;
-            System.Console.WriteLine("why: " + string.Join(",", OneRender.Painting.Painter.Why));
-            System.Array.Clear(OneRender.Painting.Painter.Why);
-            System.Console.WriteLine($"{name}: restyle {LivePage.TRestyle*f:F1}us layout {LivePage.TLayout*f:F1}us paint {LivePage.TPaint*f:F1}us flushes/iter {LivePage.TCount/20000.0}");
-        }
     }
 }

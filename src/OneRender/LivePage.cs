@@ -99,9 +99,6 @@ public sealed class LivePage
     private readonly PipelineUpdater _updater;
     private readonly Painter _painter = new();
     private int _generation;
-#pragma warning disable CA2211, CS1591
-    public static long TRestyle, TLayout, TPaint, TCount;
-#pragma warning restore CA2211
 
     /// <summary>Builds the boxes of <paramref name="tree"/>, lays them out and paints them. The tree starts recording edits from here.</summary>
     /// <param name="tree">The styled tree; it must not be shared with another page.</param>
@@ -199,15 +196,10 @@ public sealed class LivePage
         }
 
         cancellationToken.ThrowIfCancellationRequested();
-        long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
         _updater.Restyle();
-        long t1 = System.Diagnostics.Stopwatch.GetTimestamp();
         FlushWork work = _updater.UpdateBoxesAndLayout(cancellationToken);
         int reused = _updater.ReusedSubtrees;
-        long t2 = System.Diagnostics.Stopwatch.GetTimestamp();
         PaintFlush(work, cancellationToken);
-        long t3 = System.Diagnostics.Stopwatch.GetTimestamp();
-        TRestyle += t1 - t0; TLayout += t2 - t1; TPaint += t3 - t2; TCount++;
         work |= FlushWork.Repainted;
         _generation++;
         return new FlushResult(work, reused);

@@ -49,11 +49,6 @@ public sealed partial class Painter
     /// <summary>How many flushes rewrote the list in place (a diagnostic for tests and benchmarks).</summary>
     internal int PatchedPaints { get; private set; }
 
-#pragma warning disable
-    public static int[] Why = new int[64];
-    private static bool Fail(int code) { Why[code]++; return false; }
-#pragma warning restore
-
     private byte JournalFlagsOf(Box b, in ComputedValues v)
     {
         byte f = 0;
@@ -127,15 +122,14 @@ public sealed partial class Painter
             || !SameOptions(in options) || fragments.Count != _journalCount || fragments.Version != _journalVersion + (layoutRan ? 1 : 0)
             || (layoutRan && (delta is null || !delta.Aligned)))
         {
-            return Fail(1);
+            return false;
         }
 
         BoxTree boxes = fragments.Boxes;
         DisplayList list = retained.Current;
         if (boxes.TouchedOverflow || list.Count != _journalItems || list.PayloadSize > (2 * _journalPayload) + 4096 || list.Rewriting)
         {
-            Why[50] = (int)list.PayloadSize; Why[51] = (int)_journalPayload; Why[52] = list.Count; Why[53] = _journalItems; Why[54] = boxes.TouchedOverflow ? 1 : 0;
-            return Fail(2);
+            return false;
         }
 
         _tree = fragments;
@@ -147,7 +141,7 @@ public sealed partial class Painter
             if (!ok)
             {
                 _journalValid = false;
-                return Fail(3);
+                return false;
             }
 
             _journalVersion = fragments.Version;
@@ -181,7 +175,7 @@ public sealed partial class Painter
             ViewportOverflow.Resolve(_boxes, out _, out _, out int source);
             if (source != _vpSource)
             {
-                return Fail(4);
+                return false;
             }
 
             if (_scroll is not null)
@@ -193,7 +187,7 @@ public sealed partial class Painter
                 {
                     if (range.CanScroll != _vpRange.CanScroll)
                     {
-                        return Fail(5);
+                        return false;
                     }
 
                     _vpRange = range;
@@ -243,7 +237,7 @@ public sealed partial class Painter
 
                 if (_rCount > limit)
                 {
-                    return Fail(6);
+                    return false;
                 }
             }
         }
@@ -254,11 +248,13 @@ public sealed partial class Painter
             for (int f = _tree.FirstFragmentOfBox(boxes.TouchedAt(t)); f >= 0; f = _tree.NextOfBoxOf(f))
             {
                 Mark(f);
+                // Text paints from its own box's values, which follow an ancestor's inherited color, font and visibility.
+                MarkTextBelow(f);
             }
 
             if (_rCount > limit)
             {
-                return Fail(7);
+                return false;
             }
         }
 
@@ -279,19 +275,18 @@ public sealed partial class Painter
                 _rDone[x] = _rStamp;
                 if (!Reclassify(x))
                 {
-                    return Fail(8);
+                    return false;
                 }
             }
         }
 
-        Why[40] += _rCount; Why[41]++; if (layoutRan) Why[42] += delta!.Count;
         // Paint them again over their old slots.
         DamageRegion damage = retained.Damage;
         for (int k = 0; k < _rCount; k++)
         {
             if (!Rewrite(_rList[k], damage))
             {
-                return Fail(9);
+                return false;
             }
         }
 
@@ -307,6 +302,47 @@ public sealed partial class Painter
 
         _rMark[i] = _rStamp;
         _rList[_rCount++] = i;
+    }
+
+    private void MarkTextBelow(int root)
+    {
+        int c = _tree.FirstChildOf(root);
+        while (c >= 0)
+        {
+            if ((FragmentKind)_tree.KindOf(c) == FragmentKind.Text)
+            {
+                Mark(c);
+            }
+
+            int f = _tree.FirstChildOf(c);
+            if (f >= 0)
+            {
+                c = f;
+                continue;
+            }
+
+            while (true)
+            {
+                int next = _tree.NextSiblingOf(c);
+                if (next >= 0)
+                {
+                    c = next;
+                    break;
+                }
+
+                c = _tree.ParentOf(c);
+                if (c == root || c < 0)
+                {
+                    c = -1;
+                    break;
+                }
+            }
+
+            if (_rCount > _n / 2)
+            {
+                return;
+            }
+        }
     }
 
     private void MarkSubtree(int root)
@@ -346,7 +382,7 @@ public sealed partial class Painter
         if (x == 0 || x == _skipBackground)
         {
             // The canvas background belongs to the root and body boxes and is painted outside any fragment's span.
-            return Fail(10);
+            return false;
         }
 
         byte flags = _flags[x];
@@ -354,7 +390,7 @@ public sealed partial class Painter
         VisitCore(x, false);
         if (_flags[x] != flags || _ownerFor[x] != owner || _contextFor[x] != context)
         {
-            return Fail(11);
+            return false;
         }
 
         if ((FragmentKind)_tree.KindOf(x) == FragmentKind.Box)
@@ -363,7 +399,7 @@ public sealed partial class Painter
             byte now = JournalFlagsOf(b, in b.Values);
             if (((_jflags[x] | now) & (JUnpatchable | JDecoration | JOutline | JSpecial)) != 0)
             {
-                return Fail(12);
+                return false;
             }
         }
 
