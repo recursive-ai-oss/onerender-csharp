@@ -684,6 +684,9 @@ public partial struct ComputedValues
     /// <summary><c>widows</c>: the fewest lines carried over a break (inherited, at least 1, initially 2).</summary>
     public int Widows { get; internal set; }
 
+    /// <summary>The page name <c>page</c> gives the box (Paged Media 3 §7.3), or null for <c>auto</c> all the way up. Inherited, because <c>auto</c> means the parent's name.</summary>
+    public string? PageName { get; internal set; }
+
     /// <summary><c>box-decoration-break</c>.</summary>
     public BoxDecorationBreakKind BoxDecorationBreak { get; internal set; }
 

@@ -495,6 +495,47 @@ fragmentainer. Breaking never feeds back into inline layout, because every fragm
   inside the strip is placed by the strip's coordinates, so an absolutely positioned box is assigned to the column its top lands
   in. Percentage heights inside a fragmented flow resolve against the container, not the column.
 
+## Paged media (`Paged/`, `Layout/PageFragmentation.cs`, `Tree/ContentList.cs`, `Tree/GeneratedContent.cs`)
+
+CSS Paged Media 3, CSS Generated Content 3 and GCPM 3 on top of the fragmenter. `PagedDocument.Create(html, PagedOptions)` is the entry; the PDF happy path goes through it.
+
+- **Pipeline.** The document is cascaded with the `print` media type, laid out as one strip at the first page's content width, and cut by
+  `PageFragmentation.Paginate` into page-sized fragmentainers placed side by side (page *i* at x = i · stride). Each page then gets a
+  *page layer*: the page box's background and its margin boxes, laid out as a small HTML document of their own (a probe document per
+  distinct page style) and painted in page coordinates. Content is painted once for all pages (`PaintContent`); a page is a region of that
+  list plus its layer (`GetPage`, `GetPageLayer`).
+- **`@page`** (`PageRules.cs`): `size` (keywords, `landscape`/`portrait`, one or two lengths), `margin` with percentages against the page box,
+  the selectors `:first`, `:left`, `:right`, `:blank` and a page name, combined by specificity like selectors (names beat pseudo-classes by
+  the specificity rule of §7.3, later rules win ties). Page *i* is a left or right page by its number and the document's direction; a
+  right-to-left document starts on a left page. Blank pages that a `left`/`right`/`recto`/`verso` break inserts count in the numbering.
+- **Named pages.** `page` is inherited through `auto`. A change of the used name between siblings forces a break (§7.3). Page sizes are
+  per page, so the cut is planned again when a named page has a different height: at most 4 passes. Pages whose content width differs
+  from the one the strip was laid out at keep the strip's width (content is cut or padded) and a diagnostic says so.
+- **Margin boxes.** The 16 boxes are sized by the algorithm of §5.3 (`ComputeBoxRects`): corners are fixed by the margins; the three
+  boxes of an edge share the edge's length by the resolved-width rules, with `auto` widths distributed by the content's max-content
+  widths (`Distribute`), and a box that has no content takes no room. A margin box is a flex column with `overflow: hidden`, and the
+  `vertical-align` of the box sets its `justify-content`. Their text properties inherit from the root element, not from the page.
+- **Generated content.** `GeneratedContent` evaluates `content`, `counter-reset/-increment/-set` (including `reversed()`, whose
+  initial value is the sum of the negated increments in its scope, found by a bounded walk), `counter()`, `counters()`, `attr()`,
+  quotes, `string-set`/`string()`, `target-counter()`, `target-counters()`, `target-text()` and `leader()` while the front end builds the
+  styled tree. Counter scopes follow the element tree with `display: contents` elements transparent. A counter name that is `none` or
+  a CSS-wide keyword makes the value invalid and the generated box empty. `counter(page)` and `counter(pages)` are known only after
+  a cut: when content reads them, or reads a `target-counter()` of a later page, the content is built again with the numbers of the
+  previous pass, at most three times; if the numbers do not settle the last ones are used and a diagnostic is recorded.
+  `string()` takes `first`, `start`, `last` and `first-except` over the `string-set` events on each page.
+- **Leaders.** `leader()` evaluates to a pattern between two private marker characters. Inline layout turns that into a text run that
+  takes no room while a line is broken and is given the room the other pieces of the line leave when the line is placed; it shows whole
+  pattern clusters and the text after it ends at the line end. The glyph run's source text is the pattern. Leaders share the room equally.
+  The pattern is not aligned across lines.
+- **Table headers and footers.** A `thead`/`tfoot` is reserved on every page a table continues onto (`CloneTop`/`CloneBottom` of the
+  candidates) and copied there (`FragmentTree.CloneSubtree`, traits `Repeated`). The copies are artifacts in tagged output: they stay
+  inside the table's structure element, so the table is one element across pages. Header and footer groups are not split.
+- **Limits.** `MaxPages` (default and ceiling 100,000) is checked before every cut: forced breaks and blank pages past it are not taken,
+  `Truncated` is set and the rest stays on the last page. A `content` value is bounded (16 KiB of source, 64 items, 64 KiB of text once evaluated), `@page` rules (1,024) and
+  their declarations (256) by count, blocks by length (64 KiB) and nesting (16), counters by scope depth and number (4,096), string-set events by count, scan budgets for reversed counters by
+  node count. Nothing recurses over the tree.
+- **Not done.** `position: running()`/`element()` (the cascade does not keep `running()`), footnotes, leaders aligned across lines, `@counter-style` rules and the counter styles that `CounterStyles.cs` lacks (such as `georgian`), the implicit `list-item` counter for reversed lists.
+
 ## Multi-column layout (`Layout/Multicol/`)
 
 CSS Multi-column Layout 1. A container with `column-count` or `column-width` other than `auto` (`ComputedValues.IsMulticol`) is a

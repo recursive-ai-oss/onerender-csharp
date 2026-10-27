@@ -43,6 +43,7 @@ case "$target" in
   table) maxlen=2048 ;;
   effects) maxlen=2048 ;;
   incremental) maxlen=2048 ;;
+  paged) maxlen=2048 ;;
   *) echo "unknown target '$target'" >&2; exit 2 ;;
 esac
 

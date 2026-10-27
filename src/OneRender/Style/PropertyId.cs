@@ -95,6 +95,7 @@ internal enum PropertyId : byte
     Orphans,
     Widows,
     BoxDecorationBreak,
+    Page,
     ColumnCount,
     ColumnWidth,
     ColumnFill,
@@ -213,7 +214,7 @@ internal static class Properties
         "word-break", "overflow-wrap", "line-break", "hyphens", "tab-size", "text-align-last", "text-justify", "text-transform", "overflow-clip-margin",
         "flex-direction", "flex-wrap", "flex-grow", "flex-shrink", "flex-basis", "order",
         "justify-content", "align-content", "align-items", "align-self", "row-gap", "column-gap",
-        "break-before", "break-after", "break-inside", "orphans", "widows", "box-decoration-break",
+        "break-before", "break-after", "break-inside", "orphans", "widows", "box-decoration-break", "page",
         "column-count", "column-width", "column-fill", "column-span", "column-rule-width", "column-rule-style", "column-rule-color",
         "grid-template-columns", "grid-template-rows", "grid-template-areas", "grid-auto-columns", "grid-auto-rows", "grid-auto-flow",
         "grid-row-start", "grid-row-end", "grid-column-start", "grid-column-end", "justify-items", "justify-self",
@@ -246,7 +247,7 @@ internal static class Properties
             or PropertyId.TextUnderlineOffset or PropertyId.TextUnderlinePosition
             or PropertyId.WordBreak or PropertyId.OverflowWrap or PropertyId.LineBreak or PropertyId.Hyphens or PropertyId.TabSize
             or PropertyId.TextAlignLast or PropertyId.TextJustify or PropertyId.TextTransform
-            or PropertyId.BorderCollapse or PropertyId.BorderSpacing or PropertyId.EmptyCells or PropertyId.CaptionSide or PropertyId.PointerEvents or PropertyId.AccentColor => true,
+            or PropertyId.BorderCollapse or PropertyId.BorderSpacing or PropertyId.EmptyCells or PropertyId.CaptionSide or PropertyId.PointerEvents or PropertyId.AccentColor or PropertyId.Page => true,
         _ => false,
     };
 

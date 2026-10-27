@@ -159,6 +159,62 @@ internal sealed partial class Fragmenter
         }
 
         tree.SetOverflowRaw(root, new Rect(l, t, rr - l, bb - t));
+        if (_repeats.Count > 0)
+        {
+            ApplyRepeats(tree);
+        }
+    }
+
+    // Copies each repeating table's header group to the top of its pieces after the first, and its footer group to the bottom of its
+    // pieces before the last.
+    private void ApplyRepeats(FragmentTree tree)
+    {
+        var pieces = new List<int>();
+        foreach (RepeatRecord rec in _repeats)
+        {
+            pieces.Clear();
+            Box tb = _boxes.Make(rec.Box);
+            for (Fragment f = tree.FragmentOf(tb); !f.IsNull && pieces.Count < MaxFragmentainers; f = f.NextOfBox)
+            {
+                pieces.Add(f.Index);
+            }
+
+            if (pieces.Count < 2)
+            {
+                continue;
+            }
+
+            Rect hr = rec.Header >= 0 ? tree.BorderBoxOf(rec.Header) : default;
+            Rect fr = rec.Footer >= 0 ? tree.BorderBoxOf(rec.Footer) : default;
+            for (int k = 0; k < pieces.Count; k++)
+            {
+                int piece = pieces[k];
+                int firstBody = -1, lastBody = -1;
+                for (int c = tree.FirstChildOf(piece); c >= 0; c = tree.NextSiblingOf(c))
+                {
+                    if ((FragmentKind)tree.KindOf(c) == FragmentKind.Box && _boxes.Make(tree.BoxOf(c)).Context == FormattingContext.TableRowGroup && (tree.TraitsOf(c) & (byte)FragmentTraits.Repeated) == 0)
+                    {
+                        if (firstBody < 0)
+                        {
+                            firstBody = c;
+                        }
+
+                        lastBody = c;
+                    }
+                }
+
+                if (k > 0 && rec.Header >= 0 && firstBody >= 0)
+                {
+                    tree.CloneSubtree(rec.Header, piece, new Rect(hr.X, tree.BorderBoxOf(firstBody).Y - rec.HeaderReserve, hr.Width, hr.Height));
+                }
+
+                if (k < pieces.Count - 1 && rec.Footer >= 0 && lastBody >= 0)
+                {
+                    Rect lb = tree.BorderBoxOf(lastBody);
+                    tree.CloneSubtree(rec.Footer, piece, new Rect(fr.X, lb.Bottom + (rec.FooterReserve - fr.Height), fr.Width, fr.Height));
+                }
+            }
+        }
     }
 
     private void StartRow(in PlanRecord plan, int row, int root)

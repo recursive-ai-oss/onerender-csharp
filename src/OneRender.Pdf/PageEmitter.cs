@@ -82,6 +82,9 @@ internal sealed partial class PageEmitter
     /// <summary>The graphics-state levels this emitter has open (the caller's own page-level state is not counted).</summary>
     public int Depth => _depth;
 
+    /// <summary>Makes everything this emitter draws an artifact, outside the structure (page backgrounds and margin boxes).</summary>
+    public void DrawAsArtifacts() => _artifactTags++;
+
     /// <summary>Closes marked content and every scope still open.</summary>
     public void Finish()
     {

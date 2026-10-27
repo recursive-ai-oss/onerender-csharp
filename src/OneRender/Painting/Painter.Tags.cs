@@ -62,7 +62,16 @@ public sealed partial class Painter
         }
 
         int box = _tree.BoxOf(f);
+        // A repeated table header or footer is not part of the structure: it sits inside its table as an artifact, so the table stays
+        // one structure element across pages and the copies are not read again.
         int want = BuildChain(box, self);
+        if (((FragmentTraits)_tree.TraitsOf(f) & FragmentTraits.Repeated) != 0 && want < MaxTagDepth)
+        {
+            _wantBox[want] = box;
+            _wantRole[want] = (byte)TagRole.Artifact;
+            _wantVirtual[want] = true;
+            want++;
+        }
 
         // Open tags, outermost first, as the list sees them.
         int open = 0;
