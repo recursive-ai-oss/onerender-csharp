@@ -13,7 +13,11 @@ internal sealed class FormState
     private readonly Dictionary<int, bool> _indeterminate = [];
     private readonly Dictionary<int, double> _range = [];
     private readonly Dictionary<int, bool> _selected = [];
+    private readonly Dictionary<int, TextEditSession> _text = [];
     private int _open = -1;
+
+    /// <summary>What the painter draws over the control being edited, or null.</summary>
+    internal TextEditView? ActiveView { get; set; }
 
     /// <summary>Bumped on every change, so a page can tell whether it is up to date.</summary>
     public int Version { get; private set; }
@@ -43,9 +47,19 @@ internal sealed class FormState
         Version++;
     }
 
+    /// <summary>The editing session of a text control the user (or a script) has edited or focused.</summary>
+    internal bool TryGetText(Node element, out TextEditSession session) => _text.TryGetValue(element.Index, out session!);
+
+    internal void SetText(Node element, TextEditSession session)
+    {
+        _text[element.Index] = session;
+        Version++;
+    }
+
     /// <summary>Forgets what the user changed in the elements under <paramref name="root"/> (a form reset).</summary>
     public void ClearUnder(Node root)
     {
+        RemoveUnder(_text, root);
         RemoveUnder(_checked, root);
         RemoveUnder(_indeterminate, root);
         RemoveUnder(_range, root);

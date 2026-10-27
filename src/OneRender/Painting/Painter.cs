@@ -51,6 +51,9 @@ public readonly struct PaintOptions
 
     /// <summary>The address links are resolved against when <see cref="Tags"/> is on. Default none (links keep their written form).</summary>
     public string? BaseUrl { get; init; }
+
+    /// <summary>The editing state of the focused text control (selection, caret, preedit), or null when nothing is being edited. See <see cref="OneRender.Forms.TextEditView"/>.</summary>
+    public OneRender.Forms.TextEditView? Editing { get; init; }
 }
 
 /// <summary>
@@ -274,6 +277,7 @@ public sealed partial class Painter
         ViewportOverflow.Resolve(_boxes, out _, out _, out _vpSource);
         _vpRange = _scroll is null ? default : ScrollState.GetViewportRange(_tree, _vw, _vh);
 
+        ResolveEditing(in options);
         PrepareTags(in options);
         Prepass(n, ct);
         PaintCanvas(options);

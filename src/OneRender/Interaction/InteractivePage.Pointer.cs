@@ -38,6 +38,7 @@ public sealed partial class InteractivePage
         _ke = new KeyboardEvent("keydown");
         _fe = new FocusEvent("focus");
         _se = new DomEvent("scroll");
+        InitEditing();
     }
 
     /// <summary>
@@ -59,7 +60,7 @@ public sealed partial class InteractivePage
         _lastTime = input.Time;
         _havePointer = input.Action != PointerAction.Leave;
         _lastInputWasPointer = true;
-        InputOutcome outcome = InputOutcome.None;
+        InputOutcome outcome = _dragEdit ? EditPointerDrag(in input) : InputOutcome.None;
 
         Node target = default;
         if (input.Action != PointerAction.Leave && _hits.HitTest(input.X, input.Y, out HitResult hit))
@@ -232,6 +233,7 @@ public sealed partial class InteractivePage
             _navigationStart = target;
             outcome |= SetFocus(focusable, FocusReason.PointingDevice, scroll: false);
             outcome |= BeginRangeDrag(target, in p, default);
+            outcome |= EditPointerDown(target, in p, default);
         }
 
         return outcome;

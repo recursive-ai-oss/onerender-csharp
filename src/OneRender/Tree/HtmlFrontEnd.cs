@@ -230,7 +230,7 @@ public sealed partial class HtmlFrontEnd
         };
         _tree.SetElementInfo(idx, tag, replaced);
         ControlKind control = Classify(element);
-        _noDescend = control is ControlKind.SelectMenu or ControlKind.Progress or ControlKind.Meter;
+        _noDescend = control is ControlKind.SelectMenu or ControlKind.Progress or ControlKind.Meter or ControlKind.TextArea;
         _tree.ReplaceStyle(idx, AdjustControlStyle(element, SplitFieldset(element, idx, _tree.StyleOf(idx)), parentIdx < 0 ? default : _tree.StyleOf(parentIdx)));
         if (_gcConfigured && !_tree.Styles[_tree.StyleOf(idx)].Display.IsNone)
         {
