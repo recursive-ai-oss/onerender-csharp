@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="../../testdata/fonts/NotoSansHebrew-Subset-Regular.woff2" LogicalName="hebrew.woff2" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="../../src/OneRender/OneRender.csproj" />
     <ProjectReference Include="../../src/OneRender.Fonts/OneRender.Fonts.csproj" />
   </ItemGroup>

@@ -19,6 +19,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="../../testdata/fonts/*" Link="testdata/fonts/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="../../src/OneRender/OneRender.csproj" />
     <ProjectReference Include="../../src/OneRender.Image/OneRender.Image.csproj" />
     <ProjectReference Include="../../src/OneRender.Pdf/OneRender.Pdf.csproj" />
