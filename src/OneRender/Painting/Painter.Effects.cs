@@ -27,6 +27,7 @@ public sealed partial class Painter
 
     private FilterOp[] _ops = new FilterOp[DisplayList.MaxFilterOps];
     private readonly PathBuffer _fxPath = new();
+    private readonly PathBuffer _scratchPath = new();
 
     // ------------------------------------------------------------------ transform
 
@@ -258,8 +259,7 @@ public sealed partial class Painter
         ItemId id = Id2(f, PartClipPath, 0);
         if (cp.Kind == ClipPathKind.Reference)
         {
-            Diagnostics.Add(DiagnosticKind.Unsupported, "clip-path: url() references to <clipPath> elements are not rendered");
-            return false;
+            return PushClipReference(f, cp, in g, id);
         }
 
         RectF r = ReferenceBox(cp.Box, in g, out CornerRadii radii);
@@ -373,6 +373,65 @@ public sealed partial class Painter
                 }
         }
 
+        _scopes++;
+        return true;
+    }
+
+    // Masking 1 §5.1: url(#id) to a <clipPath> of an inline svg. The shapes were flattened to one path when the document was read.
+    private bool PushClipReference(int f, ClipPathSpec cp, in BoxGeometry g, ItemId id)
+    {
+        string? url = cp.Url;
+        Tree.StyledTree? tree = _boxes.Make(_tree.BoxOf(f)).Node.Tree;
+        string key = url is { Length: > 1 } && url[0] == '#' ? url.Substring(1) : string.Empty;
+        if (tree is null || key.Length == 0 || !tree.ClipPaths.TryGetValue(key, out Tree.ClipPathDef? def))
+        {
+            Diagnostics.Add(DiagnosticKind.Unsupported, "clip-path: url() must name a <clipPath> in an inline svg of this document; it is ignored");
+            return false;
+        }
+
+        RectF r = g.Border;
+        _fxPath.Clear();
+        bool ok;
+        if (def.ObjectBoundingBox)
+        {
+            _scratchPath.Clear();
+            ok = PathDataParser.Parse(def.PathData, _scratchPath, 0, 0, out _);
+            ReadOnlySpan<byte> verbs = _scratchPath.Verbs;
+            ReadOnlySpan<float> co = _scratchPath.Coords;
+            int c = 0;
+            for (int i = 0; i < verbs.Length; i++)
+            {
+                switch ((PathVerb)verbs[i])
+                {
+                    case PathVerb.Move: _fxPath.MoveTo(r.X + (co[c] * r.Width), r.Y + (co[c + 1] * r.Height)); c += 2; break;
+                    case PathVerb.Line: _fxPath.LineTo(r.X + (co[c] * r.Width), r.Y + (co[c + 1] * r.Height)); c += 2; break;
+                    case PathVerb.Quad:
+                        _fxPath.QuadTo(r.X + (co[c] * r.Width), r.Y + (co[c + 1] * r.Height), r.X + (co[c + 2] * r.Width), r.Y + (co[c + 3] * r.Height));
+                        c += 4;
+                        break;
+                    case PathVerb.Cubic:
+                        _fxPath.CubicTo(r.X + (co[c] * r.Width), r.Y + (co[c + 1] * r.Height), r.X + (co[c + 2] * r.Width), r.Y + (co[c + 3] * r.Height),
+                            r.X + (co[c + 4] * r.Width), r.Y + (co[c + 5] * r.Height));
+                        c += 6;
+                        break;
+                    default: _fxPath.Close(); break;
+                }
+            }
+        }
+        else
+        {
+            // userSpaceOnUse on an HTML box: the origin is the box's top-left corner (Masking 1 §5.1).
+            ok = PathDataParser.Parse(def.PathData, _fxPath, r.X, r.Y, out _);
+        }
+
+        if (!ok || _fxPath.VerbCount == 0)
+        {
+            _fxPath.Clear();
+            Diagnostics.Add(DiagnosticKind.InvalidValue, "clip-path: the <clipPath> has no usable shapes");
+            return false;
+        }
+
+        _list.PushClipPath(id, _fxPath, def.EvenOdd ? FillRule.EvenOdd : FillRule.NonZero);
         _scopes++;
         return true;
     }

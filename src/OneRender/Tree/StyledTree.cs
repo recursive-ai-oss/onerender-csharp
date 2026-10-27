@@ -94,6 +94,9 @@ public sealed partial class StyledTree
     /// <summary>The root, or the null handle when the tree is empty.</summary>
     public StyledNode Root => _count == 0 ? default : new StyledNode(this, 0);
 
+    /// <summary>The <c>&lt;clipPath&gt;</c> elements of the document's inline svgs by id, for <c>clip-path: url(#id)</c>.</summary>
+    internal Dictionary<string, ClipPathDef> ClipPaths { get; } = new(StringComparer.Ordinal);
+
     /// <summary>Removes every node and diagnostic; keeps all storage and cached styles.</summary>
     public void Clear()
     {
@@ -102,6 +105,7 @@ public sealed partial class StyledTree
         _limitReported = false;
         _textLimitReported = false;
         _document = null;
+        ClipPaths.Clear();
         Styles.Diagnostics.Clear();
     }
 

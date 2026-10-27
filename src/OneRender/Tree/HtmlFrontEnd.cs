@@ -111,6 +111,7 @@ public sealed class HtmlFrontEnd
         }
 
         _tree.SetReplacedSource(idx, markup);
+        SvgClipDefs.Collect(element, _tree.ClipPaths, _svgText);
         SvgSerializer.ReadSize(element, out double w, out double h, out double ratio);
         _tree.SetNatural(idx, w, h);
         _tree.SetNaturalRatio(idx, ratio);

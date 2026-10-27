@@ -213,6 +213,19 @@ public class EffectsPixelTests
     }
 
     [Fact]
+    public void ClipPathUrlUsesAnInlineClipPath()
+    {
+        const string defs = "<svg width='0' height='0' style='position:absolute'><defs><clipPath id='c'><circle cx='20' cy='20' r='10'/></clipPath>"
+            + "<clipPath id='b' clipPathUnits='objectBoundingBox'><rect x='0' y='0' width='0.5' height='1'/></clipPath></defs></svg>";
+        RgbaImage circle = Render(defs + "<div style='width:40px;height:40px;background:#f00;clip-path:url(#c)'></div>");
+        Near(Red, circle, 20, 20);
+        Near(White, circle, 35, 5);
+        RgbaImage half = Render(defs + "<div style='width:40px;height:40px;background:#f00;clip-path:url(#b)'></div>");
+        Near(Red, half, 10, 20);
+        Near(White, half, 30, 20);
+    }
+
+    [Fact]
     public void MaskImageGradientFadesTheBox()
     {
         RgbaImage img = Render("<div style='width:40px;height:10px;background:#f00;mask-image:linear-gradient(to right,transparent,#000)'></div>");
