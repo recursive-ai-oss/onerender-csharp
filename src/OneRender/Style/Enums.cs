@@ -157,6 +157,19 @@ public enum BorderStyleKind : byte
     Outset,
 }
 
+/// <summary>The reference box of <c>overflow-clip-margin</c> (CSS Overflow 4 §3.2).</summary>
+public enum ClipMarginBoxKind : byte
+{
+    /// <summary><c>padding-box</c> (default).</summary>
+    PaddingBox,
+
+    /// <summary><c>content-box</c>.</summary>
+    ContentBox,
+
+    /// <summary><c>border-box</c>.</summary>
+    BorderBox,
+}
+
 /// <summary>An <c>overflow-x</c>/<c>overflow-y</c> value (CSS Overflow 3 §3.1).</summary>
 public enum OverflowKind : byte
 {
