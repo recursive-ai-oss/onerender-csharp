@@ -114,4 +114,27 @@ public class LimitTests
         Assert.True(r.PageCount >= 1);
         Assert.NotEmpty(r.Diagnostics);
     }
+
+    [Fact]
+    public void AShadowBeyondTheRasterizersCoordinateRangeIsNotDrawnAndIsReported()
+    {
+        // An inset blurred shadow is drawn as a picture; geometry the rasterizer refuses leaves a hole and a diagnostic, not an exception.
+        var list = new OneRender.Painting.DisplayList();
+        list.DrawBoxShadow(
+            OneRender.Painting.ItemId.Of(1, 0),
+            new OneRender.Painting.RectF(36, 35.25f, 4.5f, 1e9f),
+            default,
+            new OneRender.Painting.PaintColor(0, 0, 0, 1),
+            0,
+            0,
+            42.75f,
+            0,
+            true);
+        list.Validate();
+        using var stream = new MemoryStream();
+        using var writer = new DisplayListPdfWriter(stream);
+        writer.AddPage(list, PdfPageSetup.A4);
+        Assert.Equal(1, writer.PageCount);
+        Assert.Contains(writer.Diagnostics.Items, d => d.Message.Contains("could not be rasterized", StringComparison.Ordinal));
+    }
 }

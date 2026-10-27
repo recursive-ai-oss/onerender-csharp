@@ -306,10 +306,21 @@ internal static class DisplayListTarget
         }
         else
         {
-            // An unbalanced pop must be refused with the typed exception, never corrupt the list.
+            // An unbalanced pop must be refused with the typed exception, never corrupt the list. The one pop that succeeds out of turn
+            // closes the tags opened inside the scope on the way (they carry no pixels); the target's stack follows.
             try
             {
                 Pop(l, family);
+                int match = Stack.Count - 1;
+                while (match >= 0 && Stack[match] == 3)
+                {
+                    match--;
+                }
+
+                if (match >= 0)
+                {
+                    Stack.RemoveRange(match, Stack.Count - match);
+                }
             }
             catch (DisplayListException)
             {

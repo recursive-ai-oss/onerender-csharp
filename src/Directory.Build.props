@@ -24,7 +24,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)../README.md" Pack="true" PackagePath="/" />
+    <!-- Each package has its own short README.md beside its project file. -->
+    <None Include="$(MSBuildProjectDirectory)/README.md" Pack="true" PackagePath="/" />
+    <None Include="$(MSBuildThisFileDirectory)../LICENSE-MIT" Pack="true" PackagePath="licenses/" />
+    <None Include="$(MSBuildThisFileDirectory)../LICENSE-APACHE" Pack="true" PackagePath="licenses/" />
     <None Include="$(MSBuildThisFileDirectory)../THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 

@@ -277,8 +277,10 @@ internal sealed partial class Rasterizer : IDisposable
                         Save(ItemKind.PushTransform);
                         _ctm = it.Matrix * _ctm;
 
-                        // A transform that cannot be inverted flattens its content to nothing, so nothing inside it is drawn.
-                        if (!Matrix3x2.Invert(_ctm, out _))
+                        // A transform that cannot be inverted flattens its content to nothing, so nothing inside it is drawn. The same holds
+                        // for one that is singular up to rounding: its shapes are lines, and the geometry code spends all its time on slivers
+                        // thousands of pixels long and a fraction of a nanometre wide.
+                        if (!Matrix3x2.Invert(_ctm, out _) || IsFlattening(_ctm))
                         {
                             _clip = EmptyClip;
                         }
@@ -379,6 +381,15 @@ internal sealed partial class Rasterizer : IDisposable
     }
 
     // ---------------------------------------------------------------- state stack
+
+    // True when the matrix maps the plane onto (nearly) a line: the sine of the angle between its axes is below what a float can
+    // tell from zero after a few multiplications, or the matrix is not finite.
+    private static bool IsFlattening(in Matrix3x2 m)
+    {
+        float det = (m.M11 * m.M22) - (m.M12 * m.M21);
+        float lengths = MathF.Sqrt(((m.M11 * m.M11) + (m.M12 * m.M12)) * ((m.M21 * m.M21) + (m.M22 * m.M22)));
+        return !(MathF.Abs(det) > 1e-6f * lengths);
+    }
 
     private void Save(ItemKind kind)
     {

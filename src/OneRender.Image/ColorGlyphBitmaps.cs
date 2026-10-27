@@ -2,10 +2,15 @@ using OneImage;
 
 namespace OneRender.Image;
 
-/// <summary>Decodes the PNG bitmaps of color bitmap fonts (see <c>ColorBitmapGlyphs</c>) to pixels.</summary>
-internal static class ColorGlyphBitmaps
+/// <summary>
+/// Decodes the PNG bitmaps of color bitmap fonts (the <c>CBDT</c> glyph images the text service returns as
+/// <c>ColorBitmapGlyph</c>) to straight-alpha RGBA pixels. Backends other than the raster one use it to draw those glyphs.
+/// </summary>
+public static class ColorGlyphBitmaps
 {
-    /// <summary>Decodes a PNG; null when it cannot be decoded (the glyph is then not drawn).</summary>
+    /// <summary>Decodes a PNG glyph bitmap.</summary>
+    /// <param name="png">The PNG bytes of one glyph image.</param>
+    /// <returns>The pixels, 8 bits per channel with straight alpha; <see langword="null"/> when the data is not a decodable image, in which case the glyph is not drawn.</returns>
     public static RgbaImage? Decode(ReadOnlySpan<byte> png)
     {
         try

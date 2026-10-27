@@ -113,3 +113,16 @@ The MIT notice for each: "The above copyright notice and this permission notice 
 `samples/InvoiceApp/wwwroot/css/app.css` is compiled by the Tailwind CSS v4.3.3 standalone CLI (MIT, Copyright (c) Tailwind Labs, Inc.,
 https://github.com/tailwindlabs/tailwindcss, `LICENSE`). The file keeps the CLI's `/*! tailwindcss v4.3.3 | MIT License | https://tailwindcss.com */`
 header and is not part of any package.
+
+## Files we wrote
+
+`tests/OneRender.Tests/Golden/*.png` are pictures our own rasterizer drew, which the tests compare against. `samples/InvoiceApp/wwwroot/img/logo.png` is the sample's fictional logo. The pages and templates under `testdata/` (`text-block`, `templates`, `tailwind/pages`, `forms`, `grid-lab`, `inline-lab`, `chrome-probes`, `interaction`, `game-ui`) are markup we wrote; `testdata/tailwind/pages` uses Tailwind, daisyUI and Flowbite class names only, and no compiled third-party CSS is committed except the sample style sheet above. `results/` holds measurements we produced.
+
+## Tools run on the test machine (not distributed)
+
+None of these is part of a package or of the repository; scripts under `tools/` fetch them by pinned version and check SHA-256 where the project publishes one.
+
+- veraPDF 1.30.3 (GPLv3+ / MPLv2+) and an Eclipse Temurin 21 JRE (GPLv2 with the Classpath Exception): run as separate programs to validate PDF/UA-1; never linked or shipped.
+- libFuzzer, through the `libfuzzer-dotnet` driver (Apache-2.0) and the SharpFuzz instrumenter (MIT): fuzzing only.
+- Headless Chrome for Testing (see above), WeasyPrint (BSD-3-Clause) and poppler (GPL): black-box comparison of output only.
+- NuGet packages referenced only by tests and benchmarks (xUnit, BenchmarkDotNet, SharpFuzz, and the public OneGame.UI package for the comparison benchmark) are not dependencies of any package.

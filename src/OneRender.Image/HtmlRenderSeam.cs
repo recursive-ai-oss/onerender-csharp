@@ -1,3 +1,4 @@
+using System.IO;
 using OneRender.Painting;
 
 namespace OneRender.Image;
@@ -33,6 +34,21 @@ public sealed class RgbaImage
 
     /// <summary>The pixel bytes, RGBA, not premultiplied.</summary>
     public byte[] Pixels { get; }
+
+    /// <summary>Encodes the image as a PNG file (8 bits per channel, with alpha).</summary>
+    /// <returns>The bytes of the PNG file.</returns>
+    public byte[] ToPng()
+    {
+        var px = new OneImage.Rgba32[Width * Height];
+        for (int i = 0; i < px.Length; i++)
+        {
+            px[i] = new OneImage.Rgba32(Pixels[i * 4], Pixels[(i * 4) + 1], Pixels[(i * 4) + 2], Pixels[(i * 4) + 3]);
+        }
+
+        using var ms = new MemoryStream();
+        OneImage.Image.FromPixels<OneImage.Rgba32>(px, Width, Height).Save(ms, OneImage.PngFormat.Instance);
+        return ms.ToArray();
+    }
 }
 
 /// <summary>
