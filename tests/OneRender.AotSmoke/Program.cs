@@ -45,6 +45,38 @@ scrollPainter.Paint(scrollPage.Fragments, scrollList, new PaintOptions(100, 50) 
 scrollPage.Scroll.SetViewportOffset(0, 30);
 bool scrollOk = scrollPainter.PatchScroll(scrollList) > 0;
 
+// Inline layout: wrapping, a nested inline box, an atomic inline and a bidi run through the real fonts.
+HtmlPage textPage = HtmlPage.Create(
+    "<body style='margin:0;font:16px/20px Arial'><p style='width:90px;margin:0'>one two <b>three <span style='padding:0 2px'>four</span></b> <i style='display:inline-block;width:10px;height:5px'></i> \u05d0\u05d1\u05d2 five</p></body>",
+    new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 200, ViewportHeight = 100 });
+int textLines = 0;
+OneRender.Layout.Fragment walk = textPage.Fragments.Root;
+while (!walk.IsNull)
+{
+    if (walk.Kind == OneRender.Layout.FragmentKind.Line)
+    {
+        textLines++;
+    }
+
+    if (!walk.FirstChild.IsNull)
+    {
+        walk = walk.FirstChild;
+        continue;
+    }
+
+    while (!walk.IsNull && walk.NextSibling.IsNull)
+    {
+        walk = walk.Parent;
+    }
+
+    walk = walk.IsNull ? walk : walk.NextSibling;
+}
+
+if (textLines < 3)
+{
+    return 5;
+}
+
 Console.WriteLine($"{styled.Count} styled nodes, {boxTree.Count} boxes, scroll patch {scrollOk}");
 if (boxTree.Count < 8 || !dump.Contains("flex", StringComparison.Ordinal))
 {
