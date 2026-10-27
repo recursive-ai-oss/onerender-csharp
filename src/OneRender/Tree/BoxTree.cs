@@ -28,6 +28,13 @@ public sealed partial class BoxTree
     private int[] _prev;
     private int[] _nextPiece;
     private int[] _nodeBox = [];
+    private int[] _oldStamp = new int[64];
+    private byte[] _fresh = new byte[64];
+    private int[] _freeBox = new int[64];
+    private int _freeBoxCount;
+    // True while boxes are being generated for an edit: new boxes then reuse freed slots and are recorded in _created.
+    private bool _structMode;
+    private bool _regenFailed;
     private int _count;
     private bool _limitReported;
 
@@ -97,6 +104,9 @@ public sealed partial class BoxTree
 
     internal int ParentOf(int i) => _parent[i];
 
+    /// <summary>The styled node a box was made from, or -1 for an anonymous box.</summary>
+    internal int NodeIndexOf(int i) => _node[i];
+
     internal int FirstChildOf(int i) => _first[i];
 
     internal int LastChildOf(int i) => _last[i];
@@ -110,23 +120,45 @@ public sealed partial class BoxTree
     /// <summary>Creates a box and appends it to <paramref name="parent"/>'s children (no parent for -1). Returns -1 at the box limit.</summary>
     private int NewBox(BoxKind kind, BoxLevel level, FormattingContext ctx, BoxTraits flags, StyleId style, int node, int parent)
     {
-        if (_count >= MaxBoxes)
+        int i;
+        if (_structMode && _freeBoxCount > 0)
         {
-            if (!_limitReported)
+            i = _freeBox[--_freeBoxCount];
+        }
+        else
+        {
+            if (_count >= MaxBoxes)
             {
-                _limitReported = true;
-                Styled.Diagnostics.Add(DiagnosticKind.LimitExceeded, "box limit of " + MaxBoxes.ToString(System.Globalization.CultureInfo.InvariantCulture) + " reached; later boxes are not generated");
+                if (!_limitReported)
+                {
+                    _limitReported = true;
+                    Styled.Diagnostics.Add(DiagnosticKind.LimitExceeded, "box limit of " + MaxBoxes.ToString(System.Globalization.CultureInfo.InvariantCulture) + " reached; later boxes are not generated");
+                }
+
+                _regenFailed = true;
+                return -1;
             }
 
-            return -1;
+            if (_count == _kind.Length)
+            {
+                Grow();
+            }
+
+            i = _count++;
         }
 
-        if (_count == _kind.Length)
+        if (_structMode)
         {
-            Grow();
+            _fresh[i] = 1;
+            if (_createdCount == _created.Length)
+            {
+                Array.Resize(ref _created, _createdCount * 2);
+            }
+
+            _created[_createdCount++] = i;
         }
 
-        int i = _count++;
+        _oldStamp[i] = 0;
         _kind[i] = (byte)kind;
         _level[i] = (byte)level;
         _ctx[i] = (byte)ctx;
@@ -201,5 +233,12 @@ public sealed partial class BoxTree
         Array.Resize(ref _next, n);
         Array.Resize(ref _prev, n);
         Array.Resize(ref _nextPiece, n);
+        Array.Resize(ref _oldStamp, n);
+        Array.Resize(ref _fresh, n);
+        if (_dirty.Length < n)
+        {
+            Array.Resize(ref _dirty, n);
+            Array.Resize(ref _hazard, n);
+        }
     }
 }

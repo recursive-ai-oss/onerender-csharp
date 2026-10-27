@@ -24,6 +24,9 @@ public sealed partial class BoxTree
         StyledTree st = Styled;
         _count = 0;
         _limitReported = false;
+        _structMode = false;
+        _regenBox = -1;
+        _freeBoxCount = 0;
         if (_nodeBox.Length < st.Count)
         {
             _nodeBox = new int[Math.Max(st.Count, _nodeBox.Length * 2)];
@@ -38,6 +41,14 @@ public sealed partial class BoxTree
         }
 
         Visit(0);
+        RunFrames(cancellationToken);
+        PrepareIncremental();
+    }
+
+    // Generates boxes for the frames on the stack until it is empty (an explicit stack: depth never follows the tree).
+    private void RunFrames(CancellationToken cancellationToken)
+    {
+        StyledTree st = Styled;
         int counter = 0;
         while (_top >= 0)
         {
@@ -56,8 +67,6 @@ public sealed partial class BoxTree
             _frames[_top].Next = st.NextSiblingOf(child);
             Visit(child);
         }
-
-        PrepareIncremental();
     }
 
     private void Visit(int s)
@@ -67,6 +76,11 @@ public sealed partial class BoxTree
         StyleId sid = st.StyleOf(s);
         int parentFrame = _top;
         int parentBox = parentFrame < 0 ? -1 : _frames[_frames[parentFrame].Attach].Box;
+        if (parentBox >= 0 && parentBox == _regenBox && TryKeep(s, parentBox))
+        {
+            return;
+        }
+
         switch (kind)
         {
             case StyledNodeKind.Text:
@@ -386,7 +400,7 @@ public sealed partial class BoxTree
                     int next = _next[c];
                     if (IsCollapsibleWhiteSpace(c))
                     {
-                        Unlink(c);
+                        Discard(c);
                     }
 
                     c = next;
@@ -490,7 +504,7 @@ public sealed partial class BoxTree
             }
             else if (IsCollapsibleWhiteSpace(c))
             {
-                Unlink(c);
+                Discard(c);
                 c = next;
             }
             else
@@ -509,7 +523,7 @@ public sealed partial class BoxTree
             }
             else if (IsCollapsibleWhiteSpace(cur))
             {
-                Unlink(cur);
+                Discard(cur);
                 cur = prev;
             }
             else
@@ -593,7 +607,7 @@ public sealed partial class BoxTree
             {
                 if (IsCollapsibleWhiteSpace(c))
                 {
-                    Unlink(c);
+                    Discard(c);
                 }
                 else
                 {

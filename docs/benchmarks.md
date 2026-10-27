@@ -43,6 +43,8 @@ The benchmarks:
 | | `HoverRestyle` | moves hover from one inventory slot to another, then flushes (restyle, boxes, layout of what changed, repaint with damage) |
 | | `TextChange` | sets a label's text, then flushes |
 | | `SubtreeRelayout` | resizes one quest row (a declaration swap), then flushes |
+| `StructuralBenchmarks` | `InsertSubtree`, `RemoveSubtree`, `MoveSubtree` | a floating layer of about 50 nodes is inserted, removed, or moved under another parent, then a flush; each call is one measured invocation with its setup (putting the layer in or out) outside the timing |
+| | `ChurnFrame` | one frame of the churn soak: a 50-node layer in and the last one out, one chat line in and the oldest out, then a flush |
 | `MotionBenchmarks` | `CompositorTick100` | advances the clock 16 ms with 100 transform and opacity animations running, then patches the display list |
 | | `MixedTick100Compositor4Layout` | the same 100, plus width animations on two slots and color and background-color animations; repaints when layout or paint properties changed |
 | | `WidthTransitionTick` | a CSS transition on one row's width (`transition: width` on `#quest3`, started by hovering it, 400,000 px over 100,000 s so it never ends and moves about 0.06 px a frame): advances the clock 16 ms, interpolates the width, lays out the row's subtree again and updates the display list. The frame of a game UI that animates a layout property; it has its own table in `summary.md` |

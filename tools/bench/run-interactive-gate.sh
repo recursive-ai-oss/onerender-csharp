@@ -5,7 +5,8 @@
 #   tools/bench/run-interactive-gate.sh --smoke    a short run with no lock; only proves the harness works, numbers are NOT publishable
 #
 # What it runs (BenchmarkDotNet, MemoryDiagnoser, Release):
-#   bench/OneRender.Benchmarks            IncrementalBenchmarks (idle frame, hover, text change, subtree relayout) and
+#   bench/OneRender.Benchmarks            IncrementalBenchmarks (idle frame, hover, text change, subtree relayout), StructuralBenchmarks
+#                                         (insert, remove, move a 50-node subtree; one churn frame) and
 #                                         MotionBenchmarks (100 transform/opacity animations; the same plus width/color animations; idle clock;
 #                                         a CSS transition on one row's width ticked every frame)
 #   bench/OneRender.Benchmarks.OneGameUi  the same four changes through OneGame.UI and through the engine, side by side; and the like-for-like
@@ -94,7 +95,7 @@ for p in OneRender.Benchmarks OneRender.Benchmarks.OneGameUi; do
   echo "running $p"
   mkdir -p "$OUT/$p"
   case "$p" in
-    OneRender.Benchmarks) FILTER=('*IncrementalBenchmarks*' '*MotionBenchmarks*') ;;
+    OneRender.Benchmarks) FILTER=('*IncrementalBenchmarks*' '*StructuralBenchmarks*' '*MotionBenchmarks*') ;;
     *) FILTER=('*OneGameUiBenchmarks*' '*IncrementalBenchmarks*' '*FlexHudBenchmarks*') ;;
   esac
   # BenchmarkDotNet finds the project to rebuild from the working directory, so it runs inside the project folder.

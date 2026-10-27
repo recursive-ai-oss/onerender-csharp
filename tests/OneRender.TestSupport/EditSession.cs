@@ -444,6 +444,12 @@ public sealed class EditSession
             throw new InvalidOperationException($"Step {_steps} ({_lastEdit}): {reachable} nodes are reachable but the tree counts {Tree.LiveCount} live (slots {Tree.Count}, free {Tree.FreeSlots}).");
         }
 
+        // Every box slot in use is reachable from the root: edits give back the slots of the boxes they drop.
+        if (Page.Boxes.ReachableCount() != Page.Boxes.LiveBoxes)
+        {
+            throw new InvalidOperationException($"Step {_steps} ({_lastEdit}): {Page.Boxes.ReachableCount()} boxes are reachable but {Page.Boxes.LiveBoxes} slots are in use.");
+        }
+
         foreach (StyledNode stale in _gone)
         {
             if (stale.IsValid)
@@ -493,11 +499,12 @@ public sealed class EditSession
         var sb = new StringBuilder();
         sb.Append(page.Styled.Dump()).Append("\n--boxes--\n").Append(page.Boxes.Dump()).Append("\n--fragments--\n").Append(page.Fragments.Dump()).Append("\n--list--\n");
         DisplayList l = page.Display.Current;
+        int[] rank = BoxRanks(page.Boxes);
         for (int i = 0; i < l.Count; i++)
         {
             DisplayItem it = l[i];
             RectF r = it.RootBounds;
-            sb.Append(it.Kind).Append(' ').Append(it.Id.Value.ToString(CultureInfo.InvariantCulture)).Append(' ')
+            sb.Append(it.Kind).Append(' ').Append(CanonicalId(it.Id, rank).ToString(CultureInfo.InvariantCulture)).Append(' ')
                 .Append(r.X.ToString("R", CultureInfo.InvariantCulture)).Append(',').Append(r.Y.ToString("R", CultureInfo.InvariantCulture)).Append(',')
                 .Append(r.Width.ToString("R", CultureInfo.InvariantCulture)).Append(',').Append(r.Height.ToString("R", CultureInfo.InvariantCulture)).Append(' ')
                 .Append(it.ContentHash.ToString("x", CultureInfo.InvariantCulture)).Append(' ').Append(it.ContextHash.ToString("x", CultureInfo.InvariantCulture)).Append(' ')
@@ -505,6 +512,49 @@ public sealed class EditSession
         }
 
         return sb.ToString();
+    }
+
+    // Item ids name their box by its index, and boxes made by an edit take any free index, so the same tree can number its boxes in a
+    // different order than a fresh build. Ids are compared by the box's place in the tree (its preorder rank) instead.
+    private static int[] BoxRanks(BoxTree boxes)
+    {
+        var rank = new int[boxes.Count + 1];
+        Array.Fill(rank, -1);
+        Box b = boxes.Root;
+        int n = 0;
+        while (!b.IsNull)
+        {
+            rank[b.Index] = n++;
+            if (!b.FirstChild.IsNull)
+            {
+                b = b.FirstChild;
+                continue;
+            }
+
+            while (!b.IsNull && b.NextSibling.IsNull)
+            {
+                b = b.Parent;
+            }
+
+            b = b.IsNull ? default : b.NextSibling;
+        }
+
+        return rank;
+    }
+
+    private static ulong CanonicalId(ItemId id, int[] rank)
+    {
+        // Two owner layouts: the box number plus one, or (top bit set) a fragment-ordinal field above a 21-bit box number plus one.
+        uint owner = id.Owner;
+        bool wide = (owner & 0x80000000u) != 0;
+        long box = (wide ? owner & 0x1FFFFFu : owner) - 1L;
+        if (box < 0 || box >= rank.Length || rank[box] < 0)
+        {
+            return id.Value;
+        }
+
+        uint canonical = wide ? (owner & ~0x1FFFFFu) | (uint)((rank[box] + 1) & 0x1FFFFF) : (uint)(rank[box] + 1);
+        return ((ulong)canonical << 32) | (id.Value & 0xFFFFFFFFUL);
     }
 
     private static string FirstDifference(string a, string b)

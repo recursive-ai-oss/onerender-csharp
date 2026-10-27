@@ -92,7 +92,7 @@ public class IncrementalEqualityTests
         foreach (string file in files)
         {
             byte[] bytes = File.ReadAllBytes(file);
-            var session = new EditSession(FontProviders.CreateDefault(), new Chooser(bytes[2..]), 8 + (bytes[1] % 40), (bytes[0] & 1) != 0);
+            var session = new EditSession(FontProviders.CreateDefault(), new Chooser(bytes[2..]), 8 + (bytes[1] % 40), (bytes[0] & 1) != 0, (bytes[0] & 2) != 0);
             for (int i = 0; i < 48 && !session.Exhausted; i++)
             {
                 session.Step();

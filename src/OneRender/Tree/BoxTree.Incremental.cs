@@ -216,21 +216,23 @@ public sealed partial class BoxTree
     internal BoxUpdate ApplyChanges(CancellationToken cancellationToken = default)
     {
         StyledTree st = Styled;
-        if (_count == 0 || st.PendingOverflowed || _nodeBox.Length < st.Count)
+        if (_count == 0 || st.PendingOverflowed)
         {
             Build(cancellationToken);
             return BoxUpdate.Rebuilt;
         }
 
+        EnsureNodeTables(st);
         int n = st.PendingCount;
-        // First decide whether the structure is touched; patching must not start on a tree that is about to be rebuilt.
+        // Which edits change the boxes that exist: nodes inserted, removed or moved, text that appears or disappears, and styles that
+        // change what is generated. Only a change to the root's own structure generates everything again.
+        bool structural = false;
         for (int k = 0; k < n; k++)
         {
             NodeChanges kinds = st.PendingKinds(k);
             if ((kinds & (NodeChanges.TextStructure | NodeChanges.Children | NodeChanges.Added | NodeChanges.Removed)) != 0)
             {
-                Build(cancellationToken);
-                return BoxUpdate.Rebuilt;
+                structural = true;
             }
 
             if ((kinds & NodeChanges.Style) != 0)
@@ -238,8 +240,13 @@ public sealed partial class BoxTree
                 int node = st.PendingNode(k);
                 if (!SameStructure(in st.Styles[st.OldStyleOf(node)], in st.Styles[st.StyleOf(node)]))
                 {
-                    Build(cancellationToken);
-                    return BoxUpdate.Rebuilt;
+                    if (node == 0)
+                    {
+                        Build(cancellationToken);
+                        return BoxUpdate.Rebuilt;
+                    }
+
+                    structural = true;
                 }
             }
         }
@@ -250,7 +257,7 @@ public sealed partial class BoxTree
             NodeChanges kinds = st.PendingKinds(k);
             int node = st.PendingNode(k);
             int principal = _nodeBox[node];
-            if (principal < 0)
+            if (principal < 0 || IsDead(st, node))
             {
                 continue;
             }
@@ -278,6 +285,17 @@ public sealed partial class BoxTree
 
                 layoutAny = true;
             }
+        }
+
+        if (structural)
+        {
+            if (!Restructure(cancellationToken))
+            {
+                Build(cancellationToken);
+                return BoxUpdate.Rebuilt;
+            }
+
+            return BoxUpdate.Patched;
         }
 
         return layoutAny ? BoxUpdate.Patched : paintAny ? BoxUpdate.PatchedPaintOnly : BoxUpdate.None;
