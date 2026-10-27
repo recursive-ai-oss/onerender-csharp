@@ -6,5 +6,6 @@ Targets (`dotnet OneRender.Fuzz.Values.dll --list` is not needed; run without ar
 - `tree`: bytes are operations that grow a random styled tree with small limits; a second build into the retained arenas must give the same box dump.
 - `html`: bytes are an HTML document (a form feed starts an author style sheet); the HTML front end and box tree run on it.
 - `layout`: as `html`, then block layout (floats, clearance, boxes beside floats) at a width taken from the first byte; laying out again into the retained fragment tree and into a fresh one must give the same fragments.
+- `inline`: as `layout`, with the real default fonts: inline layout at a width from the first byte. A second layout into the retained tree and a fresh one must agree, geometry must be finite, text ranges inside their text, and min-content no wider than max-content.
 
 A target must never throw. Modes: `<target> <file>` replays one input; `<target> --mutate <seconds> <seed-dir>` is a coverage-blind mutation loop; `<target>` alone is the libFuzzer target under SharpFuzz. `run.sh <target> <seconds> <seed-dir> <out-dir>` publishes, instruments `OneRender.dll` and runs the libFuzzer driver (the prebuilt `libfuzzer-dotnet`, pinned by tag and SHA-256 in `setup.sh`), user-local, no sudo. Seeds are in `seeds/<target>/`.
