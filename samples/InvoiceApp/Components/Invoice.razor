@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Invoice @Number</title>
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body class="bg-white text-slate-900 text-sm">
+  <header class="flex items-start justify-between border-b border-slate-300 pb-4">
+    <div class="flex items-center gap-3">
+      <img src="img/logo.png" width="48" height="48" alt="Northwind Supply logo">
+      <div>
+        <h1 class="text-xl font-bold">Northwind Supply Co.</h1>
+        <p class="text-slate-600">1200 Harbor Street, Portland, OR 97209</p>
+      </div>
+    </div>
+    <div class="text-right">
+      <h2 class="text-2xl font-bold tracking-wide text-sky-800">INVOICE</h2>
+      <p>Number <strong>@Number</strong></p>
+    </div>
+  </header>
+
+  <section class="my-6">
+    <h3 class="text-xs font-semibold uppercase text-slate-500">Bill to</h3>
+    <p>@Customer</p>
+  </section>
+
+  <table class="w-full border-collapse">
+    <thead>
+      <tr class="bg-slate-100 text-left">
+        <th class="px-2 py-1">Description</th>
+        <th class="px-2 py-1 text-right">Qty</th>
+        <th class="px-2 py-1 text-right">Unit price</th>
+        <th class="px-2 py-1 text-right">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      @foreach (InvoiceLine line in Lines)
+      {
+        <tr class="border-b border-slate-200">
+          <td class="px-2 py-1">@line.Description</td>
+          <td class="px-2 py-1 text-right">@line.Quantity</td>
+          <td class="px-2 py-1 text-right">@line.UnitPrice.ToString("N2", System.Globalization.CultureInfo.InvariantCulture)</td>
+          <td class="px-2 py-1 text-right">@((line.Quantity * line.UnitPrice).ToString("N2", System.Globalization.CultureInfo.InvariantCulture))</td>
+        </tr>
+      }
+    </tbody>
+    <tfoot>
+      <tr>
+        <td></td>
+        <td></td>
+        <td class="px-2 py-2 text-right font-semibold">Total due</td>
+        <td class="px-2 py-2 text-right text-lg font-bold">@Total.ToString("N2", System.Globalization.CultureInfo.InvariantCulture)</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <p class="mt-8 text-slate-500">Payment is due within 30 days. Thank you for your business.</p>
+</body>
+</html>
+
+@code {
+  /// <summary>The invoice number shown in the heading.</summary>
+  [Parameter] public string Number { get; set; } = "INV-0001";
+
+  /// <summary>Who the invoice is addressed to.</summary>
+  [Parameter] public string Customer { get; set; } = "Customer";
+
+  /// <summary>The billed lines.</summary>
+  [Parameter] public IReadOnlyList<InvoiceLine> Lines { get; set; } = new List<InvoiceLine>();
+
+  private decimal Total
+  {
+    get
+    {
+      decimal t = 0;
+      foreach (InvoiceLine l in Lines)
+      {
+        t += l.Quantity * l.UnitPrice;
+      }
+
+      return t;
+    }
+  }
+}
