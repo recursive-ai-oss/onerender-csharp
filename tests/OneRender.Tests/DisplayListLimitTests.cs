@@ -217,4 +217,28 @@ public class DisplayListLimitTests
         empty.EndTag();
         empty.Validate();
     }
+
+    [Fact]
+    public void ABorderUnderATransformThatFlattensThePlaneIsSkippedQuickly()
+    {
+        // Three nested transforms whose product is singular up to rounding: the border's ring becomes a sliver 100,000 pixels long.
+        // Drawing it used to take about a minute inside the boolean geometry code; nothing of it can be seen, so it is skipped.
+        DisplayList l = new();
+        l.PushTransform(Id(1), new Matrix3x2(11.85f, 0.75f, 1.275f, 1.275f, 12.75f, 12.75f));
+        l.PushTransform(Id(2), new Matrix3x2(11.775f, 11.775f, 11.85f, 7.2f, 118.5f, 142.5f));
+        l.PushTransform(Id(3), new Matrix3x2(-3f, -3f, 11.85f, 11.85f, 118.5f, 118.5f));
+        BorderSide dashed = new(24.45f, BorderStyle.Dashed, new PaintColor(0.1f, 0.3f, 0.04f, 0.2f));
+        BorderSide none = new(0f, BorderStyle.None, Red);
+        l.DrawBorder(Id(4), new RectF(-6.75f, -8.25f, 147.75f, 27.75f), new CornerRadii(0, 11.7f, 6.8f, 0.5f, 31.1f, 27.2f, 0, 0), none, dashed, none, none);
+        l.PopTransform();
+        l.PopTransform();
+        l.PopTransform();
+        l.Validate();
+
+        long start = Environment.TickCount64;
+        RgbaImage img = DisplayListRasterizer.Render(l, 24, 24);
+        long elapsed = Environment.TickCount64 - start;
+        Assert.Equal(24, img.Width);
+        Assert.True(elapsed < 10_000, "rendering took " + elapsed + " ms");
+    }
 }
