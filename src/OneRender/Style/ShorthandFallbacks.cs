@@ -4,14 +4,12 @@ namespace OneRender.Style;
 
 /// <summary>
 /// Shorthands the OneHtml cascade keeps as one token list (it has no grammar for them) but whose longhands the engine
-/// computes: <c>white-space</c>, <c>border-radius</c> and <c>overflow</c>. Both front ends expand them here.
+/// computes: <c>border-radius</c> and <c>overflow</c>. Both front ends expand them here.
 /// </summary>
 internal static partial class ShorthandFallbacks
 {
-    private static readonly string[] Collapse = ["collapse", "preserve", "preserve-breaks", "preserve-spaces", "break-spaces"];
-
     /// <summary>The shorthands this class expands, for callers that look at the cascade's declarations.</summary>
-    public static readonly string[] Names = ["white-space", "border-radius", "overflow", "flex", "flex-flow", "place-items", "place-content", "place-self", "columns", "column-rule", "page-break-before", "page-break-after", "page-break-inside", "grid-area", "grid-row", "grid-column", "grid-template", "grid", "border-image", "mask"];
+    public static readonly string[] Names = ["border-radius", "overflow", "flex", "flex-flow", "place-items", "place-content", "place-self", "columns", "column-rule", "page-break-before", "page-break-after", "page-break-inside", "grid-area", "grid-row", "grid-column", "grid-template", "grid", "border-image", "mask"];
 
     public static bool IsHandled(string name)
     {
@@ -43,11 +41,6 @@ internal static partial class ShorthandFallbacks
         if (IsGridShorthand(name))
         {
             return ExpandGrid(name, value, output);
-        }
-
-        if (name.Equals("white-space", StringComparison.OrdinalIgnoreCase))
-        {
-            return ExpandWhiteSpace(value, output);
         }
 
         if (name.Equals("border-radius", StringComparison.OrdinalIgnoreCase))
@@ -103,11 +96,6 @@ internal static partial class ShorthandFallbacks
         if (IsGridShorthand(name))
         {
             return GridLonghands(name);
-        }
-
-        if (name.Equals("white-space", StringComparison.OrdinalIgnoreCase))
-        {
-            return new[] { PropertyId.WhiteSpaceCollapse, PropertyId.TextWrapMode };
         }
 
         if (name.Equals("border-radius", StringComparison.OrdinalIgnoreCase))
@@ -179,54 +167,6 @@ internal static partial class ShorthandFallbacks
     }
 
     private static ComponentValueList Text(string css) => CssTree.ParseComponentValueList(css).Values;
-
-    private static bool ExpandWhiteSpace(ComponentValueList value, List<(PropertyId, ComponentValueList)> output)
-    {
-        // CSS Text 4 §4.3: white-space: normal | pre | pre-wrap | pre-line | <'white-space-collapse'> || <'text-wrap-mode'> || <'white-space-trim'>
-        string? collapse = null;
-        string? wrap = null;
-        int count = 0;
-        foreach (ComponentValue part in value)
-        {
-            if (part.IsWhitespace)
-            {
-                continue;
-            }
-
-            if (++count > 3 || part.Kind != ComponentValueKind.Token || part.Token.Kind != CssTokenKind.Ident)
-            {
-                return false;
-            }
-
-            string word = part.Raw.ToString().ToLowerInvariant();
-            switch (word)
-            {
-                case "normal": collapse = "collapse"; wrap = "wrap"; break;
-                case "pre": collapse = "preserve"; wrap = "nowrap"; break;
-                case "pre-wrap": collapse = "preserve"; wrap = "wrap"; break;
-                case "pre-line": collapse = "preserve-breaks"; wrap = "wrap"; break;
-                case "wrap" or "nowrap": wrap = word; break;
-                case "trim-inner" or "discard-before" or "discard-after" or "discard-inner": break; // white-space-trim is not implemented
-                default:
-                    if (Array.IndexOf(Collapse, word) < 0)
-                    {
-                        return false;
-                    }
-
-                    collapse = word;
-                    break;
-            }
-        }
-
-        if (count == 0)
-        {
-            return false;
-        }
-
-        output.Add((PropertyId.WhiteSpaceCollapse, Text(collapse ?? "collapse")));
-        output.Add((PropertyId.TextWrapMode, Text(wrap ?? "wrap")));
-        return true;
-    }
 
     private static bool ExpandRadius(ComponentValueList value, List<(PropertyId, ComponentValueList)> output)
     {

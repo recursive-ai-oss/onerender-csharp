@@ -22,7 +22,7 @@
         },
         "box.borderBox": {
           "compared": 737,
-          "agree": 206
+          "agree": 602
         },
         "box.exists.element": {
           "compared": 744,
@@ -50,7 +50,7 @@
         },
         "generated.bounds": {
           "compared": 25,
-          "agree": 10
+          "agree": 18
         },
         "generated.text": {
           "compared": 25,
@@ -70,27 +70,27 @@
         },
         "rect.client": {
           "compared": 737,
-          "agree": 396
+          "agree": 700
         },
         "rect.client.within1": {
           "compared": 737,
-          "agree": 397
+          "agree": 713
         },
         "rect.offset": {
           "compared": 737,
-          "agree": 221
+          "agree": 548
         },
         "rect.offset.within1": {
           "compared": 737,
-          "agree": 228
+          "agree": 610
         },
         "rect.scroll": {
           "compared": 737,
-          "agree": 388
+          "agree": 693
         },
         "rect.scroll.within1": {
           "compared": 737,
-          "agree": 389
+          "agree": 707
         },
         "stacking.context": {
           "compared": 737,
@@ -102,7 +102,7 @@
         },
         "style.all": {
           "compared": 58223,
-          "agree": 50644
+          "agree": 51318
         },
         "style.uncomputed": {
           "compared": 12529,
@@ -162,11 +162,11 @@
         },
         "style:border-right-style": {
           "compared": 737,
-          "agree": 733
+          "agree": 736
         },
         "style:border-right-width": {
           "compared": 737,
-          "agree": 734
+          "agree": 737
         },
         "style:border-top-color": {
           "compared": 737,
@@ -238,7 +238,7 @@
         },
         "style:height": {
           "compared": 737,
-          "agree": 541
+          "agree": 675
         },
         "style:isolation": {
           "compared": 737,
@@ -262,19 +262,19 @@
         },
         "style:margin-bottom": {
           "compared": 737,
-          "agree": 732
+          "agree": 737
         },
         "style:margin-left": {
           "compared": 737,
-          "agree": 728
+          "agree": 730
         },
         "style:margin-right": {
           "compared": 737,
-          "agree": 733
+          "agree": 735
         },
         "style:margin-top": {
           "compared": 737,
-          "agree": 731
+          "agree": 736
         },
         "style:max-height": {
           "compared": 737,
@@ -330,19 +330,19 @@
         },
         "style:padding-bottom": {
           "compared": 737,
-          "agree": 641
+          "agree": 737
         },
         "style:padding-left": {
           "compared": 737,
-          "agree": 617
+          "agree": 737
         },
         "style:padding-right": {
           "compared": 737,
-          "agree": 617
+          "agree": 737
         },
         "style:padding-top": {
           "compared": 737,
-          "agree": 641
+          "agree": 737
         },
         "style:pointer-events": {
           "compared": 737,
@@ -410,7 +410,7 @@
         },
         "style:width": {
           "compared": 737,
-          "agree": 311
+          "agree": 399
         },
         "style:word-break": {
           "compared": 737,
@@ -426,19 +426,19 @@
         },
         "text.bounds": {
           "compared": 417,
-          "agree": 98
+          "agree": 350
         },
         "text.boxes.bounds": {
-          "compared": 416,
-          "agree": 98
+          "compared": 417,
+          "agree": 350
         },
         "text.boxes.count": {
           "compared": 417,
-          "agree": 416
+          "agree": 417
         },
         "text.boxes.ranges": {
-          "compared": 416,
-          "agree": 406
+          "compared": 417,
+          "agree": 417
         },
         "text.layoutText": {
           "compared": 417,
@@ -470,7 +470,7 @@
         },
         "box.borderBox": {
           "compared": 715,
-          "agree": 36
+          "agree": 546
         },
         "box.exists.element": {
           "compared": 722,
@@ -498,7 +498,7 @@
         },
         "generated.bounds": {
           "compared": 25,
-          "agree": 1
+          "agree": 16
         },
         "generated.text": {
           "compared": 25,
@@ -518,27 +518,27 @@
         },
         "rect.client": {
           "compared": 715,
-          "agree": 311
+          "agree": 647
         },
         "rect.client.within1": {
           "compared": 715,
-          "agree": 312
+          "agree": 655
         },
         "rect.offset": {
           "compared": 715,
-          "agree": 94
+          "agree": 498
         },
         "rect.offset.within1": {
           "compared": 715,
-          "agree": 101
+          "agree": 560
         },
         "rect.scroll": {
           "compared": 715,
-          "agree": 301
+          "agree": 639
         },
         "rect.scroll.within1": {
           "compared": 715,
-          "agree": 302
+          "agree": 648
         },
         "stacking.context": {
           "compared": 715,
@@ -550,7 +550,7 @@
         },
         "style.all": {
           "compared": 56485,
-          "agree": 49053
+          "agree": 49823
         },
         "style.uncomputed": {
           "compared": 12155,
@@ -610,11 +610,11 @@
         },
         "style:border-right-style": {
           "compared": 715,
-          "agree": 711
+          "agree": 714
         },
         "style:border-right-width": {
           "compared": 715,
-          "agree": 712
+          "agree": 715
         },
         "style:border-top-color": {
           "compared": 715,
@@ -686,7 +686,7 @@
         },
         "style:height": {
           "compared": 715,
-          "agree": 496
+          "agree": 647
         },
         "style:isolation": {
           "compared": 715,
@@ -710,7 +710,7 @@
         },
         "style:margin-bottom": {
           "compared": 715,
-          "agree": 710
+          "agree": 715
         },
         "style:margin-left": {
           "compared": 715,
@@ -722,7 +722,7 @@
         },
         "style:margin-top": {
           "compared": 715,
-          "agree": 710
+          "agree": 715
         },
         "style:max-height": {
           "compared": 715,
@@ -778,19 +778,19 @@
         },
         "style:padding-bottom": {
           "compared": 715,
-          "agree": 621
+          "agree": 715
         },
         "style:padding-left": {
           "compared": 715,
-          "agree": 598
+          "agree": 715
         },
         "style:padding-right": {
           "compared": 715,
-          "agree": 598
+          "agree": 715
         },
         "style:padding-top": {
           "compared": 715,
-          "agree": 621
+          "agree": 715
         },
         "style:pointer-events": {
           "compared": 715,
@@ -858,7 +858,7 @@
         },
         "style:width": {
           "compared": 715,
-          "agree": 257
+          "agree": 438
         },
         "style:word-break": {
           "compared": 715,
@@ -874,19 +874,19 @@
         },
         "text.bounds": {
           "compared": 401,
-          "agree": 30
+          "agree": 335
         },
         "text.boxes.bounds": {
-          "compared": 392,
-          "agree": 30
+          "compared": 401,
+          "agree": 335
         },
         "text.boxes.count": {
           "compared": 401,
-          "agree": 392
+          "agree": 401
         },
         "text.boxes.ranges": {
-          "compared": 392,
-          "agree": 378
+          "compared": 401,
+          "agree": 401
         },
         "text.layoutText": {
           "compared": 401,
@@ -919,7 +919,7 @@
       },
       "box.borderBox": {
         "compared": 1452,
-        "agree": 242
+        "agree": 1148
       },
       "box.exists.element": {
         "compared": 1466,
@@ -947,7 +947,7 @@
       },
       "generated.bounds": {
         "compared": 50,
-        "agree": 11
+        "agree": 34
       },
       "generated.text": {
         "compared": 50,
@@ -967,27 +967,27 @@
       },
       "rect.client": {
         "compared": 1452,
-        "agree": 707
+        "agree": 1347
       },
       "rect.client.within1": {
         "compared": 1452,
-        "agree": 709
+        "agree": 1368
       },
       "rect.offset": {
         "compared": 1452,
-        "agree": 315
+        "agree": 1046
       },
       "rect.offset.within1": {
         "compared": 1452,
-        "agree": 329
+        "agree": 1170
       },
       "rect.scroll": {
         "compared": 1452,
-        "agree": 689
+        "agree": 1332
       },
       "rect.scroll.within1": {
         "compared": 1452,
-        "agree": 691
+        "agree": 1355
       },
       "stacking.context": {
         "compared": 1452,
@@ -999,7 +999,7 @@
       },
       "style.all": {
         "compared": 114708,
-        "agree": 99697
+        "agree": 101141
       },
       "style.uncomputed": {
         "compared": 24684,
@@ -1059,11 +1059,11 @@
       },
       "style:border-right-style": {
         "compared": 1452,
-        "agree": 1444
+        "agree": 1450
       },
       "style:border-right-width": {
         "compared": 1452,
-        "agree": 1446
+        "agree": 1452
       },
       "style:border-top-color": {
         "compared": 1452,
@@ -1135,7 +1135,7 @@
       },
       "style:height": {
         "compared": 1452,
-        "agree": 1037
+        "agree": 1322
       },
       "style:isolation": {
         "compared": 1452,
@@ -1159,19 +1159,19 @@
       },
       "style:margin-bottom": {
         "compared": 1452,
-        "agree": 1442
+        "agree": 1452
       },
       "style:margin-left": {
         "compared": 1452,
-        "agree": 1436
+        "agree": 1438
       },
       "style:margin-right": {
         "compared": 1452,
-        "agree": 1446
+        "agree": 1448
       },
       "style:margin-top": {
         "compared": 1452,
-        "agree": 1441
+        "agree": 1451
       },
       "style:max-height": {
         "compared": 1452,
@@ -1227,19 +1227,19 @@
       },
       "style:padding-bottom": {
         "compared": 1452,
-        "agree": 1262
+        "agree": 1452
       },
       "style:padding-left": {
         "compared": 1452,
-        "agree": 1215
+        "agree": 1452
       },
       "style:padding-right": {
         "compared": 1452,
-        "agree": 1215
+        "agree": 1452
       },
       "style:padding-top": {
         "compared": 1452,
-        "agree": 1262
+        "agree": 1452
       },
       "style:pointer-events": {
         "compared": 1452,
@@ -1307,7 +1307,7 @@
       },
       "style:width": {
         "compared": 1452,
-        "agree": 568
+        "agree": 837
       },
       "style:word-break": {
         "compared": 1452,
@@ -1323,19 +1323,19 @@
       },
       "text.bounds": {
         "compared": 818,
-        "agree": 128
+        "agree": 685
       },
       "text.boxes.bounds": {
-        "compared": 808,
-        "agree": 128
+        "compared": 818,
+        "agree": 685
       },
       "text.boxes.count": {
         "compared": 818,
-        "agree": 808
+        "agree": 818
       },
       "text.boxes.ranges": {
-        "compared": 808,
-        "agree": 784
+        "compared": 818,
+        "agree": 818
       },
       "text.layoutText": {
         "compared": 818,

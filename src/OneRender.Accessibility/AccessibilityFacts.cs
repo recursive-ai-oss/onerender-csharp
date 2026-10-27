@@ -12,21 +12,6 @@ namespace OneRender.Accessibility;
 /// <param name="Facts">The rendered facts.</param>
 public sealed record RenderedPage(Document Document, HtmlPage Page, RenderedFacts Facts);
 
-/// <summary>Raised when the facts the engine wrote do not map onto the document, which means a defect in this package.</summary>
-public sealed class RenderedFactsException : Exception
-{
-    /// <summary>Creates the exception.</summary>
-    /// <param name="refusal">What OneHtml.Accessibility refused and why.</param>
-    public RenderedFactsException(SnapshotRefusal refusal)
-        : base("The rendered facts do not map onto the document: " + (refusal ?? throw new ArgumentNullException(nameof(refusal))))
-    {
-        Refusal = refusal;
-    }
-
-    /// <summary>What the mapping refused, and where.</summary>
-    public SnapshotRefusal Refusal { get; }
-}
-
 /// <summary>
 /// Produces <see cref="RenderedFacts"/> from OneRender's own layout and paint, with the same meaning per fact as the facts
 /// OneHtml.Accessibility reads from a browser's <c>DOMSnapshot.captureSnapshot</c>, so a consumer can switch sources without
@@ -55,8 +40,7 @@ public static class AccessibilityFacts
     /// <returns>The facts, keyed by the nodes of <c>page.Document</c>.</returns>
     /// <exception cref="ArgumentNullException">An argument other than <paramref name="options"/> or <paramref name="context"/> is null.</exception>
     /// <exception cref="ArgumentException"><paramref name="trace"/> was not recorded from this page's fragments.</exception>
-    /// <exception cref="DomSnapshotFormatException">The page is over a limit in <see cref="FactsOptions.Limits"/>.</exception>
-    /// <exception cref="RenderedFactsException">The facts did not map onto the document.</exception>
+    /// <exception cref="RenderedFactsLimitException">The page is over a limit in <see cref="FactsOptions.Limits"/>.</exception>
     /// <exception cref="OperationCanceledException">Cancelled.</exception>
     public static RenderedFacts FromLayout(HtmlPage page, LayoutQueries queries, DisplayList list, PaintTrace trace, FactsOptions? options = null, StyleContext? context = null, CancellationToken cancellationToken = default)
     {
@@ -71,20 +55,7 @@ public static class AccessibilityFacts
 
         cancellationToken.ThrowIfCancellationRequested();
         options ??= new FactsOptions();
-        var writer = new SnapshotWriter(page, queries, list, trace, options);
-        byte[] json = writer.Write(cancellationToken);
-        DomSnapshot snapshot = DomSnapshot.Parse(json, writer.StyleNames, options.Limits);
-        DomSnapshotMapResult mapped = DomSnapshotAdapter.Map(
-            snapshot,
-            page.Document,
-            new DomSnapshotMapOptions
-            {
-                ViewportWidth = page.Options.ViewportWidth,
-                ViewportHeight = page.Options.ViewportHeight,
-                Context = context,
-            },
-            cancellationToken);
-        return mapped.Facts ?? throw new RenderedFactsException(mapped.Refusal!);
+        return new FactsWriter(page, queries, list, trace, options, context).Build(cancellationToken);
     }
 
     /// <summary>Paints <paramref name="page"/> and returns its facts.</summary>
@@ -93,7 +64,7 @@ public static class AccessibilityFacts
     /// <param name="cancellationToken">Cancels the work.</param>
     /// <returns>The facts, keyed by the nodes of <c>page.Document</c>.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="page"/> is null.</exception>
-    /// <exception cref="DomSnapshotFormatException">The page is over a limit in <see cref="FactsOptions.Limits"/>.</exception>
+    /// <exception cref="RenderedFactsLimitException">The page is over a limit in <see cref="FactsOptions.Limits"/>.</exception>
     /// <exception cref="OperationCanceledException">Cancelled.</exception>
     public static RenderedFacts FromPage(HtmlPage page, FactsOptions? options = null, CancellationToken cancellationToken = default)
     {
@@ -112,7 +83,7 @@ public static class AccessibilityFacts
     /// <param name="cancellationToken">Cancels the work.</param>
     /// <returns>The facts, keyed by the nodes of <c>page.Page.Document</c>; their <see cref="RenderedFacts.Context"/> is the page's style context.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="page"/> is null.</exception>
-    /// <exception cref="DomSnapshotFormatException">The page is over a limit in <see cref="FactsOptions.Limits"/>.</exception>
+    /// <exception cref="RenderedFactsLimitException">The page is over a limit in <see cref="FactsOptions.Limits"/>.</exception>
     /// <exception cref="OperationCanceledException">Cancelled.</exception>
     public static RenderedFacts FromInteractive(InteractivePage page, FactsOptions? options = null, CancellationToken cancellationToken = default)
     {
@@ -128,7 +99,7 @@ public static class AccessibilityFacts
     /// <returns>The document, the page and the facts.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="html"/> or <paramref name="page"/> is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException">A viewport dimension is below 1.</exception>
-    /// <exception cref="DomSnapshotFormatException">The page is over a limit in <see cref="FactsOptions.Limits"/>.</exception>
+    /// <exception cref="RenderedFactsLimitException">The page is over a limit in <see cref="FactsOptions.Limits"/>.</exception>
     /// <exception cref="OperationCanceledException">Cancelled.</exception>
     public static RenderedPage Render(string html, HtmlPageOptions page, FactsOptions? options = null, CancellationToken cancellationToken = default)
     {
@@ -146,7 +117,7 @@ public static class AccessibilityFacts
     /// <returns>The document, the page and the facts.</returns>
     /// <exception cref="ArgumentNullException">An argument other than <paramref name="options"/> is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException">A viewport dimension is below 1.</exception>
-    /// <exception cref="DomSnapshotFormatException">The page is over a limit in <see cref="FactsOptions.Limits"/>.</exception>
+    /// <exception cref="RenderedFactsLimitException">The page is over a limit in <see cref="FactsOptions.Limits"/>.</exception>
     /// <exception cref="OperationCanceledException">Cancelled.</exception>
     public static RenderedPage Render(Document document, HtmlPageOptions page, FactsOptions? options = null, CancellationToken cancellationToken = default)
     {

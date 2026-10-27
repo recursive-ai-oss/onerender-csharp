@@ -30,8 +30,9 @@ C# builder (StyleDeclaration) ────────────────�
 
 - `PropertyId` lists the longhands the engine models (display, box model, position, sizing, borders, overflow, font,
   text, color and a few more). Shorthands are expanded before they reach the pipeline: by OneHtml's cascade for the
-  HTML front end and by `StyleDeclaration.TrySet` for the builder, with `ShorthandFallbacks` covering `white-space`,
-  `border-radius` and `overflow`, which the cascade keeps whole.
+  HTML front end and by `StyleDeclaration.TrySet` for the builder, with `ShorthandFallbacks` covering `border-radius`,
+  `overflow`, `flex`, `grid` and the others the cascade keeps whole. (`white-space`, `text-wrap` and `border-block`/`border-inline` are expanded by
+  OneHtml 1.2 on both paths.)
 - `ComputedValues` is one struct of typed fields (enums, `Length`, `ColorValue`, doubles). **Styles are interned**: a
   `StyleTable` stores one row per distinct computed style, and a node holds a `StyleId`. A document with thousands of
   nodes typically has tens of rows. Rows are found by value equality, so `StyleId` equality means identical style.
@@ -49,7 +50,7 @@ C# builder (StyleDeclaration) ────────────────�
   declarations of properties OneHtml does not type itself. A rejected declaration neither wins nor counts as
   `!important`, so an earlier valid one stands (CSS Syntax 3 section 5.4.6, CSS Cascade 4 section 4.3). For a
   longhand the validator runs the same parser that computes the value, against initial values, so the two cannot
-  disagree; for `white-space`, `border-radius`, `overflow`, `flex`, `grid` and the other shorthands OneHtml passes
+  disagree; for `border-radius`, `overflow`, `flex`, `grid` and the other shorthands OneHtml passes
   through whole, it expands them with `ShorthandFallbacks` and checks every longhand. The check parses the value text
   again (OneHtml's token range cannot be turned back into a value list), which costs one small allocation per
   declaration per stylesheet and nothing per restyle. It holds one lock around a shared scratch computer.

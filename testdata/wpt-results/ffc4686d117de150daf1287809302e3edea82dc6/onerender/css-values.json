@@ -8,12 +8,12 @@
   "sampleStride": 1,
   "counts": {
     "total": 497,
-    "pass": 95,
-    "fail": 72,
+    "pass": 96,
+    "fail": 71,
     "blank": 0,
     "skipped": 330
   },
-  "rate": "0.5689",
+  "rate": "0.5749",
   "pass": [
     "css/css-values/angle-units-002.html",
     "css/css-values/angle-units-003.html",
@@ -67,6 +67,7 @@
     "css/css-values/calc-width-block-intrinsic-1.html",
     "css/css-values/calc-width-table-auto-1.html",
     "css/css-values/calc-width-table-fixed-1.html",
+    "css/css-values/cap-unit-001.html",
     "css/css-values/ch-unit-001.html",
     "css/css-values/ch-unit-008.html",
     "css/css-values/ex-calc-expression-001.html",
@@ -151,7 +152,6 @@
     "css/css-values/calc-size/calc-size-min-max-sizes-004.html": "== ref-filled-green-100px-square-only.html differs (max 255, 8000 px)",
     "css/css-values/calc-size/calc-size-min-max-sizes-005.html": "== ref-filled-green-100px-square-only.html differs (max 255, 6000 px)",
     "css/css-values/calc-size/calc-size-min-max-sizes-006.html": "== ref-filled-green-100px-square-only.html differs (max 255, 6000 px)",
-    "css/css-values/cap-unit-001.html": "== cap-unit-001-ref.html differs (max 255, 2200 px)",
     "css/css-values/ch-unit-002.html": "== ch-unit-002-ref.html differs (max 255, 1760 px)",
     "css/css-values/ch-unit-003.html": "== ch-unit-001-ref.html differs (max 255, 1760 px)",
     "css/css-values/ch-unit-004.html": "== ch-unit-001-ref.html differs (max 255, 1760 px)",
