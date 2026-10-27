@@ -23,6 +23,7 @@ internal static class Targets
         ["html"] = Html,
         ["layout"] = Layout,
         ["flex"] = FlexTarget.Run,
+        ["fragmentation"] = FragmentationTarget.Run,
         ["positioning"] = Positioning,
         ["inline"] = Inline,
     };

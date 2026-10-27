@@ -16,7 +16,7 @@ namespace OneRender.Layout;
 /// <para>The tree is retained: <see cref="Clear"/> keeps the storage, so laying out the same boxes again allocates nothing once warm.
 /// Not thread-safe; one layout writes at a time.</para>
 /// </remarks>
-public sealed class FragmentTree
+public sealed partial class FragmentTree
 {
     private byte[] _kind = new byte[64];
     private byte[] _traits = new byte[64];
@@ -30,6 +30,7 @@ public sealed class FragmentTree
     private int[] _textStart = new int[64];
     private int[] _textLength = new int[64];
     private int[] _run = new int[64];
+    private int[] _fragmentainer = new int[64];
     private double[] _x = new double[64];
     private double[] _y = new double[64];
     private double[] _w = new double[64];
@@ -504,6 +505,9 @@ public sealed class FragmentTree
             case FragmentKind.Line:
                 sb.Append("line ").Append(rect.ToString()).Append(" baseline=").Append(_baseline[i].ToString("0.##", System.Globalization.CultureInfo.InvariantCulture));
                 break;
+            case FragmentKind.Column:
+                sb.Append("column ").Append(_fragmentainer[i]).Append(' ').Append(rect.ToString());
+                break;
             case FragmentKind.Text:
                 sb.Append("text [").Append(_textStart[i]).Append("..").Append(_textStart[i] + _textLength[i]).Append("] ").Append(rect.ToString());
                 if (_run[i] >= 0)
@@ -558,6 +562,8 @@ public sealed class FragmentTree
 
     internal GlyphRunId GlyphRunOf(int i) => new(_run[i]);
 
+    internal int FragmentainerOf(int i) => _fragmentainer[i];
+
     private void Check(Fragment f)
     {
         if (f.IsNull || !ReferenceEquals(f.Tree, this))
@@ -600,6 +606,7 @@ public sealed class FragmentTree
         _textStart[i] = 0;
         _textLength[i] = 0;
         _run[i] = -1;
+        _fragmentainer[i] = 0;
         _x[i] = rect.X;
         _y[i] = rect.Y;
         _w[i] = rect.Width;
@@ -641,6 +648,7 @@ public sealed class FragmentTree
         Array.Resize(ref _textStart, n);
         Array.Resize(ref _textLength, n);
         Array.Resize(ref _run, n);
+        Array.Resize(ref _fragmentainer, n);
         Array.Resize(ref _x, n);
         Array.Resize(ref _y, n);
         Array.Resize(ref _w, n);

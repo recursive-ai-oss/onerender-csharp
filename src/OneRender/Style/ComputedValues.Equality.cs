@@ -87,6 +87,7 @@ public partial struct ComputedValues
         a.TextAlignLast == b.TextAlignLast &&
         a.TextJustify == b.TextJustify &&
         FlexEquals(in a, in b) &&
+        FragmentationEquals(in a, in b) &&
         GridEquals(in a, in b);
 
     internal static int ValueHash(in ComputedValues v)
@@ -176,6 +177,7 @@ public partial struct ComputedValues
         h.Add(v.TextAlignLast);
         h.Add(v.TextJustify);
         FlexHash(ref h, in v);
+        FragmentationHash(ref h, in v);
         GridHash(ref h, in v);
         return h.ToHashCode();
     }

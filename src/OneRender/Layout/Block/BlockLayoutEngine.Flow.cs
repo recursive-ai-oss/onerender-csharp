@@ -32,6 +32,7 @@ public sealed partial class BlockLayoutEngine
         parentIsRoot
         || c.Context != FormattingContext.Block
         || v.Floating != FloatKind.None
+        || (v.IsMulticol && c.Context is FormattingContext.Block or FormattingContext.FlowRoot)
         || v.Position is PositionKind.Absolute or PositionKind.Fixed
         || (v.IsScrollContainer && c.Index != _vpSource);
 
@@ -144,7 +145,12 @@ public sealed partial class BlockLayoutEngine
         double contentH;
         double cursor = t.Cursor;
         bool scroll = (fl & FrameFlags.ScrollContainer) != 0;
-        if (!double.IsNaN(t.SpecH))
+        if ((fl & FrameFlags.Multicol) != 0)
+        {
+            contentH = MulticolClose(ti);
+            t = ref _frames[ti];
+        }
+        else if (!double.IsNaN(t.SpecH))
         {
             contentH = t.SpecH;
             _pos = _neg = 0;
@@ -180,7 +186,7 @@ public sealed partial class BlockLayoutEngine
         {
             // Float border boxes are scrollable overflow of the box that contains them; they are tracked per formatting context.
             ref BfcState s = ref _bfcs[_bsp - 1];
-            if (s.OvR >= s.OvL)
+            if (s.OvR >= s.OvL && (fl & FrameFlags.Multicol) == 0)
             {
                 t.OvL = Math.Min(t.OvL, s.OvL + t.ContentLeft);
                 t.OvT = Math.Min(t.OvT, s.OvT + t.ContentTop);
