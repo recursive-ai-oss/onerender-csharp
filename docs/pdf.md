@@ -15,7 +15,11 @@ With `Profile = None` the file streams: bytes are written as each page is commit
 
 ## Pages
 
-Until `@page` exists the happy path paginates with the block fragmenter (`PageFragmentation.Paginate`): one page-sized fragmentainer per page at the content size, honouring `break-before/after/inside`, orphans and widows. Break opportunities are those of CSS Fragmentation 3 §4.1: between block siblings, between line boxes, and between the rows of a table (a table and its row groups fragment; a row's cells are never split, so a row taller than a page overflows it). Repeating `thead`/`tfoot` on each page is not done. Page *i* of the tree occupies the region at x = i · 1.5 · width, so the pages sit side by side in one display list and each page is written from its own region.
+`HtmlPdf.ToPdf` builds a `PagedDocument` (see the paged media section of `architecture.md`), so print style sheets apply: `@page` size and margins (the page setup in the options is only the default), margin boxes, named pages, forced breaks with blank pages, running strings, `counter(page)`/`counter(pages)`, tables of contents with `target-counter()` and `leader()`, and repeated `thead`/`tfoot`. Break opportunities are those of CSS Fragmentation 3 §4.1: between block siblings, between line boxes, and between the rows of a table; a row's cells are never split, so a row taller than a page overflows it. Page *i* of the tree occupies the region at x = i · stride, so the pages sit side by side in one display list and each page is written from its own region, together with its page layer.
+
+The page layer (page background and margin boxes) is drawn first, as artifacts, so the running headers and page numbers are not in the structure tree and do not split the structure elements of the content. A repeated table header is also an artifact inside its table. In-document links (`href="#id"`) are link annotations to named destinations the writer adds at the position of each target; `target-counter()` and `target-text()` make no link by themselves. A document that would need more than `MaxPages` pages makes `ToPdf` throw `PdfRenderException`.
+
+For a long document, `ToPdf` collects the heap between building, painting and writing (at 40 pages or more) and does not keep the cascade alive after the trees are built; the 10,000-row table (213 pages) peaks at about 340 MB instead of 440 MB. Layout and the display list of the whole document are still in memory; paging them out would need a layout that can be resumed page by page.
 
 ## Vector or island
 
@@ -71,14 +75,14 @@ Identity: a tag item's element is `Id >> 16` (the box, the part, the occurrence 
 
 ## Checks
 
-- `tools/pdf/fetch-verapdf.sh` fetches veraPDF 1.30.3 (from software.verapdf.org, SHA-256 pinned) and a user-local Eclipse Temurin 21 JRE; veraPDF is GPLv3+/MPLv2+ and is only run as a separate program, never linked, committed or shipped. `tools/pdf/run-verapdf.sh` writes the six templates and validates each against PDF/UA-1 (`--flavour ua1`): all six pass with zero failed rules.
+- `tools/pdf/fetch-verapdf.sh` fetches veraPDF 1.30.3 (from software.verapdf.org, SHA-256 pinned) and a user-local Eclipse Temurin 21 JRE; veraPDF is GPLv3+/MPLv2+ and is only run as a separate program, never linked, committed or shipped. `tools/pdf/run-verapdf.sh` writes the six templates and the paged sample (`testdata/templates/paged`: contents with leaders and links, running header, page X of Y, a 90-row table with a repeated header) and validates each against PDF/UA-1 (`--flavour ua1`): all seven pass with zero failed rules. `results/paged/weasyprint.md` compares page counts and break positions with WeasyPrint, run as a separate program (information only).
 - `tests/OneRender.Pdf.Tests` run OnePdf's own PDF/UA-1 check on the same six, compare extracted text with the document text, pin table pagination and the limits.
 - `tools/pdf/compare-pixels.py` compares the raster backend's picture of each page with poppler's rendering of the PDF (mean SSIM over 7×7 windows on luma). Information only: the two rasterizers anti-alias text differently, so the templates score 0.89 to 0.98 per page (the long text-only report pages are lowest, about 0.92 on average).
 - `tools/pdf/OneRender.PdfRun` writes a generated 50-page report or a 10,000-row table and prints time and memory.
 
 ## Choices the specs leave open
 
-- The page is laid out at the content width and each page region is clipped to the content area; margins are blank page, not margin boxes.
+- The page is laid out at the content width of the first page and each page region is clipped to the content area; the margins hold the page layer.
 - A profile other than `None` buffers the file; `None` streams.
 - Links are annotations only for non-fragment targets; in-document anchors need positions the list does not carry.
 - Conic gradients are 180 wedges; at 192 dpi islands rasterize at twice the screen resolution.
