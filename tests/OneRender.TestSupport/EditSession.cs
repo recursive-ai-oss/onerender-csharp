@@ -174,6 +174,7 @@ public sealed class EditSession
         ("mask-image", ["none", "linear-gradient(black, transparent)"]),
         ("mix-blend-mode", ["normal", "multiply", "screen"]),
         ("isolation", ["auto", "isolate"]),
+        ("--host-scope", ["none", "3", "-1", "none", "40"]),
         ("z-index", ["1", "-1", "auto"]),
         ("visibility", ["hidden", "visible"]),
         ("direction", ["ltr", "rtl"]),

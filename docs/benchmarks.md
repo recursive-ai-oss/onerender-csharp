@@ -45,6 +45,7 @@ The benchmarks:
 | | `SubtreeRelayout` | resizes one quest row (a declaration swap), then flushes |
 | `MotionBenchmarks` | `CompositorTick100` | advances the clock 16 ms with 100 transform and opacity animations running, then patches the display list |
 | | `MixedTick100Compositor4Layout` | the same 100, plus width animations on two slots and color and background-color animations; repaints when layout or paint properties changed |
+| | `WidthTransitionTick` | a CSS transition on one row's width (`transition: width` on `#quest3`, started by hovering it, 400,000 px over 100,000 s so it never ends and moves about 0.06 px a frame): advances the clock 16 ms, interpolates the width, lays out the row's subtree again and updates the display list. The frame of a game UI that animates a layout property; it has its own table in `summary.md` |
 | | `IdleAdvance` | advances the clock on a page with no animation |
 | `OneGameUiBenchmarks` | the same four as `IncrementalBenchmarks` | the change, then `UiTree.Frame()` (bindings, style, layout, draw-list update) |
 | `FlexHudBenchmarks` | `IdleFrame`, `HoverRestyle`, `HoverWithHitTest`, `TextChange`, `SubtreeRelayout` | the same changes on the page `OneGameUiBenchmarks` builds, built through the engine's `StyledTree` (see below) |

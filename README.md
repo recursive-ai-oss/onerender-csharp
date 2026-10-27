@@ -42,7 +42,7 @@ Use your own runtime identifier for the first command (`win-x64`, `linux-arm64`,
 
 Benchmarks: `dotnet run -c Release --project bench/OneRender.Benchmarks -- --filter '*'`.
 
-The display list backends draw from is specified in `docs/display-list.md`. Fuzz targets live in `fuzz/` (`fuzz/run.sh displaylist <seconds>`, needing libFuzzer and SharpFuzz tools, see the script header).
+The display list backends draw from is specified in `docs/display-list.md`. A game engine that draws the list itself (atlas keys, damage, host scopes, test-harness helpers) starts at `docs/game-hosts.md`. Fuzz targets live in `fuzz/` (`fuzz/run.sh displaylist <seconds>`, needing libFuzzer and SharpFuzz tools, see the script header).
 
 ## Licence
 

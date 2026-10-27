@@ -73,6 +73,12 @@ public readonly struct GlyphRunView
     /// <summary>Index of the face in the list's face table (stable within one list).</summary>
     public int FaceIndex => Rec.A;
 
+    /// <summary>
+    /// A key of the face that is the same in every list, frame and process for the same font file (format 1.3), so a host glyph atlas can
+    /// key on (face key, size × device-pixel ratio, glyph id). <see cref="FaceIndex"/> is only an index into one list's table.
+    /// </summary>
+    public ulong FaceKey => _list._faceHashes[Rec.A];
+
     /// <summary>Font size in CSS pixels.</summary>
     public float FontSize => _list._num[Rec.Num + 2];
 

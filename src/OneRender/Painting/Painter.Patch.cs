@@ -101,7 +101,7 @@ public sealed partial class Painter
         int f = fr.Fragment;
         _spanStart[f] = start;
         _spanCount[f] = _list.Count - start;
-        if (fr.PreClips > 0 || _patchCount != entriesBefore || fr.Group || fr.Outer || fr.Scroll || fr.FxOuter != 0 || fr.FxInner != 0)
+        if (fr.PreClips > 0 || _patchCount != entriesBefore || fr.Group || fr.Host || fr.Outer || fr.Scroll || fr.FxOuter != 0 || fr.FxInner != 0)
         {
             _jflags[f] |= JUnpatchable;
         }

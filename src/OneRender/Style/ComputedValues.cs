@@ -397,6 +397,12 @@ public partial struct ComputedValues
     /// <summary><c>appearance</c> (CSS UI 4 §6.1): <see cref="AppearanceKind.None"/> draws a form control as an ordinary box; every other keyword is the native look. Not inherited.</summary>
     public AppearanceKind Appearance { get; internal set; }
 
+    /// <summary>The host scope number of the element when <see cref="HasHostScope"/> is true: the value of the <c>--host-scope</c> custom property. Not inherited.</summary>
+    public int HostScope { get; internal set; }
+
+    /// <summary>True when the element declares a <c>--host-scope</c> integer, which makes it paint inside a host scope item (display list 1.3).</summary>
+    public bool HasHostScope { get; internal set; }
+
     /// <summary><c>accent-color</c> (CSS UI 4 §6.2) when <see cref="AccentColorAuto"/> is false; inherited.</summary>
     public ColorValue AccentColor { get; internal set; }
 

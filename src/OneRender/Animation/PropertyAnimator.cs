@@ -78,6 +78,7 @@ internal static partial class PropertyAnimator
         }
 
         k[(int)PropertyId.Direction] = Kind.None;
+        k[(int)PropertyId.HostScope] = Kind.None;
         k[(int)PropertyId.UnicodeBidi] = Kind.None;
 
         void Set(Kind kind, params PropertyId[] ids)

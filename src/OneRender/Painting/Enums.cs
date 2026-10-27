@@ -84,7 +84,13 @@ public enum ItemKind : byte
     /// <summary>Starts a 3D transform with perspective; the content is flattened into its plane and projected (format 1.2).</summary>
     PushTransform3D = 40,
 
-    // 39 and 41 to 63 stay reserved. Format 1.2 draws clip-path shapes with PushClipPath and PushClipRoundedRect, so no separate clip-shape kind exists.
+    /// <summary>Starts a host scope: content up to the matching <see cref="PopHostScope"/> carries one opaque integer chosen by the host (format 1.3). Drawing is unchanged.</summary>
+    PushHostScope = 41,
+
+    /// <summary>Ends the innermost host scope.</summary>
+    PopHostScope = 42,
+
+    // 39 and 43 to 63 stay reserved. Format 1.2 draws clip-path shapes with PushClipPath and PushClipRoundedRect, so no separate clip-shape kind exists.
 }
 
 /// <summary>The kind of paint a fill item uses.</summary>

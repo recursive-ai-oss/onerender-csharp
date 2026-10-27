@@ -47,6 +47,19 @@ public sealed class StyleDeclaration
         return this;
     }
 
+    /// <summary>
+    /// Puts the element in a host scope (display list 1.3): its paint sits between a <c>PushHostScope</c> and a <c>PopHostScope</c> item carrying
+    /// <paramref name="value"/>, which the engine does not interpret. The element paints as a unit, like one with <c>isolation: isolate</c>.
+    /// The same as <c>Set("--host-scope", value)</c>.
+    /// </summary>
+    /// <param name="value">The host's number (a material or layer id); any <see cref="int"/>.</param>
+    /// <returns>This declaration, for chaining.</returns>
+    public StyleDeclaration SetHostScope(int value)
+    {
+        TrySet("--host-scope", value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        return this;
+    }
+
     /// <summary>Declares one property.</summary>
     /// <param name="property">A property name in any ASCII case.</param>
     /// <param name="value">The value as CSS text, at most 65,536 characters.</param>
@@ -222,9 +235,34 @@ internal sealed class OneHtmlSource : DeclarationSource
         }
     }
 
+    // Custom properties inherit, but a host scope belongs to the element that sets it, not to its descendants: a value counts only
+    // where it differs from the parent's, so a container that sets it scopes the container once.
+    private ValueOrigin GetHostScope(out ComponentValueList value)
+    {
+        value = default;
+        string name = Properties.NameOf(PropertyId.HostScope);
+        if (_style is null || !_style.TryGetCustomProperty(name, out string? text) || text is null)
+        {
+            return ValueOrigin.Unset;
+        }
+
+        if (_style.Parent is { } parent && parent.TryGetCustomProperty(name, out string? inherited) && string.Equals(inherited, text, StringComparison.Ordinal))
+        {
+            return ValueOrigin.Unset;
+        }
+
+        value = CssTree.ParseComponentValueList(text).Values;
+        return value.IsEmpty ? ValueOrigin.Unset : ValueOrigin.Specified;
+    }
+
     public override ValueOrigin Get(PropertyId id, out ComponentValueList value)
     {
         value = default;
+        if (id == PropertyId.HostScope)
+        {
+            return GetHostScope(out value);
+        }
+
         StyleValue? sv = _style?.GetValue(Properties.NameOf(id));
         bool declared = sv is not null && !sv.IsInitial && !sv.IsInherited && !sv.Tokens.IsEmpty;
         if (!declared && _hasOverride && _originOverride[(int)id] != ValueOrigin.Unset)

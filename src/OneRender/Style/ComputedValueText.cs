@@ -160,6 +160,7 @@ internal static partial class ComputedValueText
             case PropertyId.PointerEvents: return v.PointerEvents == PointerEventsKind.None ? "none" : "auto";
             case PropertyId.Appearance: return v.Appearance == AppearanceKind.None ? "none" : "auto";
             case PropertyId.CaretColor: return v.CaretColorAuto ? "auto" : v.CaretColor.ToCss();
+            case PropertyId.HostScope: return v.HasHostScope ? v.HostScope.ToString(System.Globalization.CultureInfo.InvariantCulture) : "none";
             case PropertyId.AccentColor: return v.AccentColorAuto ? "auto" : v.AccentColor.ToCss();
             default: return (id >= PropertyId.TransitionProperty && id <= PropertyId.AnimationPlayState ? MotionText(id, in v) : PaintText(id, in v)) ?? string.Empty;
         }

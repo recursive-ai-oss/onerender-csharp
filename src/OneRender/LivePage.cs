@@ -205,6 +205,14 @@ public sealed class LivePage
         return new FlushResult(work, reused);
     }
 
+    /// <summary>
+    /// Tells the page that the host replaced the pixels behind an image handle and kept their size: the damage of <see cref="Display"/> grows by
+    /// the bounds of every item that draws it. No restyle, layout or paint runs, and nothing is allocated.
+    /// </summary>
+    /// <param name="image">The handle whose pixels changed.</param>
+    /// <returns>The number of display items that draw the handle.</returns>
+    public int InvalidateImage(ImageHandle image) => Display.InvalidateImage(image);
+
     /// <summary>What the painter draws over the text control being edited (see <see cref="Interaction.LiveTextEditor"/>); null when none. Set by the editor, read at every paint. While it is set every flush paints the whole list.</summary>
     public Forms.TextEditView? Editing { get; set; }
 

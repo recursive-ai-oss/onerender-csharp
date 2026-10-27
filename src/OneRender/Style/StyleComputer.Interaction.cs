@@ -50,6 +50,28 @@ internal sealed partial class StyleComputer
             case PropertyId.Contain:
                 return ApplyFragmentation(id, v);
 
+            case PropertyId.HostScope:
+            {
+                // --host-scope: none | <integer>. Anything else is invalid and the element has no scope.
+                if (IsWord(v, "none"))
+                {
+                    _r.HasHostScope = false;
+                    _r.HostScope = 0;
+                    return true;
+                }
+
+                if (!SinglePart(v, out ComponentValue hs) || hs.Kind != ComponentValueKind.Token || hs.Token.Kind != CssTokenKind.Number
+                    || double.IsInfinity(hs.Token.NumberValue) || hs.Token.NumberValue != Math.Floor(hs.Token.NumberValue)
+                    || hs.Token.NumberValue < int.MinValue || hs.Token.NumberValue > int.MaxValue)
+                {
+                    return false;
+                }
+
+                _r.HasHostScope = true;
+                _r.HostScope = (int)hs.Token.NumberValue;
+                return true;
+            }
+
             case PropertyId.CaretColor:
             {
                 if (IsWord(v, "auto"))
@@ -96,6 +118,7 @@ internal sealed partial class StyleComputer
         {
             case PropertyId.PointerEvents: d.PointerEvents = s.PointerEvents; break;
             case PropertyId.Contain: d.Contain = s.Contain; break;
+            case PropertyId.HostScope: d.HostScope = s.HostScope; d.HasHostScope = s.HasHostScope; break;
             case PropertyId.Appearance: d.Appearance = s.Appearance; break;
             case PropertyId.CaretColor: d.CaretColor = s.CaretColor; d.CaretColorAuto = s.CaretColorAuto; break;
             case PropertyId.AccentColor: d.AccentColor = s.AccentColor; d.AccentColorAuto = s.AccentColorAuto; break;

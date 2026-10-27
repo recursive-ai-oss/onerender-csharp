@@ -14,7 +14,7 @@ public partial struct ComputedValues
     /// <summary>True when the element paints as a stacking context because of opacity, transforms, filters, masking or compositing (Compositing 1 §3, Transforms 1 §2, Filter Effects 1 §3, Masking 1 §5 and §6).</summary>
     internal readonly bool CreatesEffectContext =>
         Opacity < 1.0 || AnimatesOpacity || CreatesTransformContext || TransformStyle == TransformStyleKind.Preserve3D || !Filter.IsNone || !BackdropFilter.IsNone
-        || ClipPath.Kind != ClipPathKind.None || Mask.HasImages || MixBlendMode != BlendMode.Normal || Isolate;
+        || ClipPath.Kind != ClipPathKind.None || Mask.HasImages || MixBlendMode != BlendMode.Normal || Isolate || HasHostScope;
 
     private static void InitEffects(ref ComputedValues v)
     {

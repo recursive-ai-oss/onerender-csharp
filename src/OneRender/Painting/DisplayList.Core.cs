@@ -12,11 +12,11 @@ public sealed partial class DisplayList
 
     private static bool IsPush(ItemKind k) =>
         k is ItemKind.PushClipRect or ItemKind.PushClipRoundedRect or ItemKind.PushClipPath or ItemKind.PushTransform or ItemKind.PushGroup or ItemKind.BeginTag
-            or ItemKind.PushTransform3D or ItemKind.PushFilter or ItemKind.PushMask or ItemKind.PushMaskLayer;
+            or ItemKind.PushTransform3D or ItemKind.PushFilter or ItemKind.PushMask or ItemKind.PushMaskLayer or ItemKind.PushHostScope;
 
     private static bool IsPop(ItemKind k) =>
         k is ItemKind.PopClip or ItemKind.PopTransform or ItemKind.PopGroup or ItemKind.EndTag
-            or ItemKind.PopFilter or ItemKind.PopMask or ItemKind.PopMaskLayer;
+            or ItemKind.PopFilter or ItemKind.PopMask or ItemKind.PopMaskLayer or ItemKind.PopHostScope;
 
     private static int FamilyOf(ItemKind push) => push switch
     {
@@ -26,6 +26,7 @@ public sealed partial class DisplayList
         ItemKind.PushFilter => 4,
         ItemKind.PushMask => 5,
         ItemKind.PushMaskLayer => 6,
+        ItemKind.PushHostScope => 7,
         _ => 3,
     };
 
@@ -145,6 +146,7 @@ public sealed partial class DisplayList
             case ItemKind.PushGroup:
             case ItemKind.PushMask:
             case ItemKind.PushMaskLayer:
+            case ItemKind.PushHostScope:
                 s.Ctx = Mix(parent.Ctx, rec.ContentHash);
                 break;
             case ItemKind.PushFilter:
@@ -749,4 +751,13 @@ public sealed class RetainedDisplayList
     /// <param name="id">The id of the group item.</param>
     /// <param name="opacity">The new opacity, 0 to 1.</param>
     public void PatchOpacity(ItemId id, float opacity) => _front.PatchOpacity(id, opacity, Damage);
+
+    /// <summary>
+    /// Tells the list that the host replaced the pixels behind an image handle and kept their size. Every item of the current list that
+    /// draws the handle (plain, tiled, the pieces of a nine-slice) adds its bounds to <see cref="Damage"/>. Nothing is laid out or painted
+    /// again, no item changes, and the call allocates nothing; the cost is one pass over the items.
+    /// </summary>
+    /// <param name="image">The handle whose pixels changed.</param>
+    /// <returns>The number of items that draw the handle; 0 means nothing needs redrawing.</returns>
+    public int InvalidateImage(ImageHandle image) => _front.InvalidateImage(image, Damage);
 }

@@ -330,6 +330,9 @@ public sealed partial class DisplayList
         PutRect(rect);
         PutColor(ClampColor(color));
         _items[_count - 1].A = StoreString(markup);
+        ulong key = SvgKeyOf(markup, ClampColor(color));
+        _items[_count - 1].B = (int)(uint)key;
+        _items[_count - 1].C = (int)(uint)(key >> 32);
         _requiredMinor = Math.Max(_requiredMinor, 2);
         Finish(_count - 1);
     }

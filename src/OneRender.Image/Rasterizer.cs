@@ -327,6 +327,10 @@ internal sealed partial class Rasterizer : IDisposable
                     }
 
                     break;
+                case ItemKind.PushHostScope:
+                case ItemKind.PopHostScope:
+                    // A host scope names a pass for a host that draws the list itself; the reference rasterizer draws the content as it is.
+                    break;
                 default:
                     // Tags carry structure for other backends; they have no pixels.
                     break;

@@ -6,7 +6,8 @@
 #
 # What it runs (BenchmarkDotNet, MemoryDiagnoser, Release):
 #   bench/OneRender.Benchmarks            IncrementalBenchmarks (idle frame, hover, text change, subtree relayout) and
-#                                         MotionBenchmarks (100 transform/opacity animations; the same plus width/color animations; idle clock)
+#                                         MotionBenchmarks (100 transform/opacity animations; the same plus width/color animations; idle clock;
+#                                         a CSS transition on one row's width ticked every frame)
 #   bench/OneRender.Benchmarks.OneGameUi  the same four changes through OneGame.UI and through the engine, side by side; and the like-for-like
 #                                         rows: OneGame.UI's own flex-only page built through the engine's builder front end (FlexHudBenchmarks),
 #                                         after a check that the two pages have the same nodes and border boxes (equivalence.txt)

@@ -121,6 +121,7 @@ internal static class DisplayListTarget
             case 0: l.PopClip(); break;
             case 1: l.PopTransform(); break;
             case 2: l.PopGroup(); break;
+            case 4: l.PopHostScope(); break;
             default: l.EndTag(); break;
         }
     }
@@ -280,6 +281,15 @@ internal static class DisplayListTarget
                 }
 
                 break;
+            case 18:
+                {
+                    ItemId id = r.Id();
+                    l.PushHostScope(id, r.Byte() - 128);
+                    Stack.Add(4);
+                    break;
+                }
+
+            case 19: PopIf(l, 4); break;
             default:
                 // Everything else is a plain fill so that most random bytes still make progress.
                 l.FillRect(r.Id(), r.Rect(), r.Color());
@@ -339,8 +349,8 @@ internal static class DisplayListTarget
                 throw new InvalidOperationException("parent after child at " + i);
             }
 
-            bool push = it.Kind is ItemKind.PushClipRect or ItemKind.PushClipRoundedRect or ItemKind.PushClipPath or ItemKind.PushTransform or ItemKind.PushGroup or ItemKind.BeginTag;
-            bool pop = it.Kind is ItemKind.PopClip or ItemKind.PopTransform or ItemKind.PopGroup or ItemKind.EndTag;
+            bool push = it.Kind is ItemKind.PushClipRect or ItemKind.PushClipRoundedRect or ItemKind.PushClipPath or ItemKind.PushTransform or ItemKind.PushGroup or ItemKind.BeginTag or ItemKind.PushHostScope;
+            bool pop = it.Kind is ItemKind.PopClip or ItemKind.PopTransform or ItemKind.PopGroup or ItemKind.EndTag or ItemKind.PopHostScope;
             if (push && (it.MatchIndex <= i || l[it.MatchIndex].MatchIndex != i))
             {
                 throw new InvalidOperationException("push/pop mismatch at " + i);

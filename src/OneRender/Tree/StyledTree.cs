@@ -110,6 +110,8 @@ public sealed partial class StyledTree
         _chgOverflow = false;
         _structureEpoch++;
         ClipPaths.Clear();
+        _nameToNode.Clear();
+        _nodeToName.Clear();
         Styles.Diagnostics.Clear();
     }
 
