@@ -4,7 +4,10 @@ using OneRender;
 using OneRender.Fonts;
 using OneRender.Image;
 using OneRender.Painting;
+using OneRender.Layout;
 using OneRender.Pdf;
+using OneRender.Style;
+using OneRender.Text;
 using OneRender.Tree;
 using RecursiveAI.OneHtml;
 using RecursiveAI.OneHtml.Css;
@@ -12,7 +15,7 @@ using RecursiveAI.OneHtml.Css;
 string[] names = [EngineInfo.Name, ImageBackendInfo.Name, PdfBackendInfo.Name];
 Console.WriteLine(string.Join(' ', names));
 // The geometry entry point and the HTML-to-pixels path must survive trimming and AOT as well.
-int boxes = GeometryProbe.LayOut("<p>x</p>", null, null, 800, 600, new DefaultFontProvider()).Count;
+int boxes = GeometryProbe.LayOut("<p>x</p>", null, null, 800, 600, FontProviders.CreateDefault()).Count;
 RgbaImage page = HtmlRender.ToImage("<body style='margin:0'><div style='width:20px;height:10px;background:#f00'></div></body>", new HtmlRenderOptions { Width = 32, Height = 32 });
 bool pageOk = page.Pixels[((5 * 32) + 5) * 4] == 255 && page.Pixels[((5 * 32) + 5) * 4 + 1] == 0 && page.Pixels[((20 * 32) + 5) * 4 + 1] == 255;
 
@@ -35,7 +38,7 @@ if (fragments.Root.IsNull || fragments.Root.BorderBox.Width != 800)
 // Positioned boxes, overflow, sticky positioning and the in-place scroll patch must survive trimming and AOT as well.
 HtmlPage scrollPage = HtmlPage.Create(
     "<body style='margin:0'><div style='position:relative;overflow:auto;width:50px;height:20px'><div style='position:absolute;left:5px;top:60px;width:10px;height:10px;background:#00f'></div><div style='height:100px'></div></div><div style='position:sticky;top:0;height:5px;background:#f00'></div><div style='height:200px'></div></body>",
-    new HtmlPageOptions(new DefaultFontProvider()) { ViewportWidth = 100, ViewportHeight = 50 });
+    new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 100, ViewportHeight = 50 });
 var scrollPainter = new Painter();
 var scrollList = new RetainedDisplayList();
 scrollPainter.Paint(scrollPage.Fragments, scrollList, new PaintOptions(100, 50) { Scroll = scrollPage.Scroll });
@@ -72,9 +75,32 @@ list.DrawGlyphRun(ItemId.Of(4), font, 12f, 4f, 14f, new PaintColor(0f, 0f, 0f, 1
 RgbaImage image = DisplayListRasterizer.Render(list, 32, 32);
 bool painted = image.Pixels[((16 * 32) + 16) * 4 + 3] == 255 && image.Pixels[(((5 * 32) + 10) * 4) + 1] < 50;
 Console.WriteLine($"rasterized {image.Width}x{image.Height} painted={painted}");
-return names.Length == 3 && sfnt && painted && pageOk && scrollOk && boxes >= 3 ? 0 : 1;
+// The text service: match, fall back, shape (ligature, kerning, Hebrew fallback) and decode a WOFF2 font (Brotli).
+IFontProvider fonts = FontProviders.CreateDefault();
+var textTree = new StyledTree();
+StyledNode textRoot = textTree.AddRoot("div", new StyleDeclaration().Set("font-family", "Calibri, sans-serif"));
+ComputedValues style = textRoot.Values;
+ShapedText run = fonts.Shape("Office fi AVA \u05D0\u05D1", in style);
+bool shaped = run.GlyphCount > 5 && run.Width > 0 && run.Segments.Length == 2 && run.MissingGlyphCount == 0;
+bool again = ReferenceEquals(run, fonts.Shape("Office fi AVA \u05D0\u05D1", in style));
+
+using System.IO.Stream woff2 = typeof(NoFonts).Assembly.GetManifestResourceStream("hebrew.woff2")!;
+var woff2Bytes = new byte[woff2.Length];
+woff2.ReadExactly(woff2Bytes);
+FontLoadResult decoded = FontLoader.Load(woff2Bytes);
+bool woff2Ok = decoded.Status == FontLoadStatus.Ok && decoded.Face!.HasGlyph(0x05D0);
+Console.WriteLine($"shaped {run.GlyphCount} glyphs, width {run.Width:F2}, cached {again}, woff2 {decoded.Status}");
+
+
+return names.Length == 3 && sfnt && painted && pageOk && boxes >= 3 && scrollOk && shaped && again && woff2Ok ? 0 : 1;
 
 internal sealed class NoFonts : OneRender.Layout.IFontProvider
 {
-    public OneFont.FontFallbackChain GetFallbackChain(in OneRender.Style.ComputedValues style) => throw new NotSupportedException();
+    public OneRender.Text.FontCatalog Catalog => throw new NotSupportedException();
+
+    public OneRender.Text.ResolvedFontList Resolve(in OneRender.Style.ComputedValues style) => throw new NotSupportedException();
+
+    public OneRender.Text.ShapedText Shape(ReadOnlySpan<char> text, in OneRender.Style.ComputedValues style, bool rightToLeft = false) => throw new NotSupportedException();
+
+    public OneRender.Text.FontMetricsInfo GetMetrics(in OneRender.Style.ComputedValues style) => throw new NotSupportedException();
 }

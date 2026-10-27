@@ -24,7 +24,7 @@ public sealed class HtmlRenderOptions
     /// </summary>
     public Func<string, byte[]?>? Resources { get; init; }
 
-    /// <summary>The fonts to use; null uses <see cref="DefaultFontProvider"/>.</summary>
+    /// <summary>The fonts to use; null uses <see cref="FontProviders.ForCurrentThread"/>.</summary>
     public IFontProvider? Fonts { get; init; }
 
     /// <summary>The layout to run; null uses the engine's default.</summary>
@@ -40,7 +40,7 @@ public sealed class HtmlRenderOptions
 /// </summary>
 public static class HtmlRender
 {
-    private static readonly DefaultFontProvider s_fonts = new();
+    
 
     /// <summary>Renders <paramref name="html"/> to an RGBA image of the viewport.</summary>
     /// <param name="html">The document source, decoded to text.</param>
@@ -59,7 +59,7 @@ public static class HtmlRender
         ArgumentOutOfRangeException.ThrowIfLessThan(options.Height, 1);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(options.Height, 16384);
 
-        var pageOptions = new HtmlPageOptions(options.Fonts ?? s_fonts)
+        var pageOptions = new HtmlPageOptions(options.Fonts ?? FontProviders.ForCurrentThread())
         {
             ViewportWidth = options.Width,
             ViewportHeight = options.Height,

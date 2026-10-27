@@ -27,6 +27,8 @@ Redistributions of source code must retain the above copyright notice, this list
 
 `tests/OneRender.Tests/testdata/wpt-block/css/` also holds unmodified copies of one reftest and its reference from `css/CSS2/normal-flow/`, used by the block layout tests. The licence notice below applies to them as well.
 
+`tests/OneRender.Tests/testdata/wpt-floats/css/` holds unmodified copies of web-platform-tests reftests from `css/CSS2/floats/` and `css/CSS2/floats-clear/` with their references (some under `css/CSS2/reference/` and `css/reference/`), taken at the commit in `tools/wpt/WPT_COMMIT`. `tests.txt` beside them is ours. They are used only by the tests, and the licence notice below applies to them as well.
+
 `tests/OneRender.Tests/testdata/wpt-style/css/` holds unmodified copies of the web-platform-tests files named `*-valid.html`, `*-invalid.html` and `*-computed.html` that exercise a property the style pipeline models, taken at the commit in `tools/wpt/WPT_COMMIT` by `tools/wpt/select-style-tests.sh`. `expected-failures.tsv` beside them is ours. They are used only by the tests.
 
 - Source: https://github.com/web-platform-tests/wpt, `LICENSE.md` (3-Clause BSD)
@@ -52,3 +54,12 @@ The tools under `tools/geomdiff/` drive Chrome for Testing 156.0.8078.47 as a bl
 - Flowbite: https://github.com/themesberg/flowbite, `LICENSE.md` (MIT)
 
 The MIT notice for each: "The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software."
+
+## Noto Sans subsets (test use only)
+
+`testdata/fonts/` holds small Noto Sans test fonts (Latin/Greek/Cyrillic and bidi coverage, Arabic, Hebrew) used by the text tests and the font-data fuzz seeds. They are never part of any package.
+
+- Source: Google Noto fonts, <https://github.com/notofonts> and <https://github.com/googlefonts/noto-fonts>, licensed under the SIL Open Font License 1.1; the copyright lines and licence text are in `testdata/fonts/OFL.txt`.
+- Modified: the `.ttf` files are subsets of the upstream fonts (fewer glyphs, hinting removed); `NotoSansHebrew-Subset-Regular.woff` and `.woff2` are format conversions of the Hebrew subset made by `testdata/fonts/make-web-fonts.py` (fontTools). The subsets were taken from the OneFont test data.
+- `NotoSans-Bidi-Subset.ttf` is modified further: it merges the Noto Sans, Noto Sans Arabic and Noto Sans Hebrew subsets into one font.
+- SHA-256: `NotoSans-Bidi-Subset.ttf` 7e55e394…cbef520, `NotoSansArabic-Subset-Regular.ttf` dc004195…ce0cae1, `NotoSansHebrew-Subset-Regular.ttf` 89d6ab25…d1e898 (full values: `sha256sum testdata/fonts/*`).

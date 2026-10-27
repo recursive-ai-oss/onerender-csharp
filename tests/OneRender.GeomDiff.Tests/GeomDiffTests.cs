@@ -185,7 +185,7 @@ public class GeomDiffTests
     [Fact]
     public void ProbeReportsElementBoxesByPath()
     {
-        var fonts = new OneRender.Image.DefaultFontProvider();
+        var fonts = OneRender.Image.FontProviders.CreateDefault();
         IReadOnlyList<ElementBox> boxes = GeometryProbe.LayOut("<body style='margin:0'><div style='height:10px'></div><div style='height:20px'><p style='margin:0;height:5px'></p></div></body>", null, null, 1280, 800, fonts);
         Assert.Contains(boxes, b => b.Path == "0" && b.Tag == "html");
         Assert.Contains(boxes, b => b.Path == "0/1" && b.Tag == "body");

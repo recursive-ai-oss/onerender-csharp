@@ -6,6 +6,8 @@ using RecursiveAI.OneHtml;
 using RecursiveAI.OneHtml.Css;
 using OneRender.Image;
 using OneRender.Painting;
+using OneRender.Style;
+using OneRender.Text;
 
 Console.WriteLine(EngineInfo.Name);
 FontFaceInfo face = DefaultFonts.GetFaces("Carlito")[0];
@@ -30,7 +32,7 @@ if (fragments.Root.IsNull || fragments.Root.BorderBox.Width != 800)
 // Positioning, overflow and the in-place scroll patch too.
 HtmlPage scrollPage = HtmlPage.Create(
     "<body style='margin:0'><div style='position:relative;overflow:auto;width:50px;height:20px'><div style='position:absolute;top:60px;width:10px;height:10px'></div><div style='height:100px'></div></div><div style='position:sticky;top:0;height:5px'></div><div style='height:200px'></div></body>",
-    new HtmlPageOptions(new DefaultFontProvider()) { ViewportWidth = 100, ViewportHeight = 50 });
+    new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 100, ViewportHeight = 50 });
 var scrollPainter = new Painter();
 var scrollList = new RetainedDisplayList();
 scrollPainter.Paint(scrollPage.Fragments, scrollList, new PaintOptions(100, 50) { Scroll = scrollPage.Scroll });
@@ -43,7 +45,24 @@ list.FillRoundedRect(ItemId.Of(1), new RectF(2, 2, 28, 28), CornerRadii.Uniform(
 RgbaImage image = DisplayListRasterizer.Render(list, 32, 32);
 Console.WriteLine($"rasterized {image.Width}x{image.Height} red={image.Pixels[((16 * 32) + 16) * 4]}");
 
+// The text service in the browser runtime: shape with fallback and decode a WOFF2 font (Brotli).
+var textTree = new StyledTree();
+StyledNode textRoot = textTree.AddRoot("div", new StyleDeclaration().Set("font-family", "Calibri"));
+ComputedValues style = textRoot.Values;
+ShapedText run = FontProviders.CreateDefault().Shape("Office fi AVA \u05D0", in style);
+Console.WriteLine($"shaped {run.GlyphCount} glyphs, width {run.Width:F2}");
+using System.IO.Stream woff2 = typeof(NoFonts).Assembly.GetManifestResourceStream("hebrew.woff2")!;
+var woff2Bytes = new byte[woff2.Length];
+woff2.ReadExactly(woff2Bytes);
+Console.WriteLine($"woff2 {FontLoader.Load(woff2Bytes).Status}");
+
 internal sealed class NoFonts : OneRender.Layout.IFontProvider
 {
-    public OneFont.FontFallbackChain GetFallbackChain(in OneRender.Style.ComputedValues style) => throw new NotSupportedException();
+    public OneRender.Text.FontCatalog Catalog => throw new NotSupportedException();
+
+    public OneRender.Text.ResolvedFontList Resolve(in OneRender.Style.ComputedValues style) => throw new NotSupportedException();
+
+    public OneRender.Text.ShapedText Shape(ReadOnlySpan<char> text, in OneRender.Style.ComputedValues style, bool rightToLeft = false) => throw new NotSupportedException();
+
+    public OneRender.Text.FontMetricsInfo GetMetrics(in OneRender.Style.ComputedValues style) => throw new NotSupportedException();
 }

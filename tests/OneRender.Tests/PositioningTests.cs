@@ -1,5 +1,5 @@
 using System;
-using OneFont;
+using OneRender.Text;
 using OneRender.Layout;
 using OneRender.Style;
 using OneRender.Tests.Support;
@@ -13,7 +13,13 @@ public class PositioningTests
 {
     private sealed class NoFonts : IFontProvider
     {
-        public FontFallbackChain GetFallbackChain(in ComputedValues style) => throw new NotSupportedException();
+        public FontCatalog Catalog => throw new NotSupportedException();
+
+        public ResolvedFontList Resolve(in ComputedValues style) => throw new NotSupportedException();
+
+        public ShapedText Shape(ReadOnlySpan<char> text, in ComputedValues style, bool rightToLeft = false) => throw new NotSupportedException();
+
+        public FontMetricsInfo GetMetrics(in ComputedValues style) => throw new NotSupportedException();
     }
 
     private sealed class FixedImages(double w, double h) : IResourceResolver
@@ -472,6 +478,46 @@ public class PositioningTests
         Assert.Equal(new Rect(100, 100, 120, 120), f.Root.BorderBox);
         Assert.True(f.TryGetBorderBox(p.Document.GetElementById("a"), out Rect a));
         Assert.Equal(new Rect(110, 110, 100, 5), a);
+    }
+
+    // ---- with floats ----
+
+    [Fact]
+    public void AbsoluteBoxInsideAFloatIsPlacedAgainstTheFloatWhenItIsPositioned()
+    {
+        Lay l = Run("<div id=f style='float:right;position:relative;width:100px;height:50px;margin:10px'><div id=a style='position:absolute;right:0;bottom:0;width:20px;height:5px'></div></div>");
+        Assert.Equal(new Rect(690, 10, 100, 50), l["f"]);
+        Assert.Equal(new Rect(770, 55, 20, 5), l["a"]);
+    }
+
+    [Fact]
+    public void AbsoluteBoxInsideAFloatUsesItsStaticPositionAndDoesNotMoveFloatsOrLines()
+    {
+        Lay l = Run("<div id=f style='float:left;width:100px;height:50px'><div style='height:7px'></div><div id=a style='position:absolute;width:20px;height:5px'></div></div><div id=b style='height:10px'></div>");
+        Assert.Equal(new Rect(0, 7, 20, 5), l["a"]);
+        Assert.Equal(0, l["b"].Y);
+    }
+
+    [Fact]
+    public void AbsoluteBoxNextToAFloatIgnoresTheFloat()
+    {
+        Lay l = Run("<div style='float:left;width:100px;height:50px'></div><div id=a style='position:absolute;width:20px;height:5px'></div>");
+        Assert.Equal(new Rect(0, 0, 20, 5), l["a"]);
+    }
+
+    [Fact]
+    public void RelativeFloatIsDrawnShiftedAndTakesItsOwnPlaceForOthers()
+    {
+        Lay l = Run("<div id=a style='float:left;position:relative;left:30px;top:4px;width:100px;height:20px'></div><div id=b style='float:left;width:50px;height:20px'></div>");
+        Assert.Equal(new Rect(30, 4, 100, 20), l["a"]);
+        Assert.Equal(new Rect(100, 0, 50, 20), l["b"]);
+    }
+
+    [Fact]
+    public void RelativeFloatShiftCountsAsOverflow()
+    {
+        Lay l = Run("<div id=p style='height:10px'><div style='float:left;position:relative;left:900px;top:0;width:10px;height:10px'></div></div>");
+        Assert.Equal(910, l.F.Root.ScrollableOverflow.Right); // the float belongs to the root block formatting context
     }
 
     // ---- bounds and determinism ----

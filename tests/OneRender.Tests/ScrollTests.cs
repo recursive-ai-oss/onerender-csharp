@@ -31,7 +31,7 @@ public class ScrollTests
     private static HtmlPage Page(string body, out CountingLayout layout, int w = 200, int h = 100)
     {
         layout = new CountingLayout();
-        return HtmlPage.Create(Head + body, new HtmlPageOptions(new DefaultFontProvider()) { ViewportWidth = w, ViewportHeight = h, Layout = layout });
+        return HtmlPage.Create(Head + body, new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = w, ViewportHeight = h, Layout = layout });
     }
 
     private static Box BoxOf(HtmlPage page, string id) =>

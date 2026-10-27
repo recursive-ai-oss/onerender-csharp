@@ -1,3 +1,4 @@
+using OneRender.Text;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -21,6 +22,7 @@ internal static class Targets
         ["tree"] = Tree,
         ["html"] = Html,
         ["layout"] = Layout,
+        ["positioning"] = Positioning,
     };
 
     private static readonly string[] PropertyNames =
@@ -181,7 +183,54 @@ internal static class Targets
 
     private sealed class NoFonts : IFontProvider
     {
-        public FontFallbackChain GetFallbackChain(in ComputedValues style) => throw new NotSupportedException("the layout target uses no text");
+        public FontCatalog Catalog => throw new NotSupportedException();
+
+        public ResolvedFontList Resolve(in ComputedValues style) => throw new NotSupportedException();
+
+        public ShapedText Shape(ReadOnlySpan<char> text, in ComputedValues style, bool rightToLeft = false) => throw new NotSupportedException();
+
+        public FontMetricsInfo GetMetrics(in ComputedValues style) => throw new NotSupportedException();
+    }
+
+    /// <summary>
+    /// As <c>html</c>, then block layout with floats and clearance at a width taken from the first byte. A second, fresh engine and
+    /// fragment tree must give the same fragments as the retained ones laid out again.
+    /// </summary>
+    private static void Layout(ReadOnlySpan<byte> data)
+    {
+        if (data.Length == 0)
+        {
+            return;
+        }
+
+        string text = Decode(data);
+        int ff = text.IndexOf('', StringComparison.Ordinal);
+        string css = ff < 0 ? string.Empty : text[(ff + 1)..];
+        string html = ff < 0 ? text : text[..ff];
+        Document doc = Document.Parse("<style>" + css.Replace("</", "<\\/", StringComparison.Ordinal) + "</style>" + html);
+        DocumentStyles styles = DocumentStyles.Create(doc, new StyleContext(), new StyleSourceOptions { IncludeUserAgentSheet = true });
+        var tree = new StyledTree(null, new TreeLimits { MaxNodes = 1 << 14, MaxDepth = 256, MaxTextLength = 1 << 18 });
+        new HtmlFrontEnd(tree).Build(styles);
+        var boxes = new BoxTree(tree);
+        boxes.Build();
+        double width = 40 + ((data[0] >> 1) * 7);
+        var input = new LayoutInput(width, double.NaN, new NoFonts());
+        var engine = new BlockLayoutEngine();
+        var fragments = new FragmentTree(boxes);
+        engine.Layout(boxes, input, fragments);
+        string first = fragments.Dump();
+        engine.Layout(boxes, input, fragments);
+        if (!string.Equals(first, fragments.Dump(), StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("laying out again into the retained fragment tree gave different fragments");
+        }
+
+        var fresh = new FragmentTree(boxes);
+        new BlockLayoutEngine().Layout(boxes, input, fresh);
+        if (!string.Equals(first, fresh.Dump(), StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("a fresh layout gave different fragments");
+        }
     }
 
     /// <summary>
@@ -189,7 +238,7 @@ internal static class Targets
     /// result is painted with scroll positions taken from the input, and the scroll patch must equal a fresh paint. Finite geometry
     /// and a repeatable layout are the invariants.
     /// </summary>
-    private static void Layout(ReadOnlySpan<byte> data)
+    private static void Positioning(ReadOnlySpan<byte> data)
     {
         if (data.Length < 2)
         {

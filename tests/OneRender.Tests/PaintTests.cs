@@ -206,7 +206,7 @@ public class PaintTests
     [Fact]
     public void TextPaintsGlyphsInTheTextColor()
     {
-        HtmlPage page = HtmlPage.Create(Reset + "<p style='margin:0;color:#800000;font-size:20px'>Hello</p>", new HtmlPageOptions(new DefaultFontProvider()) { ViewportWidth = 100, ViewportHeight = 40, Layout = new StackingLayout() });
+        HtmlPage page = HtmlPage.Create(Reset + "<p style='margin:0;color:#800000;font-size:20px'>Hello</p>", new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 100, ViewportHeight = 40, Layout = new StackingLayout() });
         var list = new DisplayList();
         page.Paint(list);
         int runs = 0;
@@ -255,7 +255,7 @@ public class PaintTests
     // ---------------------------------------------------------------- ids, damage, allocation
 
     private static HtmlPage Page(string body, int size = 100) =>
-        HtmlPage.Create(Reset + body, new HtmlPageOptions(new DefaultFontProvider()) { ViewportWidth = size, ViewportHeight = size });
+        HtmlPage.Create(Reset + body, new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = size, ViewportHeight = size });
 
     private static string ThreeBoxes(string middleColor) =>
         Box("width:30px;height:20px;background:red") + Box("width:40px;height:20px;background:" + middleColor, Box("width:10px;height:10px;background:blue")) + Box("width:50px;height:20px;background:green");

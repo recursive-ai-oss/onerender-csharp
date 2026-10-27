@@ -1,0 +1,102 @@
+# Text service (`OneRender.Text`)
+
+The service inline layout calls to turn computed font properties and text into shaped glyphs. It is independent of the box and
+fragment trees; layout reaches it through `IFontProvider` (`OneRender.Layout`), and `TextFontProvider` is the engine's
+implementation. OneFont does the shaping, bidi, line-break opportunities and grapheme segmentation; this layer adds CSS font
+matching, `@font-face`, per-character fallback, a shaped-run cache and metrics.
+
+```
+ComputedValues ─▶ TextFontProvider ─▶ FontRequest ─▶ FontCatalog.Resolve ─▶ ResolvedFontList (per-char fallback)
+                        │                                                        │
+                        └──────── Shape(text) ─▶ TextShaper (bounded cache) ◀────┘ ─▶ ShapedText
+```
+
+## What layout calls
+
+| Call | Does | Frame cost |
+|---|---|---|
+| `IFontProvider.Resolve(in style)` | Font matching (CSS Fonts 4 §5.2) for the style's family list, weight, style and stretch. | 0 B after first use of the style |
+| `IFontProvider.Shape(text, in style, rtl)` | Shapes one bidi-level run with fallback; returns a cached `ShapedText`. | 0 B on a cache hit |
+| `IFontProvider.GetMetrics(in style)` | `FontMetricsInfo` of the primary face at `font-size`. | 0 B |
+| `TextFontProvider.Shaper.ShapeInto(run, text, request, rtl)` | Reshapes into a retained `ShapedText` buffer (no cache). | 0 B once the buffer has grown |
+| `TextAnalysis` | `GetBidiRuns` (UAX #9), `GetVisualOrder`, `GetLineBreakOpportunities` (UAX #14), `GetGraphemeStarts`. | caller-provided buffers |
+| `IFontProvider.Catalog` | Add fonts (`AddFont`), `@font-face` rules (`AddFontFace`), generic mapping, resolver, system-font provider, diagnostics. | document path |
+
+Providers, catalogs and shapers are single-thread objects. The happy path is `OneRender.Image.FontProviders`:
+`CreateDefault(resolver, systemFonts)` builds a `TextFontProvider` with the packaged faces and their aliases
+(`DefaultFonts.TryResolveFamily`) registered, and `ForCurrentThread()` returns one cached per thread. `HtmlRender.ToImage`,
+`HtmlPage` callers, `GeometryProbe` and the WPT and geometry tools use it. Page `@font-face` rules are added to
+`provider.Catalog` via `FontFaceRule.FromNode` or `FontFaceRule.Create`. Adding a face invalidates resolved lists
+(`FontCatalog.Version` increments), and cached runs for stale lists are no longer returned.
+
+## Matching
+
+- Family list in order. A generic keyword resolves through `SetGenericFamily` if the host set one, otherwise through the aliases
+  (with `DefaultFonts`: `sans-serif`, `system-ui` and `ui-sans-serif` → Liberation Sans, `serif` → Liberation Serif,
+  `monospace` → Liberation Mono). Names are compared ASCII case-insensitively and go through the aliases first (Arial,
+  Helvetica, Times New Roman, Courier New, Calibri, Cambria).
+- Within a family, CSS Fonts 4 §5.2: stretch first, then style, then weight, using the spec's search directions
+  (weight 400/500 special cases, lighter below / heavier above the target).
+- After the request's list come the default faces: sans-serif, serif, monospace, then other registered families.
+- Synthetic bold applies when the request weight is at least 600 and the chosen face's heaviest weight is under 600; synthetic
+  italic slants by 14° (or the requested oblique angle) when the chosen face is upright. Both obey `font-synthesis` and are
+  reported as flags on `ResolvedFace` for paint; the text service never alters glyph outlines or advances.
+- `local()` consults only the host's `ISystemFontProvider` (off by default); it never sees the registered faces.
+- Computed-value conversion (`TextFontProvider.GetRequest`): a `font-size` of 0 or less becomes 0.001 px, weight is clamped to
+  1–1000. The request cache holds 4096 distinct font property sets and is cleared when full.
+
+## `@font-face`
+
+`FontFaceRule` carries `font-family`, `src`, `font-weight`/`-style`/`-stretch` (ranges, with `auto` = 400 / normal / 100%;
+reversed ranges are swapped), `unicode-range` and `font-display` (recorded only: there is no clock-driven swap).
+`src` entries are tried in order: `url()` through the host's `IFontResourceResolver` (the engine never fetches; `data:` URLs
+are decoded in place), `local()` through the system provider, `format()`/`tech()` filtering (unknown formats, colour, AAT and
+palette tech are skipped; `variations` is accepted and the default instance is used). Faces load lazily the first time a
+character needs them. A face outside its `unicode-range` is skipped for that character. Failures become diagnostics, never
+exceptions.
+
+`FontLoader.Load(bytes, limits)` reads TrueType/OpenType, WOFF (zlib) and WOFF2 (Brotli, with the glyf/loca and hmtx
+transforms). `FontLimits` bounds input size (32 MiB), decoded size (64 MiB) and table count (256) before anything is
+allocated. Runtimes without a native Brotli (browser WebAssembly) report WOFF2 as `UnsupportedFormat` with a message.
+
+## Fallback and diagnostics
+
+`ResolvedFontList.Select(codePoint)` walks the list (cluster-aware: a base character and its combining marks stay in one face
+where one face covers the cluster). Private-use characters skip the generic and default faces. A character no face covers
+renders the primary face's `.notdef` and records a `TextDiagnostic` of kind missing glyph whose `Package` names the opt-in
+package that would cover it (`RecursiveAI.OneRender.Fonts.Noto.<Script>`, `.Fonts.Cjk`, `.Fonts.Emoji`; the table is
+`FontPackages`). `TextDiagnostics` keeps 512 entries and counts the rest in `Dropped`. Canonical-equivalence matching
+(Fonts 4 §5.4's normalization step) is not done.
+
+## `ShapedText`
+
+Glyphs are in **visual (display) order**, in CSS px, **y down** from the baseline origin, advances unrounded (rounding policy is
+decided against the Chrome differential).
+
+- `GlyphIds`, `X`, `Y`, `Advances`, `GlyphClusters` (per glyph: UTF-16 offset of its cluster in `Text`), `Width`, `Size`,
+  `RightToLeft`.
+- `Clusters`: `GlyphCluster` records (text range, glyph range, advance, missing flag) that tile the text; line breaking cuts runs
+  at cluster boundaries.
+- `Segments`: maximal glyph ranges in one face (`ResolvedFace` with its synthetic bold/italic flags). The display list's glyph run
+  item takes one segment: the OneFont `FontFace`, glyph ids, positions, source text and cluster map.
+- `MissingGlyphCount`, `FirstMissingGlyph`.
+
+Kerning and common ligatures are on by default; `FontFeatureSettings` carries `font-kerning`, `font-variant-*` subsets and
+`font-feature-settings` tags. Text over `TextShaper.MaxRunLength` (1 Mi code units) throws `ArgumentException`.
+
+**Cache.** `TextShaper` keeps a 4-way set-associative table (default 4096 entries, LRU within a set) keyed on text, matched
+list, size and direction; texts up to 2048 code units are cached. A hit returns the same `ShapedText` object (do not modify it).
+`ClearCache` empties it.
+
+## Metrics
+
+`FontMetricsInfo` (px at the requested size): ascent, descent, line gap (the horizontal header; the OS/2 typographic metrics when the font sets
+USE_TYPO_METRICS or has no header values; the Windows metrics as the last resort), x-height, cap-height, underline and strikethrough position and thickness, zero advance, and the
+`size-adjust`/`ascent-override`/`descent-override`/`line-gap-override` descriptors of an `@font-face` face applied. Values are
+not rounded. `font-size-adjust` is computed by layout from `XHeight`, `CapHeight` and `ZeroAdvance`.
+
+## Limits and determinism
+
+Hostile font data fails with a status and detail, at the `FontLimits` above. A fuzz target (`fuzz/`, target `fontdata`) drives
+the loader, descriptor parser, matching, fallback and shaping. Nothing in the service reads a clock, the file system or the
+network; the same fonts and inputs give the same runs on every platform.
