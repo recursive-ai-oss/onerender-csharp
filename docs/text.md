@@ -45,6 +45,20 @@ Providers, catalogs and shapers are single-thread objects. The happy path is `On
 - Computed-value conversion (`TextFontProvider.GetRequest`): a `font-size` of 0 or less becomes 0.001 px, weight is clamped to
   1–1000. The request cache holds 4096 distinct font property sets and is cleared when full.
 
+## First available font, `ex`, `ch`, `ic`
+
+The first available font of a style (CSS Fonts 4 §5.1) is the first listed family with a usable face whose `unicode-range`
+includes U+0020; a family limited to other characters is skipped even when listed first. The default faces after the author's list
+do not count in this pass. If no listed family qualifies, the old rule applies: the first family with a space glyph, else with any
+usable face. `PrimaryFace` and the strut metrics use it.
+
+The style computer asks the font provider for that face's metrics once per computed style, right after `font-family`, `font-size`,
+`font-weight`, `font-style` and `font-stretch` are known, and resolves `ex` (x-height), `ch` (advance of "0") and `ic` (advance of
+U+6C34) from them (CSS Values 4 §6.1.1). Where the face lacks the measure, the spec's fallbacks apply: 0.5 em for `ex` and `ch`, 1 em
+for `ic`. `font-size` itself is computed in the parent's font, so its `ex` and `ch` use the parent's face. The font set must be
+complete before styles are computed (the page registers `@font-face` rules first); cached styles keep the numbers they were
+computed with. A page built without a font provider uses the fallbacks.
+
 ## `@font-face`
 
 `FontFaceRule` carries `font-family`, `src`, `font-weight`/`-style`/`-stretch` (ranges, with `auto` = 400 / normal / 100%;

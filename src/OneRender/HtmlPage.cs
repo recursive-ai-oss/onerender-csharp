@@ -160,6 +160,7 @@ public sealed partial class HtmlPage
     {
         var table = new StyleTable();
         table.SetViewport(options.ViewportWidth, options.ViewportHeight);
+        table.Fonts = options.Fonts;
         var styled = new StyledTree(table) { Resolver = options.Replaced };
         new HtmlFrontEnd(styled).Build(styles, cancellationToken);
         var boxes = new BoxTree(styled);

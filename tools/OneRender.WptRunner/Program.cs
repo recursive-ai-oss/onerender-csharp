@@ -14,8 +14,16 @@ internal sealed class EngineRenderer : IReftestRenderer
 
     public EngineRenderer(ReftestStore store) => _store = store;
 
-    public RgbaImage Render(string wptPath) =>
-        HtmlRenderSeam.Render(File.ReadAllText(_store.FullPath(wptPath)), "/" + wptPath, 800, 600, uri => Load(uri));
+    public RgbaImage Render(string wptPath)
+    {
+        string source = File.ReadAllText(_store.FullPath(wptPath));
+        if (XhtmlSource.IsXhtml(wptPath))
+        {
+            source = XhtmlSource.ToHtml(source);
+        }
+
+        return HtmlRenderSeam.Render(source, "/" + wptPath, 800, 600, uri => Load(uri));
+    }
 
     private byte[]? Load(string uri)
     {
