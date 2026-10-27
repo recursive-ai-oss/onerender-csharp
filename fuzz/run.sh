@@ -41,6 +41,7 @@ case "$target" in
   grid) maxlen=2048 ;;
   flow) maxlen=2048 ;;
   table) maxlen=2048 ;;
+  effects) maxlen=2048 ;;
   *) echo "unknown target '$target'" >&2; exit 2 ;;
 esac
 
