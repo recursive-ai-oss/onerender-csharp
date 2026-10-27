@@ -195,6 +195,7 @@ public sealed class LivePage
             return new FlushResult(FlushWork.None, 0);
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
         _updater.Restyle();
         FlushWork work = _updater.UpdateBoxesAndLayout(cancellationToken);
         int reused = _updater.ReusedSubtrees;
