@@ -47,7 +47,7 @@ public enum FlushWork : byte
     /// <summary>Boxes were patched in place.</summary>
     BoxesPatched = 2,
 
-    /// <summary>The box tree was generated again (the change reached which boxes exist).</summary>
+    /// <summary>The box tree was generated again in full (the root's own structure changed, a limit was hit, or a flush was cancelled).</summary>
     BoxesRebuilt = 4,
 
     /// <summary>Layout ran. Subtrees that did not change were taken from the layout before.</summary>
@@ -84,9 +84,10 @@ public readonly struct FlushResult
 /// </summary>
 /// <remarks>
 /// <para>
-/// Steady-state flushes of text, state, declaration and paint-only changes allocate nothing once the pipeline is warm. Changes that
-/// alter which boxes exist (insert, remove, move, display changes, text that becomes empty or white space) generate the boxes and lay
-/// out everything again; more than <see cref="StyledTree.MaxPendingChanges"/> changes in one flush do the same.
+/// Steady-state flushes of text, state, declaration and paint-only changes allocate nothing once the pipeline is warm, and so do
+/// inserting, removing and moving nodes: the boxes of the affected container are generated again, the other boxes are kept, and freed
+/// slots are reused. A change to the root element's own structure, or more than <see cref="StyledTree.MaxPendingChanges"/> changes in
+/// one flush, generates every box and lays out everything again.
 /// </para>
 /// <para>
 /// A script runtime batches its mutations per task and calls <see cref="Flush"/> once, and again before it answers a layout query
