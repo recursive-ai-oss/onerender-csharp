@@ -210,9 +210,9 @@ public sealed class ResolvedFontList
     private bool _primaryDone;
 
     /// <summary>
-    /// The first available face: the first family in the list that has a usable face (CSS Fonts 4 §5.2, "first available font").
-    /// For a family split by <c>unicode-range</c>, the face that covers U+0020 if there is one. Null when no family matched and
-    /// the collection is empty.
+    /// The first available face (CSS Fonts 4 §5.1): the first listed family with a usable face whose <c>unicode-range</c> includes
+    /// U+0020, so a family limited to other characters is skipped. When no listed family qualifies, the first family that has a glyph
+    /// for a space or any usable face. Null when no family matched and the collection is empty.
     /// </summary>
     public ResolvedFace? PrimaryFace
     {
@@ -235,6 +235,17 @@ public sealed class ResolvedFontList
 
     private ResolvedFace? FindPrimary()
     {
+        // CSS Fonts 4 §5.1: a listed family whose faces all leave U+0020 outside their unicode-range is not the first available
+        // font, even when it comes first in the list. Only the author's own families count here, not the default faces after them.
+        for (int i = 0; i < ListedSlots && i < Slots.Length; i++)
+        {
+            ResolvedFace? f = Slots[i].InRangeFor(' ', this);
+            if (f is not null)
+            {
+                return f;
+            }
+        }
+
         foreach (FontSlot slot in Slots)
         {
             ResolvedFace? f = slot.Select(' ', this);
@@ -243,7 +254,7 @@ public sealed class ResolvedFontList
                 return f;
             }
 
-            // A family whose faces lack a space (or are not in range for it): take any usable face of the family.
+            // A family whose faces lack a space: take any usable face of the family.
             f = slot.AnyUsable(this);
             if (f is not null)
             {
@@ -294,6 +305,32 @@ internal sealed class FontSlot(FaceEntry[] group, ResolvedFace[] faces, bool isG
             {
                 return Faces[i];
             }
+        }
+
+        return null;
+    }
+
+    // The face whose unicode-range includes the code point and that loads, whether or not it has a glyph for it.
+    public ResolvedFace? InRangeFor(int codePoint, ResolvedFontList list)
+    {
+        for (int i = 0; i < Group.Length; i++)
+        {
+            if (!Group[i].InRange(codePoint))
+            {
+                continue;
+            }
+
+            if (Group[i].EnsureLoaded(list.Owner))
+            {
+                // The answer doesn't matter here, but a lookup exposes a face whose tables turn out damaged and marks it failed.
+                _ = Group[i].HasGlyph(codePoint, list.Owner);
+                if (Group[i].EnsureLoaded(list.Owner))
+                {
+                    return Faces[i];
+                }
+            }
+
+            list.IsStale = true;
         }
 
         return null;

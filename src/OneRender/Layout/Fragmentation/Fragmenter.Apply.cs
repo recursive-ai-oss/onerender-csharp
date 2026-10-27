@@ -239,6 +239,62 @@ internal sealed partial class Fragmenter
         return (box.Flags & BoxTraits.OutOfFlow) != 0 || Monolithic(box);
     }
 
+    // The top of the first line box among the in-flow descendants that follow a marker, in the coordinates of the marker's parent
+    // (whose top is parentTop). Gives up on boxes that don't fragment and after a fixed number of fragments, so it stays linear.
+    private bool FirstLineTop(int first, double parentTop, out double top)
+    {
+        top = 0;
+        int cur = first;
+        double off = parentTop;
+        int depth = 0;
+        for (int steps = 0; cur >= 0 && steps < 64; steps++)
+        {
+            FragmentKind kind = (FragmentKind)_t.KindOf(cur);
+            if (kind == FragmentKind.Line)
+            {
+                top = off + _t.BorderBoxOf(cur).Y;
+                return true;
+            }
+
+            if (kind == FragmentKind.Box)
+            {
+                Box b = _boxes.Make(_t.BoxOf(cur));
+                if ((b.Flags & (BoxTraits.OutOfFlow | BoxTraits.OutsideMarker)) == 0)
+                {
+                    if (Monolithic(b))
+                    {
+                        return false;
+                    }
+
+                    int child = _t.FirstChildOf(cur);
+                    if (child >= 0)
+                    {
+                        off += _t.BorderBoxOf(cur).Y;
+                        depth++;
+                        cur = child;
+                        continue;
+                    }
+                }
+            }
+
+            while (_t.NextSiblingOf(cur) < 0)
+            {
+                if (depth == 0)
+                {
+                    return false;
+                }
+
+                cur = _t.ParentOf(cur);
+                off -= _t.BorderBoxOf(cur).Y;
+                depth--;
+            }
+
+            cur = _t.NextSiblingOf(cur);
+        }
+
+        return false;
+    }
+
     private void PlaceChild(int pi, int c)
     {
         AFrame p = _af[pi];
@@ -246,6 +302,14 @@ internal sealed partial class Fragmenter
         double cTop = p.SrcTop + r.Y, cBot = cTop + r.Height;
         if (IsLeaf(c, out Box box))
         {
+            if (!box.IsNull && box.Kind == BoxKind.Marker && (box.Flags & BoxTraits.OutsideMarker) != 0 && FirstLineTop(p.Next, p.SrcTop, out double lineTop) && lineTop > cTop)
+            {
+                // CSS Lists 3 §3: an outside marker sits beside the item's first line box, so it follows that line into the column it lands in.
+                r = new Rect(r.X, r.Y + (lineTop - cTop), r.Width, r.Height);
+                cTop = lineTop;
+                cBot = cTop + r.Height;
+            }
+
             int k = FindK(cTop, p.KStart, p.KEnd);
             int parentPiece = _pieces[p.PiecesBase + (k - p.KStart)];
             double colY = cTop - _pYs[_rFk + k] + _pT[_rFk + k];

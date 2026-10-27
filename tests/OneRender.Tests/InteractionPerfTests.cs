@@ -23,20 +23,28 @@ public class InteractionAllocationTests
         return Ix.Page(sb.ToString(), 800, 600, "button{margin-left:8px}");
     }
 
-    private static long Measure(Action body, int warmup = 50, int iterations = 200)
+    // The fewest bytes over three timed passes. A cost paid on every call shows in every pass; a one-time cost that lands inside a
+    // pass (a runtime compiling or tiering the method on a loaded machine) does not.
+    private static long Measure(Action body, int warmup = 500, int iterations = 200)
     {
         for (int i = 0; i < warmup; i++)
         {
             body();
         }
 
-        long before = GC.GetAllocatedBytesForCurrentThread();
-        for (int i = 0; i < iterations; i++)
+        long best = long.MaxValue;
+        for (int pass = 0; pass < 3 && best != 0; pass++)
         {
-            body();
+            long before = GC.GetAllocatedBytesForCurrentThread();
+            for (int i = 0; i < iterations; i++)
+            {
+                body();
+            }
+
+            best = Math.Min(best, GC.GetAllocatedBytesForCurrentThread() - before);
         }
 
-        return GC.GetAllocatedBytesForCurrentThread() - before;
+        return best;
     }
 
     [Fact]

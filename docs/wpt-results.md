@@ -59,6 +59,16 @@ Run from the repository root (the default module file is `tools/wpt/modules.json
 
 Chrome mode serves the checkout over loopback HTTP, drives headless Chrome over the DevTools protocol (one tab per `--parallel`), waits for load and web fonts, and takes the first screenshot that equals the one before it. It is a black box used to check the runner, never an engine input. `--fonts <dir>` restricts Chrome to the fonts in a directory through a private fontconfig file.
 
+## XHTML tests
+
+Files ending in `.xht` or `.xhtml` are XML documents in the suite, and many of them (and most of the references of CSS2) write their stylesheet as `<style><![CDATA[ ... ]]></style>`. The engine's front end is an HTML parser, which reads that as a broken selector and drops the first rule, so those pages used to render without their style and tests compared two blank pages. The runner therefore rewrites these files before handing them to the engine (`tools/OneRender.WptRunner/XhtmlSource.cs`):
+
+- CDATA sections become their character data (XML 1.0 §2.7): verbatim inside `style` and `script`, escaped text elsewhere.
+- An empty-element tag on a non-void element (`<div/>`, `<td />`) becomes a start and an end tag (XML 1.0 §3.1), since HTML ignores the slash and would nest what follows.
+- The XML declaration and other processing instructions are dropped.
+
+This is **not a conforming XML parser**: nothing is checked for well-formedness, there is no namespace processing, no DTD entity declarations, and no XML tree building (an XML document gets no implicit `html`, `head`, `body` or `tbody`; the HTML parser still adds them). Documents that depend on those differences can still pass or fail for the wrong reason. The rewrite lives in the harness, not the engine; `HtmlRender` and `HtmlPage` take HTML only.
+
 ## Results layout
 
 ```
