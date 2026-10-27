@@ -1,10 +1,10 @@
 | page | viewport | elements | within tolerance | rate | mismatches |
 |---|---|---|---|---|---|
-| daisy-app | 1280x800 | 98 | 7 | 7.143% | 91 |
-| daisy-app | 390x844 | 98 | 7 | 7.143% | 91 |
+| daisy-app | 1280x800 | 98 | 35 | 35.714% | 63 |
+| daisy-app | 390x844 | 98 | 24 | 24.490% | 74 |
 | daisy-showcase | 1280x800 | 161 | 0 | 0.000% | 161 |
 | daisy-showcase | 390x844 | 161 | 0 | 0.000% | 161 |
-| flowbite-components | 1280x800 | 116 | 1 | 0.862% | 115 |
+| flowbite-components | 1280x800 | 116 | 19 | 16.379% | 97 |
 | flowbite-components | 390x844 | 116 | 0 | 0.000% | 116 |
 | tw-article | 1280x800 | 59 | 0 | 0.000% | 59 |
 | tw-article | 390x844 | 59 | 0 | 0.000% | 59 |

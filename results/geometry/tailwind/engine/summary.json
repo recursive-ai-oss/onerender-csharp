@@ -13,20 +13,20 @@
       "viewport": "1280x800",
       "pages": 7,
       "elements": 749,
-      "matched": 9,
-      "rate": 0.012016021361815754,
+      "matched": 55,
+      "rate": 0.07343124165554073,
       "classes": {
-        "positionOnly": 85,
-        "sizeOnly": 30,
-        "positionAndSize": 256,
-        "textRun": 357,
+        "positionOnly": 255,
+        "sizeOnly": 38,
+        "positionAndSize": 153,
+        "textRun": 236,
         "missingOurs": 1,
         "missingChrome": 11
       },
       "rootCauses": {
         "positionOnly": 0,
         "sizeOnly": 7,
-        "positionAndSize": 0,
+        "positionAndSize": 2,
         "textRun": 0,
         "missingOurs": 1,
         "missingChrome": 11
@@ -38,17 +38,17 @@
       "worstTags": [
         {
           "tag": "div",
-          "mismatches": 174,
+          "mismatches": 168,
           "elements": 175
         },
         {
           "tag": "li",
-          "mismatches": 72,
+          "mismatches": 58,
           "elements": 76
         },
         {
           "tag": "a",
-          "mismatches": 66,
+          "mismatches": 56,
           "elements": 69
         },
         {
@@ -58,7 +58,7 @@
         },
         {
           "tag": "span",
-          "mismatches": 56,
+          "mismatches": 54,
           "elements": 57
         },
         {
@@ -92,13 +92,13 @@
       "viewport": "390x844",
       "pages": 7,
       "elements": 727,
-      "matched": 7,
-      "rate": 0.009628610729023384,
+      "matched": 24,
+      "rate": 0.033012379642365884,
       "classes": {
-        "positionOnly": 110,
-        "sizeOnly": 31,
-        "positionAndSize": 241,
-        "textRun": 326,
+        "positionOnly": 221,
+        "sizeOnly": 35,
+        "positionAndSize": 184,
+        "textRun": 251,
         "missingOurs": 1,
         "missingChrome": 11
       },
@@ -122,7 +122,7 @@
         },
         {
           "tag": "li",
-          "mismatches": 72,
+          "mismatches": 65,
           "elements": 76
         },
         {
@@ -137,7 +137,7 @@
         },
         {
           "tag": "a",
-          "mismatches": 52,
+          "mismatches": 47,
           "elements": 69
         },
         {
@@ -172,20 +172,20 @@
     "viewport": "all",
     "pages": 14,
     "elements": 1476,
-    "matched": 16,
-    "rate": 0.01084010840108401,
+    "matched": 79,
+    "rate": 0.0535230352303523,
     "classes": {
-      "positionOnly": 195,
-      "sizeOnly": 61,
-      "positionAndSize": 497,
-      "textRun": 683,
+      "positionOnly": 476,
+      "sizeOnly": 73,
+      "positionAndSize": 337,
+      "textRun": 487,
       "missingOurs": 2,
       "missingChrome": 22
     },
     "rootCauses": {
       "positionOnly": 0,
       "sizeOnly": 14,
-      "positionAndSize": 0,
+      "positionAndSize": 2,
       "textRun": 0,
       "missingOurs": 2,
       "missingChrome": 22
@@ -197,28 +197,28 @@
     "worstTags": [
       {
         "tag": "div",
-        "mismatches": 345,
+        "mismatches": 339,
         "elements": 350
       },
       {
         "tag": "li",
-        "mismatches": 144,
+        "mismatches": 123,
         "elements": 152
-      },
-      {
-        "tag": "a",
-        "mismatches": 118,
-        "elements": 138
-      },
-      {
-        "tag": "span",
-        "mismatches": 113,
-        "elements": 114
       },
       {
         "tag": "p",
         "mismatches": 112,
         "elements": 112
+      },
+      {
+        "tag": "span",
+        "mismatches": 111,
+        "elements": 114
+      },
+      {
+        "tag": "a",
+        "mismatches": 103,
+        "elements": 138
       },
       {
         "tag": "td",
