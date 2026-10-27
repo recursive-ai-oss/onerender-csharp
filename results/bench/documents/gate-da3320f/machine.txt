@@ -1,0 +1,116 @@
+mode: gate
+cpu: AMD Ryzen 9 7950X3D 16-Core Processor
+cores: 32 logical; onerender and WeasyPrint pinned to 8-15; Chrome unpinned
+governor: powersave
+memory: 125 GB
+kernel: Linux 7.0.0-38-generic
+dotnet sdk: 10.0.402; runtime: 10.0.13
+chrome: Google Chrome for Testing 156.0.8078.47 
+weasyprint: WeasyPrint version 70.0
+fonts: fontset: 8768bf2774f6c8e8 (20 files)
+runs: onerender 7 processes, Chrome 5 cold + 7 warm, WeasyPrint 3; bdn: --warmupCount 3 --iterationCount 15 --launchCount 2 --invocationCount 1 --unrollFactor 1 --exporters json --memory true
+commit: da3320f
+== load before 2026-10-27T13:34:10Z
+12.89 10.19 11.43 14/1203 666662
+%CPU %MEM ELAPSED COMMAND
+ 266  0.2       0 dotnet
+ 107  0.1     338 (other workload)
+ 104  1.0    1210 (other workload)
+ 101  0.0      74 dotnet
+ 100  0.0       0 (other workload)
+== load during 2026-10-27T13:34:41Z
+12.09 10.21 11.40 22/1193 702719
+%CPU %MEM ELAPSED COMMAND
+1500  0.0       0 python
+ 742  0.5       0 dotnet
+ 114  0.2       2 dotnet
+ 107  0.1     368 (other workload)
+ 101  0.8    1240 (other workload)
+== load during 2026-10-27T13:35:11Z
+11.26 10.19 11.35 26/1313 738682
+%CPU %MEM ELAPSED COMMAND
+ 517  0.5       4 (other workload)
+ 446  0.2       0 dotnet
+ 107  0.1     398 (other workload)
+ 101  0.0     134 dotnet
+ 100  0.0       0 (other workload)
+== load during 2026-10-27T13:35:41Z
+11.47 10.35 11.37 15/1235 773479
+%CPU %MEM ELAPSED COMMAND
+ 509  0.6      15 OneRender.Tests
+ 109  0.2      13 dotnet
+ 107  0.1     428 (other workload)
+ 101  0.0     164 dotnet
+99.8  0.1     733 dotnet
+== load during 2026-10-27T13:36:11Z
+10.11 10.12 11.26 8/1207 808915
+%CPU %MEM ELAPSED COMMAND
+ 327  0.5      45 OneRender.Tests
+ 108  0.2      16 dotnet
+ 107  0.1     458 (other workload)
+ 101  0.0     194 dotnet
+ 100  0.0       0 (other workload)
+== load during 2026-10-27T13:36:41Z
+10.05 10.11 11.22 12/1158 847033
+%CPU %MEM ELAPSED COMMAND
+ 107  0.1     488 (other workload)
+ 101  0.0     224 dotnet
+99.8  0.1     793 dotnet
+95.7  0.6    1360 (other workload)
+82.1  0.1       9 dotnet
+== load during 2026-10-27T13:37:11Z
+13.53 10.96 11.47 17/1380 880999
+%CPU %MEM ELAPSED COMMAND
+ 631  0.4       0 dotnet
+ 420  0.8      11 dotnet
+ 112  1.0       2 chrome
+ 107  0.1     518 (other workload)
+ 101  0.0     254 dotnet
+== load during 2026-10-27T13:37:41Z
+19.60 12.67 12.02 20/1505 908575
+%CPU %MEM ELAPSED COMMAND
+ 395  0.5       0 dotnet
+ 314  2.8      41 dotnet
+ 300  1.0       9 dotnet
+ 107  1.3       3 chrome
+ 107  0.1     548 (other workload)
+== load during 2026-10-27T13:38:11Z
+16.96 12.68 12.04 17/1341 939110
+%CPU %MEM ELAPSED COMMAND
+ 287  2.1      39 dotnet
+ 120  0.1       0 chrome
+ 107  0.1     578 (other workload)
+ 101  0.0     314 dotnet
+99.7  0.1     883 dotnet
+== load during 2026-10-27T13:38:41Z
+13.71 12.28 11.93 18/1172 967391
+%CPU %MEM ELAPSED COMMAND
+ 386  1.4      17 dotnet
+ 108  0.1       8 (other workload)
+ 101  0.0     345 dotnet
+ 100  0.8    1480 (other workload)
+99.7  0.1     913 dotnet
+== load during 2026-10-27T13:39:11Z
+12.91 12.22 11.92 8/1145 1000349
+%CPU %MEM ELAPSED COMMAND
+ 346  4.7      47 dotnet
+ 111  0.1      38 (other workload)
+ 101  1.0    1510 (other workload)
+ 101  0.0     375 dotnet
+99.6  0.1     943 dotnet
+== load during 2026-10-27T13:39:41Z
+16.74 13.09 12.21 47/1588 1034199
+%CPU %MEM ELAPSED COMMAND
+ 470  0.1      10 (other workload)
+ 108  0.9    1540 (other workload)
+ 108  0.1      68 (other workload)
+ 101  0.0     405 dotnet
+99.6  0.1     973 dotnet
+== load after 2026-10-27T13:39:47Z
+17.25 13.26 12.27 11/1306 1040162
+%CPU %MEM ELAPSED COMMAND
+ 342  0.3      16 (other workload)
+ 145  0.0       0 dotnet
+ 110  1.1    1547 (other workload)
+ 107  0.1      75 (other workload)
+ 101  0.1     411 dotnet
