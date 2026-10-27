@@ -355,8 +355,8 @@
     "css/css-fonts/system-ui-ur-vs-ar.html": "!= system-ui-ar.html identical",
     "css/css-fonts/system-ui-ur.html": "!= system-ui-ur-notref.html identical",
     "css/css-fonts/system-ui-zh.html": "!= system-ui-zh-notref.html identical",
-    "css/css-fonts/test-synthetic-italic-2.html": "== test-synthetic-italic-2-ref.html differs (max 255, 9016 px)",
-    "css/css-fonts/test-synthetic-italic-3.html": "== test-synthetic-italic-3-ref.html differs (max 255, 4508 px)"
+    "css/css-fonts/test-synthetic-italic-2.html": "== test-synthetic-italic-2-ref.html differs (max 255, 9329 px)",
+    "css/css-fonts/test-synthetic-italic-3.html": "== test-synthetic-italic-3-ref.html differs (max 255, 10508 px)"
   },
   "skipped": {
     "css/css-fonts/animations/font-palette-animation-not-specified-endpoints.html": "testharness.js test",

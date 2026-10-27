@@ -8,14 +8,15 @@
   "sampleStride": 1,
   "counts": {
     "total": 75,
-    "pass": 25,
-    "fail": 23,
+    "pass": 26,
+    "fail": 22,
     "blank": 4,
     "skipped": 23
   },
-  "rate": "0.4808",
+  "rate": "0.5000",
   "pass": [
     "css/compositing/background-blending/background-blend-mode-gradient-image.html",
+    "css/compositing/isolation/isolation-establishes-stacking-context.html",
     "css/compositing/mix-blend-mode/mix-blend-mode-animation.html",
     "css/compositing/mix-blend-mode/mix-blend-mode-blended-element-interposed.html",
     "css/compositing/mix-blend-mode/mix-blend-mode-blended-element-overflow-hidden-and-border-radius.html",
@@ -48,7 +49,6 @@
     "css/compositing/root-element-background-image-transparency-004.html"
   ],
   "fail": {
-    "css/compositing/isolation/isolation-establishes-stacking-context.html": "== ref-filled-green-100px-square.xht differs (max 255, 10000 px)",
     "css/compositing/mix-blend-mode/mix-blend-mode-blended-element-with-transparent-pixels.html": "== mix-blend-mode-blended-element-with-transparent-pixels-ref.html differs (max 255, 4400 px)",
     "css/compositing/mix-blend-mode/mix-blend-mode-blended-with-3D-transform.html": "== mix-blend-mode-blended-with-3D-transform-ref.html differs (max 255, 24040 px)",
     "css/compositing/mix-blend-mode/mix-blend-mode-border-image.html": "== mix-blend-mode-border-image-ref.html differs (max 255, 4400 px)",
