@@ -1,0 +1,13 @@
+body { margin: 0; padding: 24px 0; background: #ddd; font: 13px/1.35 "Courier New", Courier, monospace; color: #111; }
+.receipt { width: 302px; margin: 0 auto; padding: 18px 16px; background: #fff; }
+h1 { margin: 0 0 6px; text-align: center; font-size: 20px; letter-spacing: 0.1em; }
+.c { text-align: center; margin: 4px 0; }
+.small { font-size: 11px; }
+hr { border: 0; border-top: 1px dashed #333; margin: 10px 0; }
+ol { list-style: none; margin: 0; padding: 0; }
+li { display: grid; grid-template-columns: 1fr auto auto; column-gap: 8px; padding: 2px 0; }
+li .a { text-align: right; min-width: 56px; }
+li .q { color: #444; }
+.row { display: flex; justify-content: space-between; margin: 2px 0; }
+.total { font-size: 16px; font-weight: bold; margin: 6px 0; }
+.barcode { text-align: center; font-size: 22px; letter-spacing: 2px; margin: 12px 0 0; transform: scaleY(1.6); }

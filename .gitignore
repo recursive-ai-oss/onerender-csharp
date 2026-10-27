@@ -18,6 +18,7 @@
 !/fuzz/
 !/tools/
 !/docs/
+!/results/
 !/testdata/
 
 # Build output, results and fetched material stay out even inside allowed folders.

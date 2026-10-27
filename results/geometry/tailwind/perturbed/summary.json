@@ -1,0 +1,251 @@
+{
+  "format": "onerender-geometry-summary/1",
+  "set": "tailwind",
+  "label": "perturbed",
+  "ours": "capture",
+  "tolerancePx": 1,
+  "tolerancePercent": 0.5,
+  "gateRate": 0.99,
+  "browser": "Chrome/156.0.8078.47",
+  "fontSet": "8768bf2774f6c8e8 (20 files)",
+  "viewports": [
+    {
+      "viewport": "1280x800",
+      "pages": 7,
+      "elements": 745,
+      "matched": 666,
+      "rate": 0.8939597315436242,
+      "classes": {
+        "positionOnly": 17,
+        "sizeOnly": 6,
+        "positionAndSize": 6,
+        "textRun": 28,
+        "missingOurs": 15,
+        "missingChrome": 7
+      },
+      "rootCauses": {
+        "positionOnly": 8,
+        "sizeOnly": 3,
+        "positionAndSize": 6,
+        "textRun": 19,
+        "missingOurs": 15,
+        "missingChrome": 7
+      },
+      "tagConflicts": 0,
+      "pagesAtGate": 0,
+      "medianPageRate": 0.88,
+      "minPageRate": 0.8666666666666667,
+      "worstTags": [
+        {
+          "tag": "div",
+          "mismatches": 11,
+          "elements": 175
+        },
+        {
+          "tag": "a",
+          "mismatches": 10,
+          "elements": 69
+        },
+        {
+          "tag": "li",
+          "mismatches": 9,
+          "elements": 76
+        },
+        {
+          "tag": "h3",
+          "mismatches": 6,
+          "elements": 20
+        },
+        {
+          "tag": "span",
+          "mismatches": 6,
+          "elements": 57
+        },
+        {
+          "tag": "button",
+          "mismatches": 4,
+          "elements": 19
+        },
+        {
+          "tag": "p",
+          "mismatches": 3,
+          "elements": 56
+        },
+        {
+          "tag": "td",
+          "mismatches": 3,
+          "elements": 43
+        },
+        {
+          "tag": "h2",
+          "mismatches": 2,
+          "elements": 24
+        },
+        {
+          "tag": "h6",
+          "mismatches": 2,
+          "elements": 3
+        }
+      ]
+    },
+    {
+      "viewport": "390x844",
+      "pages": 7,
+      "elements": 723,
+      "matched": 646,
+      "rate": 0.8934993084370678,
+      "classes": {
+        "positionOnly": 17,
+        "sizeOnly": 6,
+        "positionAndSize": 6,
+        "textRun": 26,
+        "missingOurs": 15,
+        "missingChrome": 7
+      },
+      "rootCauses": {
+        "positionOnly": 8,
+        "sizeOnly": 3,
+        "positionAndSize": 6,
+        "textRun": 17,
+        "missingOurs": 15,
+        "missingChrome": 7
+      },
+      "tagConflicts": 0,
+      "pagesAtGate": 0,
+      "medianPageRate": 0.8762886597938144,
+      "minPageRate": 0.8636363636363636,
+      "worstTags": [
+        {
+          "tag": "div",
+          "mismatches": 11,
+          "elements": 175
+        },
+        {
+          "tag": "li",
+          "mismatches": 9,
+          "elements": 76
+        },
+        {
+          "tag": "a",
+          "mismatches": 8,
+          "elements": 69
+        },
+        {
+          "tag": "h3",
+          "mismatches": 6,
+          "elements": 20
+        },
+        {
+          "tag": "span",
+          "mismatches": 6,
+          "elements": 57
+        },
+        {
+          "tag": "button",
+          "mismatches": 4,
+          "elements": 19
+        },
+        {
+          "tag": "p",
+          "mismatches": 3,
+          "elements": 56
+        },
+        {
+          "tag": "td",
+          "mismatches": 3,
+          "elements": 43
+        },
+        {
+          "tag": "h2",
+          "mismatches": 2,
+          "elements": 24
+        },
+        {
+          "tag": "h6",
+          "mismatches": 2,
+          "elements": 3
+        }
+      ]
+    }
+  ],
+  "total": {
+    "viewport": "all",
+    "pages": 14,
+    "elements": 1468,
+    "matched": 1312,
+    "rate": 0.8937329700272479,
+    "classes": {
+      "positionOnly": 34,
+      "sizeOnly": 12,
+      "positionAndSize": 12,
+      "textRun": 54,
+      "missingOurs": 30,
+      "missingChrome": 14
+    },
+    "rootCauses": {
+      "positionOnly": 16,
+      "sizeOnly": 6,
+      "positionAndSize": 12,
+      "textRun": 36,
+      "missingOurs": 30,
+      "missingChrome": 14
+    },
+    "tagConflicts": 0,
+    "pagesAtGate": 0,
+    "medianPageRate": 0.88,
+    "minPageRate": 0.8636363636363636,
+    "worstTags": [
+      {
+        "tag": "div",
+        "mismatches": 22,
+        "elements": 350
+      },
+      {
+        "tag": "a",
+        "mismatches": 18,
+        "elements": 138
+      },
+      {
+        "tag": "li",
+        "mismatches": 18,
+        "elements": 152
+      },
+      {
+        "tag": "h3",
+        "mismatches": 12,
+        "elements": 40
+      },
+      {
+        "tag": "span",
+        "mismatches": 12,
+        "elements": 114
+      },
+      {
+        "tag": "button",
+        "mismatches": 8,
+        "elements": 38
+      },
+      {
+        "tag": "p",
+        "mismatches": 6,
+        "elements": 112
+      },
+      {
+        "tag": "td",
+        "mismatches": 6,
+        "elements": 86
+      },
+      {
+        "tag": "h2",
+        "mismatches": 4,
+        "elements": 48
+      },
+      {
+        "tag": "h6",
+        "mismatches": 4,
+        "elements": 6
+      }
+    ]
+  },
+  "gateMet": false
+}
