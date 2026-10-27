@@ -5,6 +5,7 @@
     <Project Path="src/OneRender.Pdf/OneRender.Pdf.csproj" />
     <Project Path="src/OneRender.Fonts/OneRender.Fonts.csproj" />
     <Project Path="src/OneRender.Razor/OneRender.Razor.csproj" />
+    <Project Path="src/OneRender.Accessibility/OneRender.Accessibility.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/OneRender.TestSupport/OneRender.TestSupport.csproj" />

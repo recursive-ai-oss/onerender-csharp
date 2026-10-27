@@ -9,6 +9,7 @@ public class PackageTests
     {
         Assert.Equal("OneRender", EngineInfo.Name);
         Assert.Equal("OneRender.Image", Image.ImageBackendInfo.Name);
+        Assert.Equal("OneRender.Accessibility", Accessibility.AccessibilityInfo.Name);
         Assert.Equal("OneRender.Pdf", Pdf.PdfBackendInfo.Name);
         Assert.Equal("OneRender.Fonts", Fonts.FontsInfo.Name);
         Assert.Equal("OneRender.Razor", Razor.RazorInfo.Name);

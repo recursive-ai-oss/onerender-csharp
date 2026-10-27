@@ -12,6 +12,8 @@ internal static class Program
           capture          --snapshots <dir> --out <dir> --chrome <exe> --fontconfig <file> [--viewport WxH]... [--jobs N] [--limit N] [--work <dir>]
           compare          --chrome-dir <dir> (--ours-dir <dir> | --engine --snapshots <dir>) --set <name> --label <name> --out <dir>
                            [--detail <dir>] [--tol-px 1] [--tol-pct 0.5] [--expect <file>] [--page-table]
+          facts-capture    --snapshots <dir> --out <dir> --chrome <exe> --fontconfig <file> [--viewport WxH]... [--jobs N] [--limit N] [--work <dir>]
+          facts-compare    --captures <dir> --snapshots <dir> --set <name> --out <dir> [--detail <dir>] [--parallel N]
           perturb          --in <dir> --out <dir> --expect-out <file> [--seed 1]
           fonts-check      --page <html> --out <md> --chrome <exe> --fontconfig <file> [--work <dir>]
 
@@ -102,6 +104,13 @@ internal static class Program
                         ExpectFile = Opt("--expect"),
                         PageTable = pageTable,
                     }, cts.Token);
+                case "facts-capture":
+                    {
+                        List<ViewportSize> vps = o.TryGetValue("--viewport", out List<string>? v) ? [.. v.Select(Capture.ParseViewport)] : [new ViewportSize { Width = 1280, Height = 800 }];
+                        return await FactsCapture.RunAsync(Req("--snapshots"), Req("--out"), Req("--chrome"), Req("--fontconfig"), vps, OptInt("--jobs", 4), OptInt("--limit", 0), work, sandbox, cts.Token).ConfigureAwait(false);
+                    }
+                case "facts-compare":
+                    return FactsCompare.Run(Req("--captures"), Req("--snapshots"), Req("--set"), Req("--out"), Opt("--detail"), OptInt("--parallel", 4), cts.Token);
                 case "perturb":
                     return Perturb.Run(Req("--in"), Req("--out"), OptInt("--seed", 1), new Tolerance(OptDouble("--tol-px", 1), OptDouble("--tol-pct", 0.5)), Req("--expect-out"));
                 case "fonts-check":

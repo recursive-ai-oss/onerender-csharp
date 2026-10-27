@@ -100,6 +100,12 @@ RgbaImage fxPage = HtmlRender.ToImage(
     new HtmlRenderOptions { Width = 64, Height = 64 });
 Console.WriteLine($"effects {fxPage.Pixels[((10 * 64) + 10) * 4]}");
 
+// The rendered-facts producer on WebAssembly too.
+OneRender.Accessibility.RenderedPage factsPage = OneRender.Accessibility.AccessibilityFacts.Render(
+    "<body style='margin:0'><div style='background:#036;color:#fff'>Hi</div></body>",
+    new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 100, ViewportHeight = 50 });
+Console.WriteLine($"facts {factsPage.Facts.BoxCount}");
+
 internal sealed class NoFonts : OneRender.Layout.IFontProvider
 {
     public OneRender.Text.FontCatalog Catalog => throw new NotSupportedException();

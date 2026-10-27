@@ -16,6 +16,7 @@ public sealed partial class Painter
 
     private void PaintText(int f)
     {
+        Observer?.Content(_tree.Make(f), _list.Count);
         Box box = _boxes.Make(_tree.BoxOf(f));
         ref readonly ComputedValues v = ref box.Values;
         if (v.Visibility != VisibilityKind.Visible)

@@ -8,7 +8,7 @@ using RecursiveAI.OneHtml.Css;
 
 namespace OneRender;
 
-/// <summary>What <see cref="HtmlPage.Create"/> needs to turn HTML into a laid-out page.</summary>
+/// <summary>What <see cref="HtmlPage.Create(string, HtmlPageOptions, CancellationToken)"/> needs to turn HTML into a laid-out page.</summary>
 public sealed class HtmlPageOptions
 {
     /// <summary>Creates options with the required font provider.</summary>
@@ -121,7 +121,27 @@ public sealed partial class HtmlPage
         ArgumentOutOfRangeException.ThrowIfLessThan(options.ViewportHeight, 1);
         cancellationToken.ThrowIfCancellationRequested();
 
-        Document document = Document.Parse(html, null, cancellationToken);
+        return CreateWithStyles(Document.Parse(html, null, cancellationToken), options, out styles, cancellationToken);
+    }
+
+    /// <summary>Cascades, builds the box tree and lays out a document the host has already parsed.</summary>
+    /// <param name="document">The parsed document. The page keeps it and never changes it.</param>
+    /// <param name="options">Viewport, fonts, resource hooks and layout.</param>
+    /// <param name="cancellationToken">Cancels the work.</param>
+    /// <returns>The laid-out page; <see cref="Document"/> is <paramref name="document"/>.</returns>
+    /// <exception cref="ArgumentNullException">An argument is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">A viewport dimension is below 1.</exception>
+    /// <exception cref="OperationCanceledException">Cancelled.</exception>
+    public static HtmlPage Create(Document document, HtmlPageOptions options, CancellationToken cancellationToken = default) =>
+        CreateWithStyles(document, options, out _, cancellationToken);
+
+    internal static HtmlPage CreateWithStyles(Document document, HtmlPageOptions options, out DocumentStyles styles, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentOutOfRangeException.ThrowIfLessThan(options.ViewportWidth, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(options.ViewportHeight, 1);
+        cancellationToken.ThrowIfCancellationRequested();
         var context = new StyleContext { Media = new MediaFeatures { Width = options.ViewportWidth, Height = options.ViewportHeight } };
         Func<string, byte[]?>? bytes = options.StylesheetBytes;
         StyleSourceOptions MakeOptions(string? registered)
