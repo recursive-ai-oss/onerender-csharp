@@ -1,3 +1,4 @@
+using OneRender.Interaction;
 using System;
 using OneRender;
 using OneRender.Fonts;
@@ -75,6 +76,22 @@ HtmlPage tablePage = HtmlPage.Create(
 var tableList = new DisplayList();
 new Painter().Paint(tablePage.Fragments, tableList, new PaintOptions(200, 100));
 Console.WriteLine($"paint items {paintList.Count}, table page {tablePage.Fragments.Count} fragments, {tableList.Count} table items");
+
+// Interaction: a hit test, a dispatched pointer sequence with a listener, and a focus change.
+InteractivePage ix = InteractivePage.Create(
+    "<body style='margin:0'><div id=a style='width:40px;height:40px'><button id=b style='width:20px;height:20px'>x</button></div></body>",
+    new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 100, ViewportHeight = 100 });
+Node ixButton = ix.Page.Document.GetElementById("b");
+int ixClicks = 0;
+ix.Events.AddEventListener(ixButton, "click", _ => ixClicks++);
+bool ixHit = ix.ElementFromPoint(5, 5).Equals(ixButton);
+ix.HandlePointer(new PointerInput { Action = PointerAction.Down, X = 5, Y = 5, Button = 0, Buttons = MouseButtons.Primary, Time = 1 });
+ix.HandlePointer(new PointerInput { Action = PointerAction.Up, X = 5, Y = 5, Button = 0, Time = 2 });
+Console.WriteLine($"interaction hit={ixHit} clicks={ixClicks} focused={ix.FocusedElement.Equals(ixButton)}");
+if (!ixHit || ixClicks != 1)
+{
+    throw new InvalidOperationException("interaction failed");
+}
 
 internal sealed class NoFonts : OneRender.Layout.IFontProvider
 {
