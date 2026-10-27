@@ -50,6 +50,7 @@ internal static partial class ComputedValueText
             case PropertyId.MaskComposite: return JoinEach(v.Mask.Composites, c => c.ToString().ToLowerInvariant());
             case PropertyId.MixBlendMode: return BlendNames[(int)v.MixBlendMode];
             case PropertyId.Isolation: return v.Isolate ? "isolate" : "auto";
+            case PropertyId.ImageOrientation: return v.ImageOrientationNone ? "none" : "from-image";
             case PropertyId.BackgroundBlendMode: return JoinEach(v.BackgroundBlendModes, b => BlendNames[(int)b]);
             default: return null;
         }

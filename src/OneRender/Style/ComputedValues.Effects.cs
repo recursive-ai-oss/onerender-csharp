@@ -50,6 +50,7 @@ public partial struct ComputedValues
         a.Mask.Equals(b.Mask) &&
         a.MixBlendMode == b.MixBlendMode &&
         a.Isolate == b.Isolate &&
+        a.ImageOrientationNone == b.ImageOrientationNone &&
         a.BackgroundBlendModes.AsSpan().SequenceEqual(b.BackgroundBlendModes);
 
     private static void EffectsHash(ref HashCode h, in ComputedValues v)
@@ -64,5 +65,6 @@ public partial struct ComputedValues
         h.Add(v.ClipPath);
         h.Add(v.MixBlendMode);
         h.Add(v.Isolate);
+        h.Add(v.ImageOrientationNone);
     }
 }

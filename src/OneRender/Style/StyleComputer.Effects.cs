@@ -266,6 +266,14 @@ internal sealed partial class StyleComputer
                 }
 
                 return false;
+            case PropertyId.ImageOrientation:
+                if (IsWord(v, "from-image") || IsWord(v, "none"))
+                {
+                    _r.ImageOrientationNone = IsWord(v, "none");
+                    return true;
+                }
+
+                return false;
             default:
                 return false;
         }
@@ -299,6 +307,7 @@ internal sealed partial class StyleComputer
             case PropertyId.MixBlendMode: d.MixBlendMode = s.MixBlendMode; break;
             case PropertyId.Isolation: d.Isolate = s.Isolate; break;
             case PropertyId.BackgroundBlendMode: d.BackgroundBlendModes = s.BackgroundBlendModes; break;
+            case PropertyId.ImageOrientation: d.ImageOrientationNone = s.ImageOrientationNone; break;
         }
     }
 

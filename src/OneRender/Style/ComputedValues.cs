@@ -331,6 +331,12 @@ public partial struct ComputedValues
     /// <summary><c>color</c>; never <c>currentcolor</c> (it inherits).</summary>
     public ColorValue Color { get; internal set; }
 
+    /// <summary>
+    /// True when the computed <c>display</c> was inline-level before positioning made it block-level. An absolutely positioned box
+    /// like that has the static position it would have had on a line, so it follows <c>text-align</c> (CSS Position 3 §4).
+    /// </summary>
+    public bool DisplayWasInlineLevel { get; internal set; }
+
     /// <summary><c>pointer-events</c>; inherited.</summary>
     public PointerEventsKind PointerEvents { get; internal set; }
 
@@ -596,6 +602,9 @@ public partial struct ComputedValues
 
     /// <summary><c>background-blend-mode</c> list; layer <i>i</i> takes entry <c>i mod Length</c>.</summary>
     internal BlendMode[] BackgroundBlendModes { get; set; }
+
+    /// <summary>True for <c>image-orientation: none</c>: images are drawn with the pixel layout stored in the file, ignoring EXIF orientation. Inherited.</summary>
+    internal bool ImageOrientationNone { get; set; }
 
     /// <summary><c>break-before</c>.</summary>
     public BreakKind BreakBefore { get; internal set; }

@@ -325,7 +325,7 @@ public sealed partial class Painter
         PaintColor color = new(v.Color.R, v.Color.G, v.Color.B, v.Color.A);
 
         ImageSpec li = v.ListStyleImage;
-        if (li.Kind == ImageSourceKind.Url && TryImage(li.Url!, out ImageInfo info) && info.Width > 0 && info.Height > 0)
+        if (li.Kind == ImageSourceKind.Url && TryImage(li.Url!, out ImageInfo info, v.ImageOrientationNone) && info.Width > 0 && info.Height > 0)
         {
             double iw = info.Width, ih = info.Height;
             double ix = v.ListStylePosition == ListStylePositionKind.Outside ? r.Right - iw - (fs * 0.25) : r.X;
@@ -544,7 +544,7 @@ public sealed partial class Painter
 
         string? src = box.Node.ReplacedSource;
         RectF cr = g.Content;
-        if (string.IsNullOrEmpty(src) || cr.IsEmpty || !TryImage(src, out ImageInfo info))
+        if (string.IsNullOrEmpty(src) || cr.IsEmpty || !TryImage(src, out ImageInfo info, v.ImageOrientationNone))
         {
             return;
         }

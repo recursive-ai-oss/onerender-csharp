@@ -421,7 +421,7 @@ public sealed partial class Painter
         bool natural = false;
         if (image.Kind == ImageSourceKind.Url)
         {
-            if (!TryImage(image.Url!, out info))
+            if (!TryImage(image.Url!, out info, v.ImageOrientationNone))
             {
                 return;
             }
@@ -560,10 +560,10 @@ public sealed partial class Painter
     private static ImageSampling SamplingOf(in ComputedValues v) =>
         v.ImageRendering is ImageRenderingKind.Pixelated or ImageRenderingKind.CrispEdges ? ImageSampling.Pixelated : ImageSampling.Smooth;
 
-    private bool TryImage(string address, out ImageInfo info)
+    private bool TryImage(string address, out ImageInfo info, bool storedOrientation = false)
     {
         info = default;
-        if (_images is not null && _images.TryGetImage(address, out info))
+        if (_images is not null && _images.TryGetImage(address, storedOrientation, out info))
         {
             return true;
         }

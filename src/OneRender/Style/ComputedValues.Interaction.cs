@@ -18,10 +18,11 @@ public partial struct ComputedValues
     }
 
     internal static bool InteractionEquals(in ComputedValues a, in ComputedValues b) =>
-        a.PointerEvents == b.PointerEvents;
+        a.PointerEvents == b.PointerEvents && a.DisplayWasInlineLevel == b.DisplayWasInlineLevel;
 
     internal static void InteractionHash(ref HashCode h, in ComputedValues v)
     {
         h.Add(v.PointerEvents);
+        h.Add(v.DisplayWasInlineLevel);
     }
 }

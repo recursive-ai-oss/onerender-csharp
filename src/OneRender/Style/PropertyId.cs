@@ -167,6 +167,7 @@ internal enum PropertyId : byte
     MixBlendMode,
     Isolation,
     BackgroundBlendMode,
+    ImageOrientation,
     BorderCollapse,
     BorderSpacing,
     EmptyCells,
@@ -204,7 +205,7 @@ internal static class Properties
         "background-image", "background-repeat", "background-position-x", "background-position-y", "background-size", "background-origin", "background-clip", "background-attachment", "border-image-source", "border-image-slice", "border-image-width", "border-image-outset", "border-image-repeat", "box-shadow", "outline-width", "outline-style", "outline-color", "outline-offset", "text-decoration-line", "text-decoration-style", "text-decoration-color", "text-decoration-thickness", "text-underline-offset", "text-underline-position", "text-shadow", "object-fit", "object-position", "image-rendering", "list-style-image",
         "transform", "transform-origin", "transform-box", "translate", "rotate", "scale", "perspective", "perspective-origin", "transform-style", "backface-visibility",
         "filter", "backdrop-filter", "clip-path", "mask-image", "mask-mode", "mask-repeat", "mask-position", "mask-size", "mask-origin", "mask-clip", "mask-composite",
-        "mix-blend-mode", "isolation", "background-blend-mode",
+        "mix-blend-mode", "isolation", "background-blend-mode", "image-orientation",
         "border-collapse", "border-spacing", "empty-cells", "caption-side", "table-layout", "pointer-events",
     ];
 
@@ -223,7 +224,7 @@ internal static class Properties
             or PropertyId.FontStretch or PropertyId.LineHeight or PropertyId.WhiteSpaceCollapse or PropertyId.TextWrapMode
             or PropertyId.TextAlign or PropertyId.TextIndent or PropertyId.LetterSpacing or PropertyId.WordSpacing
             or PropertyId.Direction or PropertyId.Color or PropertyId.ListStyleType or PropertyId.ListStylePosition or PropertyId.Orphans or PropertyId.Widows
-            or PropertyId.TextShadow or PropertyId.ImageRendering or PropertyId.ListStyleImage
+            or PropertyId.TextShadow or PropertyId.ImageRendering or PropertyId.ListStyleImage or PropertyId.ImageOrientation
             or PropertyId.TextUnderlineOffset or PropertyId.TextUnderlinePosition
             or PropertyId.WordBreak or PropertyId.OverflowWrap or PropertyId.LineBreak or PropertyId.Hyphens or PropertyId.TabSize
             or PropertyId.TextAlignLast or PropertyId.TextJustify or PropertyId.TextTransform
