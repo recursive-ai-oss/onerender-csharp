@@ -1,20 +1,39 @@
 using OneRender.Style;
 using OneRender.Tree;
-using OneFont;
+using OneRender.Text;
 
 namespace OneRender.Layout;
 
-/// <summary>Chooses fonts for computed styles. The host (or the fonts packages) implements it; the engine loads no font files itself.</summary>
+/// <summary>
+/// The text service layout calls: it turns computed font properties into a matched font list, shaped runs and metrics.
+/// <see cref="TextFontProvider"/> is the engine's implementation, built on <see cref="FontCatalog"/> and <see cref="TextShaper"/>;
+/// a host can wrap or replace it. Providers are single-thread objects and, for the same inputs while the font set does not
+/// change, return the same objects and allocate nothing.
+/// </summary>
 public interface IFontProvider
 {
+    /// <summary>The faces and diagnostics behind the provider (add fonts, <c>@font-face</c> rules, read missing-glyph diagnostics).</summary>
+    FontCatalog Catalog { get; }
+
     /// <summary>
-    /// Returns the faces to use for a style, in preference order, as a fallback chain for shaping: the families of
-    /// <c>font-family</c> matched against <c>font-weight</c>, <c>font-style</c> and <c>font-stretch</c> (CSS Fonts 4 §5.2), then
-    /// the host's fallback faces. The result must be the same object for the same inputs while the font set does not change.
+    /// Matches a style (CSS Fonts 4 §5.2): the families of <c>font-family</c> against <c>font-weight</c>, <c>font-style</c> and
+    /// <c>font-stretch</c>, then the default faces. The list also answers per-character fallback.
     /// </summary>
     /// <param name="style">The computed values of the box whose text is shaped.</param>
-    /// <returns>A chain with at least one face; never null.</returns>
-    FontFallbackChain GetFallbackChain(in ComputedValues style);
+    /// <returns>A list with at least one face when any face is registered; never null.</returns>
+    ResolvedFontList Resolve(in ComputedValues style);
+
+    /// <summary>Shapes text for a style into a (cached) glyph run; see <see cref="TextShaper.Shape"/>.</summary>
+    /// <param name="text">The text of one bidi level run, already white-space processed.</param>
+    /// <param name="style">The computed values of the box.</param>
+    /// <param name="rightToLeft">True for a right-to-left run.</param>
+    /// <returns>A run owned by the provider's cache; do not modify it.</returns>
+    ShapedText Shape(ReadOnlySpan<char> text, in ComputedValues style, bool rightToLeft = false);
+
+    /// <summary>Metrics of the primary face of a style at its <c>font-size</c>, in px.</summary>
+    /// <param name="style">The computed values.</param>
+    /// <returns>The metrics, or the default value when no face exists.</returns>
+    FontMetricsInfo GetMetrics(in ComputedValues style);
 }
 
 /// <summary>What a layout is given besides the box tree.</summary>

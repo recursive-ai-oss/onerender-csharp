@@ -574,7 +574,7 @@ internal sealed class StackingLayout : ILayoutEngine
 
     private static void Face(IFontProvider fonts, in ComputedValues v, out double ascent, out double descent, out double lineHeight)
     {
-        FontFace face = fonts.GetFallbackChain(in v).Faces[0];
+        FontFace face = fonts.Resolve(in v).PrimaryFace!.Face;
         FontMetrics m = face.Metrics;
         double scale = v.FontSize / m.UnitsPerEm;
         ascent = m.Ascender * scale;
@@ -590,7 +590,7 @@ internal sealed class StackingLayout : ILayoutEngine
     private double AddText(FragmentTree output, Box textBox, IFontProvider fonts, int parentItem, Fragment parentFrag, double x, ref bool pendingSpace, ref bool atStart, ref double maxAscent, ref double maxDescent)
     {
         ref readonly ComputedValues v = ref textBox.Values;
-        FontFace face = fonts.GetFallbackChain(in v).Faces[0];
+        FontFace face = fonts.Resolve(in v).PrimaryFace!.Face;
         Face(fonts, in v, out double asc, out double desc, out double lineHeight);
         double scale = v.FontSize / face.Metrics.UnitsPerEm;
         bool collapse = v.WhiteSpaceCollapse is WhiteSpaceCollapseKind.Collapse;

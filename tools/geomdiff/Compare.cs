@@ -323,7 +323,7 @@ internal static class Comparer
 /// <summary>Our side: the engine, through <see cref="GeometryProbe"/>, with the default fonts.</summary>
 internal static class EngineSide
 {
-    private static readonly OneRender.Image.DefaultFontProvider Fonts = new();
+    private static OneRender.Text.TextFontProvider Fonts => OneRender.Image.FontProviders.ForCurrentThread();
 
     public static GeometryCapture LayOut(string snapshotRoot, string pageId, ViewportSize vp, CancellationToken ct)
     {

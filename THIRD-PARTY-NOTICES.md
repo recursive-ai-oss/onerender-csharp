@@ -52,3 +52,12 @@ The tools under `tools/geomdiff/` drive Chrome for Testing 156.0.8078.47 as a bl
 - Flowbite: https://github.com/themesberg/flowbite, `LICENSE.md` (MIT)
 
 The MIT notice for each: "The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software."
+
+## Noto Sans subsets (test use only)
+
+`testdata/fonts/` holds small Noto Sans test fonts (Latin/Greek/Cyrillic and bidi coverage, Arabic, Hebrew) used by the text tests and the font-data fuzz seeds. They are never part of any package.
+
+- Source: Google Noto fonts, <https://github.com/notofonts> and <https://github.com/googlefonts/noto-fonts>, licensed under the SIL Open Font License 1.1; the copyright lines and licence text are in `testdata/fonts/OFL.txt`.
+- Modified: the `.ttf` files are subsets of the upstream fonts (fewer glyphs, hinting removed); `NotoSansHebrew-Subset-Regular.woff` and `.woff2` are format conversions of the Hebrew subset made by `testdata/fonts/make-web-fonts.py` (fontTools). The subsets were taken from the OneFont test data.
+- `NotoSans-Bidi-Subset.ttf` is modified further: it merges the Noto Sans, Noto Sans Arabic and Noto Sans Hebrew subsets into one font.
+- SHA-256: `NotoSans-Bidi-Subset.ttf` 7e55e394…cbef520, `NotoSansArabic-Subset-Regular.ttf` dc004195…ce0cae1, `NotoSansHebrew-Subset-Regular.ttf` 89d6ab25…d1e898 (full values: `sha256sum testdata/fonts/*`).
