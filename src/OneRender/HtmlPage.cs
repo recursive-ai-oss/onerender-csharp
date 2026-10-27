@@ -124,7 +124,7 @@ public sealed partial class HtmlPage
         ArgumentOutOfRangeException.ThrowIfLessThan(options.ViewportHeight, 1);
         cancellationToken.ThrowIfCancellationRequested();
 
-        return CreateWithStyles(Document.Parse(html, null, cancellationToken), options, out styles, cancellationToken);
+        return CreateWithStyles(Document.Parse(html, null, cancellationToken), options, out styles, cancellationToken, incremental);
     }
 
     /// <summary>Cascades, builds the box tree and lays out a document the host has already parsed.</summary>
@@ -138,7 +138,7 @@ public sealed partial class HtmlPage
     public static HtmlPage Create(Document document, HtmlPageOptions options, CancellationToken cancellationToken = default) =>
         CreateWithStyles(document, options, out _, cancellationToken);
 
-    internal static HtmlPage CreateWithStyles(Document document, HtmlPageOptions options, out DocumentStyles styles, CancellationToken cancellationToken)
+    internal static HtmlPage CreateWithStyles(Document document, HtmlPageOptions options, out DocumentStyles styles, CancellationToken cancellationToken, bool incremental = false)
     {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(options);

@@ -13,6 +13,8 @@ public sealed partial class FragmentTree
     /// </summary>
     internal void SwapContents(FragmentTree other)
     {
+        _version++;
+        other._version++;
         (_kind, other._kind) = (other._kind, _kind);
         (_traits, other._traits) = (other._traits, _traits);
         (_box, other._box) = (other._box, _box);
