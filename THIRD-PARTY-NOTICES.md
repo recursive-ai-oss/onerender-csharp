@@ -31,6 +31,8 @@ Redistributions of source code must retain the above copyright notice, this list
 
 `tests/OneRender.Tests/testdata/wpt-style/css/` holds unmodified copies of the web-platform-tests files named `*-valid.html`, `*-invalid.html` and `*-computed.html` that exercise a property the style pipeline models, taken at the commit in `tools/wpt/WPT_COMMIT` by `tools/wpt/select-style-tests.sh`. `expected-failures.tsv` beside them is ours. They are used only by the tests.
 
+`tests/OneRender.Tests/testdata/wpt-motion/css/` holds unmodified copies of the web-platform-tests testharness files of `css/css-transitions` and `css/css-animations` that the tests can replay without a script engine (the parsing files and the files that call the interpolation helpers), taken at the commit in `tools/wpt/WPT_COMMIT`. `excluded.tsv`, `expected-failures.tsv` and `floors.tsv` beside them are ours. They are used only by the tests, and the licence notice below applies to them as well.
+
 - Source: https://github.com/web-platform-tests/wpt, `LICENSE.md` (3-Clause BSD)
 - Copyright: web-platform-tests contributors
 

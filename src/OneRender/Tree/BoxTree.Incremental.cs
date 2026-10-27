@@ -241,6 +241,29 @@ public sealed partial class BoxTree
         return layoutAny ? BoxUpdate.Patched : paintAny ? BoxUpdate.PatchedPaintOnly : BoxUpdate.None;
     }
 
+    /// <summary>
+    /// Brings the boxes up to date after style rows were rewritten in place (an animation tick): the boxes of the given nodes keep their
+    /// style ids, whose content changed. Anonymous boxes below them take their parents' values again, hazards are recomputed, and with
+    /// <paramref name="layout"/> the boxes are marked for layout.
+    /// </summary>
+    /// <param name="nodes">Styled node indices whose rows changed.</param>
+    /// <param name="layout">True when a property that affects layout changed.</param>
+    internal void ApplyAnimatedRows(ReadOnlySpan<int> nodes, bool layout)
+    {
+        foreach (int node in nodes)
+        {
+            if ((uint)node >= (uint)_nodeBox.Length)
+            {
+                continue;
+            }
+
+            for (int b = _nodeBox[node]; b >= 0; b = _nextPiece[b])
+            {
+                PatchStyle(b, new StyleId(_style[b]), layout);
+            }
+        }
+    }
+
     private void PatchStyle(int box, StyleId sid, bool layout)
     {
         if (_style[box] != sid.Index)

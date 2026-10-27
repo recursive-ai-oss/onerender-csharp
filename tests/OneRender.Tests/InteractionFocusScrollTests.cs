@@ -144,7 +144,7 @@ public class FocusTests
     [Fact]
     public void FocusVisibleFollowsTheKeyboardPointerHeuristic()
     {
-        InteractivePage p = Ix.Page("<button id=b>x</button><input id=t><div id=d tabindex=0 style='height:20px'></div>", extraStyle: "button:focus-visible{background-color:rgb(255,0,0)} button:focus{outline:1px solid} input:focus-visible{background-color:rgb(0,0,255)}");
+        InteractivePage p = Ix.Page("<button id=b>x</button><input id=t><div id=d tabindex=0 style='height:20px'></div>", extraStyle: "button,input{background-color:rgb(0,0,0)} button:focus-visible{background-color:rgb(255,0,0)} button:focus{outline:1px solid} input:focus-visible{background-color:rgb(0,0,255)}");
         Node b = Ix.Id(p, "b");
         Color(p, "b");
 

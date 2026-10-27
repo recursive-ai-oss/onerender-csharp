@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The comparison with OneGame.UI, a public library used here through its published package. Benchmark-only: nothing in src/ refers to it.
+       It runs the same four changes on the same game-UI page through OneGame.UI and through the engine (the engine's benchmarks are
+       linked in from the main benchmark project, so both sides appear in one report). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>OneRender.Benchmarks</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);CA1822</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+    <PackageReference Include="RecursiveAI.OneGame.UI" />
+    <PackageReference Include="RecursiveAI.OneGame.Text" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="../OneRender.Benchmarks/IncrementalBenchmarks.cs" Link="IncrementalBenchmarks.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/OneRender/OneRender.csproj" />
+    <ProjectReference Include="../../src/OneRender.Image/OneRender.Image.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts/OneRender.Fonts.csproj" />
+    <ProjectReference Include="../../tests/OneRender.TestSupport/OneRender.TestSupport.csproj" />
+  </ItemGroup>
+
+</Project>

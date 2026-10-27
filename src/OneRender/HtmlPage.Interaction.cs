@@ -9,8 +9,10 @@ namespace OneRender;
 public sealed partial class HtmlPage
 {
     // A page for the same document under a new cascade (another hover, focus or active element), keeping the host's scroll positions.
-    internal HtmlPage Rebuild(DocumentStyles styles, CancellationToken cancellationToken) =>
-        Build(Document, styles, Options, Scroll, cancellationToken, _updater is not null);
+    internal HtmlPage Rebuild(DocumentStyles styles, CancellationToken cancellationToken, double now = 0) =>
+        Build(Document, styles, Options, Scroll, cancellationToken, _updater is not null, Motion, Styled, now);
+
+    internal PipelineUpdater? Updater => _updater;
 
     /// <summary>Whether this page can take a restyle in place (it was made for an interactive page).</summary>
     internal bool CanRestyleInPlace => _updater is not null;
@@ -23,8 +25,9 @@ public sealed partial class HtmlPage
     /// <param name="styles">The new view.</param>
     /// <param name="all">True to check every element (the view is not derived from the one the page shows).</param>
     /// <param name="cancellationToken">Cancels the work.</param>
+    /// <param name="now">The animation clock, in the host's ms, for transitions and animations the change starts.</param>
     /// <returns>False when the change reaches which nodes and boxes exist (a <c>display: none</c> that came or went, generated content, list markers); the page is then stale and the caller builds a new one with <see cref="Rebuild"/>.</returns>
-    internal bool TryRestyle(DocumentStyles styles, bool all, CancellationToken cancellationToken)
+    internal bool TryRestyle(DocumentStyles styles, bool all, CancellationToken cancellationToken, double now = 0)
     {
         if (_updater is null || _front is null || styles.HasInteractivePseudoElementRules)
         {
@@ -53,6 +56,15 @@ public sealed partial class HtmlPage
         }
 
         _updater.Restyle();
+
+        // Transitions and animations see the restyled elements before boxes are touched. When any of them has effects, its style row now
+        // differs in content from the recorded old style (rows are rewritten under their ids), so the boxes are generated again rather
+        // than compared; the walk over the styles and the cascade are still skipped.
+        if (Motion is { } motion && motion.RecalcPending(st, now, styles))
+        {
+            _updater.InvalidateBoxes();
+        }
+
         for (int k = 0; k < st.PendingCount; k++)
         {
             if ((st.PendingKinds(k) & NodeChanges.Style) == 0)

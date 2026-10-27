@@ -38,7 +38,7 @@ public sealed class RgbaImage
 /// <summary>
 /// The one narrow entry point test harnesses use to turn an HTML document into pixels:
 /// "render this document at this viewport to an RGBA image". It is <see cref="HtmlRender.ToImage"/> with the argument shape
-/// the reftest runner uses.
+/// the reftest runner uses. Transitions and animations are shown at time 0, as a browser's screenshot at load would.
 /// </summary>
 public static class HtmlRenderSeam
 {
@@ -75,6 +75,6 @@ public static class HtmlRenderSeam
         string? baseUrl = string.IsNullOrEmpty(documentUri) ? null : (rooted ? Origin + documentUri : documentUri);
         Func<string, byte[]?>? inner = resources is null ? null : url =>
             resources(url.StartsWith(Origin, StringComparison.Ordinal) ? url.Substring(Origin.Length) : url);
-        return HtmlRender.ToImage(html, new HtmlRenderOptions { Width = width, Height = height, BaseUrl = baseUrl, Resources = inner }, cancellationToken);
+        return HtmlRender.ToImage(html, new HtmlRenderOptions { Width = width, Height = height, BaseUrl = baseUrl, Resources = inner, AnimationTime = 0 }, cancellationToken);
     }
 }

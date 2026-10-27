@@ -339,7 +339,7 @@ internal sealed partial class StyleComputer
             }
 
             default:
-                return id >= PropertyId.PointerEvents ? ApplyInteraction(id, v) : id >= PropertyId.BorderCollapse ? ApplyTable(id, v) : id >= PropertyId.BackgroundImage ? ApplyPaint(id, v) : id >= PropertyId.GridTemplateColumns ? ApplyGrid(id, v) : ApplyFlex(id, v);
+                return id >= PropertyId.Appearance || id == PropertyId.PointerEvents ? ApplyInteraction(id, v) : id > PropertyId.PointerEvents ? ApplyMotion(id, v) : id >= PropertyId.BorderCollapse ? ApplyTable(id, v) : id >= PropertyId.BackgroundImage ? ApplyPaint(id, v) : id >= PropertyId.GridTemplateColumns ? ApplyGrid(id, v) : ApplyFlex(id, v);
         }
     }
 
