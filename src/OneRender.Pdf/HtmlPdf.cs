@@ -87,13 +87,10 @@ public static class HtmlPdf
         }
 
         var list = new DisplayList();
-        var painter = new Painter();
-        doc.PaintContent(list, painter, options.Output.Tagged, cancellationToken);
-
-        PdfOutputOptions o = Complete(options.Output, doc.Content);
         var diagnostics = new List<Diagnostic>();
-        diagnostics.AddRange(doc.Diagnostics);
-        diagnostics.AddRange(painter.Diagnostics.Items);
+        CompactHeap(doc.PageCount);
+        PdfOutputOptions o = PaintAll(doc, list, options, diagnostics, cancellationToken);
+        CompactHeap(doc.PageCount);
         using var writer = new DisplayListPdfWriter(output, o, images);
         var names = new List<string>(doc.Destinations.Count);
         foreach (PageDestination d in doc.Destinations)
@@ -118,6 +115,28 @@ public static class HtmlPdf
         writer.Finish(cancellationToken);
         diagnostics.AddRange(writer.Diagnostics.Items);
         return new HtmlPdfResult(doc.PageCount, diagnostics);
+    }
+
+    // A long document builds hundreds of megabytes of trees and then lists in turn; collecting between the phases keeps the working
+    // set near what is live instead of letting the generations grow to several times that.
+    private static void CompactHeap(int pages)
+    {
+        if (pages >= LargeDocumentPages)
+        {
+            GC.Collect();
+        }
+    }
+
+    private const int LargeDocumentPages = 40;
+
+    // The painter holds arrays as large as the fragment tree; keeping it in its own frame lets them go before the pages are written.
+    private static PdfOutputOptions PaintAll(PagedDocument doc, DisplayList list, HtmlPdfOptions options, List<Diagnostic> diagnostics, CancellationToken cancellationToken)
+    {
+        var painter = new Painter();
+        doc.PaintContent(list, painter, options.Output.Tagged, cancellationToken);
+        diagnostics.AddRange(doc.Diagnostics);
+        diagnostics.AddRange(painter.Diagnostics.Items);
+        return Complete(options.Output, doc.Content);
     }
 
     /// <summary>Renders <paramref name="html"/> to PDF bytes.</summary>

@@ -237,19 +237,7 @@ public sealed partial class PagedDocument
         sb.Append(_fontFaceCss);
         sb.Append("html,body{margin:0;padding:0;background:transparent}");
         sb.Append(".pg{position:relative;overflow:hidden;box-sizing:border-box;width:").Append(Px(style.Geometry.Width)).Append(";height:").Append(Px(style.Geometry.Height)).Append(';');
-        Node root = Content.Document.DocumentElement;
-        if (!root.IsNull)
-        {
-            ComputedStyle rs = _styles.GetStyle(root);
-            foreach (string p in InheritedRootProperties)
-            {
-                string v = rs.GetPropertyValue(p);
-                if (v.Length > 0 && v.Length < 512)
-                {
-                    sb.Append(p).Append(':').Append(Attr(v)).Append(';');
-                }
-            }
-        }
+        sb.Append(_rootCss);
 
         sb.Append(Attr(style.Css));
         sb.Append("}.mb{position:absolute;box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden}</style></head><body>");

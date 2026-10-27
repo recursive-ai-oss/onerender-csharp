@@ -280,6 +280,11 @@ public sealed partial class HtmlPage
             page._front = front;
             page._updater = new PipelineUpdater(styled, boxes, fragments, reusing, options.Fonts, options.ViewportWidth, options.ViewportHeight);
         }
+        else
+        {
+            // A page that is never restyled does not keep the cascade alive through the front end.
+            styled.Styler = null;
+        }
 
         if (scroll is not null)
         {

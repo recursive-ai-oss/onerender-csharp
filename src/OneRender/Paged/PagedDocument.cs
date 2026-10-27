@@ -83,7 +83,7 @@ public sealed partial class PagedDocument
     private readonly Dictionary<string, ContentList> _contentCache = new(StringComparer.Ordinal);
     private readonly Dictionary<string, DisplayList> _layerCache = new(StringComparer.Ordinal);
     private readonly Dictionary<PageStyle, int> _styleIds = new(ReferenceEqualityComparer.Instance);
-    private readonly DocumentStyles _styles;
+    private readonly string _rootCss;
     private readonly string _fontFaceCss;
     private readonly bool _firstRight;
     private readonly double _contentWidth;
@@ -99,13 +99,36 @@ public sealed partial class PagedDocument
     {
         _options = options;
         Content = content;
-        _styles = styles;
         _rules = rules;
         _pages = pages;
         Truncated = truncated;
         _firstRight = firstRight;
         _contentWidth = contentWidth;
         _fontFaceCss = CollectFontFaces(styles);
+        _rootCss = RootCss(content, styles);
+    }
+
+    // The root's text properties, which the margin boxes inherit; read once so the cascade does not have to stay in memory.
+    private static string RootCss(HtmlPage content, DocumentStyles styles)
+    {
+        Node root = content.Document.DocumentElement;
+        if (root.IsNull)
+        {
+            return "";
+        }
+
+        ComputedStyle rs = styles.GetStyle(root);
+        var sb = new StringBuilder();
+        foreach (string p in InheritedRootProperties)
+        {
+            string v = rs.GetPropertyValue(p);
+            if (v.Length > 0 && v.Length < 512)
+            {
+                sb.Append(p).Append(':').Append(Attr(v)).Append(';');
+            }
+        }
+
+        return sb.ToString();
     }
 
     /// <summary>The laid-out content: its fragment tree has one page fragment per page, side by side.</summary>
