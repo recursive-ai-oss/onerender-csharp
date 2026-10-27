@@ -53,7 +53,7 @@ public sealed partial class InteractivePage
 
     /// <summary>Parses, styles and lays out <paramref name="html"/> and makes it interactive.</summary>
     /// <param name="html">The document source.</param>
-    /// <param name="options">Viewport, fonts and resource hooks, as for <see cref="HtmlPage.Create"/>.</param>
+    /// <param name="options">Viewport, fonts and resource hooks, as for <see cref="HtmlPage.Create(string, HtmlPageOptions, CancellationToken)"/>.</param>
     /// <param name="interaction">Double-click timing, scroll step sizes and tab wrapping; null for the defaults.</param>
     /// <param name="cancellationToken">Cancels the work.</param>
     /// <returns>The interactive page.</returns>

@@ -37,6 +37,7 @@
     <ProjectReference Include="../../src/OneRender.Pdf/OneRender.Pdf.csproj" />
     <ProjectReference Include="../../src/OneRender.Fonts/OneRender.Fonts.csproj" />
     <ProjectReference Include="../../src/OneRender.Razor/OneRender.Razor.csproj" />
+    <ProjectReference Include="../../src/OneRender.Accessibility/OneRender.Accessibility.csproj" />
     <ProjectReference Include="../OneRender.TestSupport/OneRender.TestSupport.csproj" />
   </ItemGroup>
 

@@ -70,6 +70,12 @@ public sealed partial class Painter
     private const int PhasePositive = 5; // step 9: child stacking contexts with positive z-index
     private const int PhaseCount = 6;
 
+    /// <summary>
+    /// Told where painting is in the paint order, for consumers that relate display list items to fragments; null (the default)
+    /// means nobody is told and painting does no extra work.
+    /// </summary>
+    public IPaintObserver? Observer { get; set; }
+
     private const int MaxScopes = 240;
     private const int MaxClipSteps = 4096;
     private const int MaxDeferredClips = 64;
@@ -691,6 +697,12 @@ public sealed partial class Painter
         int f = _stack[top].Fragment;
         Box box = _boxes.Make(_tree.BoxOf(f));
         ref readonly ComputedValues v = ref box.Values;
+        if (Observer is { } observer)
+        {
+            bool stackingContext = (_flags[f] & FlagStackingContext) != 0;
+            observer.EnterUnit(_tree.Make(f), stackingContext || v.Position != PositionKind.Static, stackingContext, _list.Count);
+        }
+
         if (_scroll is not null && PushOuterTransform(f, in v))
         {
             _stack[top].Outer = true;
@@ -761,6 +773,8 @@ public sealed partial class Painter
             _list.PopClip();
             _scopes--;
         }
+
+        Observer?.ExitUnit(_tree.Make(frag), _list.Count);
     }
 
     // ------------------------------------------------------------------ scroll and sticky patch items
