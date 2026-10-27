@@ -161,6 +161,18 @@ public sealed partial class DisplayList
         // it: a painter that opens a tag lazily, when content needs it, never has to track which scope it is in.
         if (popKind != ItemKind.EndTag)
         {
+            // A pop that will be refused leaves the list as it was: look past the tags before closing any of them.
+            int scope = _top;
+            while (scope >= 0 && _items[scope].Kind == ItemKind.BeginTag)
+            {
+                scope = _items[scope].Parent;
+            }
+
+            if (scope < 0 || FamilyOf(_items[scope].Kind) != FamilyOf(pushKind))
+            {
+                throw new DisplayListException(popKind + " does not match the innermost open push.");
+            }
+
             while (_top >= 0 && _items[_top].Kind == ItemKind.BeginTag)
             {
                 Pop(ItemKind.EndTag, ItemKind.BeginTag);

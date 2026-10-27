@@ -198,4 +198,23 @@ public class DisplayListLimitTests
         Assert.Equal(10, img.Height);
         Assert.All(img.Pixels, b => Assert.Equal(255, b));
     }
+
+    [Fact]
+    public void ARefusedPopLeavesTheOpenTagsAlone()
+    {
+        // Popping a scope closes the tags inside it, but a pop that does not match anything must change nothing.
+        DisplayList l = new();
+        l.PushTransform(Id(1), Matrix3x2.Identity);
+        l.BeginTag(Id(2), TagRole.Paragraph, null, null);
+        Assert.Throws<DisplayListException>(() => l.PopGroup());
+        l.EndTag();
+        l.PopTransform();
+        l.Validate();
+
+        DisplayList empty = new();
+        empty.BeginTag(Id(1), TagRole.Paragraph, null, null);
+        Assert.Throws<DisplayListException>(() => empty.PopClip());
+        empty.EndTag();
+        empty.Validate();
+    }
 }
