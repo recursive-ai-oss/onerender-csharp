@@ -1,0 +1,1 @@
+0<div style="background:repeating-conic-gradient(red calc(infinity*1deg),blue);width:calc(infinity*1px);border-image:linear-gradient(red,blue) 30% fill/calc(NaN*1px) round">x</div>

@@ -108,7 +108,13 @@ public sealed partial class Painter
 
         // A gradient is drawn in image space and mapped: scale the source rectangle onto the destination.
         double kx = dw / sw, ky = dh / sh;
-        var m = new Matrix3x2((float)kx, 0, 0, (float)ky, (float)(dx - (sx * kx)), (float)(dy - (sy * ky)));
+        double tx = dx - (sx * kx), ty = dy - (sy * ky);
+        if (!double.IsFinite(kx + ky + tx + ty) || Math.Abs(kx) > 1e6 || Math.Abs(ky) > 1e6 || Math.Abs(tx) > 1e8 || Math.Abs(ty) > 1e8)
+        {
+            return;
+        }
+
+        var m = new Matrix3x2((float)kx, 0, 0, (float)ky, (float)tx, (float)ty);
         var srcRect = new RectF(C(sx), C(sy), C(sw), C(sh));
         _list.PushTransform(Id2(f, 13, idx), m);
         _list.PushClipRect(Id2(f, 14, idx), srcRect);

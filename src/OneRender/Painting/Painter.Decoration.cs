@@ -146,7 +146,7 @@ public sealed partial class Painter
         }
     }
 
-    private float SnapWidth(double w) => w <= 0 ? 0f : (float)Math.Max(1.0 / _dpr, Math.Floor(w * _dpr) / _dpr);
+    private float SnapWidth(double w) => !(w > 0) ? 0f : C(Math.Max(1.0 / _dpr, Math.Floor(w * _dpr) / _dpr));
 
     // ------------------------------------------------------------------ ids
 
@@ -902,7 +902,8 @@ public sealed partial class Painter
             Array.Resize(ref _stopBuf, Math.Min(_stopBuf.Length * 2, DisplayListLimits.MaxStopsPerGradient));
         }
 
-        _stopBuf[n++] = new GradientStop(offset, color);
+        // Stop positions can come out infinite or NaN (calc(infinity * 1px)); the list only takes finite ones.
+        _stopBuf[n++] = new GradientStop(float.IsNaN(offset) ? 0f : Math.Clamp(offset, -1e8f, 1e8f), color);
     }
 
     // Premultiplied interpolation, as the gradient itself does (Images 3 §3.5.2).
@@ -988,7 +989,7 @@ public sealed partial class Painter
                 Grow(radii.TopRightX, outer, minRadius), Grow(radii.TopRightY, outer, minRadius),
                 Grow(radii.BottomRightX, outer, minRadius), Grow(radii.BottomRightY, outer, minRadius),
                 Grow(radii.BottomLeftX, outer, minRadius), Grow(radii.BottomLeftY, outer, minRadius));
-        float sw = (float)width;
+        float sw = C(width);
         BorderStyle bs = style ?? fallback;
         _list.DrawBorder(Id2(f, 6, index), r, rad, new BorderSide(sw, bs, color), new BorderSide(sw, bs, color), new BorderSide(sw, bs, color), new BorderSide(sw, bs, color));
     }
