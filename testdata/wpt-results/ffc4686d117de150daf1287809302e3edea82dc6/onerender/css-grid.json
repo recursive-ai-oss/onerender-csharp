@@ -9,8 +9,8 @@
   "counts": {
     "total": 2481,
     "pass": 533,
-    "fail": 1030,
-    "blank": 10,
+    "fail": 1032,
+    "blank": 8,
     "skipped": 908
   },
   "rate": "0.3388",
@@ -557,9 +557,7 @@
     "css/css-grid/grid-lanes/track-sizing/auto-repeat/intrinsic-auto-repeat/column-auto-repeat-auto-026.html",
     "css/css-grid/grid-lanes/track-sizing/auto-repeat/intrinsic-auto-repeat/row-auto-repeat-auto-026.html",
     "css/css-grid/grid-lanes/track-sizing/auto-repeat/intrinsic-auto-repeat/row-auto-repeat-auto-028.html",
-    "css/css-grid/grid-lanes/track-sizing/auto-repeat/row-auto-repeat-025.html",
-    "css/css-grid/stretch-grid-item-checkbox-input.html",
-    "css/css-grid/stretch-grid-item-radio-input.html"
+    "css/css-grid/grid-lanes/track-sizing/auto-repeat/row-auto-repeat-025.html"
   ],
   "fail": {
     "css/css-grid/abspos/descendant-static-position-001.html": "== descendant-static-position-001-ref.html differs (max 255, 6581 px)",
@@ -859,7 +857,7 @@
     "css/css-grid/grid-lanes/alignment/column-fill-reverse-stacking-alignment-indefinite-size-001.html": "== column-fill-reverse-stacking-alignment-indefinite-size-001-ref.html differs (max 255, 15043 px)",
     "css/css-grid/grid-lanes/alignment/column-grid-lanes-justify-self-001.html": "== column-grid-lanes-justify-self-001-ref.html differs (max 255, 72780 px)",
     "css/css-grid/grid-lanes/alignment/column-grid-lanes-justify-self-002.html": "== column-grid-lanes-justify-self-002-ref.html differs (max 255, 35805 px)",
-    "css/css-grid/grid-lanes/alignment/column-grid-lanes-justify-self-003.html": "== column-grid-lanes-justify-self-003-ref.html differs (max 255, 67596 px)",
+    "css/css-grid/grid-lanes/alignment/column-grid-lanes-justify-self-003.html": "== column-grid-lanes-justify-self-003-ref.html differs (max 255, 66549 px)",
     "css/css-grid/grid-lanes/alignment/column-justify-items-center-001.html": "== column-justify-items-center-001-ref.html differs (max 255, 71134 px)",
     "css/css-grid/grid-lanes/alignment/column-justify-items-end-justify-self-start-001.html": "== column-justify-items-end-justify-self-start-001-ref.html differs (max 255, 73832 px)",
     "css/css-grid/grid-lanes/alignment/column-overflow-alignment-001.html": "== column-overflow-alignment-001-ref.html differs (max 255, 5312 px)",
@@ -903,7 +901,7 @@
     "css/css-grid/grid-lanes/alignment/row-fill-reverse-justify-content-safe-001.html": "== row-fill-reverse-justify-content-safe-001-ref.html differs (max 211, 8178 px)",
     "css/css-grid/grid-lanes/alignment/row-grid-lanes-align-self-001.html": "== row-grid-lanes-align-self-001-ref.html differs (max 255, 81370 px)",
     "css/css-grid/grid-lanes/alignment/row-grid-lanes-align-self-002.html": "== row-grid-lanes-align-self-002-ref.html differs (max 255, 34082 px)",
-    "css/css-grid/grid-lanes/alignment/row-grid-lanes-align-self-003.html": "== row-grid-lanes-align-self-003-ref.html differs (max 255, 20033 px)",
+    "css/css-grid/grid-lanes/alignment/row-grid-lanes-align-self-003.html": "== row-grid-lanes-align-self-003-ref.html differs (max 255, 19229 px)",
     "css/css-grid/grid-lanes/alignment/row-justify-items-001.html": "== row-justify-items-001-ref.html differs (max 241, 85517 px)",
     "css/css-grid/grid-lanes/alignment/row-justify-items-002.html": "== row-justify-items-002-ref.html differs (max 241, 85523 px)",
     "css/css-grid/grid-lanes/alignment/row-justify-items-003.html": "== row-justify-items-003-ref.html differs (max 211, 113401 px)",
@@ -1550,7 +1548,9 @@
     "css/css-grid/layout-algorithm/grid-max-content-width-percent-height-aspect-ratio-001.html": "== ref-filled-green-100px-square-only.html differs (max 255, 8000 px)",
     "css/css-grid/layout-algorithm/grid-min-content-width-percent-height-aspect-ratio-001.html": "== ref-filled-green-100px-square-only.html differs (max 255, 8000 px)",
     "css/css-grid/layout-algorithm/grid-template-flexible-rerun-track-sizing.html": "== ref-filled-green-100px-square.xht differs (max 255, 10000 px)",
-    "css/css-grid/stretch-grid-item-text-input-overflow.html": "== stretch-grid-item-text-input-overflow-ref.html differs (max 255, 3620 px)",
+    "css/css-grid/stretch-grid-item-checkbox-input.html": "== stretch-grid-item-checkbox-input-ref.html differs (max 137, 254 px)",
+    "css/css-grid/stretch-grid-item-radio-input.html": "== stretch-grid-item-radio-input-ref.html differs (max 136, 402 px)",
+    "css/css-grid/stretch-grid-item-text-input-overflow.html": "== stretch-grid-item-text-input-overflow-ref.html differs (max 255, 2786 px)",
     "css/css-grid/subgrid/abs-pos-002.html": "== abs-pos-002-ref.html differs (max 253, 9669 px)",
     "css/css-grid/subgrid/grid-gap-002.html": "== grid-gap-002-ref.html differs (max 255, 3362 px)",
     "css/css-grid/subgrid/grid-gap-003.html": "== grid-gap-003-ref.html differs (max 255, 4154 px)",

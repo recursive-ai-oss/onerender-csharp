@@ -12,158 +12,78 @@
     {
       "viewport": "1280x800",
       "pages": 7,
-      "elements": 744,
-      "matched": 602,
-      "rate": 0.8091397849462365,
+      "elements": 738,
+      "matched": 735,
+      "rate": 0.9959349593495935,
       "classes": {
-        "positionOnly": 112,
-        "sizeOnly": 15,
-        "positionAndSize": 6,
-        "textRun": 2,
-        "missingOurs": 1,
-        "missingChrome": 6
+        "positionOnly": 2,
+        "sizeOnly": 1,
+        "positionAndSize": 0,
+        "textRun": 0,
+        "missingOurs": 0,
+        "missingChrome": 0
       },
       "rootCauses": {
-        "positionOnly": 10,
-        "sizeOnly": 4,
-        "positionAndSize": 1,
+        "positionOnly": 0,
+        "sizeOnly": 1,
+        "positionAndSize": 0,
         "textRun": 0,
-        "missingOurs": 1,
-        "missingChrome": 6
+        "missingOurs": 0,
+        "missingChrome": 0
       },
       "tagConflicts": 0,
-      "pagesAtGate": 2,
-      "medianPageRate": 0.967948717948718,
-      "minPageRate": 0.17582417582417584,
+      "pagesAtGate": 6,
+      "medianPageRate": 1,
+      "minPageRate": 0.9805194805194806,
       "worstTags": [
         {
-          "tag": "div",
-          "mismatches": 27,
-          "elements": 175
-        },
-        {
-          "tag": "li",
-          "mismatches": 23,
-          "elements": 76
-        },
-        {
-          "tag": "p",
-          "mismatches": 17,
-          "elements": 56
-        },
-        {
-          "tag": "h3",
-          "mismatches": 8,
-          "elements": 20
-        },
-        {
-          "tag": "input",
-          "mismatches": 7,
-          "elements": 14
-        },
-        {
-          "tag": "span",
-          "mismatches": 7,
-          "elements": 57
-        },
-        {
-          "tag": "h2",
-          "mismatches": 6,
-          "elements": 24
-        },
-        {
-          "tag": "option",
-          "mismatches": 6,
-          "elements": 6
-        },
-        {
-          "tag": "a",
-          "mismatches": 5,
-          "elements": 69
-        },
-        {
           "tag": "button",
-          "mismatches": 5,
+          "mismatches": 2,
           "elements": 19
+        },
+        {
+          "tag": "div",
+          "mismatches": 1,
+          "elements": 175
         }
       ]
     },
     {
       "viewport": "390x844",
       "pages": 7,
-      "elements": 722,
-      "matched": 546,
-      "rate": 0.7562326869806094,
+      "elements": 716,
+      "matched": 713,
+      "rate": 0.9958100558659218,
       "classes": {
-        "positionOnly": 106,
-        "sizeOnly": 39,
-        "positionAndSize": 11,
-        "textRun": 13,
-        "missingOurs": 1,
-        "missingChrome": 6
+        "positionOnly": 2,
+        "sizeOnly": 1,
+        "positionAndSize": 0,
+        "textRun": 0,
+        "missingOurs": 0,
+        "missingChrome": 0
       },
       "rootCauses": {
         "positionOnly": 0,
-        "sizeOnly": 4,
-        "positionAndSize": 1,
+        "sizeOnly": 1,
+        "positionAndSize": 0,
         "textRun": 0,
-        "missingOurs": 1,
-        "missingChrome": 6
+        "missingOurs": 0,
+        "missingChrome": 0
       },
       "tagConflicts": 0,
-      "pagesAtGate": 2,
-      "medianPageRate": 0.967948717948718,
-      "minPageRate": 0.09302325581395349,
+      "pagesAtGate": 6,
+      "medianPageRate": 1,
+      "minPageRate": 0.9805194805194806,
       "worstTags": [
         {
-          "tag": "div",
-          "mismatches": 48,
-          "elements": 175
-        },
-        {
-          "tag": "li",
-          "mismatches": 26,
-          "elements": 76
-        },
-        {
-          "tag": "p",
-          "mismatches": 16,
-          "elements": 56
-        },
-        {
-          "tag": "h2",
-          "mismatches": 8,
-          "elements": 24
-        },
-        {
-          "tag": "h3",
-          "mismatches": 8,
-          "elements": 20
-        },
-        {
-          "tag": "input",
-          "mismatches": 7,
-          "elements": 14
-        },
-        {
-          "tag": "span",
-          "mismatches": 7,
-          "elements": 57
-        },
-        {
           "tag": "button",
-          "mismatches": 6,
+          "mismatches": 2,
           "elements": 19
         },
         {
-          "tag": "option",
-          "mismatches": 6,
-          "elements": 6
-        },
-        {
-          "tag": "ul",
-          "mismatches": 6,
-          "elements": 18
+          "tag": "div",
+          "mismatches": 1,
+          "elements": 175
         }
       ]
     }
@@ -171,81 +91,41 @@
   "total": {
     "viewport": "all",
     "pages": 14,
-    "elements": 1466,
-    "matched": 1148,
-    "rate": 0.7830832196452933,
+    "elements": 1454,
+    "matched": 1448,
+    "rate": 0.9958734525447043,
     "classes": {
-      "positionOnly": 218,
-      "sizeOnly": 54,
-      "positionAndSize": 17,
-      "textRun": 15,
-      "missingOurs": 2,
-      "missingChrome": 12
+      "positionOnly": 4,
+      "sizeOnly": 2,
+      "positionAndSize": 0,
+      "textRun": 0,
+      "missingOurs": 0,
+      "missingChrome": 0
     },
     "rootCauses": {
-      "positionOnly": 10,
-      "sizeOnly": 8,
-      "positionAndSize": 2,
+      "positionOnly": 0,
+      "sizeOnly": 2,
+      "positionAndSize": 0,
       "textRun": 0,
-      "missingOurs": 2,
-      "missingChrome": 12
+      "missingOurs": 0,
+      "missingChrome": 0
     },
     "tagConflicts": 0,
-    "pagesAtGate": 4,
-    "medianPageRate": 0.967948717948718,
-    "minPageRate": 0.09302325581395349,
+    "pagesAtGate": 12,
+    "medianPageRate": 1,
+    "minPageRate": 0.9805194805194806,
     "worstTags": [
       {
-        "tag": "div",
-        "mismatches": 75,
-        "elements": 350
-      },
-      {
-        "tag": "li",
-        "mismatches": 49,
-        "elements": 152
-      },
-      {
-        "tag": "p",
-        "mismatches": 33,
-        "elements": 112
-      },
-      {
-        "tag": "h3",
-        "mismatches": 16,
-        "elements": 40
-      },
-      {
-        "tag": "h2",
-        "mismatches": 14,
-        "elements": 48
-      },
-      {
-        "tag": "input",
-        "mismatches": 14,
-        "elements": 28
-      },
-      {
-        "tag": "span",
-        "mismatches": 14,
-        "elements": 114
-      },
-      {
-        "tag": "option",
-        "mismatches": 12,
-        "elements": 12
-      },
-      {
         "tag": "button",
-        "mismatches": 11,
+        "mismatches": 4,
         "elements": 38
       },
       {
-        "tag": "a",
-        "mismatches": 10,
-        "elements": 138
+        "tag": "div",
+        "mismatches": 2,
+        "elements": 350
       }
     ]
   },
-  "gateMet": false
+  "gateMet": true
 }

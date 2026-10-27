@@ -1,0 +1,251 @@
+{
+  "format": "onerender-geometry-summary/1",
+  "set": "forms",
+  "label": "perturbed",
+  "ours": "capture",
+  "tolerancePx": 1,
+  "tolerancePercent": 0.5,
+  "gateRate": 0.99,
+  "browser": "Chrome/156.0.8078.47",
+  "fontSet": "8768bf2774f6c8e8 (20 files)",
+  "viewports": [
+    {
+      "viewport": "1280x800",
+      "pages": 4,
+      "elements": 340,
+      "matched": 309,
+      "rate": 0.9088235294117647,
+      "classes": {
+        "positionOnly": 5,
+        "sizeOnly": 2,
+        "positionAndSize": 3,
+        "textRun": 13,
+        "missingOurs": 4,
+        "missingChrome": 4
+      },
+      "rootCauses": {
+        "positionOnly": 5,
+        "sizeOnly": 1,
+        "positionAndSize": 2,
+        "textRun": 8,
+        "missingOurs": 4,
+        "missingChrome": 4
+      },
+      "tagConflicts": 0,
+      "pagesAtGate": 0,
+      "medianPageRate": 0.9113924050632911,
+      "minPageRate": 0.8775510204081632,
+      "worstTags": [
+        {
+          "tag": "label",
+          "mismatches": 6,
+          "elements": 55
+        },
+        {
+          "tag": "input",
+          "mismatches": 4,
+          "elements": 80
+        },
+        {
+          "tag": "button",
+          "mismatches": 3,
+          "elements": 17
+        },
+        {
+          "tag": "div",
+          "mismatches": 3,
+          "elements": 67
+        },
+        {
+          "tag": "option",
+          "mismatches": 3,
+          "elements": 35
+        },
+        {
+          "tag": "select",
+          "mismatches": 2,
+          "elements": 16
+        },
+        {
+          "tag": "a",
+          "mismatches": 1,
+          "elements": 5
+        },
+        {
+          "tag": "body",
+          "mismatches": 1,
+          "elements": 4
+        },
+        {
+          "tag": "h1",
+          "mismatches": 1,
+          "elements": 3
+        },
+        {
+          "tag": "html",
+          "mismatches": 1,
+          "elements": 4
+        }
+      ]
+    },
+    {
+      "viewport": "390x844",
+      "pages": 4,
+      "elements": 340,
+      "matched": 309,
+      "rate": 0.9088235294117647,
+      "classes": {
+        "positionOnly": 5,
+        "sizeOnly": 2,
+        "positionAndSize": 3,
+        "textRun": 13,
+        "missingOurs": 4,
+        "missingChrome": 4
+      },
+      "rootCauses": {
+        "positionOnly": 5,
+        "sizeOnly": 1,
+        "positionAndSize": 2,
+        "textRun": 8,
+        "missingOurs": 4,
+        "missingChrome": 4
+      },
+      "tagConflicts": 0,
+      "pagesAtGate": 0,
+      "medianPageRate": 0.9113924050632911,
+      "minPageRate": 0.8775510204081632,
+      "worstTags": [
+        {
+          "tag": "label",
+          "mismatches": 6,
+          "elements": 55
+        },
+        {
+          "tag": "input",
+          "mismatches": 4,
+          "elements": 80
+        },
+        {
+          "tag": "button",
+          "mismatches": 3,
+          "elements": 17
+        },
+        {
+          "tag": "div",
+          "mismatches": 3,
+          "elements": 67
+        },
+        {
+          "tag": "option",
+          "mismatches": 3,
+          "elements": 35
+        },
+        {
+          "tag": "select",
+          "mismatches": 2,
+          "elements": 16
+        },
+        {
+          "tag": "a",
+          "mismatches": 1,
+          "elements": 5
+        },
+        {
+          "tag": "body",
+          "mismatches": 1,
+          "elements": 4
+        },
+        {
+          "tag": "h1",
+          "mismatches": 1,
+          "elements": 3
+        },
+        {
+          "tag": "html",
+          "mismatches": 1,
+          "elements": 4
+        }
+      ]
+    }
+  ],
+  "total": {
+    "viewport": "all",
+    "pages": 8,
+    "elements": 680,
+    "matched": 618,
+    "rate": 0.9088235294117647,
+    "classes": {
+      "positionOnly": 10,
+      "sizeOnly": 4,
+      "positionAndSize": 6,
+      "textRun": 26,
+      "missingOurs": 8,
+      "missingChrome": 8
+    },
+    "rootCauses": {
+      "positionOnly": 10,
+      "sizeOnly": 2,
+      "positionAndSize": 4,
+      "textRun": 16,
+      "missingOurs": 8,
+      "missingChrome": 8
+    },
+    "tagConflicts": 0,
+    "pagesAtGate": 0,
+    "medianPageRate": 0.9113924050632911,
+    "minPageRate": 0.8775510204081632,
+    "worstTags": [
+      {
+        "tag": "label",
+        "mismatches": 12,
+        "elements": 110
+      },
+      {
+        "tag": "input",
+        "mismatches": 8,
+        "elements": 160
+      },
+      {
+        "tag": "button",
+        "mismatches": 6,
+        "elements": 34
+      },
+      {
+        "tag": "div",
+        "mismatches": 6,
+        "elements": 134
+      },
+      {
+        "tag": "option",
+        "mismatches": 6,
+        "elements": 70
+      },
+      {
+        "tag": "select",
+        "mismatches": 4,
+        "elements": 32
+      },
+      {
+        "tag": "a",
+        "mismatches": 2,
+        "elements": 10
+      },
+      {
+        "tag": "body",
+        "mismatches": 2,
+        "elements": 8
+      },
+      {
+        "tag": "h1",
+        "mismatches": 2,
+        "elements": 6
+      },
+      {
+        "tag": "html",
+        "mismatches": 2,
+        "elements": 8
+      }
+    ]
+  },
+  "gateMet": false
+}
