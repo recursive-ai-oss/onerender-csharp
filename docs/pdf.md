@@ -75,6 +75,10 @@ Identity: a tag item's element is `Id >> 16` (the box, the part, the occurrence 
 
 `PdfPageSetup` edges are 1 to 14,400 px and the margins must leave content (`ArgumentOutOfRangeException`); `MaxPages` fails with `PdfRenderException`; island pixel caps as above; tag nesting as above; clip and transform nesting 21 `q` levels per page and 6 transparency-group forms deep, beyond which the inner ones are flattened with a diagnostic. Only `PdfRenderException`, `ArgumentException` (and its subclasses), `DisplayListException` and `OperationCanceledException` leave the public methods. The `pdf` fuzz target (`fuzz/`) feeds hostile display lists, page sizes and profiles through the writer and checks the file reopens.
 
+## Known limitation: complex-script text and PDF/UA-1
+
+Tagged PDF/UA-1 output with complex-script text (full Arabic, Devanagari or Thai sentences) can fail veraPDF rule 7.21.7, because glyphs inside multi-glyph clusters have no `ToUnicode` mapping. Extracted text is still correct. Pages that mix scripts with short complex-script words pass.
+
 ## Checks
 
 - `tools/pdf/fetch-verapdf.sh` fetches veraPDF 1.30.3 (from software.verapdf.org, SHA-256 pinned) and a user-local Eclipse Temurin 21 JRE; veraPDF is GPLv3+/MPLv2+ and is only run as a separate program, never linked, committed or shipped. `tools/pdf/run-verapdf.sh` writes the six templates and the paged sample (`testdata/templates/paged`: contents with leaders and links, running header, page X of Y, a 90-row table with a repeated header) and validates each against PDF/UA-1 (`--flavour ua1`): all seven pass with zero failed rules. `results/paged/weasyprint.md` compares page counts and break positions with WeasyPrint, run as a separate program (information only).

@@ -35,17 +35,6 @@ internal static class FlexTarget
 
     private static readonly string[] Displays = ["flex", "flex", "inline-flex", "block", "flex", "inline-block"];
 
-    private sealed class NoFonts : IFontProvider
-    {
-        public FontCatalog Catalog => throw new NotSupportedException();
-
-        public ResolvedFontList Resolve(in ComputedValues style) => throw new NotSupportedException();
-
-        public ShapedText Shape(ReadOnlySpan<char> text, in ComputedValues style, bool rightToLeft = false) => throw new NotSupportedException();
-
-        public FontMetricsInfo GetMetrics(in ComputedValues style) => throw new NotSupportedException();
-    }
-
     public static void Run(ReadOnlySpan<byte> data)
     {
         if (data.Length < 3)
@@ -97,7 +86,7 @@ internal static class FlexTarget
 
         boxes.Build();
         double width = 20 + (data[0] * 5);
-        var input = new LayoutInput(width, double.NaN, new NoFonts());
+        var input = new LayoutInput(width, double.NaN, OneRender.Image.FontProviders.ForCurrentThread());
         var engine = new BlockLayoutEngine();
         var fragments = new FragmentTree(boxes);
         engine.Layout(boxes, input, fragments);
