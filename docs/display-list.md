@@ -17,6 +17,7 @@ Types live in `RecursiveAI.OneRender`, namespace `OneRender.Painting`: `DisplayL
 9. [Images](#images)
 10. [Glyph runs](#glyph-runs)
 11. [Clips, transforms, groups, tags](#clips-transforms-groups-tags)
+    - [Effects (1.2)](#effects-12)
 12. [Bounds](#bounds)
 13. [Damage](#damage)
 14. [Patching](#patching)
@@ -28,12 +29,12 @@ Types live in `RecursiveAI.OneRender`, namespace `OneRender.Painting`: `DisplayL
 
 ## Version
 
-The format has a major and a minor number (`DisplayList.FormatMajor`, `FormatMinor`; now 1.1).
+The format has a major and a minor number (`DisplayList.FormatMajor`, `FormatMinor`; now 1.2).
 
 - A reader of major *N* must refuse lists of any other major.
 - A minor release only **adds**: new item kinds (new numbers), new properties on existing kinds with defaults that mean "as before", new enum members. It never renumbers, repurposes or removes.
-- `DisplayList.RequiredMinor` is the lowest minor a reader needs to draw this particular list. A reader of minor *M* must refuse a list whose `RequiredMinor` is above *M*, because an item it does not know cannot be ignored: masks, filters and clip-path shapes change the pixels of everything inside them. A list that uses only items of version 1.0 has `RequiredMinor` 0 whatever library version made it. Format 1.1 (below) adds two properties; a list that uses either has `RequiredMinor` 1.
-- Kind numbers 32 to 63 are reserved for effects that need a minor bump: `PushMask`/`PopMask` (mask images and mask borders), `PushFilter`/`PopFilter` (`filter`, `backdrop-filter`) and `PushClipShape` (`clip-path` with a reference box). They follow the same push/pop discipline as the existing pairs, and a reader that does not know them refuses the list rather than skipping them.
+- `DisplayList.RequiredMinor` is the lowest minor a reader needs to draw this particular list. A reader of minor *M* must refuse a list whose `RequiredMinor` is above *M*, because an item it does not know cannot be ignored: masks, filters and clip-path shapes change the pixels of everything inside them. A list that uses only items of version 1.0 has `RequiredMinor` 0 whatever library version made it. Format 1.1 (below) adds two properties; a list that uses either has `RequiredMinor` 1. Format 1.2 adds the effect items listed under [Effects](#effects-12); a list that uses any has `RequiredMinor` 2.
+- Kind numbers 32 to 63 are reserved for effects that need a minor bump. 1.2 uses 32 to 38 and 40 (see [Effects](#effects-12)); 39 and 41 to 63 stay reserved. They follow the same push/pop discipline as the existing pairs, and a reader that does not know them refuses the list rather than skipping them. `clip-path` needs no kind of its own: its shapes are `PushClipRect`, `PushClipRoundedRect` and `PushClipPath`.
 - Everything that is not a public member (storage layout, pool indices, hash values) is not part of the format. Reading goes through `DisplayList[i]` and `DisplayItem`.
 
 ## Space, units and conventions
@@ -90,6 +91,7 @@ All fields are in CSS pixels unless stated. "Rect" is the item's primary rectang
 | `Border` | 4 | rect (border box), radii (outer), four sides | see [Borders](#borders) |
 | `BoxShadow` | 5 | rect, radii, color, offset x/y, blur, spread, inset | see [Box shadows](#box-shadows) |
 | `Image` | 6 | image handle, source rect, destination rect, sampling | see [Images](#images) |
+| `SvgImage` | 8 | rect, `currentColor`, svg markup | 1.2, see [Effects](#effects-12) |
 | `GlyphRun` | 7 | face, size, origin, color, glyph ids, x, y, clusters, text, direction | see [Glyph runs](#glyph-runs) |
 | `PushClipRect` | 16 | rect | |
 | `PushClipRoundedRect` | 17 | rect, radii | |
@@ -101,6 +103,11 @@ All fields are in CSS pixels unless stated. "Rect" is the item's primary rectang
 | `PopGroup` | 23 | | |
 | `BeginTag` | 24 | role, alt text, link target, language | |
 | `EndTag` | 25 | | |
+| `PushFilter` / `PopFilter` | 32 / 33 | filter chain | 1.2 |
+| `PushMask` / `PopMask` | 34 / 35 | | 1.2 |
+| `PushMaskLayer` / `PopMaskLayer` | 36 / 37 | mode, composite operator | 1.2, only directly inside a mask |
+| `BackdropFilter` | 38 | rect, radii, filter chain | 1.2 |
+| `PushTransform3D` | 40 | 4×4 matrix | 1.2; closed by `PopTransform` |
 
 **Radii** (`CornerRadii`) are eight numbers: a horizontal and a vertical radius for each corner (top-left, top-right, bottom-right, bottom-left), an elliptical quarter at each corner. The list stores radii after CSS Backgrounds 3 §5.5: negative radii become zero, and if the radii on any side add up to more than that side, all eight are multiplied by the one factor that makes the worst side fit. A consumer therefore draws the stored radii as they are. A corner whose horizontal or vertical radius is zero is square.
 
@@ -176,9 +183,22 @@ A `GlyphRun` is one run of glyphs of one face, size and color.
 ## Clips, transforms, groups, tags
 
 - **Clips.** Content between a clip push and its pop is clipped to the rectangle, rounded rectangle or path (in the space current at the push) intersected with every enclosing clip. Edges are anti-aliased. `PushClipPath` takes a fill rule. A clip with empty shape clips everything.
-- **Transforms.** `PushTransform` multiplies the current transform by the matrix for everything up to the matching pop; clips pushed inside move with it. `PushTransform3D` on the builder flattens a 4×4 matrix to 2D when adding: the 2D part `(M11, M12, M21, M22, M41, M42)` divided by `M44`. Perspective terms (`M14`, `M24`) and z are dropped, so perspective is approximated by its affine part at the origin. A matrix that cannot be inverted flattens its content away; nothing inside it is drawn.
+- **Transforms.** `PushTransform` multiplies the current transform by the matrix for everything up to the matching pop; clips pushed inside move with it. `PushTransform3D` on the builder takes a 4×4 matrix (row vectors, as `System.Numerics.Matrix4x4`). Without perspective (`M14` and `M24` zero) the plane maps affinely and the builder stores an ordinary `PushTransform` of the 2D part `(M11, M12, M21, M22, M41, M42)` divided by `M44`, which must then be positive. With perspective the whole matrix is stored (kind 40) and the content, drawn flat in its own plane, is projected: `w = x·M14 + y·M24 + M44`, `x' = (x·M11 + y·M21 + M41) / w`, `y' = (x·M12 + y·M22 + M42) / w`. `M44` is the `w` of the page origin and can be negative; what matters is `w` at the points of the content, and a point with `w ≤ 0` is behind the viewer and is not drawn. Inside a projection a further perspective is not nested: it is flattened to its affine part. A matrix that cannot be inverted flattens its content away; nothing inside it is drawn.
 - **Groups.** `PushGroup(opacity, blend)` is an isolated group (Compositing and Blending 1 §3 to §4): its content is painted into a transparent layer, and when the group ends the layer is composited onto what is behind it using `blend` (§10, plus `PlusLighter`) with the group's opacity multiplied into the layer's alpha. Opacity is 0 to 1. Blend modes inside the group blend with the group's own content, not the backdrop. Use it for `opacity` below 1, `mix-blend-mode` and `isolation: isolate` (opacity 1, normal). Clips enclosing the group apply to the composited layer once. Groups nest, and opacities multiply.
 - **Tags.** `BeginTag(role, alt, link, language)` / `EndTag` carry structure and no pixels. Everything painted inside belongs to the element. `TagRole` names follow PDF structure types (`Document`, `Part`, `Section`, `Div`, `Paragraph`, `Span`, `Heading1`–`6`, `List`, `ListItem`, `ListLabel`, `ListBody`, `Table`, `TableRow`, `TableHeaderCell`, `TableDataCell`, `TableHead`, `TableBody`, `TableFoot`, `Figure`, `Caption`, `Link`, `BlockQuote`, `Code`, `Form`) plus `Artifact` for decoration that is not part of the structure. `alt` is the alternative text (for `Figure` and for anything whose accessible name differs from its text), `link` the destination of a `Link` (an absolute URL or a `#fragment`), `language` a BCP 47 tag when it differs from the parent. A backend that has no use for structure ignores tags; they never change drawing.
+
+### Effects (1.2)
+
+Every effect scope is a push and a pop on the shared stack; the 256-level nesting limit applies. A backend that draws a list refuses `RequiredMinor` above what it knows.
+
+- **Filters** (`PushFilter`, Filter Effects 1 §5). Content up to `PopFilter` is painted into a layer, the chain is applied in order, and the result is composited like any content (enclosing clips apply to the result). One to 32 operations, each `FilterOp(Kind, A, B, C, Color)`: `Blur` (A = standard deviation in CSS px, at most 4096), `Brightness`, `Contrast`, `Grayscale`, `Invert`, `Opacity`, `Saturate`, `Sepia` (A = amount), `HueRotate` (A = radians), `DropShadow` (A, B = offset, C = standard deviation, color). The item's bounds grow by the chain's outset (three standard deviations of each blur and shadow plus offsets), so damage covers blurred ink.
+- **Backdrop filter** (`BackdropFilter`, Filter Effects 2 §2). A leaf: the pixels of the current layer inside the rounded rectangle are replaced by the filtered pixels. The painter emits it before the element's own background.
+- **Masks** (`PushMask`, Masking 1 §6). Directly inside, zero to 16 `PushMaskLayer` scopes describe the mask bottom layer first, each painted into a transparent layer whose alpha (`Alpha`) or luminance times alpha (`Luminance`) is its coverage, combined with the layers before it by `Add` (source over), `Subtract` (source out), `Intersect` (source in) or `Exclude` (xor). The items after the layers, up to `PopMask`, are the masked content, multiplied by the combined coverage. A mask with no layers hides its content.
+- **Inline SVG** (`SvgImage`). The serialized `<svg>` element (at most 1,048,576 characters) is drawn as an image exactly the size of the rectangle: the backend replaces the root's `width` and `height` with the rectangle's size and keeps `viewBox` and `preserveAspectRatio`; `currentColor` is the item's color. The painter draws the element's own box; nothing in the markup refers to the page.
+- **Projection** (`PushTransform3D`) is described under [Clips, transforms, groups, tags](#clips-transforms-groups-tags). `PatchTransform3D(id, matrix)` replaces the matrix in place (0 B) like `PatchTransform`.
+- **Scope order** the painter uses for one element: transform, then the opacity/blend group, then the mask, then the clip-path, then the filter, then the element (Filter Effects 1 §3, Masking 1 §5: filter, clip, mask, opacity).
+- **PDF.** `DisplayItem.PdfNative` says whether a PDF writer can express an item: opacity and blend groups, masks (soft masks) and an opacity-only filter chain are native; other filters, backdrop filters, projections and SVG images are drawn as rasterized islands with a diagnostic.
+- **Limits.** 32 filter operations, blur 4096 px, 16 mask layers, 1,048,576 SVG characters, 256 scopes; each is checked before the item is added. The painter stops opening scopes before the nesting limit and records `LimitExceeded`.
 
 ## Bounds
 
@@ -303,6 +323,9 @@ These are choices of the reference rasterizer where CSS does not decide. None ha
 - `double` borders thinner than 3 px draw solid.
 - "Dark" for groove, ridge, inset and outset is 2/3 of each channel; black is not treated specially.
 - A square corner stays square when a shadow spread grows or shrinks it.
-- Perspective in a flattened 3D transform is dropped.
+- `transform-style: preserve-3d` is flattened: each element is projected on its own plane and nested 3D contexts do not intersect.
+- Backdrop filters are painted before the element's own group, so the element's `opacity` does not fade them.
+- Filter blur and color operations work on premultiplied sRGB floats; luminance masks use the sRGB coefficients 0.2126, 0.7152 and 0.0722.
+- A clip shape beyond ±33,554,432 device pixels leaves the previous clip in place.
 - A bilinear image sample clamps at the edges of the source rectangle; scaling down by more than 2× is not filtered further (no mip-mapping), so a large reduction aliases.
-- Group layers cover the whole surface.
+- Group, filter and mask layers cover only the device region their content can reach (bounds plus filter outset, clipped to the surface and the enclosing clip); the sum over open layers is capped at 134,217,728 (2^27) pixels and the nesting at 32 layers, beyond which `Render` throws `RasterizationException`.
