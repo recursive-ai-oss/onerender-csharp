@@ -155,9 +155,9 @@ public class StyleValidationTests
         for (int i = 0; i < Properties.Count; i++)
         {
             string name = Properties.NameOf((PropertyId)i);
-            if (Array.IndexOf(typed, name) >= 0)
+            if (Array.IndexOf(typed, name) >= 0 || name.StartsWith("--", StringComparison.Ordinal))
             {
-                continue;
+                continue; // custom properties accept any value, so nothing is invalid
             }
 
             Dump("a{" + name + ":~bogus 1 2 (}", out int d);
