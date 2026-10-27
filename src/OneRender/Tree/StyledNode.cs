@@ -52,74 +52,99 @@ public interface IResourceResolver
     bool TryGetNaturalSize(ReplacedKind kind, ReadOnlySpan<char> source, out double width, out double height);
 }
 
-/// <summary>A handle to a node of a <see cref="StyledTree"/>. Cheap to copy; valid until the tree is cleared.</summary>
+/// <summary>A handle to a node of a <see cref="StyledTree"/>. Cheap to copy; valid until the node is removed and its slot reclaimed, or the tree is cleared (see <see cref="IsValid"/>).</summary>
 public readonly struct StyledNode : IEquatable<StyledNode>
 {
     internal StyledNode(StyledTree tree, int index)
     {
         Tree = tree;
         Index = index;
+        Generation = tree.GenerationOf(index);
     }
 
     /// <summary>The tree the node belongs to; null for the default value.</summary>
     public StyledTree? Tree { get; }
 
-    /// <summary>The node's position in the tree's columns. Stable while the tree is not cleared.</summary>
+    /// <summary>The node's position in the tree's columns. Stable for as long as the node exists; the position of a removed node is reused by later nodes, so check <see cref="IsValid"/> before trusting an old handle.</summary>
     public int Index { get; }
+
+    /// <summary>Counts how often the slot at <see cref="Index"/> has been given back; a handle whose count differs from the slot's refers to a node that no longer exists.</summary>
+    internal int Generation { get; }
+
+    /// <summary>
+    /// True while the handle refers to the node it was made for. It becomes false once the node was removed and the tree reclaimed its
+    /// slot (at the next flush of the page that owns the tree, or at the next insert of a tree no page tracks), and after <see cref="StyledTree.Clear"/>.
+    /// The null handle is not valid. Every other member throws <see cref="InvalidOperationException"/> on an invalid handle.
+    /// </summary>
+    public bool IsValid => Tree is not null && Tree.GenerationOf(Index) == Generation;
+
+    private StyledTree T
+    {
+        get
+        {
+            StyledTree t = Tree!;
+            if (t.GenerationOf(Index) != Generation)
+            {
+                throw new InvalidOperationException("The node was removed from the tree; its slot may belong to another node now.");
+            }
+
+            return t;
+        }
+    }
 
     /// <summary>True for the default value, which refers to no node.</summary>
     public bool IsNull => Tree is null;
 
     /// <summary>What the node stands for.</summary>
-    public StyledNodeKind Kind => (StyledNodeKind)Tree!.KindOf(Index);
+    public StyledNodeKind Kind => (StyledNodeKind)T.KindOf(Index);
 
     /// <summary>The parent, or the null handle for the root.</summary>
-    public StyledNode Parent => Tree!.Make(Tree.ParentOf(Index));
+    public StyledNode Parent => T.Make(T.ParentOf(Index));
 
     /// <summary>The first child, or the null handle.</summary>
-    public StyledNode FirstChild => Tree!.Make(Tree.FirstChildOf(Index));
+    public StyledNode FirstChild => T.Make(T.FirstChildOf(Index));
 
     /// <summary>The last child, or the null handle.</summary>
-    public StyledNode LastChild => Tree!.Make(Tree.LastChildOf(Index));
+    public StyledNode LastChild => T.Make(T.LastChildOf(Index));
 
     /// <summary>The next sibling, or the null handle.</summary>
-    public StyledNode NextSibling => Tree!.Make(Tree.NextSiblingOf(Index));
+    public StyledNode NextSibling => T.Make(T.NextSiblingOf(Index));
 
     /// <summary>The style row of the node.</summary>
-    public StyleId Style => Tree!.StyleOf(Index);
+    public StyleId Style => T.StyleOf(Index);
 
     /// <summary>The computed values of the node.</summary>
-    public ref readonly ComputedValues Values => ref Tree!.Styles[Tree.StyleOf(Index)];
+    public ref readonly ComputedValues Values => ref T.Styles[T.StyleOf(Index)];
 
     /// <summary>The lower-case local name of an element (<c>div</c>); empty for other kinds.</summary>
-    public string TagName => Tree!.TagNameOf(Index);
+    public string TagName => T.TagNameOf(Index);
 
     /// <summary>The text of a <see cref="StyledNodeKind.Text"/>, <see cref="StyledNodeKind.Before"/> or <see cref="StyledNodeKind.After"/> node; empty otherwise. Valid until the tree is cleared or grows.</summary>
-    public ReadOnlySpan<char> Text => Tree!.TextOf(Index);
+    public ReadOnlySpan<char> Text => T.TextOf(Index);
 
     /// <summary>The address of replaced content (<c>src</c> of an image, <c>data</c> of an object) as written, or null when there is none.</summary>
-    public string? ReplacedSource => Tree!.ReplacedSourceOf(Index);
+    public string? ReplacedSource => T.ReplacedSourceOf(Index);
 
     /// <summary>The kind of replaced content an element carries, or <see cref="ReplacedKind.None"/>.</summary>
-    public ReplacedKind Replaced => Tree!.ReplacedOf(Index);
+    public ReplacedKind Replaced => T.ReplacedOf(Index);
 
     /// <summary>The natural width of replaced content in px, or NaN when it has none.</summary>
-    public double NaturalWidth => Tree!.NaturalWidthOf(Index);
+    public double NaturalWidth => T.NaturalWidthOf(Index);
 
     /// <summary>The natural height of replaced content in px, or NaN when it has none.</summary>
-    public double NaturalHeight => Tree!.NaturalHeightOf(Index);
+    public double NaturalHeight => T.NaturalHeightOf(Index);
 
     /// <summary>The natural aspect ratio (width over height) of replaced content that has a ratio but no size (an <c>svg</c> with only a <c>viewBox</c>), or 0.</summary>
-    public double NaturalRatio => Tree!.NaturalRatioOf(Index);
+    public double NaturalRatio => T.NaturalRatioOf(Index);
 
     /// <summary>
     /// The index of the OneHtml node this node was made from (<c>Node.Index</c>), or -1 for a builder node and for generated nodes.
     /// Pair it with the tree's <see cref="StyledTree.SourceDocument"/> to get the OneHtml node back.
     /// </summary>
-    public int SourceIndex => Tree!.SourceIndexOf(Index);
+    public int SourceIndex => T.SourceIndexOf(Index);
 
     /// <inheritdoc />
-    public bool Equals(StyledNode other) => ReferenceEquals(Tree, other.Tree) && Index == other.Index;
+    public bool Equals(StyledNode other) => ReferenceEquals(Tree, other.Tree) && Index == other.Index && Generation == other.Generation;
 
     /// <inheritdoc />
     public override bool Equals(object? obj) => obj is StyledNode n && Equals(n);
@@ -134,5 +159,5 @@ public readonly struct StyledNode : IEquatable<StyledNode>
     public static bool operator !=(StyledNode left, StyledNode right) => !left.Equals(right);
 
     /// <inheritdoc />
-    public override string ToString() => Tree is null ? "(null)" : Kind + "#" + Index.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    public override string ToString() => Tree is null ? "(null)" : (IsValid ? Kind.ToString() : "Stale") + "#" + Index.ToString(System.Globalization.CultureInfo.InvariantCulture);
 }

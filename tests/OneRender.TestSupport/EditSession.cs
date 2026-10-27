@@ -219,6 +219,8 @@ public sealed class EditSession
     private static readonly string[] Tags = ["div", "span", "p", "section", "b"];
 
     private readonly bool _calm;
+    private readonly bool _churn;
+    private readonly List<StyledNode> _gone = [];
     private readonly (string Property, string[] Values)[] _pool;
     private readonly string[] _texts;
     private readonly IFontProvider _fonts;
@@ -234,8 +236,10 @@ public sealed class EditSession
     /// <param name="chooser">The random choices.</param>
     /// <param name="size">The approximate number of nodes, at least 1.</param>
     /// <param name="calm">Leaves out floats, out-of-flow positioning, columns, tables and display changes that remove boxes, and favors edits of text, states and declarations.</param>
-    public EditSession(IFontProvider fonts, Chooser chooser, int size = 40, bool calm = false)
+    /// <param name="churn">Mostly inserts and removes, alone and in bursts of several before one flush, so node slots are reclaimed and reused all the time.</param>
+    public EditSession(IFontProvider fonts, Chooser chooser, int size = 40, bool calm = false, bool churn = false)
     {
+        _churn = churn;
         _fonts = fonts;
         _c = chooser;
         _calm = calm;
@@ -407,8 +411,65 @@ public sealed class EditSession
 
         FlushResult r = Page.Flush();
         Stats.Count(r);
+        CheckSlots();
         CheckAgainstFresh();
         return _lastEdit;
+    }
+
+    // After a flush every removed node has given its slot back: the tree holds exactly the nodes reachable from the root, and the handles
+    // of removed nodes are stale however many inserts have reused their slots since.
+    private void CheckSlots()
+    {
+        int reachable = 0;
+        for (StyledNode n = Tree.Root; !n.IsNull;)
+        {
+            reachable++;
+            if (!n.FirstChild.IsNull)
+            {
+                n = n.FirstChild;
+                continue;
+            }
+
+            while (!n.IsNull && n.NextSibling.IsNull)
+            {
+                n = n.Parent;
+            }
+
+            n = n.IsNull ? default : n.NextSibling;
+        }
+
+        if (reachable != Tree.LiveCount)
+        {
+            throw new InvalidOperationException($"Step {_steps} ({_lastEdit}): {reachable} nodes are reachable but the tree counts {Tree.LiveCount} live (slots {Tree.Count}, free {Tree.FreeSlots}).");
+        }
+
+        foreach (StyledNode stale in _gone)
+        {
+            if (stale.IsValid)
+            {
+                throw new InvalidOperationException($"Step {_steps} ({_lastEdit}): the handle of a removed node is still valid.");
+            }
+
+            bool rejected = false;
+            try
+            {
+                Tree.SetDeclaration(stale, null);
+            }
+            catch (ArgumentException)
+            {
+                rejected = true;
+            }
+
+            if (!rejected)
+            {
+                throw new InvalidOperationException($"Step {_steps} ({_lastEdit}): an edit through a stale handle was accepted.");
+            }
+        }
+
+        if (_gone.Count > 200)
+        {
+            _gone.RemoveRange(0, _gone.Count - 100);
+        }
     }
 
     /// <summary>Compares the page with a fresh build of the same content.</summary>
@@ -486,7 +547,7 @@ public sealed class EditSession
     private void ApplyRandomEdit()
     {
         List<M> elements = Attached(true);
-        int kind = _calm && _c.Next(12) != 0 ? _c.Next(18) : _c.Next(26);
+        int kind = _churn ? (_c.Next(4) == 0 ? _c.Next(28) : 18 + _c.Next(9)) : _calm && _c.Next(12) != 0 ? _c.Next(18) : _c.Next(28);
         M e = elements[_c.Next(elements.Count)];
         switch (kind)
         {
@@ -558,9 +619,7 @@ public sealed class EditSession
                 }
 
                 M victim = all[1 + _c.Next(all.Count - 1)];
-                Tree.Remove(victim.Live);
-                victim.Parent!.Kids.Remove(victim);
-                victim.Parent = null;
+                RemoveModel(victim);
                 _lastEdit = "remove " + (victim.Text ?? victim.Tag);
                 break;
             }
@@ -608,6 +667,9 @@ public sealed class EditSession
                 break;
             }
 
+            case < 27:
+                Burst();
+                break;
             default:
                 _vw = 300 + _c.Next(1100);
                 _vh = 200 + _c.Next(700);
@@ -615,6 +677,63 @@ public sealed class EditSession
                 _lastEdit = $"resize {_vw}x{_vh}";
                 break;
         }
+    }
+
+    // Removes a model node and its subtree from the tree and from the model; the handles of all of it go on the stale list.
+    private void RemoveModel(M victim)
+    {
+        Tree.Remove(victim.Live);
+        victim.Parent!.Kids.Remove(victim);
+        victim.Parent = null;
+        var stack = new Stack<M>();
+        stack.Push(victim);
+        while (stack.Count > 0)
+        {
+            M m = stack.Pop();
+            _gone.Add(m.Live);
+            foreach (M k in m.Kids)
+            {
+                stack.Push(k);
+            }
+        }
+    }
+
+    // Several removals and inserts of whole subtrees before the next flush: removed and new nodes are pending together, and the slots
+    // the removals free are reused by the inserts of the flush after.
+    private void Burst()
+    {
+        int n = 2 + _c.Next(6);
+        int removed = 0, inserted = 0;
+        for (int i = 0; i < n; i++)
+        {
+            List<M> all = Attached(false);
+            if (_c.Next(2) == 0 && all.Count > 3)
+            {
+                RemoveModel(all[1 + _c.Next(all.Count - 1)]);
+                removed++;
+                continue;
+            }
+
+            List<M> elements = Attached(true);
+            M parent = elements[_c.Next(elements.Count)];
+            M sub = RandomNode(false);
+            int kids = _c.Next(4);
+            for (int k = 0; k < kids; k++)
+            {
+                M kid = RandomNode(true);
+                kid.Parent = sub;
+                sub.Kids.Add(kid);
+            }
+
+            int at = _c.Next(parent.Kids.Count + 1);
+            StyledNode before = at < parent.Kids.Count ? parent.Kids[at].Live : default;
+            sub.Parent = parent;
+            parent.Kids.Insert(at, sub);
+            InsertLive(sub, before);
+            inserted++;
+        }
+
+        _lastEdit = $"burst of {removed} removals and {inserted} inserts";
     }
 
     // Inserts a model node (and its descendants) into the live tree.
