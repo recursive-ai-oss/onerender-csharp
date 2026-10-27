@@ -8,12 +8,12 @@
   "sampleStride": 1,
   "counts": {
     "total": 892,
-    "pass": 114,
-    "fail": 381,
+    "pass": 115,
+    "fail": 380,
     "blank": 11,
     "skipped": 386
   },
-  "rate": "0.2253",
+  "rate": "0.2273",
   "pass": [
     "css/css-overflow/abspos-shrink-to-fit-with-scrollable-descendant.html",
     "css/css-overflow/button-with-scrollable-descendant.html",
@@ -81,6 +81,7 @@
     "css/css-overflow/overflow-clip-margin-005.html",
     "css/css-overflow/overflow-clip-margin-006.html",
     "css/css-overflow/overflow-clip-margin-008.html",
+    "css/css-overflow/overflow-clip-margin-009.html",
     "css/css-overflow/overflow-clip-margin-011.html",
     "css/css-overflow/overflow-clip-margin-013.html",
     "css/css-overflow/overflow-clip-margin-014.html",
@@ -407,7 +408,6 @@
     "css/css-overflow/overflow-auto-scrollbar-gutter-intrinsic-003.html": "== overflow-auto-scrollbar-gutter-intrinsic-003-ref.html differs (max 255, 1738 px)",
     "css/css-overflow/overflow-body-propagation-010.html": "== overflow-body-propagation-010-ref.html differs (max 255, 369800 px)",
     "css/css-overflow/overflow-clip-margin-004.html": "== overflow-clip-margin-004-ref.html differs (max 255, 21600 px)",
-    "css/css-overflow/overflow-clip-margin-009.html": "== overflow-clip-margin-009-ref.html differs (max 82, 4400 px)",
     "css/css-overflow/overflow-clip-margin-010.html": "== overflow-clip-margin-010-ref.html differs (max 66, 1045 px)",
     "css/css-overflow/overflow-clip-margin-016.html": "== ref-filled-green-100px-square-only.html differs (max 255, 4160 px)",
     "css/css-overflow/overflow-clip-margin-017.html": "== ref-filled-green-100px-square-only.html differs (max 255, 4160 px)",

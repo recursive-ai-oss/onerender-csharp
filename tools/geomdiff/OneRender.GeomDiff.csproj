@@ -26,6 +26,7 @@
     <ProjectReference Include="../../src/OneRender/OneRender.csproj" />
     <ProjectReference Include="../../src/OneRender.Image/OneRender.Image.csproj" />
     <ProjectReference Include="../../src/OneRender.Accessibility/OneRender.Accessibility.csproj" />
+    <ProjectReference Include="../OneRender.WptRunner.Chrome/OneRender.WptRunner.Chrome.csproj" />
   </ItemGroup>
 
 </Project>
