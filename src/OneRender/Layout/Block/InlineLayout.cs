@@ -82,6 +82,48 @@ public readonly struct InlineLayoutResult
         LastBaseline = lastBaseline;
     }
 
+    /// <summary>
+    /// Creates a result that also reports the extent of everything the lines paint or occupy (line boxes, inline box edges, text and
+    /// atomic inlines), which is the inline content's contribution to the scrollable overflow area (CSS Overflow 3 §2.2).
+    /// </summary>
+    /// <param name="height">Total height of the line boxes in px (0 when there are none).</param>
+    /// <param name="lineCount">Number of line boxes produced.</param>
+    /// <param name="firstBaseline">Baseline of the first line, measured from the top of the content box; NaN when there is no line.</param>
+    /// <param name="lastBaseline">Baseline of the last line, measured from the top of the content box; NaN when there is no line.</param>
+    /// <param name="overflowLeft">Left edge of the extent in the container fragment's border-box coordinates.</param>
+    /// <param name="overflowTop">Top edge of the extent in the container fragment's border-box coordinates.</param>
+    /// <param name="overflowRight">Right edge of the extent in the container fragment's border-box coordinates.</param>
+    /// <param name="overflowBottom">Bottom edge of the extent in the container fragment's border-box coordinates.</param>
+    /// <param name="queuedAbsolutes">True when the inline layout has already handed every absolutely positioned box in the content to the block layout with its static position.</param>
+    public InlineLayoutResult(double height, int lineCount, double firstBaseline, double lastBaseline, double overflowLeft, double overflowTop, double overflowRight, double overflowBottom, bool queuedAbsolutes)
+        : this(height, lineCount, firstBaseline, lastBaseline)
+    {
+        OverflowLeft = overflowLeft;
+        OverflowTop = overflowTop;
+        OverflowRight = overflowRight;
+        OverflowBottom = overflowBottom;
+        HasOverflow = overflowRight >= overflowLeft && overflowBottom >= overflowTop;
+        QueuedAbsolutes = queuedAbsolutes;
+    }
+
+    /// <summary>True when the inline layout already queued the absolutely positioned boxes of the content through <see cref="IAtomicInlineHost.QueueAbsolute"/>, so the block layout must not give them the start of the content box as their static position.</summary>
+    public bool QueuedAbsolutes { get; }
+
+    /// <summary>True when the extent properties are meaningful.</summary>
+    public bool HasOverflow { get; }
+
+    /// <summary>Left edge of the extent of the lines' content in the container fragment's border-box coordinates; valid when <see cref="HasOverflow"/>.</summary>
+    public double OverflowLeft { get; }
+
+    /// <summary>Top edge of the extent of the lines' content; valid when <see cref="HasOverflow"/>.</summary>
+    public double OverflowTop { get; }
+
+    /// <summary>Right edge of the extent of the lines' content; valid when <see cref="HasOverflow"/>.</summary>
+    public double OverflowRight { get; }
+
+    /// <summary>Bottom edge of the extent of the lines' content; valid when <see cref="HasOverflow"/>.</summary>
+    public double OverflowBottom { get; }
+
     /// <summary>Total height of the line boxes in px.</summary>
     public double Height { get; }
 

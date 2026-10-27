@@ -25,6 +25,7 @@ public sealed partial class FragmentTree
     private int[] _first = new int[64];
     private int[] _last = new int[64];
     private int[] _next = new int[64];
+    private int[] _prev = new int[64];
     private int[] _nextOfBox = new int[64];
     private int[] _textStart = new int[64];
     private int[] _textLength = new int[64];
@@ -242,6 +243,61 @@ public sealed partial class FragmentTree
     {
         Check(fragment);
         _baseline[fragment.Index] = baseline;
+    }
+
+    /// <summary>
+    /// Moves a fragment, with its subtree, to the end of another parent's children. Inline layout lays out atomic inline-level boxes
+    /// before it knows which line and inline box they sit in, then moves them. The fragment keeps its rectangle; set the new one with
+    /// <see cref="SetBorderBox"/>.
+    /// </summary>
+    /// <param name="fragment">A non-root fragment of this tree.</param>
+    /// <param name="newParent">A fragment of this tree that is not inside <paramref name="fragment"/>'s subtree.</param>
+    /// <exception cref="ArgumentException">A fragment is not from this tree, or <paramref name="fragment"/> is the root.</exception>
+    public void Reparent(Fragment fragment, Fragment newParent)
+    {
+        Check(fragment);
+        Check(newParent);
+        int i = fragment.Index;
+        int old = _parent[i];
+        if (old < 0)
+        {
+            throw new ArgumentException("The root fragment cannot be moved.", nameof(fragment));
+        }
+
+        int prev = _prev[i];
+        int next = _next[i];
+        if (prev >= 0)
+        {
+            _next[prev] = next;
+        }
+        else
+        {
+            _first[old] = next;
+        }
+
+        if (next >= 0)
+        {
+            _prev[next] = prev;
+        }
+        else
+        {
+            _last[old] = prev;
+        }
+
+        int p = newParent.Index;
+        _parent[i] = p;
+        _next[i] = -1;
+        _prev[i] = _last[p];
+        if (_last[p] >= 0)
+        {
+            _next[_last[p]] = i;
+        }
+        else
+        {
+            _first[p] = i;
+        }
+
+        _last[p] = i;
     }
 
     /// <summary>Marks how a fragment continues into or from its box's other fragments.</summary>
@@ -545,6 +601,7 @@ public sealed partial class FragmentTree
         _first[i] = -1;
         _last[i] = -1;
         _next[i] = -1;
+        _prev[i] = -1;
         _nextOfBox[i] = -1;
         _textStart[i] = 0;
         _textLength[i] = 0;
@@ -563,6 +620,7 @@ public sealed partial class FragmentTree
             if (_last[p] >= 0)
             {
                 _next[_last[p]] = i;
+                _prev[i] = _last[p];
             }
             else
             {
@@ -585,6 +643,7 @@ public sealed partial class FragmentTree
         Array.Resize(ref _first, n);
         Array.Resize(ref _last, n);
         Array.Resize(ref _next, n);
+        Array.Resize(ref _prev, n);
         Array.Resize(ref _nextOfBox, n);
         Array.Resize(ref _textStart, n);
         Array.Resize(ref _textLength, n);

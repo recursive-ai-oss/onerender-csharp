@@ -174,6 +174,13 @@ internal sealed partial class StyleComputer
         v.ListStylePosition = p.ListStylePosition;
         v.Orphans = p.Orphans;
         v.Widows = p.Widows;
+        v.WordBreak = p.WordBreak;
+        v.OverflowWrap = p.OverflowWrap;
+        v.LineBreak = p.LineBreak;
+        v.Hyphens = p.Hyphens;
+        v.TabSize = p.TabSize;
+        v.TextAlignLast = p.TextAlignLast;
+        v.TextJustify = p.TextJustify;
         return v;
     }
 
@@ -253,6 +260,13 @@ internal sealed partial class StyleComputer
             case PropertyId.Content: d.Content = s.Content; d.ContentText = s.ContentText; break;
             case PropertyId.ListStyleType: d.ListStyleType = s.ListStyleType; d.ListStyleTypeIsString = s.ListStyleTypeIsString; break;
             case PropertyId.ListStylePosition: d.ListStylePosition = s.ListStylePosition; break;
+            case PropertyId.WordBreak: d.WordBreak = s.WordBreak; break;
+            case PropertyId.OverflowWrap: d.OverflowWrap = s.OverflowWrap; break;
+            case PropertyId.LineBreak: d.LineBreak = s.LineBreak; break;
+            case PropertyId.Hyphens: d.Hyphens = s.Hyphens; break;
+            case PropertyId.TabSize: d.TabSize = s.TabSize; break;
+            case PropertyId.TextAlignLast: d.TextAlignLast = s.TextAlignLast; break;
+            case PropertyId.TextJustify: d.TextJustify = s.TextJustify; break;
             case PropertyId.OverflowClipMargin: d.OverflowClipMarginPx = s.OverflowClipMarginPx; d.OverflowClipMarginBox = s.OverflowClipMarginBox; break;
             default: CopyFlexProperty(id, ref d, in s, fromParent); CopyGridProperty(id, ref d, in s); break;
         }
@@ -292,6 +306,19 @@ internal sealed partial class StyleComputer
                 TextAlignKind.MatchParent => TextAlignKind.Start,
                 TextAlignKind.JustifyAll => TextAlignKind.Justify,
                 TextAlignKind other => other,
+            };
+        }
+
+        // CSS Text 3 §7.2: text-align-last: match-parent computes like text-align.
+        if (_r.TextAlignLast == TextAlignLastKind.MatchParent)
+        {
+            bool parentRtl = _parent.Direction == DirectionKind.Rtl;
+            _r.TextAlignLast = !_hasParent ? TextAlignLastKind.Start : _parent.TextAlignLast switch
+            {
+                TextAlignLastKind.Start => parentRtl ? TextAlignLastKind.Right : TextAlignLastKind.Left,
+                TextAlignLastKind.End => parentRtl ? TextAlignLastKind.Left : TextAlignLastKind.Right,
+                TextAlignLastKind.MatchParent => TextAlignLastKind.Start,
+                TextAlignLastKind other => other,
             };
         }
 

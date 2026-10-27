@@ -1,0 +1,1 @@
+X<div><span style='position:relative;left:3px'>a<span style='position:absolute;top:0'></span>b</span> c<br>d<br><br>e</div> div{letter-spacing:1px;word-spacing:5px;text-align:center}

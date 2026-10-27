@@ -67,7 +67,7 @@ public class FloatLayoutTests
         string html = "<!DOCTYPE html><html><head><style>body{margin:0}" + css + "</style></head><body>" + body + "</body></html>";
         Pipeline p = Pipeline.FromHtml(html, width, 600, resolver: images);
         var f = new FragmentTree(p.Boxes);
-        var engine = new BlockLayoutEngine();
+        var engine = new BlockLayoutEngine(new PlaceholderInlineLayout());
         engine.Layout(p.Boxes, new LayoutInput(width, double.NaN, new NoFonts()), f);
         return new Lay { P = p, F = f, Engine = engine };
     }
