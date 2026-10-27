@@ -128,4 +128,27 @@ public sealed partial class HtmlPage
         _updater.UpdateBoxesAndLayout(cancellationToken);
         return true;
     }
+
+    /// <summary>
+    /// Puts the text of an edited control on screen: its text nodes are updated and only what the new text changes is laid out again.
+    /// </summary>
+    /// <returns>False when the page cannot take the change in place.</returns>
+    internal bool ApplyTextEdit(Node control, Forms.TextEditSession session, CancellationToken cancellationToken)
+    {
+        if (_updater is null || _front is null)
+        {
+            return false;
+        }
+
+        StyledNode n = Styled.FindBySource(control.Index);
+        if (n.IsNull)
+        {
+            return false;
+        }
+
+        Forms.TextControls.Sync(Styled, n, session.Display, session.Placeholder);
+        _updater.Restyle();
+        _updater.UpdateBoxesAndLayout(cancellationToken);
+        return true;
+    }
 }

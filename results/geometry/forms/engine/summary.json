@@ -11,9 +11,9 @@
   "viewports": [
     {
       "viewport": "1280x800",
-      "pages": 4,
-      "elements": 336,
-      "matched": 336,
+      "pages": 5,
+      "elements": 366,
+      "matched": 366,
       "rate": 1,
       "classes": {
         "positionOnly": 0,
@@ -32,17 +32,17 @@
         "missingChrome": 0
       },
       "tagConflicts": 0,
-      "pagesAtGate": 4,
+      "pagesAtGate": 5,
       "medianPageRate": 1,
       "minPageRate": 1,
       "worstTags": []
     },
     {
       "viewport": "390x844",
-      "pages": 4,
-      "elements": 336,
-      "matched": 335,
-      "rate": 0.9970238095238095,
+      "pages": 5,
+      "elements": 366,
+      "matched": 365,
+      "rate": 0.9972677595628415,
       "classes": {
         "positionOnly": 0,
         "sizeOnly": 1,
@@ -60,7 +60,7 @@
         "missingChrome": 0
       },
       "tagConflicts": 0,
-      "pagesAtGate": 3,
+      "pagesAtGate": 4,
       "medianPageRate": 1,
       "minPageRate": 0.9871794871794872,
       "worstTags": [
@@ -74,10 +74,10 @@
   ],
   "total": {
     "viewport": "all",
-    "pages": 8,
-    "elements": 672,
-    "matched": 671,
-    "rate": 0.9985119047619048,
+    "pages": 10,
+    "elements": 732,
+    "matched": 731,
+    "rate": 0.9986338797814208,
     "classes": {
       "positionOnly": 0,
       "sizeOnly": 1,
@@ -95,7 +95,7 @@
       "missingChrome": 0
     },
     "tagConflicts": 0,
-    "pagesAtGate": 7,
+    "pagesAtGate": 9,
     "medianPageRate": 1,
     "minPageRate": 0.9871794871794872,
     "worstTags": [

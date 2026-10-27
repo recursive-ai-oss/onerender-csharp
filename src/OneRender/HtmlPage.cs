@@ -366,7 +366,7 @@ public sealed partial class HtmlPage
     public void Paint(DisplayList list, Painter? painter = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(list);
-        (painter ?? new Painter()).Paint(Fragments, list, new PaintOptions(Options.ViewportWidth, Options.ViewportHeight) { Scroll = Scroll, Images = Options.Images, Fonts = Options.Fonts, DevicePixelRatio = Options.DevicePixelRatio }, cancellationToken);
+        (painter ?? new Painter()).Paint(Fragments, list, new PaintOptions(Options.ViewportWidth, Options.ViewportHeight) { Scroll = Scroll, Images = Options.Images, Fonts = Options.Fonts, DevicePixelRatio = Options.DevicePixelRatio, Editing = Form.ActiveView }, cancellationToken);
     }
 
     /// <summary>

@@ -400,6 +400,12 @@ public partial struct ComputedValues
     /// <summary><c>accent-color</c> (CSS UI 4 §6.2) when <see cref="AccentColorAuto"/> is false; inherited.</summary>
     public ColorValue AccentColor { get; internal set; }
 
+    /// <summary><c>caret-color</c> (CSS UI 4 §5.2) when <see cref="CaretColorAuto"/> is false; inherited.</summary>
+    public ColorValue CaretColor { get; internal set; }
+
+    /// <summary>True for <c>caret-color: auto</c>, which draws the caret in the text color. Inherited.</summary>
+    public bool CaretColorAuto { get; internal set; }
+
     /// <summary>True for <c>accent-color: auto</c>, the user agent's accent. Inherited.</summary>
     public bool AccentColorAuto { get; internal set; }
 

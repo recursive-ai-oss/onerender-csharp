@@ -47,6 +47,24 @@ internal sealed partial class StyleComputer
                 return true;
             }
 
+            case PropertyId.CaretColor:
+            {
+                if (IsWord(v, "auto"))
+                {
+                    _r.CaretColorAuto = true;
+                    return true;
+                }
+
+                if (!TryColorList(v, out ColorValue caret))
+                {
+                    return false;
+                }
+
+                _r.CaretColorAuto = false;
+                _r.CaretColor = caret;
+                return true;
+            }
+
             case PropertyId.AccentColor:
             {
                 if (IsWord(v, "auto"))
@@ -75,6 +93,7 @@ internal sealed partial class StyleComputer
         {
             case PropertyId.PointerEvents: d.PointerEvents = s.PointerEvents; break;
             case PropertyId.Appearance: d.Appearance = s.Appearance; break;
+            case PropertyId.CaretColor: d.CaretColor = s.CaretColor; d.CaretColorAuto = s.CaretColorAuto; break;
             case PropertyId.AccentColor: d.AccentColor = s.AccentColor; d.AccentColorAuto = s.AccentColorAuto; break;
         }
     }

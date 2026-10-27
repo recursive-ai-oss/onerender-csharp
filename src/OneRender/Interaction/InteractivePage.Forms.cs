@@ -1,4 +1,5 @@
 using OneRender.Forms;
+using OneRender.Tree;
 using RecursiveAI.OneHtml;
 using RecursiveAI.OneHtml.Css;
 using RecursiveAI.OneHtml.Selectors;
@@ -890,7 +891,18 @@ public sealed partial class InteractivePage
             return InputOutcome.None;
         }
 
-        bool toggle = FocusRules.HasAttribute(select, "multiple") && (_lastModifiers & (KeyModifiers.Control | KeyModifiers.Meta)) != 0;
+        bool multiple = FocusRules.HasAttribute(select, "multiple");
+        int clicked = IndexOfOption(select, option);
+        if (multiple && (_lastModifiers & KeyModifiers.Shift) != 0)
+        {
+            // A shift-click selects the range from the anchor to the clicked option (the anchor stays), keeping the rest with Ctrl.
+            int anchor = _listAnchorSelect == select.Index && _listAnchor >= 0 ? _listAnchor : Math.Max(0, GetSelectedIndex(select));
+            return RangeSelect(select, anchor, clicked, (_lastModifiers & (KeyModifiers.Control | KeyModifiers.Meta)) != 0, ct);
+        }
+
+        _listAnchor = clicked;
+        _listAnchorSelect = select.Index;
+        bool toggle = multiple && (_lastModifiers & (KeyModifiers.Control | KeyModifiers.Meta)) != 0;
         if (toggle)
         {
             int n = 0;
@@ -904,6 +916,90 @@ public sealed partial class InteractivePage
         }
 
         return ChooseOption(select, IndexOfOption(select, option), ct);
+    }
+
+    // The options from `a` to `b` (inclusive, either order) become the selection; with `keep` the options already selected stay selected.
+    private InputOutcome RangeSelect(Node select, int a, int b, bool keep, CancellationToken ct)
+    {
+        int lo = Math.Min(a, b), hi = Math.Max(a, b), n = 0, i = 0;
+        bool changed = false;
+        for (Node o = FirstOption(select); !o.IsNull; o = NextOption(select, o), i++)
+        {
+            bool want = (i >= lo && i <= hi && !IsDisabledControl(o)) || (keep && IsOptionSelected(o));
+            if (IsOptionSelected(o) != want)
+            {
+                _page.Form.SetSelected(o, want);
+                AddScratch(ref n, o);
+                changed = true;
+            }
+        }
+
+        if (!changed)
+        {
+            return InputOutcome.None;
+        }
+
+        AddScratch(ref n, select);
+        InputOutcome outcome = ApplyFormChange(n, ct);
+        FireSimple("input", true, false, select, _lastTime);
+        FireSimple("change", true, false, select, _lastTime);
+        return outcome;
+    }
+
+    private int _listAnchor = -1;
+    private int _listAnchorSelect = -1;
+    private int _listFocus = -1;
+    private readonly char[] _typeAhead = new char[32];
+    private int _typeAheadLength;
+    private double _typeAheadTime = double.NegativeInfinity;
+
+    // Type-ahead (HTML §4.10.7 and what Chrome does): printable keys typed within a second of each other form a prefix; the first enabled
+    // option whose label starts with it (ignoring case) is chosen, starting from the current one. Typing one letter repeatedly cycles
+    // through the options that start with it.
+    private bool TypeAhead(Node select, string key, bool open, CancellationToken ct, out InputOutcome outcome)
+    {
+        outcome = InputOutcome.None;
+        bool continuing = _lastTime - _typeAheadTime <= 1000 && _typeAheadLength > 0;
+        if (key.Length != 1 || char.IsControl(key[0]) || (key[0] == ' ' && !continuing))
+        {
+            return false;
+        }
+
+        if (!continuing)
+        {
+            _typeAheadLength = 0;
+        }
+
+        _typeAheadTime = _lastTime;
+        if (_typeAheadLength < _typeAhead.Length)
+        {
+            _typeAhead[_typeAheadLength++] = char.ToLowerInvariant(key[0]);
+        }
+
+        bool same = true;
+        for (int k = 1; k < _typeAheadLength; k++)
+        {
+            same &= _typeAhead[k] == _typeAhead[0];
+        }
+
+        ReadOnlySpan<char> prefix = same ? _typeAhead.AsSpan(0, 1) : _typeAhead.AsSpan(0, _typeAheadLength);
+        int count = OptionCount(select);
+        int current = open && _page.Form.HighlightIndex >= 0 ? IndexOfOption(select, _page.Document.GetNode(_page.Form.HighlightIndex)) : GetSelectedIndex(select);
+        int start = same ? current + 1 : Math.Max(current, 0);
+        for (int k = 0; k < count; k++)
+        {
+            int idx = (((start + k) % count) + count) % count;
+            Node o = OptionAt(select, idx);
+            if (o.IsNull || IsDisabledControl(o) || !HtmlFrontEnd.OptionLabel(o).AsSpan().TrimStart().StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            outcome = open ? Highlight(select, o, ct) : ChooseOption(select, idx, ct);
+            return true;
+        }
+
+        return true;
     }
 
     // Selects an option as the user does: the selection changes, then `input` and `change` fire when it did.
@@ -949,12 +1045,26 @@ public sealed partial class InteractivePage
 
     // Keys on a focused select (HTML §4.10.7, and what Chrome does): arrows change the choice of a closed drop-down, Space and Alt+Down
     // open it; in the open list arrows move the highlight, Enter and Space choose it and Escape closes the list.
-    private bool TrySelectKey(string key, bool alt, CancellationToken ct, out InputOutcome outcome)
+    private bool TrySelectKey(string key, KeyModifiers mods, CancellationToken ct, out InputOutcome outcome)
     {
         outcome = InputOutcome.None;
         Node select = _focused;
         if (!FocusRules.IsHtml(select, "select") || IsDisabledControl(select))
         {
+            return false;
+        }
+
+        bool alt = mods == KeyModifiers.Alt;
+        bool shift = (mods & KeyModifiers.Shift) != 0;
+        bool command = (mods & (KeyModifiers.Control | KeyModifiers.Meta)) != 0;
+        if (command || (mods & KeyModifiers.Alt) != 0 && !alt)
+        {
+            if (command && key is "a" or "A" && FocusRules.HasAttribute(select, "multiple"))
+            {
+                outcome = RangeSelect(select, 0, OptionCount(select) - 1, false, ct);
+                return true;
+            }
+
             return false;
         }
 
@@ -967,6 +1077,33 @@ public sealed partial class InteractivePage
         }
 
         int sel = GetSelectedIndex(select);
+        if (!alt && TypeAhead(select, key, open, ct, out InputOutcome typed))
+        {
+            outcome = typed;
+            return true;
+        }
+
+        if (shift && !open && FocusRules.HasAttribute(select, "multiple") && key is "ArrowDown" or "ArrowUp")
+        {
+            // Shift+arrow extends the selection from the anchor.
+            int from = _listFocus >= 0 && _listAnchorSelect == select.Index ? _listFocus : Math.Max(sel, 0);
+            int next = NextEnabledOption(select, from, key == "ArrowDown" ? 1 : -1);
+            if (next >= 0)
+            {
+                if (_listAnchorSelect != select.Index || _listAnchor < 0)
+                {
+                    _listAnchor = Math.Max(sel, 0);
+                    _listAnchorSelect = select.Index;
+                }
+
+                _listFocus = next;
+                outcome = RangeSelect(select, _listAnchor, next, false, ct);
+            }
+
+            return true;
+        }
+
+        _listFocus = -1;
         if (open)
         {
             Node hl = _page.Form.HighlightIndex >= 0 ? _page.Document.GetNode(_page.Form.HighlightIndex) : default;

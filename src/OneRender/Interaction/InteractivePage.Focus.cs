@@ -105,6 +105,7 @@ public sealed partial class InteractivePage
             _focused = default;
             _focusVisible = false;
             MarkDirty();
+            EndEditing(old, _lastTime);
             FireFocus("blur", false, old, target);
             FireFocus("focusout", true, old, target);
             if (token != _focusToken)
@@ -119,6 +120,7 @@ public sealed partial class InteractivePage
             _focusReason = reason;
             _focusVisible = visible;
             MarkDirty();
+            BeginEditing(target, reason, _lastTime);
             FireFocus("focus", false, target, old);
             FireFocus("focusin", true, target, old);
             if (token != _focusToken)
