@@ -6,13 +6,18 @@ using Xunit;
 
 namespace OneRender.Tests;
 
+/// <summary>Runs alone: the heap figures are the whole process's, so other tests running beside it would blur them.</summary>
+[CollectionDefinition("ChurnSoak", DisableParallelization = true)]
+public sealed class ChurnSoakCollection;
+
 /// <summary>A tree that adds and removes nodes for as long as the program runs stays the size of what is live.</summary>
+[Collection("ChurnSoak")]
 public class ChurnSoakTests
 {
-    // ONERENDER_SOAK_FRAMES raises the frame count for the long soak on a build machine.
-    private static int Frames(int fallback)
+    // ONERENDER_SOAK_FRAMES and ONERENDER_SOAK_FRAMES_FRESH raise the frame counts for the long soak on a build machine.
+    private static int Frames(string variable, int fallback)
     {
-        string? e = Environment.GetEnvironmentVariable("ONERENDER_SOAK_FRAMES");
+        string? e = Environment.GetEnvironmentVariable(variable);
         return e is not null && int.TryParse(e, NumberStyles.None, CultureInfo.InvariantCulture, out int n) && n > 0 ? n : fallback;
     }
 
@@ -30,6 +35,7 @@ public class ChurnSoakTests
         long heap = GC.GetTotalMemory(true);
         Console.WriteLine($"SOAK fresh={fresh} warm {warm}: {soak.Describe()}, heap {heap / 1024} KiB");
         int checkpoints = 10;
+        var clock = System.Diagnostics.Stopwatch.StartNew();
         long maxHeap = heap;
         for (int c = 1; c <= checkpoints; c++)
         {
@@ -40,7 +46,7 @@ public class ChurnSoakTests
 
             long h = GC.GetTotalMemory(true);
             maxHeap = Math.Max(maxHeap, h);
-            Console.WriteLine($"SOAK fresh={fresh} frame {soak.Frames}: {soak.Describe()}, heap {h / 1024} KiB");
+            Console.WriteLine($"SOAK fresh={fresh} frame {soak.Frames}: {soak.Describe()}, heap {h / 1024} KiB, {clock.Elapsed.TotalSeconds:0} s since warm-up");
             Assert.Equal(slots, tree.Count);
             Assert.Equal(capacity, tree.Capacity);
             Assert.Equal(rows, tree.Styles.Count);
@@ -51,10 +57,10 @@ public class ChurnSoakTests
     }
 
     [Fact]
-    public void SharedDeclarationsKeepTheTreeFlat() => Soak(false, Frames(6000));
+    public void SharedDeclarationsKeepTheTreeFlat() => Soak(false, Frames("ONERENDER_SOAK_FRAMES", 6000));
 
     [Fact]
-    public void DeclarationsMadeForEachNodeKeepTheTreeFlat() => Soak(true, Frames(6000));
+    public void DeclarationsMadeForEachNodeKeepTheTreeFlat() => Soak(true, Frames("ONERENDER_SOAK_FRAMES_FRESH", 6000));
 
     [Fact]
     public void SteadyStateChurnFramesAllocateNothing()

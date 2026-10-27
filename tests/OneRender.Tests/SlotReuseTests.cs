@@ -154,6 +154,28 @@ public class SlotReuseTests
     }
 
     [Fact]
+    public void AnEditorWhoseFieldWasRemovedKeepsWorking()
+    {
+        var tree = new StyledTree();
+        StyledNode root = tree.AddRoot("div", Block());
+        StyledNode field = tree.AddElement(root, "input", new StyleDeclaration().Set("display", "block").Set("width", "100px").Set("height", "20px"));
+        tree.SetControl(field, OneRender.Forms.ControlKind.TextField);
+        tree.AddText(field, "hello");
+        LivePage page = Page(tree);
+        var editor = new OneRender.Interaction.LiveTextEditor(page, field);
+        editor.Focus(0);
+        tree.Remove(field);
+        page.Flush();
+        // Slot reuse by a new element must not redirect the editor to it.
+        StyledNode other = tree.AddElement(root, "div", Block());
+        tree.AddText(other, "untouched");
+        page.Flush();
+        editor.InsertText("x");
+        page.Flush();
+        Assert.Equal("untouched", other.FirstChild.Text.ToString());
+    }
+
+    [Fact]
     public void TheTextArenaStaysTheSizeOfTheLiveText()
     {
         var tree = new StyledTree();
