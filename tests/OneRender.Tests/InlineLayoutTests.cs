@@ -799,6 +799,23 @@ public class InlineLayoutTests
     }
 
     [Fact]
+    public void FlexAndGridItemsSizeFromTheTextIntrinsicSizes()
+    {
+        double ab = W("aaaa bbbb");
+        // Flex: an item with flex-basis auto and no width takes the max-content of its text; the second shrinks to min-content when squeezed.
+        Lay f = Run("<div style='display:flex;width:" + Px(ab * 2) + "px'><div id=a>aaaa bbbb</div><div id=b>aaaa bbbb</div></div>");
+        Assert.Equal(ab, f["a"].Width, 1);
+        Lay sq = Run("<div style='display:flex;width:" + Px(ab) + "px'><div id=a>aaaa bbbb</div><div id=b>aaaa bbbb</div></div>");
+        Assert.Equal(ab / 2, sq["a"].Width, 1.5);
+        Assert.True(sq.Lines("a").Count >= 2);
+        // Grid: auto tracks are sized by max-content of the text when there is room.
+        Lay g = Run("<div style='display:grid;grid-template-columns:auto auto;width:800px'><div id=a>aaaa bbbb</div><div id=b>aaaa</div></div>");
+        Assert.True(g["a"].Width >= ab - 0.01);
+        Lay m = Run("<div style='display:grid;grid-template-columns:min-content;width:800px'><div id=a>aaaa bbbb</div></div>");
+        Assert.Equal(W("aaaa"), m["a"].Width, 1);
+    }
+
+    [Fact]
     public void TheSameInputGivesTheSameFragments()
     {
         const string body = "<p id=a style='width:123px;text-align:justify'>Lorem ipsum <b>dolor</b> sit <i>amet, consectetur</i> adipiscing אבג elit.</p>";
