@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../OneRender/OneRender.csproj" />
+    <ProjectReference Include="../OneRender.Image/OneRender.Image.csproj" />
     <PackageReference Include="RecursiveAI.OnePdf" />
   </ItemGroup>
 
