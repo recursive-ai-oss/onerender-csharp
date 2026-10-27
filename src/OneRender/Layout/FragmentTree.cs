@@ -234,6 +234,15 @@ public sealed class FragmentTree
         _overflow[fragment.Index] = overflow;
     }
 
+    /// <summary>Sets the baseline of a fragment, measured from its border-box top; NaN means the box has none.</summary>
+    /// <param name="fragment">A fragment of this tree.</param>
+    /// <param name="baseline">The baseline offset in px, or NaN.</param>
+    public void SetBaseline(Fragment fragment, double baseline)
+    {
+        Check(fragment);
+        _baseline[fragment.Index] = baseline;
+    }
+
     /// <summary>Marks how a fragment continues into or from its box's other fragments.</summary>
     /// <param name="fragment">A fragment of this tree.</param>
     /// <param name="traits">The flags.</param>

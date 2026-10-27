@@ -22,9 +22,11 @@ ComputedValues ─▶ TextFontProvider ─▶ FontRequest ─▶ FontCatalog.Res
 | `TextAnalysis` | `GetBidiRuns` (UAX #9), `GetVisualOrder`, `GetLineBreakOpportunities` (UAX #14), `GetGraphemeStarts`. | caller-provided buffers |
 | `IFontProvider.Catalog` | Add fonts (`AddFont`), `@font-face` rules (`AddFontFace`), generic mapping, resolver, system-font provider, diagnostics. | document path |
 
-Providers, catalogs and shapers are single-thread objects. A host builds the catalog once: the packaged default fonts (the
-engine cannot reference `.Fonts`, so the host adds them and passes an `IFontFamilyAliases` over `DefaultFonts.TryResolveFamily`),
-then page `@font-face` rules via `FontFaceRule.FromNode` or `FontFaceRule.Create`. Adding a face invalidates resolved lists
+Providers, catalogs and shapers are single-thread objects. The happy path is `OneRender.Image.FontProviders`:
+`CreateDefault(resolver, systemFonts)` builds a `TextFontProvider` with the packaged faces and their aliases
+(`DefaultFonts.TryResolveFamily`) registered, and `ForCurrentThread()` returns one cached per thread. `HtmlRender.ToImage`,
+`HtmlPage` callers, `GeometryProbe` and the WPT and geometry tools use it. Page `@font-face` rules are added to
+`provider.Catalog` via `FontFaceRule.FromNode` or `FontFaceRule.Create`. Adding a face invalidates resolved lists
 (`FontCatalog.Version` increments), and cached runs for stale lists are no longer returned.
 
 ## Matching

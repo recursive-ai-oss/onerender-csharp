@@ -320,14 +320,16 @@ internal static class Comparer
     }
 }
 
-/// <summary>Our side: the engine behind the provisional geometry seam.</summary>
+/// <summary>Our side: the engine, through <see cref="GeometryProbe"/>, with the default fonts.</summary>
 internal static class EngineSide
 {
+    private static OneRender.Text.TextFontProvider Fonts => OneRender.Image.FontProviders.ForCurrentThread();
+
     public static GeometryCapture LayOut(string snapshotRoot, string pageId, ViewportSize vp, CancellationToken ct)
     {
         (SnapshotPage page, string html, Dictionary<string, (byte[] Body, string Type)> res) = Snapshots.Load(snapshotRoot, pageId);
         Func<Uri, byte[]?> resolve = uri => res.TryGetValue(Snapshots.UrlKey(uri.AbsoluteUri), out (byte[] Body, string Type) r) ? r.Body : null;
-        IReadOnlyList<ElementBox> boxes = GeometryProbe.LayOut(html, new Uri(page.Url), resolve, vp.Width, vp.Height, ct);
+        IReadOnlyList<ElementBox> boxes = GeometryProbe.LayOut(html, new Uri(page.Url), resolve, vp.Width, vp.Height, Fonts, null, ct);
         GeometryCapture cap = new() { Source = "engine", Page = pageId, Viewport = vp };
         foreach (ElementBox b in boxes)
         {

@@ -1,3 +1,5 @@
+using OneRender.Layout;
+
 namespace OneRender;
 
 /// <summary>
@@ -18,10 +20,8 @@ namespace OneRender;
 public readonly record struct ElementBox(string Path, string Tag, double X, double Y, double Width, double Height);
 
 /// <summary>
-/// Provisional entry point for geometry comparison: lay out an HTML document at a viewport and report the border
-/// box of every element that generates one. The comparison tooling calls this and nothing else on the engine
-/// side, so the real layout entry point can replace the body without changing the tooling. This type is
-/// replaced when the engine has a public layout API.
+/// The entry point of the geometry comparison: lay out an HTML document at a viewport and report the border box of every
+/// element that generates one. The comparison tooling calls this and nothing else on the engine side.
 /// </summary>
 public static class GeometryProbe
 {
@@ -37,12 +37,11 @@ public static class GeometryProbe
     /// </param>
     /// <param name="viewportWidth">Layout viewport width in CSS pixels; at least 1.</param>
     /// <param name="viewportHeight">Layout viewport height in CSS pixels; at least 1.</param>
+    /// <param name="fonts">Chooses the faces text is laid out with.</param>
+    /// <param name="layout">The layout to run; null uses the engine's default.</param>
     /// <param name="cancellationToken">Cancels the layout; an <see cref="OperationCanceledException"/> results.</param>
-    /// <returns>
-    /// The boxes in document order. Currently always empty: the engine has no layout yet, which makes every
-    /// reference element count as missing on our side.
-    /// </returns>
-    /// <exception cref="ArgumentNullException"><paramref name="html"/> is null.</exception>
+    /// <returns>The boxes in document order.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="html"/> or <paramref name="fonts"/> is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException">A viewport dimension is below 1.</exception>
     public static IReadOnlyList<ElementBox> LayOut(
         string html,
@@ -50,12 +49,23 @@ public static class GeometryProbe
         Func<Uri, byte[]?>? resolveResource,
         int viewportWidth,
         int viewportHeight,
+        IFontProvider fonts,
+        ILayoutEngine? layout = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(html);
+        ArgumentNullException.ThrowIfNull(fonts);
         ArgumentOutOfRangeException.ThrowIfLessThan(viewportWidth, 1);
         ArgumentOutOfRangeException.ThrowIfLessThan(viewportHeight, 1);
         cancellationToken.ThrowIfCancellationRequested();
-        return [];
+        var options = new HtmlPageOptions(fonts)
+        {
+            ViewportWidth = viewportWidth,
+            ViewportHeight = viewportHeight,
+            BaseUrl = documentUrl?.AbsoluteUri,
+            StylesheetBytes = resolveResource is null ? null : url => Uri.TryCreate(url, UriKind.Absolute, out Uri? u) ? resolveResource(u) : null,
+            Layout = layout,
+        };
+        return HtmlPage.Create(html, options, cancellationToken).ElementBoxes(cancellationToken);
     }
 }

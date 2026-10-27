@@ -14,8 +14,10 @@ using RecursiveAI.OneHtml.Css;
 
 string[] names = [EngineInfo.Name, ImageBackendInfo.Name, PdfBackendInfo.Name];
 Console.WriteLine(string.Join(' ', names));
-// The provisional geometry entry point must survive trimming and AOT as well.
-int boxes = GeometryProbe.LayOut("<p>x</p>", null, null, 800, 600).Count;
+// The geometry entry point and the HTML-to-pixels path must survive trimming and AOT as well.
+int boxes = GeometryProbe.LayOut("<p>x</p>", null, null, 800, 600, FontProviders.CreateDefault()).Count;
+RgbaImage page = HtmlRender.ToImage("<body style='margin:0'><div style='width:20px;height:10px;background:#f00'></div></body>", new HtmlRenderOptions { Width = 32, Height = 32 });
+bool pageOk = page.Pixels[((5 * 32) + 5) * 4] == 255 && page.Pixels[((5 * 32) + 5) * 4 + 1] == 0 && page.Pixels[((20 * 32) + 5) * 4 + 1] == 255;
 
 // Build a box tree from a small HTML string: parse, cascade, styled tree, box tree.
 Document doc = Document.Parse("<!DOCTYPE html><body><p style=\"width:50%;margin:1em auto\">Hello <b>world</b></p><div style=\"display:flex\"><span>a</span></div><img src=x.png>");
@@ -25,6 +27,14 @@ new HtmlFrontEnd(styled).Build(styles);
 var boxTree = new BoxTree(styled);
 boxTree.Build();
 string dump = boxTree.Dump();
+// Block layout over that tree: no reflection or dynamic code, so it must trim and run the same way.
+var fragments = new OneRender.Layout.FragmentTree(boxTree);
+new OneRender.Layout.BlockLayoutEngine().Layout(boxTree, new OneRender.Layout.LayoutInput(800, 600, new NoFonts()), fragments);
+if (fragments.Root.IsNull || fragments.Root.BorderBox.Width != 800)
+{
+    return 4;
+}
+
 Console.WriteLine($"{styled.Count} styled nodes, {boxTree.Count} boxes");
 if (boxTree.Count < 8 || !dump.Contains("flex", StringComparison.Ordinal))
 {
@@ -56,13 +66,7 @@ RgbaImage image = DisplayListRasterizer.Render(list, 32, 32);
 bool painted = image.Pixels[((16 * 32) + 16) * 4 + 3] == 255 && image.Pixels[(((5 * 32) + 10) * 4) + 1] < 50;
 Console.WriteLine($"rasterized {image.Width}x{image.Height} painted={painted}");
 // The text service: match, fall back, shape (ligature, kerning, Hebrew fallback) and decode a WOFF2 font (Brotli).
-var catalog = new FontCatalog(aliases: new SmokeAliases());
-foreach (FontFaceInfo info in DefaultFonts.Faces)
-{
-    catalog.AddFont(info.ReadAllBytes(), info.Family, info.Weight, info.Slant == FontSlant.Italic ? FontStyleKind.Italic : FontStyleKind.Normal, info.Stretch);
-}
-
-IFontProvider fonts = new TextFontProvider(catalog);
+IFontProvider fonts = FontProviders.CreateDefault();
 var textTree = new StyledTree();
 StyledNode textRoot = textTree.AddRoot("div", new StyleDeclaration().Set("font-family", "Calibri, sans-serif"));
 ComputedValues style = textRoot.Values;
@@ -70,16 +74,23 @@ ShapedText run = fonts.Shape("Office fi AVA \u05D0\u05D1", in style);
 bool shaped = run.GlyphCount > 5 && run.Width > 0 && run.Segments.Length == 2 && run.MissingGlyphCount == 0;
 bool again = ReferenceEquals(run, fonts.Shape("Office fi AVA \u05D0\u05D1", in style));
 
-using System.IO.Stream woff2 = typeof(SmokeAliases).Assembly.GetManifestResourceStream("hebrew.woff2")!;
+using System.IO.Stream woff2 = typeof(NoFonts).Assembly.GetManifestResourceStream("hebrew.woff2")!;
 var woff2Bytes = new byte[woff2.Length];
 woff2.ReadExactly(woff2Bytes);
 FontLoadResult decoded = FontLoader.Load(woff2Bytes);
 bool woff2Ok = decoded.Status == FontLoadStatus.Ok && decoded.Face!.HasGlyph(0x05D0);
 Console.WriteLine($"shaped {run.GlyphCount} glyphs, width {run.Width:F2}, cached {again}, woff2 {decoded.Status}");
-return names.Length == 3 && sfnt && painted && boxes == 0 && shaped && again && woff2Ok ? 0 : 1;
 
-internal sealed class SmokeAliases : IFontFamilyAliases
+
+return names.Length == 3 && sfnt && painted && pageOk && boxes >= 3 && shaped && again && woff2Ok ? 0 : 1;
+
+internal sealed class NoFonts : OneRender.Layout.IFontProvider
 {
-    public bool TryResolve(ReadOnlySpan<char> name, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out string? family) => DefaultFonts.TryResolveFamily(name, out family);
-}
+    public OneRender.Text.FontCatalog Catalog => throw new NotSupportedException();
 
+    public OneRender.Text.ResolvedFontList Resolve(in OneRender.Style.ComputedValues style) => throw new NotSupportedException();
+
+    public OneRender.Text.ShapedText Shape(ReadOnlySpan<char> text, in OneRender.Style.ComputedValues style, bool rightToLeft = false) => throw new NotSupportedException();
+
+    public OneRender.Text.FontMetricsInfo GetMetrics(in OneRender.Style.ComputedValues style) => throw new NotSupportedException();
+}
