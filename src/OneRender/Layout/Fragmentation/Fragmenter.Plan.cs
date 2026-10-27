@@ -114,7 +114,9 @@ internal sealed partial class Fragmenter
                 if (balance)
                 {
                     h = Balance(c0, c1, cs, ce, inp.Columns, avail);
-                    if (last && inp.Columns > 0)
+                    // A trailing margin longer than the content itself (a monolithic float with 40px margins around 20px of box) is not
+                    // shared out among the columns; it trails them as before (evidence: the monolithic-float margin reftests).
+                    if (last && inp.Columns > 0 && inp.StripH - ce <= ce - cs)
                     {
                         // Balancing starts from an equal share of everything, trailing margin included, and only grows from there; the
                         // columns end at that height and nothing trails them (evidence: docs/layout-conventions.md, balanced columns).

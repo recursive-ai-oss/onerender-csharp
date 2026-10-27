@@ -78,10 +78,10 @@ internal sealed partial class InlineWorker
                             _opp[p] = OppAllowed;
                         }
 
-                        if (_opp[p] == OppAllowed && p < n && _t[p - 1] is '/' or '|' or '!' && _t[p] < '\u2E80' && (char.IsLetterOrDigit(_t[p]) || _t[p] == '/'))
+                        if (v.WordBreak != WordBreakKind.BreakAll && _opp[p] == OppAllowed && p < n && _t[p - 1] is '/' or '|' or '!' && _t[p] < '\u2E80' && (char.IsLetterOrDigit(_t[p]) || _t[p] == '/'))
                         {
                             // UAX #14 allows a break after "/" (SY), "|" (BA) and "!" (EX) before a letter. The reference browser does
-                            // not, which keeps paths, URLs and "and/or" in one piece; "?" and "-" still break (evidence: docs/layout-conventions.md).
+                            // not, which keeps paths, URLs and "and/or" in one piece (word-break: break-all keeps the UAX #14 break after "/"); "?" and "-" still break (evidence: docs/layout-conventions.md).
                             _opp[p] = OppNone;
                         }
 
