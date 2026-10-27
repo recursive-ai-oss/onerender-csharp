@@ -270,6 +270,15 @@ liveTree.SetStates(liveKid, ElementStates.None);
 FlushResult liveFlush = livePage.Flush();
 bool liveOk = liveHeight == 30 && liveQueries.OffsetHeight(liveKid) == 10 && liveFlush.Repainted && livePage.Display.Current.Count > 0;
 
+// Slot reuse: a removed subtree's slots serve the next insert, and the old handle is stale afterwards.
+int liveSlots = liveTree.Count;
+StyledNode liveGone = liveRoot.LastChild;
+liveTree.Remove(liveGone);
+livePage.Flush();
+StyledNode liveNew = liveTree.AddElement(liveRoot, "p");
+bool reuseOk = !liveGone.IsValid && liveNew.IsValid && liveNew.Index < liveSlots && liveTree.Count == liveSlots;
+liveOk = liveOk && reuseOk;
+
 // The PDF backend: a tagged one-page file with a gradient and a rasterized island, through the PDF/UA identification pass.
 byte[] pdfBytes = HtmlPdf.ToPdf(
     "<!DOCTYPE html><html lang='en'><head><title>T</title></head><body><h1>Hi</h1><p style='background:linear-gradient(#f00,#00f);box-shadow:2px 2px 4px #888'>text <a href='https://example.invalid/'>link</a></p></body></html>",

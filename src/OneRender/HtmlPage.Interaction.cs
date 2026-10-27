@@ -40,7 +40,10 @@ public sealed partial class HtmlPage
         {
             for (int i = 0; i < st.Count; i++)
             {
-                st.MarkStyleDirty(i);
+                if (!st.IsFreeSlot(i))
+                {
+                    st.MarkStyleDirty(i);
+                }
             }
         }
         else

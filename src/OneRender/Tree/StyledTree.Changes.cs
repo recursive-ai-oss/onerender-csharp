@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using OneRender.Interaction;
 using OneRender.Style;
 using ComponentValueList = RecursiveAI.OneHtml.Css.ComponentValueList;
@@ -76,10 +77,8 @@ public sealed partial class StyledTree
     private char[] _textSpare = [];
     private int _structureEpoch;
     private INodeStyler? _styler;
-    private readonly Dictionary<LayerTuple, LayerKey> _layers = new();
+    private readonly LayerTier _layerRoot = new();
     private readonly LayeredSource _layered = new();
-
-    private readonly record struct LayerTuple(object? Base, object? Focus, object? Hover, object? Active, byte Mask);
 
     private sealed class LayerKey
     {
@@ -157,6 +156,94 @@ public sealed partial class StyledTree
         }
 
         _chgCount = 0;
+        ReclaimRemoved();
+    }
+
+    // Removed subtrees are kept until the consumers of the change set have seen them (they find the removed nodes' old boxes and
+    // state by index). Then every node of every removed subtree gives its slot back: the columns are reset so nothing stale is
+    // read or kept alive, the generation moves on so old handles are detectably stale, and the index goes on the free list.
+    private void ReclaimRemoved()
+    {
+        for (int d = 0; d < _deadCount; d++)
+        {
+            int root = _dead[d];
+            if (_kind[root] == FreeKind)
+            {
+                continue;
+            }
+
+            int sp = 0;
+            EnsureWork(1);
+            _work[sp++] = root;
+            while (sp > 0)
+            {
+                int n = _work[--sp];
+                for (int c = _first[n]; c >= 0; c = _next[c])
+                {
+                    EnsureWork(sp + 1);
+                    _work[sp++] = c;
+                }
+
+                FreeSlot(n);
+            }
+        }
+
+        _deadCount = 0;
+    }
+
+    private void FreeSlot(int n)
+    {
+        _gen[n]++;
+        _kind[n] = FreeKind;
+        _parent[n] = -1;
+        _first[n] = -1;
+        _last[n] = -1;
+        _next[n] = -1;
+        _style[n] = 0;
+        _source[n] = -1;
+        _decl[n] = null;
+        _src[n] = null;
+        if (_focusDecl is not null)
+        {
+            _focusDecl[n] = null;
+        }
+
+        if (_hoverDecl is not null)
+        {
+            _hoverDecl[n] = null;
+        }
+
+        if (_activeDecl is not null)
+        {
+            _activeDecl[n] = null;
+        }
+
+        _states[n] = 0;
+        if (_control is not null)
+        {
+            _control[n] = default;
+        }
+
+        _textCap[n] = 0;
+        _textLength[n] = 0;
+        _chg[n] = 0;
+        if (_freeCount == _free.Length)
+        {
+            Array.Resize(ref _free, _free.Length * 2);
+        }
+
+        _free[_freeCount++] = n;
+    }
+
+    // A node taken out of its parent's list: it and what is below it are reclaimed once the change set has been consumed.
+    private void MarkRemoved(int root)
+    {
+        if (_deadCount == _dead.Length)
+        {
+            Array.Resize(ref _dead, _dead.Length * 2);
+        }
+
+        _dead[_deadCount++] = root;
     }
 
     private void Note(int node, byte bits)
@@ -187,9 +274,9 @@ public sealed partial class StyledTree
 
     private void CheckNode(StyledNode node, string name)
     {
-        if (node.IsNull || !ReferenceEquals(node.Tree, this))
+        if (!node.IsValid || !ReferenceEquals(node.Tree, this))
         {
-            throw new ArgumentException("The node does not belong to this tree.", name);
+            throw new ArgumentException("The node does not belong to this tree, or it was removed and its slot reclaimed.", name);
         }
     }
 
@@ -437,7 +524,7 @@ public sealed partial class StyledTree
 
     // Slots whose text moved leave holes. When the arena is full, live texts are packed into the spare buffer and the buffers swap,
     // so the arena stays about as big as the live text however often labels change.
-    private void CompactText(int needed)
+    private void CompactText(int needed, bool force = false)
     {
         long live = 0;
         for (int i = 0; i < _count; i++)
@@ -448,7 +535,7 @@ public sealed partial class StyledTree
             }
         }
 
-        if (live + needed > _text.Length * 3L / 4)
+        if (!force && live + needed > _text.Length * 3L / 4)
         {
             return; // mostly live: growing is cheaper than packing
         }
@@ -510,7 +597,7 @@ public sealed partial class StyledTree
         return n;
     }
 
-    /// <summary>Takes a node and its subtree out of the tree. The nodes keep their indices but are no longer reachable.</summary>
+    /// <summary>Takes a node and its subtree out of the tree. Until the next flush the nodes keep their indices and handles (the change set refers to them); after it their slots are reused by later inserts and their handles are no longer <see cref="StyledNode.IsValid"/>.</summary>
     /// <param name="node">A non-root node of this tree.</param>
     /// <exception cref="ArgumentException">The node is the root, already removed, or from another tree.</exception>
     public void Remove(StyledNode node)
@@ -524,6 +611,7 @@ public sealed partial class StyledTree
 
         int p = _parent[i];
         Unlink(i);
+        MarkRemoved(i);
         Note(i, (byte)NodeChanges.Removed);
         Note(p, (byte)NodeChanges.Children);
         _structureEpoch++;
@@ -755,7 +843,7 @@ public sealed partial class StyledTree
             }
 
             _chg[n] = (byte)(_chg[n] & ~PendingStyleBit);
-            if (_parent[n] < 0 && n != 0)
+            if ((_parent[n] < 0 && n != 0) || _kind[n] == FreeKind)
             {
                 continue; // removed while waiting
             }
@@ -901,6 +989,7 @@ public sealed partial class StyledTree
         else if (!listItem && hasMarker)
         {
             Unlink(first);
+            MarkRemoved(first);
             Note(first, (byte)NodeChanges.Removed);
             Note(n, (byte)NodeChanges.Children);
             _structureEpoch++;
@@ -935,21 +1024,17 @@ public sealed partial class StyledTree
         {
             object key = (object?)decl ?? NoDeclaration;
             int version = decl?.Version ?? 0;
-            if (Styles.TryGetCached(key, version, parentStyle, out StyleId cached))
+            bool weak = decl is not null;
+            if (weak ? Styles.TryGetCachedWeak(key, version, parentStyle, out StyleId cached) : Styles.TryGetCached(key, version, parentStyle, out cached))
             {
                 return cached;
             }
 
             _builderSource.Declaration = decl;
-            return Styles.Compute(key, version, _builderSource, parentStyle, p >= 0, p < 0);
+            return Styles.Compute(key, version, _builderSource, parentStyle, p >= 0, p < 0, weak);
         }
 
-        var tuple = new LayerTuple(decl, focus, hover, active, (byte)((focus is null ? 0 : 1) | (hover is null ? 0 : 2) | (active is null ? 0 : 4)));
-        if (!_layers.TryGetValue(tuple, out LayerKey? layer))
-        {
-            layer = new LayerKey();
-            _layers[tuple] = layer;
-        }
+        LayerKey layer = LayerKeyOf(decl, focus, hover, active);
 
         int bv = decl?.Version ?? 0, fv = focus?.Version ?? 0, hv = hover?.Version ?? 0, av = active?.Version ?? 0;
         if (layer.BaseVersion != bv || layer.FocusVersion != fv || layer.HoverVersion != hv || layer.ActiveVersion != av)
@@ -961,13 +1046,53 @@ public sealed partial class StyledTree
             layer.Version++;
         }
 
-        if (Styles.TryGetCached(layer, layer.Version, parentStyle, out StyleId hit))
+        if (Styles.TryGetCachedWeak(layer, layer.Version, parentStyle, out StyleId hit))
         {
             return hit;
         }
 
         _layered.Set(decl, focus, hover, active);
-        return Styles.Compute(layer, layer.Version, _layered, parentStyle, p >= 0, p < 0);
+        return Styles.Compute(layer, layer.Version, _layered, parentStyle, p >= 0, p < 0, weak: true);
+    }
+
+    // One key object per combination of the four layers, found through four weak tables, one per layer. Each table's entries die with
+    // the declaration they are keyed by, and a table hangs off the layer above it, so a declaration that lives long (a shared base) never
+    // keeps a short-lived one (a hover layer made for one node) or the key made for it alive.
+    private LayerKey LayerKeyOf(StyleDeclaration? decl, StyleDeclaration? focus, StyleDeclaration? hover, StyleDeclaration? active)
+    {
+        LayerTier t = _layerRoot;
+        t = t.Next(decl ?? NoDeclaration);
+        t = t.Next(focus ?? NoDeclaration);
+        t = t.Next(hover ?? NoDeclaration);
+        return t.Leaf(active ?? NoDeclaration);
+    }
+
+    private sealed class LayerTier
+    {
+        private readonly ConditionalWeakTable<object, LayerTier> _tiers = new();
+        private readonly ConditionalWeakTable<object, LayerKey> _leaves = new();
+
+        public LayerTier Next(object key)
+        {
+            if (!_tiers.TryGetValue(key, out LayerTier? next))
+            {
+                next = new LayerTier();
+                _tiers.Add(key, next);
+            }
+
+            return next;
+        }
+
+        public LayerKey Leaf(object key)
+        {
+            if (!_leaves.TryGetValue(key, out LayerKey? leaf))
+            {
+                leaf = new LayerKey();
+                _leaves.Add(key, leaf);
+            }
+
+            return leaf;
+        }
     }
 
     /// <summary>A declaration source that reads several declarations, the last one that declares a property winning.</summary>

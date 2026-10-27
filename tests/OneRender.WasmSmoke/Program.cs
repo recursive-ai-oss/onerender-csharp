@@ -157,6 +157,15 @@ liveTree.AddText(liveTree.AddElement(liveRoot, "span"), "x");
 liveTree.SetStates(liveKid, ElementStates.None);
 FlushResult liveFlush = livePage.Flush();
 bool liveOk = liveHeight == 30 && liveQueries.OffsetHeight(liveKid) == 10 && liveFlush.Repainted && livePage.Display.Current.Count > 0;
+
+// Slot reuse: a removed subtree's slots serve the next insert, and the old handle is stale afterwards.
+int liveSlots = liveTree.Count;
+StyledNode liveGone = liveRoot.LastChild;
+liveTree.Remove(liveGone);
+livePage.Flush();
+StyledNode liveNew = liveTree.AddElement(liveRoot, "p");
+bool reuseOk = !liveGone.IsValid && liveNew.IsValid && liveNew.Index < liveSlots && liveTree.Count == liveSlots;
+liveOk = liveOk && reuseOk;
 Console.WriteLine($"incremental {liveOk}");
 // The PDF backend: a tagged page through the PDF/UA identification pass must trim as well.
 byte[] pdfBytes = OneRender.Pdf.HtmlPdf.ToPdf(

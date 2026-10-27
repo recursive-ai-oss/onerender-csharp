@@ -5,7 +5,7 @@ using OneRender.TestSupport;
 namespace OneRender.Fuzz;
 
 /// <summary>
-/// Random edit sequences on a live page, read from the input bytes: after every edit the incrementally updated page must equal a
+/// Random edit sequences on a live page, read from the input bytes (bit 0 of the first byte picks the calm profile, bit 1 the insert/remove churn profile): after every edit the incrementally updated page must equal a
 /// page built from scratch (styles, boxes, fragments, display list). A difference raises <see cref="InvalidOperationException"/>,
 /// which is a finding like any other escaping exception.
 /// </summary>
@@ -22,8 +22,9 @@ internal static class IncrementalTarget
 
         byte[] bytes = data.ToArray();
         bool calm = (bytes[0] & 1) != 0;
+        bool churn = (bytes[0] & 2) != 0;
         int size = 8 + (bytes[1] % 40);
-        var session = new EditSession(FontProviders.CreateDefault(), new Chooser(bytes[2..]), size, calm);
+        var session = new EditSession(FontProviders.CreateDefault(), new Chooser(bytes[2..]), size, calm, churn);
         for (int i = 0; i < MaxSteps && !session.Exhausted; i++)
         {
             session.Step();

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using RecursiveAI.OneHtml.Css;
 
 namespace OneRender.Style;
@@ -49,6 +50,11 @@ public sealed class StyleTable
     private readonly Dictionary<StyleKey, int> _intern = new(256);
     private readonly Dictionary<long, int> _anonymous = new(16);
     private readonly Dictionary<int, int> _byHash = new(256);
+
+    // Styles computed from builder declarations are remembered on the declaration (weakly), not in _intern: a game that makes a
+    // declaration per node it inserts must not keep every declaration it ever made alive. Declarations a host keeps and shares keep
+    // their entries for as long as they live, so reusing them computes nothing.
+    private readonly ConditionalWeakTable<object, SourceCache> _bySource = new();
     private int[] _sameHash = new int[64];
     private ComputedValues[] _rows = new ComputedValues[64];
     private int _count = 1; // row 0 is the "none" row (initial values), so a default StyleId is harmless.
@@ -101,6 +107,7 @@ public sealed class StyleTable
     {
         ResetGeneration++;
         _intern.Clear();
+        _bySource.Clear();
         _anonymous.Clear();
         _byHash.Clear();
         _count = 1;
@@ -128,6 +135,83 @@ public sealed class StyleTable
         _rootEnv = _computer.WithRootFont(_rootEnv, in _rows[root.Index]);
     }
 
+    private sealed class SourceCache
+    {
+        public const int MaxEntries = 32;
+        public Entry[] Entries = new Entry[2];
+        public int Count;
+        public int Next;
+    }
+
+    private struct Entry
+    {
+        public int Version;
+        public int Parent;
+        public int Row;
+        public ComputeEnvironment Root;
+    }
+
+    /// <summary>The style remembered for a builder declaration (or layer key) under a parent style, if any.</summary>
+    internal bool TryGetCachedWeak(object source, int version, StyleId parent, out StyleId id)
+    {
+        if (_bySource.TryGetValue(source, out SourceCache? cache))
+        {
+            Entry[] entries = cache.Entries;
+            for (int i = 0; i < cache.Count; i++)
+            {
+                ref Entry e = ref entries[i];
+                if (e.Version == version && e.Parent == parent.Index && e.Root == _rootEnv)
+                {
+                    id = new StyleId(e.Row);
+                    return true;
+                }
+            }
+        }
+
+        id = default;
+        return false;
+    }
+
+    private void RememberWeak(object source, int version, int parent, int row)
+    {
+        if (!_bySource.TryGetValue(source, out SourceCache? cache))
+        {
+            cache = new SourceCache();
+            _bySource.Add(source, cache);
+        }
+
+        // Entries of an older version of the declaration can never be asked for again; they go first.
+        int slot = -1;
+        for (int i = 0; i < cache.Count; i++)
+        {
+            if (cache.Entries[i].Version != version)
+            {
+                slot = i;
+                break;
+            }
+        }
+
+        if (slot < 0)
+        {
+            if (cache.Count < SourceCache.MaxEntries)
+            {
+                if (cache.Count == cache.Entries.Length)
+                {
+                    Array.Resize(ref cache.Entries, Math.Min(SourceCache.MaxEntries, cache.Entries.Length * 2));
+                }
+
+                slot = cache.Count++;
+            }
+            else
+            {
+                slot = cache.Next;
+                cache.Next = (cache.Next + 1) % SourceCache.MaxEntries;
+            }
+        }
+
+        cache.Entries[slot] = new Entry { Version = version, Parent = parent, Row = row, Root = _rootEnv };
+    }
+
     internal bool TryGetCached(object source, int version, StyleId parent, out StyleId id)
     {
         if (_intern.TryGetValue(new StyleKey(source, version, parent.Index, _rootEnv), out int row))
@@ -141,7 +225,7 @@ public sealed class StyleTable
     }
 
     /// <summary>Computes the style of a node and caches it under the key and version.</summary>
-    internal StyleId Compute(object key, int version, DeclarationSource declarations, StyleId parent, bool hasParent, bool isRoot)
+    internal StyleId Compute(object key, int version, DeclarationSource declarations, StyleId parent, bool hasParent, bool isRoot, bool weak = false)
     {
         ComputeEnvironment env = isRoot
             ? new ComputeEnvironment(_viewportWidth, _viewportHeight, 16)
@@ -167,7 +251,15 @@ public sealed class StyleTable
             return hasParent ? parent : default;
         }
 
-        _intern[new StyleKey(key, version, parent.Index, _rootEnv)] = id.Index;
+        if (weak)
+        {
+            RememberWeak(key, version, parent.Index, id.Index);
+        }
+        else
+        {
+            _intern[new StyleKey(key, version, parent.Index, _rootEnv)] = id.Index;
+        }
+
         return id;
     }
 

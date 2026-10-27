@@ -39,6 +39,11 @@ public sealed partial class StyledTree
     private string?[] _src;
     private char[] _text;
     private int[] _sourceToNode = [];
+    private int[] _gen;
+    private int[] _free = new int[64];
+    private int _freeCount;
+    private int[] _dead = new int[16];
+    private int _deadCount;
     private int _count;
     private int _textCount;
     private bool _limitReported;
@@ -53,6 +58,7 @@ public sealed partial class StyledTree
         Styles = styles ?? new StyleTable();
         Limits = limits ?? TreeLimits.Default;
         _kind = new byte[64];
+        _gen = new int[64];
         _parent = new int[64];
         _first = new int[64];
         _last = new int[64];
@@ -82,8 +88,24 @@ public sealed partial class StyledTree
     /// <summary>What was dropped or ignored while building: limits hit, invalid values met. Cleared by <see cref="Clear"/>.</summary>
     public DiagnosticBag Diagnostics => Styles.Diagnostics;
 
-    /// <summary>The number of nodes.</summary>
+    /// <summary>
+    /// The number of node slots in use or waiting for reuse: one more than the largest <see cref="StyledNode.Index"/> ever handed out.
+    /// Removed nodes give their slots back for later inserts, so this stays near the most nodes the tree held at once however long it
+    /// lives. Index-keyed tables are sized by it; loops over it must skip free slots (<see cref="IsFreeSlot"/>).
+    /// </summary>
     public int Count => _count;
+
+    /// <summary>The size of the text arena in chars; it follows the live text, not the text ever stored.</summary>
+    internal int TextCapacity => _text.Length;
+
+    /// <summary>The number of nodes in the tree, including removed ones whose slots have not been reclaimed yet.</summary>
+    public int LiveCount => _count - _freeCount;
+
+    /// <summary>The number of slots the columns can hold before they grow.</summary>
+    public int Capacity => _kind.Length;
+
+    /// <summary>Slots ready for the next inserts.</summary>
+    public int FreeSlots => _freeCount;
 
     /// <summary>The host's resource resolver, used for the natural size of replaced content. Null means no sizes are known.</summary>
     public IResourceResolver? Resolver { get; set; }
@@ -94,12 +116,44 @@ public sealed partial class StyledTree
     /// <summary>The root, or the null handle when the tree is empty.</summary>
     public StyledNode Root => _count == 0 ? default : new StyledNode(this, 0);
 
+    internal const byte FreeKind = 255;
+
+    internal int GenerationOf(int index) => (uint)index < (uint)_gen.Length ? _gen[index] : -1;
+
+    /// <summary>True for a slot that holds no node (reclaimed, waiting for reuse).</summary>
+    internal bool IsFreeSlot(int index) => _kind[index] == FreeKind;
+
     /// <summary>The <c>&lt;clipPath&gt;</c> elements of the document's inline svgs by id, for <c>clip-path: url(#id)</c>.</summary>
     internal Dictionary<string, ClipPathDef> ClipPaths { get; } = new(StringComparer.Ordinal);
 
     /// <summary>Removes every node and diagnostic; keeps all storage and cached styles.</summary>
     public void Clear()
     {
+        // Handles from before the call stop being valid.
+        for (int i = 0; i < _count; i++)
+        {
+            _gen[i]++;
+            _kind[i] = FreeKind;
+            _decl[i] = null;
+            _src[i] = null;
+            if (_focusDecl is not null)
+            {
+                _focusDecl[i] = null;
+            }
+
+            if (_hoverDecl is not null)
+            {
+                _hoverDecl[i] = null;
+            }
+
+            if (_activeDecl is not null)
+            {
+                _activeDecl[i] = null;
+            }
+        }
+
+        _freeCount = 0;
+        _deadCount = 0;
         _count = 0;
         _textCount = 0;
         _limitReported = false;
@@ -174,9 +228,9 @@ public sealed partial class StyledTree
     /// <param name="height">Height in px; NaN for none.</param>
     public void SetNaturalSize(StyledNode node, double width, double height)
     {
-        if (node.IsNull || !ReferenceEquals(node.Tree, this))
+        if (!node.IsValid || !ReferenceEquals(node.Tree, this))
         {
-            throw new ArgumentException("The node does not belong to this tree.", nameof(node));
+            throw new ArgumentException("The node does not belong to this tree, or it was removed and its slot reclaimed.", nameof(node));
         }
 
         _naturalW[node.Index] = width < 0 ? double.NaN : width;
@@ -188,9 +242,9 @@ public sealed partial class StyledTree
     /// <param name="source">The address the host's image source understands; null for none.</param>
     public void SetReplacedSource(StyledNode node, string? source)
     {
-        if (node.IsNull || !ReferenceEquals(node.Tree, this))
+        if (!node.IsValid || !ReferenceEquals(node.Tree, this))
         {
-            throw new ArgumentException("The node does not belong to this tree.", nameof(node));
+            throw new ArgumentException("The node does not belong to this tree, or it was removed and its slot reclaimed.", nameof(node));
         }
 
         _src[node.Index] = source;
@@ -198,9 +252,9 @@ public sealed partial class StyledTree
 
     private void CheckParent(StyledNode parent)
     {
-        if (!ReferenceEquals(parent.Tree, this))
+        if (!parent.IsValid || !ReferenceEquals(parent.Tree, this))
         {
-            throw new ArgumentException("The parent belongs to another tree.", nameof(parent));
+            throw new ArgumentException("The parent belongs to another tree, or it was removed and its slot reclaimed.", nameof(parent));
         }
 
         if (_kind[parent.Index] != (byte)StyledNodeKind.Element)
@@ -220,10 +274,11 @@ public sealed partial class StyledTree
         StyleId style;
         object key = (object?)declaration ?? NoDeclaration;
         int version = declaration?.Version ?? 0;
-        if (!Styles.TryGetCached(key, version, parentStyle, out style))
+        bool weak = declaration is not null; // a shared "no declaration" key is one key; a declaration a host made for a node may die with it
+        if (!(weak ? Styles.TryGetCachedWeak(key, version, parentStyle, out style) : Styles.TryGetCached(key, version, parentStyle, out style)))
         {
             _builderSource.Declaration = declaration;
-            style = Styles.Compute(key, version, _builderSource, parentStyle, parent >= 0, parent < 0);
+            style = Styles.Compute(key, version, _builderSource, parentStyle, parent >= 0, parent < 0, weak);
         }
 
         if (parent < 0)
@@ -324,11 +379,7 @@ public sealed partial class StyledTree
     /// <param name="rows">The row span, 0 for the rest of the row group.</param>
     public void SetTableSpans(StyledNode node, int columns, int rows)
     {
-        if (node.IsNull || !ReferenceEquals(node.Tree, this))
-        {
-            throw new ArgumentException("The node does not belong to this tree.", nameof(node));
-        }
-
+        CheckNode(node, nameof(node));
         SetSpans(node.Index, columns, rows);
     }
 
@@ -373,7 +424,13 @@ public sealed partial class StyledTree
 
     internal int NewNode(StyledNodeKind kind, int parent, StyleId style, int sourceIndex)
     {
-        if (_count >= Limits.MaxNodes)
+        if (_freeCount == 0 && _deadCount > 0 && !_tracking)
+        {
+            ReclaimRemoved(); // nothing watches this tree's changes, so removed nodes can go at once
+        }
+
+        // The limit bounds the nodes in the tree, not the slots ever used: a free slot is always available.
+        if (_freeCount == 0 && _count >= Limits.MaxNodes)
         {
             ReportLimit("node count limit of " + Limits.MaxNodes.ToString(System.Globalization.CultureInfo.InvariantCulture) + " reached; later nodes are dropped");
             return -1;
@@ -386,12 +443,21 @@ public sealed partial class StyledTree
             return -1;
         }
 
-        if (_count == _kind.Length)
+        int i;
+        if (_freeCount > 0)
         {
-            Grow();
+            i = _free[--_freeCount];
+        }
+        else
+        {
+            if (_count == _kind.Length)
+            {
+                Grow();
+            }
+
+            i = _count++;
         }
 
-        int i = _count++;
         _kind[i] = (byte)kind;
         _parent[i] = parent;
         _first[i] = -1;
@@ -470,6 +536,11 @@ public sealed partial class StyledTree
     {
         if (text.Length > Limits.MaxTextLength - _textCount)
         {
+            CompactText(text.Length, force: true); // holes left by removed and rewritten texts are not text
+        }
+
+        if (text.Length > Limits.MaxTextLength - _textCount)
+        {
             if (!_textLimitReported)
             {
                 _textLimitReported = true;
@@ -491,6 +562,11 @@ public sealed partial class StyledTree
 
     internal void SetText(int idx, ReadOnlySpan<char> text)
     {
+        if (_textCount + text.Length > _text.Length)
+        {
+            CompactText(text.Length);
+        }
+
         if (_textCount + text.Length > _text.Length)
         {
             Array.Resize(ref _text, (int)Math.Min(Array.MaxLength, Math.Max((long)_text.Length * 2, (long)_textCount + text.Length)));
@@ -592,6 +668,7 @@ public sealed partial class StyledTree
     {
         int n = _kind.Length * 2;
         Array.Resize(ref _kind, n);
+        Array.Resize(ref _gen, n);
         Array.Resize(ref _parent, n);
         Array.Resize(ref _first, n);
         Array.Resize(ref _last, n);

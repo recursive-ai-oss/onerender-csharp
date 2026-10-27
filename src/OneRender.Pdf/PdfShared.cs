@@ -13,6 +13,9 @@ internal sealed class PdfShared
     private readonly Dictionary<int, PdfCreatedImage?> _images = [];
     private readonly Dictionary<(FontFace Face, int Glyph), PdfCreatedImage?> _glyphImages = [];
 
+    /// <summary>The pictures of blurred box shadows already embedded, so equal shadows share one.</summary>
+    internal Dictionary<PageEmitter.ShadowKey, PdfCreatedImage> ShadowImages { get; } = [];
+
     public PdfShared(PdfDocumentWriter writer, PdfOutputOptions options, IImageResolver? images, DiagnosticBag diagnostics)
     {
         Writer = writer;
@@ -100,6 +103,23 @@ internal sealed class PdfShared
         _images[handle.Value] = image;
         return image;
     }
+
+    /// <summary>Embeds a picture of one colour with the given coverage as its alpha channel (a blurred shadow).</summary>
+    public PdfCreatedImage EmbedShadow(byte[] alpha, int width, int height, in PaintColor color)
+    {
+        byte[] rgb = new byte[alpha.Length * 3];
+        byte r = ToByte(color.R), g = ToByte(color.G), b = ToByte(color.B);
+        for (int i = 0; i < alpha.Length; i++)
+        {
+            rgb[i * 3] = r;
+            rgb[(i * 3) + 1] = g;
+            rgb[(i * 3) + 2] = b;
+        }
+
+        return Writer.AddRawImage(width, height, PdfImageColor.Rgb, rgb, alpha);
+    }
+
+    private static byte ToByte(float v) => (byte)Math.Clamp((int)MathF.Round(v * 255f), 0, 255);
 
     public PdfCreatedImage Embed(RgbaImage pixels)
     {

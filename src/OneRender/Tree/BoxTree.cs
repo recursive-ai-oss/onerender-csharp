@@ -71,7 +71,7 @@ public sealed partial class BoxTree
     /// <param name="node">A node of <see cref="Styled"/>.</param>
     public Box PrincipalBox(StyledNode node)
     {
-        if (node.IsNull || !ReferenceEquals(node.Tree, Styled))
+        if (!node.IsValid || !ReferenceEquals(node.Tree, Styled))
         {
             return default;
         }

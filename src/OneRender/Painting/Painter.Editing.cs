@@ -35,7 +35,7 @@ public sealed partial class Painter
 
         StyledTree styled = _boxes.Styled;
         StyledNode control = view.SourceElement >= 0 ? styled.FindBySource(view.SourceElement) : view.ControlNode;
-        if (control.IsNull || !ReferenceEquals(control.Tree, styled))
+        if (!control.IsValid || !ReferenceEquals(control.Tree, styled))
         {
             return;
         }
