@@ -1,6 +1,7 @@
 using System.Numerics;
 using OnePdf;
 using OneRender.Painting;
+using OneRender.Text;
 
 namespace OneRender.Pdf;
 
@@ -526,8 +527,47 @@ internal sealed partial class PageEmitter
         _b.Translate(run.OriginX + xs[0], run.OriginY + baseY);
         _b.Scale(1, -1);
         _b.SetFont(font, size);
+        bool bitmaps = ColorBitmapGlyphs.HasBitmaps(run.Face);
+        if (bitmaps)
+        {
+            // A color bitmap font has no outlines to paint: the text is written invisibly so it stays selectable and extractable,
+            // and each glyph's bitmap is drawn over it below.
+            _b.SetTextRenderMode(PdfTextRenderMode.Invisible);
+        }
+
         _b.DrawGlyphRun(0, 0, glyphs, source);
         _b.Restore();
+        if (bitmaps)
+        {
+            ColorBitmapGlyphItems(in run, ids);
+        }
+
         EndAlpha(saved);
+    }
+
+    // Each glyph of a color bitmap font is its PNG, scaled from the strike's pixels per em to the run's font size and placed by the
+    // glyph's bearings: the same placement the raster backend uses.
+    private void ColorBitmapGlyphItems(in GlyphRunView run, ReadOnlySpan<int> ids)
+    {
+        ReadOnlySpan<float> xs = run.X, ys = run.Y;
+        for (int i = 0; i < ids.Length; i++)
+        {
+            if (!ColorBitmapGlyphs.TryGet(run.Face, ids[i], out ColorBitmapGlyph g))
+            {
+                continue;
+            }
+
+            PdfCreatedImage? img = _s.GlyphImageFor(run.Face, ids[i], in g);
+            if (img is null)
+            {
+                continue;
+            }
+
+            double k = run.FontSize / (double)g.Ppem;
+            double left = run.OriginX + xs[i] + (g.BearingX * k);
+            double top = run.OriginY + ys[i] - (g.BearingY * k);
+            double w = g.Width * k, h = g.Height * k;
+            _b.DrawImage(img, left, top + h, w, -h);
+        }
     }
 }

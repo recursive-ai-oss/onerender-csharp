@@ -1,0 +1,8 @@
+# Upstream provenance of every shipped file. Columns are tab-separated.
+# archive<TAB>url<TAB>sha256   a download that holds several files
+# file<TAB>path<TAB>url<TAB>member<TAB>sha256   path is relative to this folder; member is the name inside the archive, or - for a direct download
+# Tools: tools/fonts/optional_fonts.py verify
+archive	https://github.com/notofonts/balinese/releases/download/NotoSansBalinese-v2.006/NotoSansBalinese-v2.006.zip	b3fef31d0a12e2675f802694d37eacae0d141598c514f5d45b4681c4997d52be
+file	NotoSansBalinese-Bold.ttf	https://github.com/notofonts/balinese/releases/download/NotoSansBalinese-v2.006/NotoSansBalinese-v2.006.zip	NotoSansBalinese/unhinted/ttf/NotoSansBalinese-Bold.ttf	0152d9070b2e4c36ac2556015c16e907b25ef2486eb11cf74b47fbf7dc96bb97
+file	NotoSansBalinese-Regular.ttf	https://github.com/notofonts/balinese/releases/download/NotoSansBalinese-v2.006/NotoSansBalinese-v2.006.zip	NotoSansBalinese/unhinted/ttf/NotoSansBalinese-Regular.ttf	cee58a184e7e00c4332087ac01870a69ac52fd5fa17ea3783ac728c945af1827
+file	OFL.txt	https://github.com/notofonts/balinese/releases/download/NotoSansBalinese-v2.006/NotoSansBalinese-v2.006.zip	OFL.txt	11bc477b31ec9e66f86bf6f64c060dde84b34ed49582d881657b472c33c4e1e9

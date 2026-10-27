@@ -11,6 +11,7 @@ internal sealed class PdfShared
 {
     private readonly Dictionary<FontFace, PdfCreatedFont?> _fonts = new(ReferenceEqualityComparer.Instance as IEqualityComparer<FontFace>);
     private readonly Dictionary<int, PdfCreatedImage?> _images = [];
+    private readonly Dictionary<(FontFace Face, int Glyph), PdfCreatedImage?> _glyphImages = [];
 
     public PdfShared(PdfDocumentWriter writer, PdfOutputOptions options, IImageResolver? images, DiagnosticBag diagnostics)
     {
@@ -66,6 +67,20 @@ internal sealed class PdfShared
 
         _fonts[face] = font;
         return font;
+    }
+
+    /// <summary>The embedded image of one glyph of a color bitmap font, or null when the font has none for it or it cannot be decoded.</summary>
+    public PdfCreatedImage? GlyphImageFor(FontFace face, int glyphId, in OneRender.Text.ColorBitmapGlyph glyph)
+    {
+        if (_glyphImages.TryGetValue((face, glyphId), out PdfCreatedImage? image))
+        {
+            return image;
+        }
+
+        RgbaImage? pixels = ColorGlyphBitmaps.Decode(glyph.Png.Span);
+        image = pixels is null ? null : Embed(pixels);
+        _glyphImages[(face, glyphId)] = image;
+        return image;
     }
 
     public PdfCreatedImage? ImageFor(ImageHandle handle)

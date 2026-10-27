@@ -1,0 +1,8 @@
+# Upstream provenance of every shipped file. Columns are tab-separated.
+# archive<TAB>url<TAB>sha256   a download that holds several files
+# file<TAB>path<TAB>url<TAB>member<TAB>sha256   path is relative to this folder; member is the name inside the archive, or - for a direct download
+# Tools: tools/fonts/optional_fonts.py verify
+archive	https://github.com/notofonts/malayalam/releases/download/NotoSansMalayalam-v2.104/NotoSansMalayalam-v2.104.zip	2ebd31e79f2893025d659def7784e0ec3557e7ff9ac105adcc82d35782913bf2
+file	NotoSansMalayalam-Bold.ttf	https://github.com/notofonts/malayalam/releases/download/NotoSansMalayalam-v2.104/NotoSansMalayalam-v2.104.zip	NotoSansMalayalam/unhinted/ttf/NotoSansMalayalam-Bold.ttf	165d635d82b0eb0a04275b92b9334c1ece679b99f263727c24c7c92ebcab51e9
+file	NotoSansMalayalam-Regular.ttf	https://github.com/notofonts/malayalam/releases/download/NotoSansMalayalam-v2.104/NotoSansMalayalam-v2.104.zip	NotoSansMalayalam/unhinted/ttf/NotoSansMalayalam-Regular.ttf	cc39bb1f7d63b582a2aec1abf2469a43b805a3523a27e0a0eee8cd32702541d5
+file	OFL.txt	https://github.com/notofonts/malayalam/releases/download/NotoSansMalayalam-v2.104/NotoSansMalayalam-v2.104.zip	../OFL.txt	1df18163a0bf60f02131401ba1609df90051f40c4047684dda1c8a2e9586f7f2

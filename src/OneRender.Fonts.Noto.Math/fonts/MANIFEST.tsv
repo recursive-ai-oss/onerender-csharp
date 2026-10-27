@@ -1,0 +1,7 @@
+# Upstream provenance of every shipped file. Columns are tab-separated.
+# archive<TAB>url<TAB>sha256   a download that holds several files
+# file<TAB>path<TAB>url<TAB>member<TAB>sha256   path is relative to this folder; member is the name inside the archive, or - for a direct download
+# Tools: tools/fonts/optional_fonts.py verify
+archive	https://github.com/notofonts/math/releases/download/NotoSansMath-v3.000/NotoSansMath-v3.000.zip	ac351837b41f8a897f020b97fb0f075ad574c1e9669fb5839ada1f92fd748356
+file	NotoSansMath-Regular.ttf	https://github.com/notofonts/math/releases/download/NotoSansMath-v3.000/NotoSansMath-v3.000.zip	NotoSansMath/unhinted/ttf/NotoSansMath-Regular.ttf	b127e84699212b6b2ef50aff58e0ebebeec04ffe6db1b9eb9e209c8c3d97b4aa
+file	OFL.txt	https://github.com/notofonts/math/releases/download/NotoSansMath-v3.000/NotoSansMath-v3.000.zip	OFL.txt	c9c63b8ed6cf76b2ce0c58b241acfc1195c2c928334c989c7047cbdac58773d9

@@ -1,0 +1,8 @@
+# Upstream provenance of every shipped file. Columns are tab-separated.
+# archive<TAB>url<TAB>sha256   a download that holds several files
+# file<TAB>path<TAB>url<TAB>member<TAB>sha256   path is relative to this folder; member is the name inside the archive, or - for a direct download
+# Tools: tools/fonts/optional_fonts.py verify
+archive	https://github.com/notofonts/cherokee/releases/download/NotoSansCherokee-v2.001/NotoSansCherokee-v2.001.zip	986b7fcf5c4cef9a7329aad8aea93d5c1b974e465eb7514f39517cace043a58d
+file	NotoSansCherokee-Bold.ttf	https://github.com/notofonts/cherokee/releases/download/NotoSansCherokee-v2.001/NotoSansCherokee-v2.001.zip	NotoSansCherokee/unhinted/ttf/NotoSansCherokee-Bold.ttf	70c6314d40f7ad12760ccde0bb647bc47dc9842ff2477244ce8960870258f0ca
+file	NotoSansCherokee-Regular.ttf	https://github.com/notofonts/cherokee/releases/download/NotoSansCherokee-v2.001/NotoSansCherokee-v2.001.zip	NotoSansCherokee/unhinted/ttf/NotoSansCherokee-Regular.ttf	4460410f1a089f79af329d5d26e09381ba553a05baa7c1f3c352fc43bb96878d
+file	OFL.txt	https://github.com/notofonts/cherokee/releases/download/NotoSansCherokee-v2.001/NotoSansCherokee-v2.001.zip	../OFL.txt	d7f9ca0cf1b9bcb7e94697bce31b2ec7a5571c51deb8f1f2f411ddf9a67859dd

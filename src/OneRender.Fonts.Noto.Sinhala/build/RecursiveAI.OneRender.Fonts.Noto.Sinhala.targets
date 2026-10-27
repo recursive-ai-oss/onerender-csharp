@@ -1,0 +1,8 @@
+<Project>
+
+  <!-- Registers the package's fonts with the engine when the application starts (see OptionalFonts). -->
+  <ItemGroup Condition="'$(Language)' == 'C#'">
+    <Compile Include="$(MSBuildThisFileDirectory)RecursiveAI.OneRender.Fonts.Noto.Sinhala.AutoRegister.cs" Visible="false" />
+  </ItemGroup>
+
+</Project>

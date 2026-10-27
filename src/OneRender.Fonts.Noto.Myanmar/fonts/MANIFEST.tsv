@@ -1,0 +1,8 @@
+# Upstream provenance of every shipped file. Columns are tab-separated.
+# archive<TAB>url<TAB>sha256   a download that holds several files
+# file<TAB>path<TAB>url<TAB>member<TAB>sha256   path is relative to this folder; member is the name inside the archive, or - for a direct download
+# Tools: tools/fonts/optional_fonts.py verify
+archive	https://github.com/notofonts/myanmar/releases/download/NotoSansMyanmar-v2.107/NotoSansMyanmar-v2.107.zip	c4995ee97f1f267b46cf83734dbf18a3cfd431e387b6fe38e90279546f260c4b
+file	NotoSansMyanmar-Bold.ttf	https://github.com/notofonts/myanmar/releases/download/NotoSansMyanmar-v2.107/NotoSansMyanmar-v2.107.zip	NotoSansMyanmar/unhinted/ttf/NotoSansMyanmar-Bold.ttf	c40a000f8093de13bdf1379a7c589faa2ea989319f33f244eaaa907033c6889f
+file	NotoSansMyanmar-Regular.ttf	https://github.com/notofonts/myanmar/releases/download/NotoSansMyanmar-v2.107/NotoSansMyanmar-v2.107.zip	NotoSansMyanmar/unhinted/ttf/NotoSansMyanmar-Regular.ttf	f4be6ef43871516d8347c5217a2033991b8ecda2dd1200007c2fb431a66d64db
+file	OFL.txt	https://github.com/notofonts/myanmar/releases/download/NotoSansMyanmar-v2.107/NotoSansMyanmar-v2.107.zip	../OFL.txt	246a75859267af7da466823969d2e2b407ed8455ee5f74f4c8d63d8783be9b57

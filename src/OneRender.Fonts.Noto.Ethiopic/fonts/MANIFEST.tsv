@@ -1,0 +1,8 @@
+# Upstream provenance of every shipped file. Columns are tab-separated.
+# archive<TAB>url<TAB>sha256   a download that holds several files
+# file<TAB>path<TAB>url<TAB>member<TAB>sha256   path is relative to this folder; member is the name inside the archive, or - for a direct download
+# Tools: tools/fonts/optional_fonts.py verify
+archive	https://github.com/notofonts/ethiopic/releases/download/NotoSansEthiopic-v2.102/NotoSansEthiopic-v2.102.zip	4e3e53aa1586344ba842f310ab35c65281fa11e8cc2d259613ad06a9ae994d52
+file	NotoSansEthiopic-Bold.ttf	https://github.com/notofonts/ethiopic/releases/download/NotoSansEthiopic-v2.102/NotoSansEthiopic-v2.102.zip	NotoSansEthiopic/unhinted/ttf/NotoSansEthiopic-Bold.ttf	6b06274ea730962522b1fcbfdcb16cb5a385aa36734f31f5c9d0ca910541e880
+file	NotoSansEthiopic-Regular.ttf	https://github.com/notofonts/ethiopic/releases/download/NotoSansEthiopic-v2.102/NotoSansEthiopic-v2.102.zip	NotoSansEthiopic/unhinted/ttf/NotoSansEthiopic-Regular.ttf	86b9c07c049e68438388d00a34033fa28cabeef91b26e1bbed67512d360166d4
+file	OFL.txt	https://github.com/notofonts/ethiopic/releases/download/NotoSansEthiopic-v2.102/NotoSansEthiopic-v2.102.zip	../OFL.txt	72606b23f312cb25973958f2892d4d2c2012deabadbf0f763232624a9649fc69

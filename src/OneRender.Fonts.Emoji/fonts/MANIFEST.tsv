@@ -1,0 +1,6 @@
+# Upstream provenance of every shipped file. Columns are tab-separated.
+# archive<TAB>url<TAB>sha256   a download that holds several files
+# file<TAB>path<TAB>url<TAB>member<TAB>sha256   path is relative to this folder; member is the name inside the archive, or - for a direct download
+# Tools: tools/fonts/optional_fonts.py verify
+file	NotoColorEmoji_WindowsCompatible.ttf	https://raw.githubusercontent.com/googlefonts/noto-emoji/v2.051/fonts/NotoColorEmoji_WindowsCompatible.ttf	-	19473341d23f8fdf90e91ffca381d727c43f7bc05b2758dec9687a58fbb81150
+file	OFL.txt	https://raw.githubusercontent.com/googlefonts/noto-emoji/v2.051/fonts/LICENSE	-	6a73f9541c2de74158c0e7cf6b0a58ef774f5a780bf191f2d7ec9cc53efe2bf2

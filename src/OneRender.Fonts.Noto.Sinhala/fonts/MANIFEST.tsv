@@ -1,0 +1,8 @@
+# Upstream provenance of every shipped file. Columns are tab-separated.
+# archive<TAB>url<TAB>sha256   a download that holds several files
+# file<TAB>path<TAB>url<TAB>member<TAB>sha256   path is relative to this folder; member is the name inside the archive, or - for a direct download
+# Tools: tools/fonts/optional_fonts.py verify
+archive	https://github.com/notofonts/sinhala/releases/download/NotoSansSinhala-v3.000/NotoSansSinhala-v3.000.zip	25b2c787e0b34b82ccedce026e6519cc535394a6bd8520d5a1df45c233807d8a
+file	NotoSansSinhala-Bold.ttf	https://github.com/notofonts/sinhala/releases/download/NotoSansSinhala-v3.000/NotoSansSinhala-v3.000.zip	NotoSansSinhala/unhinted/ttf/NotoSansSinhala-Bold.ttf	438ce1325e788ec0501042dd6e798c0ec02231a42dbf42e72d17b338aa46742a
+file	NotoSansSinhala-Regular.ttf	https://github.com/notofonts/sinhala/releases/download/NotoSansSinhala-v3.000/NotoSansSinhala-v3.000.zip	NotoSansSinhala/unhinted/ttf/NotoSansSinhala-Regular.ttf	46d5b54952a624e6e3981e0968aecc5464f3b1081131dd7a1fcd42fbf7966471
+file	OFL.txt	https://github.com/notofonts/sinhala/releases/download/NotoSansSinhala-v3.000/NotoSansSinhala-v3.000.zip	OFL.txt	2d6f7c43bce61f4b1919379f901bc613484f5285f520b6d29bb7c1f31b17e841

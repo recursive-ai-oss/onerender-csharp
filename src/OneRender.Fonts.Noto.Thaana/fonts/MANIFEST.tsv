@@ -1,0 +1,8 @@
+# Upstream provenance of every shipped file. Columns are tab-separated.
+# archive<TAB>url<TAB>sha256   a download that holds several files
+# file<TAB>path<TAB>url<TAB>member<TAB>sha256   path is relative to this folder; member is the name inside the archive, or - for a direct download
+# Tools: tools/fonts/optional_fonts.py verify
+archive	https://github.com/notofonts/thaana/releases/download/NotoSansThaana-v3.001/NotoSansThaana-v3.001.zip	001ecb8ee72058c82a62c078448a54876924345a468b343773cbace373a1ad05
+file	NotoSansThaana-Bold.ttf	https://github.com/notofonts/thaana/releases/download/NotoSansThaana-v3.001/NotoSansThaana-v3.001.zip	NotoSansThaana/unhinted/ttf/NotoSansThaana-Bold.ttf	476597290f449013cb07477b1089219db333c6af9ec0e436a74139ea9b2c8536
+file	NotoSansThaana-Regular.ttf	https://github.com/notofonts/thaana/releases/download/NotoSansThaana-v3.001/NotoSansThaana-v3.001.zip	NotoSansThaana/unhinted/ttf/NotoSansThaana-Regular.ttf	7543935bdcef770c9d3dd54222651b29040e5ec82f3bc58542392b2c7a9cbd3c
+file	OFL.txt	https://github.com/notofonts/thaana/releases/download/NotoSansThaana-v3.001/NotoSansThaana-v3.001.zip	OFL.txt	5de6fbfe9ca25509fd60e47be3fab3cc236abe20bc1b123a5c2bd12f067fd13c
