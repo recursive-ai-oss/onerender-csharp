@@ -41,6 +41,8 @@ Use your own runtime identifier for the first command (`win-x64`, `linux-arm64`,
 
 Benchmarks: `dotnet run -c Release --project bench/OneRender.Benchmarks -- --filter '*'`.
 
+The display list backends draw from is specified in `docs/display-list.md`. Fuzz targets live in `fuzz/` (`fuzz/run.sh displaylist <seconds>`, needing libFuzzer and SharpFuzz tools, see the script header).
+
 ## Licence
 
 `MIT OR Apache-2.0`, copyright Recursive AI, LLC (`LICENSE-MIT`, `LICENSE-APACHE`). The fonts package is `(MIT OR Apache-2.0) AND OFL-1.1`. Bundled third-party material is listed in `THIRD-PARTY-NOTICES.md`.
