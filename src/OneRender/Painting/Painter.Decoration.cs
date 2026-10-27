@@ -172,6 +172,7 @@ public sealed partial class Painter
         float w = C(v.ColumnRuleWidth);
         BorderStyle style = MapStyle(v.ColumnRuleStyle);
         int prev = -1;
+        int ruleNo = 0;
         for (int c = _tree.FirstChildOf(f); c >= 0; c = _tree.NextSiblingOf(c))
         {
             if ((FragmentKind)_tree.KindOf(c) != FragmentKind.Column)
@@ -189,7 +190,9 @@ public sealed partial class Painter
                     double gapEnd = b.X >= a.X ? b.X : a.X;
                     double x = ((gapStart + gapEnd) / 2) - (w / 2);
                     var rect = new RectF(C(_absX[prev] - a.X + x), C(_absY[prev]), w, C(a.Height));
-                    ItemId id = ItemId.Of((uint)(_tree.BoxOf(f) + 1), (ushort)(10 | ((_ordinal[f] >> 16) << 4)), (ushort)_tree.FragmentainerOf(c));
+                    // The rule's number among the container's rules keys its id, in the per-fragment id space. A nested container's
+                    // columns all carry the outer column's fragmentainer index, so that index can't tell two rules apart.
+                    ItemId id = Id2(f, 16, ruleNo++);
                     var none = new BorderSide(0f, BorderStyle.None, color);
                     _list.DrawBorder(id, rect, default, none, none, none, new BorderSide(w, style, color));
                 }
