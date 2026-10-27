@@ -218,11 +218,11 @@
       "sampleStride": 1,
       "discovered": 904,
       "total": 904,
-      "pass": 533,
-      "fail": 157,
+      "pass": 534,
+      "fail": 156,
       "blank": 21,
       "skipped": 193,
-      "rate": "0.7496"
+      "rate": "0.7511"
     },
     {
       "module": "css-transitions",
@@ -326,8 +326,8 @@
   ],
   "totals": {
     "total": 20216,
-    "pass": 4889,
-    "fail": 8724,
+    "pass": 4890,
+    "fail": 8723,
     "blank": 149,
     "skipped": 6454,
     "rate": "0.3553"

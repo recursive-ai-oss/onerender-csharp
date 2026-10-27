@@ -8,12 +8,12 @@
   "sampleStride": 1,
   "counts": {
     "total": 904,
-    "pass": 533,
-    "fail": 157,
+    "pass": 534,
+    "fail": 156,
     "blank": 21,
     "skipped": 193
   },
-  "rate": "0.7496",
+  "rate": "0.7511",
   "pass": [
     "css/css-transforms/2d-rotate-001.html",
     "css/css-transforms/2d-rotate-notref.html",
@@ -214,6 +214,7 @@
     "css/css-transforms/perspective-children-only-fixpos.html",
     "css/css-transforms/perspective-origin-x.html",
     "css/css-transforms/perspective-origin-xy.html",
+    "css/css-transforms/perspective-split-by-zero-w.html",
     "css/css-transforms/perspective-svg-001.html",
     "css/css-transforms/perspective-translateZ-0.html",
     "css/css-transforms/perspective-translateZ-negative.html",
@@ -612,7 +613,6 @@
     "css/css-transforms/perspective-origin-004.html": "== ref-filled-green-100px-square.xht differs (max 255, 10000 px)",
     "css/css-transforms/perspective-origin-005.html": "== ref-filled-green-100px-square.xht differs (max 255, 10000 px)",
     "css/css-transforms/perspective-origin-006.html": "== ref-filled-green-100px-square.xht differs (max 255, 10000 px)",
-    "css/css-transforms/perspective-split-by-zero-w.html": "error: ArgumentException: The matrix has no finite, positive M44. (Parameter \u0027matrix\u0027)",
     "css/css-transforms/perspective-svg-child-001.html": "== perspective-svg-child-ref.html differs (max 255, 10800 px)",
     "css/css-transforms/perspective-svg-child-002.html": "== perspective-svg-child-ref.html differs (max 255, 10800 px)",
     "css/css-transforms/perspective-zero-2.html": "== perspective-zero-2-ref.html differs (max 255, 30000 px)",

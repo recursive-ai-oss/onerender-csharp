@@ -26,7 +26,7 @@
 | css-tables | 1 | 308 | 53 | 85 | 0 | 170 | 0.3841 |
 | css-text-decor | 1 | 357 | 82 | 195 | 8 | 72 | 0.2877 |
 | css-text | 1 | 1860 | 639 | 742 | 4 | 475 | 0.4614 |
-| css-transforms | 1 | 904 | 533 | 157 | 21 | 193 | 0.7496 |
+| css-transforms | 1 | 904 | 534 | 156 | 21 | 193 | 0.7511 |
 | css-transitions | 1 | 131 | 1 | 0 | 0 | 130 | 1.0000 |
 | css-ui | 1 | 1075 | 52 | 57 | 4 | 962 | 0.4602 |
 | css-values | 1 | 497 | 74 | 93 | 0 | 330 | 0.4431 |
@@ -36,7 +36,7 @@
 | css2-positioning | 1 | 654 | 108 | 512 | 0 | 34 | 0.1742 |
 | css2-tables | 1 | 375 | 95 | 154 | 0 | 126 | 0.3815 |
 | filter-effects | 1 | 367 | 129 | 137 | 4 | 97 | 0.4778 |
-| **all** | | 20216 | 4889 | 8724 | 149 | 6454 | 0.3553 |
+| **all** | | 20216 | 4890 | 8723 | 149 | 6454 | 0.3553 |
 
 ## Why tests failed or were skipped
 
@@ -118,7 +118,7 @@
 - Skipped: 366 × testharness.js test; 89 × script-dependent; 20 × reftest-wait (needs script)
 ### css-transforms
 
-- Failures: 155 × == reference differs; 1 × != reference identical; 1 × error: ArgumentException: The matrix has no finite, positive M44. (Parameter 'matrix')
+- Failures: 155 × == reference differs; 1 × != reference identical
 - Skipped: 108 × testharness.js test; 60 × reftest-wait (needs script); 23 × script-dependent; 2 × reference file missing
 ### css-transitions
 
