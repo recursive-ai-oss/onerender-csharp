@@ -161,4 +161,23 @@ public class ChromeAgreementTests
         Dictionary<string, ElementBox> inl = Lay("<div style='display:inline-block'><img style='aspect-ratio:7/3;min-height:120px'></div>");
         Assert.Equal(280, inl["0/1/0"].Width, 3);
     }
+
+    // The no-break-after-slash tailoring does not apply under word-break: break-all, which keeps the UAX #14 break after "/" (CSS Text 3 §5.2).
+    [Theory]
+    [InlineData("normal", 1)]
+    [InlineData("break-all", 2)]
+    public void SlashTailoringIsOffUnderBreakAll(string wordBreak, int lines)
+    {
+        Dictionary<string, ElementBox> m = Lay("<div style='width:1px;word-break:" + wordBreak + "'>a/b</div>");
+        Assert.Equal(lines * 20, m["0/1/0"].Height, 3);
+    }
+
+    // Balanced columns share out a trailing margin only when it is no longer than the content: a 20px float with 40px margins in two
+    // columns keeps its 40px lead and trail around one 20px column (100px in all), not 30px columns.
+    [Fact]
+    public void TrailingMarginLongerThanContentIsNotSharedAmongColumns()
+    {
+        Dictionary<string, ElementBox> m = Lay("<div style='width:100px'><div style='columns:2;line-height:20px'><div style='float:left;width:100%;height:20px;margin:40px 0'></div></div></div>");
+        Assert.Equal(100, m["0/1/0/0"].Height, 3);
+    }
 }
