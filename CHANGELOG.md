@@ -8,6 +8,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - **WebAssembly:** `HtmlPage`, `InteractivePage` and `LivePage` crashed the Mono runtime (`Assertion: should not be reached at class-accessors.c`, or `memory access out of bounds`) on the first garbage collection after the first page, in Debug and Release builds alike. `ComputedValues.Initial` was a large `static readonly` struct, and Mono on 32-bit WebAssembly does not keep the references held by such a static alive across a collection. `ComputedValues.Initial` is now a `ref readonly` property over a heap object (source compatible; code compiled against 1.0.0 must be recompiled).
 - A `LivePage` over a `StyledTree` with no nodes no longer loops until memory runs out.
+- Sequential focus navigation treats a radio button group as one tab stop: Tab lands on the checked radio (first or last in the direction of travel when none is checked), including checkedness set after creation with `SetChecked` or by the user. Arrow keys move within the group and check the new radio.
 
 ### Changed
 

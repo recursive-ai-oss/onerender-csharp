@@ -65,7 +65,7 @@ public sealed partial class InteractivePage
     /// <returns>The tab stops.</returns>
     public Node[] GetTabOrder()
     {
-        BuildTabOrder(default);
+        BuildTabOrder(default, true);
         return _order.AsSpan(0, _orderCount).ToArray();
     }
 
@@ -149,7 +149,7 @@ public sealed partial class InteractivePage
 
     // ------------------------------------------------------------------ sequential navigation order
 
-    private void BuildTabOrder(Node startPoint)
+    private void BuildTabOrder(Node startPoint, bool forward)
     {
         _orderCount = 0;
         _positiveCount = 0;
@@ -210,6 +210,8 @@ public sealed partial class InteractivePage
             n = n.IsNull ? default : n.NextSibling;
         }
 
+        count = CollapseRadioGroups(count, forward);
+
         // Positive tabindex first, ascending by value then tree order; then the zero group in tree order.
         int w = 0;
         for (int i = 0; i < count; i++)
@@ -255,6 +257,76 @@ public sealed partial class InteractivePage
         Array.Copy(sortedTab, _orderTab, outIndex);
     }
 
+    // HTML "radio button group" and sequential focus navigation: a radio button group is one tab stop. When one of its buttons is checked
+    // only that one is a stop; with none checked, the stop is the first button in the direction of travel. Checkedness is read live
+    // (IsChecked), so it holds for state set after creation. Radio buttons without a name are their own group (HTML §4.10.5.1.17).
+    private int CollapseRadioGroups(int count, bool forward)
+    {
+        Dictionary<(int Owner, string Name), (int First, int Last, int Checked)>? groups = null;
+        for (int i = 0; i < count; i++)
+        {
+            if (!IsRadio(_order[i]) || !TryRadioKey(_order[i], out var key))
+            {
+                continue;
+            }
+
+            groups ??= [];
+            groups.TryGetValue(key, out var g);
+            if (g == default)
+            {
+                g = (i, i, -1);
+            }
+
+            g.Last = i;
+            if (g.Checked < 0 && IsChecked(_order[i]))
+            {
+                g.Checked = i;
+            }
+
+            groups[key] = g;
+        }
+
+        if (groups is null)
+        {
+            return count;
+        }
+
+        int w = 0;
+        for (int i = 0; i < count; i++)
+        {
+            if (IsRadio(_order[i]) && TryRadioKey(_order[i], out var key))
+            {
+                var g = groups[key];
+                int keep = g.Checked >= 0 ? g.Checked : (forward ? g.First : g.Last);
+                if (keep != i)
+                {
+                    continue;
+                }
+            }
+
+            _order[w] = _order[i];
+            _orderOrdinal[w] = _orderOrdinal[i];
+            _orderTab[w] = _orderTab[i];
+            w++;
+        }
+
+        return w;
+    }
+
+    private bool TryRadioKey(Node radio, out (int Owner, string Name) key)
+    {
+        string? name = radio.GetAttribute("name");
+        if (string.IsNullOrEmpty(name))
+        {
+            key = default;
+            return false;
+        }
+
+        Node owner = FormOwner(radio);
+        key = (owner.IsNull ? -1 : owner.Index, name);
+        return true;
+    }
+
     // HTML §6.6.3: sequentially focusable means focusable with a tabindex of 0 or more, or with none and focusable by default.
     private static bool IsTabStop(Node n, in ComputedValues v, out int tab)
     {
@@ -281,7 +353,7 @@ public sealed partial class InteractivePage
 
     private Node NextTabStop(Node from, bool forward)
     {
-        BuildTabOrder(from);
+        BuildTabOrder(from, forward);
         int count = _orderCount;
         if (count == 0)
         {

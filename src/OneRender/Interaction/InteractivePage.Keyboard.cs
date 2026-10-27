@@ -58,6 +58,11 @@ public sealed partial class InteractivePage
             return outcome;
         }
 
+        if (input.Down && plain && !shift && !_focused.IsNull && IsRadio(_focused) && IsRadioArrow(key))
+        {
+            return outcome | MoveRadio(key is "ArrowDown" or "ArrowRight", input.Time, cancellationToken) | FlushStates(cancellationToken);
+        }
+
         if (TryEditKey(in input, cancellationToken, out InputOutcome editOutcome))
         {
             return outcome | editOutcome | FlushStates(cancellationToken);
@@ -83,6 +88,27 @@ public sealed partial class InteractivePage
         }
 
         return outcome | FlushStates(cancellationToken);
+    }
+
+    private static bool IsRadioArrow(string key) => key is "ArrowDown" or "ArrowUp" or "ArrowLeft" or "ArrowRight";
+
+    // HTML "radio button group": arrow keys move to the next (Down/Right) or previous (Up/Left) enabled button of the group, wrapping, and
+    // check it with a synthetic click, as activating it would. The key's default scroll is suppressed.
+    private InputOutcome MoveRadio(bool forward, double time, CancellationToken ct)
+    {
+        List<Node> group = RadioGroup(_focused);
+        int at = group.FindIndex(r => r.Equals(_focused));
+        for (int step = 1; step < group.Count; step++)
+        {
+            Node r = group[((at + (forward ? step : group.Count - step)) % group.Count)];
+            if (FocusRules.IsFocusable(r, _page.Styled))
+            {
+                InputOutcome o = SetFocus(r, FocusReason.Keyboard, scroll: true);
+                return o | Activate(r, time);
+            }
+        }
+
+        return InputOutcome.None;
     }
 
     // The body is where key events go when nothing has focus (HTML: the focused area of the document is the document itself).
