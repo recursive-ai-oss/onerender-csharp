@@ -1,3 +1,4 @@
+using System.Linq;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -161,6 +162,18 @@ public sealed class EditSession
         ("background-color", ["#abcdef", "transparent", "rgb(200 100 50)"]),
         ("opacity", ["0.5", "1"]),
         ("transform", ["rotate(10deg)", "translate(5px, 3px)", "scale(1.1)", "none"]),
+        ("translate", ["10px 5px", "none", "3px"]),
+        ("rotate", ["15deg", "none"]),
+        ("scale", ["1.2", "none", "0.8 1.1"]),
+        ("transform-origin", ["0 0", "center", "100% 50%"]),
+        ("perspective", ["none", "200px"]),
+        ("transform-style", ["flat", "preserve-3d"]),
+        ("filter", ["none", "blur(2px)", "opacity(0.5)", "grayscale(1) brightness(1.2)", "drop-shadow(2px 2px 3px #000)"]),
+        ("backdrop-filter", ["none", "blur(3px)"]),
+        ("clip-path", ["none", "inset(2px 4px)", "circle(40% at 50% 50%)", "polygon(0 0, 100% 0, 50% 100%)"]),
+        ("mask-image", ["none", "linear-gradient(black, transparent)"]),
+        ("mix-blend-mode", ["normal", "multiply", "screen"]),
+        ("isolation", ["auto", "isolate"]),
         ("z-index", ["1", "-1", "auto"]),
         ("visibility", ["hidden", "visible"]),
         ("direction", ["ltr", "rtl"]),
@@ -298,14 +311,20 @@ public sealed class EditSession
         return m;
     }
 
+    private string _lastDecl = "";
+    private readonly List<string> _history = [];
+
     private StyleDeclaration RandomDeclaration(int maxProps)
     {
         var d = new StyleDeclaration();
         int n = 1 + _c.Next(maxProps);
+        _lastDecl = "";
         for (int i = 0; i < n; i++)
         {
             (string p, string[] v) = _c.Pick(_pool);
-            d.Set(p, _c.Pick(v));
+            string val = _c.Pick(v);
+            d.Set(p, val);
+            _lastDecl += $"{p}:{val}; ";
         }
 
         return d;
@@ -376,6 +395,12 @@ public sealed class EditSession
     {
         _steps++;
         ApplyRandomEdit();
+        _history.Add(_lastEdit);
+        if (_history.Count > 6)
+        {
+            _history.RemoveAt(0);
+        }
+
         FlushResult r = Page.Flush();
         Stats.Count(r);
         CheckAgainstFresh();
@@ -390,7 +415,7 @@ public sealed class EditSession
         string a = Snapshot(Page), b = Snapshot(fresh);
         if (!string.Equals(a, b, StringComparison.Ordinal))
         {
-            throw new InvalidOperationException($"Step {_steps} ({_lastEdit}): incremental page differs from a fresh build.\n{FirstDifference(a, b)}");
+            throw new InvalidOperationException($"Step {_steps} ({_lastEdit}): incremental page differs from a fresh build.\nrecent edits: {string.Join(" | ", _history)}\n{FirstDifference(a, b)}");
         }
     }
 
@@ -424,7 +449,8 @@ public sealed class EditSession
         {
             if (!string.Equals(x[i], y[i], StringComparison.Ordinal))
             {
-                return $"line {i}:\n  incremental: {x[i]}\n  fresh:       {y[i]}";
+                string ctx = string.Join("\n", x.Skip(Math.Max(0, i - 8)).Take(8));
+                return $"line {i}:\n  incremental: {x[i]}\n  fresh:       {y[i]}\n  before:\n{ctx}";
             }
         }
 
@@ -473,7 +499,7 @@ public sealed class EditSession
             case < 12:
                 e.Decl = _c.Next(8) == 0 ? null : RandomDeclaration(5);
                 Tree.SetDeclaration(e.Live, e.Decl);
-                _lastEdit = "replace declaration on " + e.Tag;
+                _lastEdit = "replace declaration on " + e.Tag + " { " + _lastDecl + "}";
                 break;
             case < 15:
                 if (e.HoverDecl is null)
