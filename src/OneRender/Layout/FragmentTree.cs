@@ -76,6 +76,7 @@ public sealed partial class FragmentTree
         _count = 0;
         _runCount = 0;
         _glyphCount = 0;
+        ClearTableBorders();
         int n = Boxes.Count;
         if (_boxFirst.Length < n)
         {

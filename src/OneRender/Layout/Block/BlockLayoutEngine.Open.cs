@@ -69,6 +69,35 @@ public sealed partial class BlockLayoutEngine
 
         double pl = Pad(v.PaddingLeft, w), pr = Pad(v.PaddingRight, w), pt = Pad(v.PaddingTop, w), pb = Pad(v.PaddingBottom, w);
         double bl = v.BorderLeftWidth, br = v.BorderRightWidth, bt = v.BorderTopWidth, bb = v.BorderBottomWidth;
+        TableLevel? tableLevel = null;
+        bool tableCell = false;
+        if (c.Kind == BoxKind.Container && c.Context == FormattingContext.Table)
+        {
+            // CSS2 §17.6.2: a collapsing table's border is half the collapsed border at its edge, and it has no padding.
+            tableLevel = TablePrepare(c, w);
+            if (tableLevel is not null)
+            {
+                bl = tableLevel.Bl;
+                br = tableLevel.Br;
+                bt = tableLevel.Bt;
+                bb = tableLevel.Bb;
+                pl = tableLevel.Pl;
+                pr = tableLevel.Pr;
+                pt = tableLevel.Pt;
+                pb = tableLevel.Pb;
+            }
+        }
+        else if (_tcActive && c.Context == FormattingContext.TableCell)
+        {
+            // The cell's borders come from the table's border model, and cells have no margins (CSS2 §17.5).
+            _tcActive = false;
+            tableCell = true;
+            bl = _tcL;
+            br = _tcR;
+            bt = _tcT;
+            bb = _tcB;
+        }
+
         double ph = pl + pr + bl + br, pv = pt + pb + bt + bb;
         double forceW = double.NaN, forceH = double.NaN;
         if (parentIsFlex)
@@ -78,7 +107,12 @@ public sealed partial class BlockLayoutEngine
         }
         double mt = MarginPx(v.MarginTop, w), mb = MarginPx(v.MarginBottom, w);
         double mlv = MarginPx(v.MarginLeft, w), mrv = MarginPx(v.MarginRight, w);
-        bool mlAuto = v.MarginLeft.IsAuto && !shrink, mrAuto = v.MarginRight.IsAuto && !shrink;
+        if (tableCell)
+        {
+            mt = mb = mlv = mrv = 0;
+        }
+
+        bool mlAuto = v.MarginLeft.IsAuto && !shrink && !tableCell, mrAuto = v.MarginRight.IsAuto && !shrink && !tableCell;
         double mlFixed = mlAuto ? 0 : mlv, mrFixed = mrAuto ? 0 : mrv;
         double availContent = Math.Max(0, w - mlFixed - mrFixed - ph);
 
@@ -389,6 +423,12 @@ public sealed partial class BlockLayoutEngine
             PushBfc();
         }
 
+        if (tableLevel is not null)
+        {
+            TableOpen(ni, c, tableLevel, w);
+            return;
+        }
+
         if (c.Context == FormattingContext.Flex)
         {
             FlexOpen(ni, c);
@@ -469,11 +509,17 @@ public sealed partial class BlockLayoutEngine
             maxW = double.PositiveInfinity;
         }
 
-        if (double.IsNaN(cw) && shrink && v.Width.Kind is LengthKind.Auto)
+        if (double.IsNaN(cw) && (shrink || c.Context == FormattingContext.Table) && v.Width.Kind is LengthKind.Auto)
         {
-            // CSS2 §10.3.5: shrink-to-fit is min(max(preferred minimum, available), preferred).
+            // CSS2 §10.3.5: shrink-to-fit is min(max(preferred minimum, available), preferred). An auto-width table always does this (CSS2 §17.5.2.2).
             GetIntrinsic(c, out double imin, out double imax);
             cw = Math.Min(imax, Math.Max(imin, availContent));
+        }
+        else if (!double.IsNaN(cw) && c.Context == FormattingContext.Table)
+        {
+            // A table is never narrower than its columns can be (CSS2 §17.5.2: the used width is the greater of the specified width and the minimum).
+            GetIntrinsic(c, out double tmin, out _);
+            cw = Math.Max(cw, tmin);
         }
 
         SolveInline(fill, ph, cw, mlAuto, mrAuto, mlv, mrv, rtl, shrink, out borderW, out ml, out mr);

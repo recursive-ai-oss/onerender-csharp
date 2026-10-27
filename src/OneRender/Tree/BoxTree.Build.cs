@@ -354,7 +354,17 @@ public sealed partial class BoxTree
             case FormattingContext.FlowRoot:
             case FormattingContext.TableCell:
             case FormattingContext.TableCaption:
+                WrapStrayTableParts(box);
                 FinishFlow(box);
+                break;
+            case FormattingContext.Table:
+            case FormattingContext.TableRowGroup:
+            case FormattingContext.TableHeaderGroup:
+            case FormattingContext.TableFooterGroup:
+            case FormattingContext.TableRow:
+            case FormattingContext.TableColumnGroup:
+            case FormattingContext.TableColumn:
+                FinishTablePart(box);
                 break;
             case FormattingContext.Flex:
             case FormattingContext.Grid:

@@ -180,6 +180,9 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace, 
         _shrinkNext = false;
         _gridDepth = 0;
         _gridIntrinsicMode = 0;
+        _tableDepth = 0;
+        _tableDepthReported = false;
+        _tcActive = false;
         BeginPositioning(boxes, in input);
         if (boxes.Root.Values.Position is PositionKind.Absolute or PositionKind.Fixed)
         {

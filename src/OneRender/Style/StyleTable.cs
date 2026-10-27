@@ -145,6 +145,9 @@ public sealed class StyleTable
         return id;
     }
 
+    /// <summary>A copy of a style with some values changed (presentational hints), shared with any equal style.</summary>
+    internal StyleId Derive(StyleId id, in ComputedValues changed) => TryAdd(in changed, out StyleId derived) ? derived : id;
+
     /// <summary>The style of an anonymous box under <paramref name="parent"/> (CSS2 §9.2.1.1): inherited values, everything else initial.</summary>
     /// <param name="parent">The style of the box's parent.</param>
     /// <param name="display">The display of the anonymous box (block or inline flow).</param>
