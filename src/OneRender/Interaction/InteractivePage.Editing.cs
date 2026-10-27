@@ -83,7 +83,10 @@ public sealed partial class InteractivePage
 
         public override void Sync()
         {
-            if (!page._page.ApplyTextEdit(page._editElement, page._edit!, page._editToken))
+            // The control being written is the focused one while the user edits it, but SetValue also writes controls that were never
+            // focused: their session is the one the form state holds.
+            if (!page._page.Form.TryGetText(page._editElement, out TextEditSession? session)
+                || !page._page.ApplyTextEdit(page._editElement, session, page._editToken))
             {
                 page.Rebuild(page._editToken);
             }

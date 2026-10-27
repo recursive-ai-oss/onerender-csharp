@@ -432,4 +432,18 @@ public class AttributeEditTests
         TestContext.Current.SendDiagnosticMessage($"HUD page, per attribute change: {bytes} B");
         Assert.True(bytes < 8_000_000);
     }
+
+    [Fact]
+    public void SetValueOnAControlThatWasNeverFocused()
+    {
+        InteractivePage p = InteractivePage.Create("<body><input id=t value=a><textarea id=ta>x</textarea></body>", Options());
+        Node t = Ix.Id(p, "t");
+        Assert.True(p.FocusedElement.IsNull);
+        p.SetValue(t, "typed");
+        p.SetValue(Ix.Id(p, "ta"), "many\nlines");
+        Assert.Equal("typed", p.GetValue(t));
+        Assert.True(p.FocusedElement.IsNull);
+        InteractivePage fresh = InteractivePage.Create("<body><input id=t value=typed><textarea id=ta>many\nlines</textarea></body>", Options());
+        Assert.Equal(Describe(fresh), Describe(p));
+    }
 }
