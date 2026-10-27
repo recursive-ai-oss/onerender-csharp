@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Threading;
 using OneFont;
+using OneRender.Text;
 using OneRender.Fonts;
 using OneRender.Layout;
 using OneRender.Style;
@@ -74,7 +75,13 @@ public class FragmentTreeTests
 
     private sealed class NoFonts : IFontProvider
     {
-        public FontFallbackChain GetFallbackChain(in ComputedValues style) => throw new NotSupportedException();
+        public FontCatalog Catalog => throw new NotSupportedException();
+
+        public ResolvedFontList Resolve(in ComputedValues style) => throw new NotSupportedException();
+
+        public ShapedText Shape(ReadOnlySpan<char> text, in ComputedValues style, bool rightToLeft = false) => throw new NotSupportedException();
+
+        public FontMetricsInfo GetMetrics(in ComputedValues style) => throw new NotSupportedException();
     }
 
     private static FontFace Face() => FontFace.Load(DefaultFonts.GetFaces("Liberation Sans")[0].ReadAllBytes());

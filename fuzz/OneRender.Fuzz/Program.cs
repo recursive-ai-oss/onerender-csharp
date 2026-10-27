@@ -23,6 +23,7 @@ internal static class Program
     private static readonly Dictionary<string, Target> Targets = new()
     {
         ["displaylist"] = DisplayListTarget.Run,
+        ["fontdata"] = FontDataTarget.Run,
     };
 
     private static int Main(string[] args)
@@ -34,7 +35,9 @@ internal static class Program
 
         if (args.Length > 2 && args[0] == "seeds")
         {
-            return DisplayListTarget.WriteSeeds(args[2]);
+            return args[1] == "fontdata"
+                ? FontDataTarget.WriteSeeds(args[2], Environment.GetEnvironmentVariable("ONERENDER_FUZZ_FONTS") ?? "testdata/fonts")
+                : DisplayListTarget.WriteSeeds(args[2]);
         }
 
         if (args.Length > 2 && args[0] == "smoke" && Targets.TryGetValue(args[1], out Target? smoke))

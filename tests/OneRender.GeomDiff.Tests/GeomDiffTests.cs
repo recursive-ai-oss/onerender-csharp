@@ -140,7 +140,7 @@ public class GeomDiffTests
     }
 
     [Fact]
-    public void TheStubEngineMakesEveryElementMissingOnOurSide()
+    public void TheEngineSideLaysOutTheSnapshotAndTheRestIsMissing()
     {
         string dir = TempDir();
         try
@@ -150,11 +150,11 @@ public class GeomDiffTests
             Directory.CreateDirectory(page);
             File.WriteAllText(Path.Combine(page, "index.html"), "<!DOCTYPE html><title>t</title><p>x</p>");
             Assert.Equal(1, Snapshots.BuildStatic(Path.Combine(dir, "src"), Path.Combine(dir, "snap"), ""));
-            Comparer.Run(new Comparer.Options { ChromeDir = Path.Combine(dir, "chrome"), UseEngine = true, SnapshotDir = Path.Combine(dir, "snap"), Set = "t", Label = "stub", OutDir = Path.Combine(dir, "out") }, CancellationToken.None);
+            Comparer.Run(new Comparer.Options { ChromeDir = Path.Combine(dir, "chrome"), UseEngine = true, SnapshotDir = Path.Combine(dir, "snap"), Set = "t", Label = "engine", OutDir = Path.Combine(dir, "out") }, CancellationToken.None);
             SummaryFile sum = Store.Read(Path.Combine(dir, "out", "summary.json"), Ctx.Default.SummaryFile);
-            Assert.Equal(0, sum.Total.Matched);
-            Assert.Equal(sum.Total.Elements, sum.Total.Classes.MissingOurs);
-            Assert.Equal(0.0, sum.Total.Rate);
+            // The page has three elements with boxes; the synthetic Chrome capture has 400, so most are missing on our side.
+            Assert.True(sum.Total.Classes.MissingOurs > 300);
+            Assert.True(sum.Total.Rate < 0.05);
         }
         finally
         {
@@ -183,9 +183,18 @@ public class GeomDiffTests
     }
 
     [Fact]
-    public void ProvisionalProbeReturnsNothingYet()
+    public void ProbeReportsElementBoxesByPath()
     {
-        Assert.Empty(GeometryProbe.LayOut("<p>hi</p>", null, null, 1280, 800));
-        Assert.Throws<ArgumentOutOfRangeException>(() => GeometryProbe.LayOut("", null, null, 0, 800));
+        var fonts = OneRender.Image.FontProviders.CreateDefault();
+        IReadOnlyList<ElementBox> boxes = GeometryProbe.LayOut("<body style='margin:0'><div style='height:10px'></div><div style='height:20px'><p style='margin:0;height:5px'></p></div></body>", null, null, 1280, 800, fonts);
+        Assert.Contains(boxes, b => b.Path == "0" && b.Tag == "html");
+        Assert.Contains(boxes, b => b.Path == "0/1" && b.Tag == "body");
+        ElementBox second = Assert.Single(boxes, b => b.Path == "0/1/1");
+        Assert.Equal(10, second.Y);
+        Assert.Equal(20, second.Height);
+        Assert.Equal(1280, second.Width);
+        Assert.Contains(boxes, b => b.Path == "0/1/1/0" && b.Tag == "p" && b.Y == 10);
+        Assert.DoesNotContain(boxes, b => b.Tag == "head" && b.Width > 0);
+        Assert.Throws<ArgumentOutOfRangeException>(() => GeometryProbe.LayOut("", null, null, 0, 800, fonts));
     }
 }

@@ -5,7 +5,6 @@ namespace OneRender.Image;
 /// <summary>
 /// A tightly packed RGBA bitmap: four bytes per pixel in the order red, green, blue, alpha, rows top to bottom.
 /// </summary>
-/// <remarks>Provisional: the engine's public rendering API replaces this seam.</remarks>
 public sealed class RgbaImage
 {
     /// <summary>Creates an image over <paramref name="pixels"/>, which is not copied.</summary>
@@ -38,14 +37,15 @@ public sealed class RgbaImage
 
 /// <summary>
 /// The one narrow entry point test harnesses use to turn an HTML document into pixels:
-/// "render this document at this viewport to an RGBA image".
+/// "render this document at this viewport to an RGBA image". It is <see cref="HtmlRender.ToImage"/> with the argument shape
+/// the reftest runner uses.
 /// </summary>
-/// <remarks>
-/// Provisional. Today it paints an opaque white page and nothing else; the engine is wired in behind it later
-/// without changing callers.
-/// </remarks>
 public static class HtmlRenderSeam
 {
+    // Root-relative document addresses ("/css/...") get this origin so relative references resolve; it is removed again before
+    // the host's resolver is asked, so the host sees root-relative addresses for them.
+    private const string Origin = "https://document.invalid";
+
     /// <summary>
     /// Renders <paramref name="html"/> into a <paramref name="width"/> by <paramref name="height"/> viewport image.
     /// </summary>
@@ -54,8 +54,8 @@ public static class HtmlRenderSeam
     /// <param name="width">Viewport width in CSS pixels, 1 to 16384.</param>
     /// <param name="height">Viewport height in CSS pixels, 1 to 16384.</param>
     /// <param name="resources">
-    /// Supplies the bytes of a stylesheet, image or font by absolute URI, or null when it is unavailable.
-    /// The renderer never fetches anything itself. May be null for none.
+    /// Supplies the bytes of a stylesheet by URI, or null when it is unavailable. For a root-relative document URI the argument is
+    /// root-relative too. The renderer never fetches anything itself. May be null for none.
     /// </param>
     /// <param name="cancellationToken">Cancels the render.</param>
     /// <returns>A new image, opaque white where nothing is painted.</returns>
@@ -71,17 +71,10 @@ public static class HtmlRenderSeam
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(html);
-        ArgumentOutOfRangeException.ThrowIfLessThan(width, 1);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(width, 16384);
-        ArgumentOutOfRangeException.ThrowIfLessThan(height, 1);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(height, 16384);
-        cancellationToken.ThrowIfCancellationRequested();
-        _ = documentUri;
-        _ = resources;
-
-        // Layout and paint do not exist yet, so the display list is empty; it still goes through the rasterizer, which is the
-        // path the engine's real output will take.
-        DisplayList list = new();
-        return DisplayListRasterizer.Render(list, width, height, new RasterOptions(), cancellationToken);
+        bool rooted = documentUri is not null && documentUri.StartsWith('/');
+        string? baseUrl = string.IsNullOrEmpty(documentUri) ? null : (rooted ? Origin + documentUri : documentUri);
+        Func<string, byte[]?>? inner = resources is null ? null : url =>
+            resources(url.StartsWith(Origin, StringComparison.Ordinal) ? url.Substring(Origin.Length) : url);
+        return HtmlRender.ToImage(html, new HtmlRenderOptions { Width = width, Height = height, BaseUrl = baseUrl, Resources = inner }, cancellationToken);
     }
 }

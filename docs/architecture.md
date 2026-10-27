@@ -111,8 +111,9 @@ public interface ILayoutEngine
 ```
 
 `LayoutInput` carries the initial containing block (`AvailableWidth`, and `AvailableHeight` or NaN when the content
-decides) and an `IFontProvider`, whose `GetFallbackChain(in ComputedValues)` returns a OneFont `FontFallbackChain` for a
-style. An implementation clears `output`, writes a fragment for the root and for every box that generates one in tree
+decides) and an `IFontProvider`, the text service layout calls: `Resolve(in ComputedValues)` matches a style to a font list with
+per-character fallback, `Shape(text, in ComputedValues, rtl)` returns a cached `ShapedText`, and `GetMetrics(in ComputedValues)`
+returns the primary face's metrics (see `text.md`; `TextFontProvider` is the engine's implementation). An implementation clears `output`, writes a fragment for the root and for every box that generates one in tree
 order, reads nothing but its arguments, and checks the token every few hundred boxes. The result is a pure function of
 the box tree, the fonts and the available size. Block and inline flow, floats, positioning, flex, grid, tables and
 fragmentation are separate implementations behind this one entry.

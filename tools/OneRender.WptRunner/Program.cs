@@ -7,7 +7,7 @@ using OneRender.WptRunner.Chrome;
 
 namespace OneRender.WptRunner;
 
-/// <summary>Renders through the engine seam in <c>OneRender.Image</c>.</summary>
+/// <summary>Renders through the engine, by way of the image seam in <c>OneRender.Image</c>.</summary>
 internal sealed class EngineRenderer : IReftestRenderer
 {
     private readonly ReftestStore _store;
@@ -47,11 +47,11 @@ internal sealed class ChromeAdapter : IReftestRenderer
 internal static partial class Program
 {
     private const string Usage = """
-        usage: OneRender.WptRunner run --wpt <checkout> --renderer stub|chrome [options]
+        usage: OneRender.WptRunner run --wpt <checkout> --renderer onerender|chrome [options]
 
           --wpt <dir>         WPT checkout (fetch-wpt.sh prints it); its folder name is the commit, or pass --commit
           --commit <sha>      commit to record when the folder is not named after it
-          --renderer <name>   stub (the engine seam) or chrome (calibration)
+          --renderer <name>   onerender (the engine, through the image seam) or chrome (calibration)
           --chrome <path>     chrome executable (default: $ONERENDER_CACHE/chrome/<pinned>/chrome-linux64/chrome)
           --fonts <dir>       restrict Chrome to the fonts in this directory
           --modules <file>    module list (default tools/wpt/modules.json)
@@ -59,7 +59,7 @@ internal static partial class Program
           --filter <text>     only tests whose path contains the text
           --test <path>       run one WPT-relative test path (repeatable); prints the verdict
           --sample <n>        run at most about n tests per module, taking every Nth in path order
-          --parallel <n>      concurrent tests (default 8 for stub, 6 for chrome)
+          --parallel <n>      concurrent tests (default 8 for onerender, 6 for chrome)
           --dump <dir>        save every rendered image as a PNG (for --test runs)
           --out <dir>         write results to <dir>/<commit>/<renderer>/
         """;
@@ -115,9 +115,9 @@ internal static partial class Program
     {
         string wpt = Opt(o, "wpt") ?? throw new ArgumentException("--wpt is required");
         string renderer = Opt(o, "renderer") ?? throw new ArgumentException("--renderer is required");
-        if (renderer is not ("stub" or "chrome"))
+        if (renderer is not ("onerender" or "chrome"))
         {
-            throw new ArgumentException("--renderer must be stub or chrome");
+            throw new ArgumentException("--renderer must be onerender or chrome");
         }
 
         string commit = Opt(o, "commit") ?? Path.GetFileName(Path.TrimEndingDirectorySeparator(Path.GetFullPath(wpt)));
@@ -144,7 +144,7 @@ internal static partial class Program
 
         StaticFileServer? server = null;
         ChromeRenderer? chrome = null;
-        string rendererVersion = "onerender seam (provisional)";
+        string rendererVersion = "OneRender " + typeof(OneRender.EngineInfo).Assembly.GetName().Version;
         IReftestRenderer impl;
         try
         {

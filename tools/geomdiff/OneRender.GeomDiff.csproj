@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/OneRender/OneRender.csproj" />
+    <ProjectReference Include="../../src/OneRender.Image/OneRender.Image.csproj" />
   </ItemGroup>
 
 </Project>
