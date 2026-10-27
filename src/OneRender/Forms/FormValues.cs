@@ -36,43 +36,95 @@ public static class FormValues
     }
 
     /// <summary>
-    /// The value of a range control and its position on the track (HTML §4.10.5.1.13): the minimum defaults to 0, the maximum to 100
-    /// (and is at least the minimum), the default value is the midpoint, and the value snaps to the step and is clamped.
+    /// The numbers of a range control (HTML §4.10.5.1.13): the minimum defaults to 0, the maximum to 100 (and is at least the minimum), the
+    /// default value is the midpoint, and a value snaps to the step counted from the minimum and is clamped to the range.
     /// </summary>
+    public readonly struct RangeSpec
+    {
+        internal RangeSpec(double min, double max, double step)
+        {
+            Min = min;
+            Max = max;
+            Step = step;
+        }
+
+        /// <summary>The smallest value.</summary>
+        public double Min { get; }
+
+        /// <summary>The largest value, at least <see cref="Min"/>.</summary>
+        public double Max { get; }
+
+        /// <summary>The step, or 0 when the step attribute is <c>any</c>.</summary>
+        public double Step { get; }
+
+        /// <summary>Reads the <c>min</c>, <c>max</c> and <c>step</c> attributes.</summary>
+        /// <param name="min">The <c>min</c> attribute, or null.</param>
+        /// <param name="max">The <c>max</c> attribute, or null.</param>
+        /// <param name="step">The <c>step</c> attribute, or null (1; <c>any</c> means no snapping).</param>
+        /// <returns>The spec.</returns>
+        public static RangeSpec From(string? min, string? max, string? step)
+        {
+            double mn = TryParseNumber(min, out double a) ? a : 0;
+            double mx = TryParseNumber(max, out double b) ? b : 100;
+            if (mx < mn)
+            {
+                mx = mn;
+            }
+
+            double st = 1;
+            if (step is not null && step.Trim().Equals("any", StringComparison.OrdinalIgnoreCase))
+            {
+                st = 0;
+            }
+            else if (TryParseNumber(step, out double c) && c > 0)
+            {
+                st = c;
+            }
+
+            return new RangeSpec(mn, mx, st);
+        }
+
+        /// <summary>The value a range has when its value attribute is missing or invalid: the midpoint, snapped.</summary>
+        public double Default => Snap(Min + ((Max - Min) / 2));
+
+        /// <summary>The nearest value the step allows, within the range.</summary>
+        /// <param name="value">Any number.</param>
+        /// <returns>The snapped value.</returns>
+        public double Snap(double value)
+        {
+            if (Step > 0)
+            {
+                value = Min + (Math.Round((value - Min) / Step, MidpointRounding.AwayFromZero) * Step);
+                if (value > Max)
+                {
+                    value = Min + (Math.Floor((Max - Min) / Step) * Step);
+                }
+            }
+
+            return Math.Clamp(value, Min, Max);
+        }
+
+        /// <summary>Where a value sits on the track.</summary>
+        /// <param name="value">A value.</param>
+        /// <returns>0 at the minimum to 1 at the maximum.</returns>
+        public double Fraction(double value) => Max > Min ? Math.Clamp((value - Min) / (Max - Min), 0, 1) : 0;
+
+        /// <summary>The value at a place on the track.</summary>
+        /// <param name="fraction">0 to 1.</param>
+        /// <returns>The snapped value.</returns>
+        public double FromFraction(double fraction) => Snap(Min + (Math.Clamp(fraction, 0, 1) * (Max - Min)));
+    }
+
+    /// <summary>The thumb position of a range control from its attributes (see <see cref="RangeSpec"/>).</summary>
     /// <param name="valueAttribute">The <c>value</c> attribute, or null.</param>
     /// <param name="minAttribute">The <c>min</c> attribute, or null.</param>
     /// <param name="maxAttribute">The <c>max</c> attribute, or null.</param>
-    /// <param name="stepAttribute">The <c>step</c> attribute, or null (1; <c>any</c> means no snapping).</param>
-    /// <returns>The thumb position from 0 (minimum) to 1 (maximum).</returns>
+    /// <param name="stepAttribute">The <c>step</c> attribute, or null.</param>
+    /// <returns>0 (minimum) to 1 (maximum).</returns>
     public static double RangeFraction(string? valueAttribute, string? minAttribute, string? maxAttribute, string? stepAttribute)
     {
-        double min = TryParseNumber(minAttribute, out double mn) ? mn : 0;
-        double max = TryParseNumber(maxAttribute, out double mx) ? mx : 100;
-        if (max < min)
-        {
-            max = min;
-        }
-
-        double value = TryParseNumber(valueAttribute, out double v) ? v : min + ((max - min) / 2);
-        double step = 1;
-        bool any = stepAttribute is not null && stepAttribute.Trim().Equals("any", StringComparison.OrdinalIgnoreCase);
-        if (!any && TryParseNumber(stepAttribute, out double st) && st > 0)
-        {
-            step = st;
-        }
-
-        if (!any)
-        {
-            // §4.10.5.1.13: the nearest valid value, with steps counted from the minimum.
-            value = min + (Math.Round((value - min) / step, MidpointRounding.AwayFromZero) * step);
-            if (value > max)
-            {
-                value = min + (Math.Floor((max - min) / step) * step);
-            }
-        }
-
-        value = Math.Clamp(value, min, max);
-        return max > min ? (value - min) / (max - min) : 0;
+        RangeSpec spec = RangeSpec.From(minAttribute, maxAttribute, stepAttribute);
+        return spec.Fraction(TryParseNumber(valueAttribute, out double v) ? spec.Snap(v) : spec.Default);
     }
 
     /// <summary>The fraction a <c>progress</c> bar is filled (§4.10.13): value over max (default 1); NaN when there is no valid value (an indeterminate bar).</summary>

@@ -118,6 +118,18 @@ public sealed partial class HtmlFrontEnd
                             _stack[top].Fieldset = idx;
                         }
                     }
+                    else if (idx >= 0 && _popupParent >= 0)
+                    {
+                        // An open drop-down: its options go into the popup box.
+                        if (top + 1 == _stack.Length)
+                        {
+                            Array.Resize(ref _stack, _stack.Length * 2);
+                        }
+
+                        _stack[++top] = new Frame(child.FirstChild, _popupParent, child);
+                    }
+
+                    _popupParent = -1;
 
                     break;
                 }
@@ -198,6 +210,10 @@ public sealed partial class HtmlFrontEnd
         if (control != ControlKind.None)
         {
             AddControlContent(element, idx, control);
+            if (control == ControlKind.SelectMenu && Form is not null && Form.IsOpen(element))
+            {
+                AddSelectPopup(element, idx);
+            }
         }
 
         if (table[_tree.StyleOf(idx)].Display.IsListItem)

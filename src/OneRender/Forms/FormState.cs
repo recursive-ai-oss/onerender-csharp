@@ -35,12 +35,35 @@ internal sealed class FormState
         Version++;
     }
 
-    public bool TryGetRangeFraction(Node element, out double fraction) => _range.TryGetValue(element.Index, out fraction);
+    public bool TryGetRangeValue(Node element, out double value) => _range.TryGetValue(element.Index, out value);
 
-    public void SetRangeFraction(Node element, double fraction)
+    public void SetRangeValue(Node element, double value)
     {
-        _range[element.Index] = fraction;
+        _range[element.Index] = value;
         Version++;
+    }
+
+    /// <summary>Forgets what the user changed in the elements under <paramref name="root"/> (a form reset).</summary>
+    public void ClearUnder(Node root)
+    {
+        RemoveUnder(_checked, root);
+        RemoveUnder(_indeterminate, root);
+        RemoveUnder(_range, root);
+        RemoveUnder(_selected, root);
+        Version++;
+    }
+
+    private static void RemoveUnder<T>(Dictionary<int, T> map, Node root)
+    {
+        if (map.Count == 0)
+        {
+            return;
+        }
+
+        foreach (Node n in root.Descendants)
+        {
+            map.Remove(n.Index);
+        }
     }
 
     public bool TryGetSelected(Node option, out bool value) => _selected.TryGetValue(option.Index, out value);
@@ -53,12 +76,33 @@ internal sealed class FormState
 
     public bool IsOpen(Node select) => _open == select.Index;
 
+    /// <summary>The index of the node of the open drop-down, or -1.</summary>
+    public int OpenIndex => _open;
+
+    private int _highlight = -1;
+
+    /// <summary>The option of the open drop-down that is highlighted (by the pointer or the keyboard), or -1.</summary>
+    public int HighlightIndex => _highlight;
+
+    public bool IsHighlighted(Node option) => _highlight == option.Index;
+
+    public void SetHighlight(Node option)
+    {
+        int want = option.IsNull ? -1 : option.Index;
+        if (_highlight != want)
+        {
+            _highlight = want;
+            Version++;
+        }
+    }
+
     public void SetOpen(Node select, bool open)
     {
         int want = open ? select.Index : -1;
         if (_open != want && (open || _open == select.Index))
         {
             _open = want;
+            _highlight = -1;
             Version++;
         }
     }

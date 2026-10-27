@@ -89,6 +89,9 @@ public sealed partial class HtmlPage
     /// <summary>The parsed document.</summary>
     public Document Document { get; }
 
+    // What the user changed in the form controls; carried to every page built for the same document.
+    internal Forms.FormState Form { get; private set; } = new();
+
     /// <summary>The styled-node tree.</summary>
     public StyledTree Styled { get; }
 
@@ -227,13 +230,13 @@ public sealed partial class HtmlPage
     }
 
     private static HtmlPage Build(Document document, DocumentStyles styles, HtmlPageOptions options, ScrollState? scroll, CancellationToken cancellationToken,
-        bool incremental = false, Animation.AnimationController? motion = null, StyledTree? previous = null, double now = 0, double sampleAt = double.NaN)
+        bool incremental = false, Animation.AnimationController? motion = null, StyledTree? previous = null, double now = 0, double sampleAt = double.NaN, Forms.FormState? form = null)
     {
         var table = new StyleTable();
         table.SetViewport(options.ViewportWidth, options.ViewportHeight);
         table.Fonts = options.Fonts;
         var styled = new StyledTree(table) { Resolver = options.Replaced };
-        var front = new HtmlFrontEnd(styled);
+        var front = new HtmlFrontEnd(styled) { Form = form ??= new Forms.FormState() };
         front.Build(styles, cancellationToken);
 
         // Transitions and animations are applied to the styled tree before boxes are made from it, so the box tree, layout and paint all see
@@ -251,7 +254,7 @@ public sealed partial class HtmlPage
         BlockLayoutEngine? reusing = incremental && options.Layout is null ? new BlockLayoutEngine() : null;
         ILayoutEngine engine = options.Layout ?? reusing ?? new BlockLayoutEngine();
         engine.Layout(boxes, new LayoutInput(options.ViewportWidth, options.ViewportHeight, options.Fonts) { Reuse = reusing is not null }, fragments, cancellationToken);
-        var page = new HtmlPage(document, styled, boxes, fragments, options) { Motion = motion };
+        var page = new HtmlPage(document, styled, boxes, fragments, options) { Motion = motion, Form = form };
         if (reusing is not null)
         {
             boxes.ClearDirty();

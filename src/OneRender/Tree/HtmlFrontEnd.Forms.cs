@@ -203,6 +203,18 @@ public sealed partial class HtmlFrontEnd
 
             case ControlKind.SelectMenu:
                 AdjustMenulist(element, ref v, fonts, borderBox);
+                if (Form is not null && Form.IsOpen(element))
+                {
+                    // The popup is positioned against the select and must not be clipped by it.
+                    if (v.Position == PositionKind.Static)
+                    {
+                        v.Position = PositionKind.Relative;
+                    }
+
+                    v.OverflowX = OverflowKind.Visible;
+                    v.OverflowY = OverflowKind.Visible;
+                }
+
                 break;
             case ControlKind.SelectList:
             {
@@ -260,8 +272,8 @@ public sealed partial class HtmlFrontEnd
 
                 break;
             case ControlKind.Range:
-                v.ControlFraction = Form is not null && Form.TryGetRangeFraction(element, out double rf)
-                    ? rf
+                v.ControlFraction = Form is not null && Form.TryGetRangeValue(element, out double rv)
+                    ? FormValues.RangeSpec.From(element.GetAttribute("min"), element.GetAttribute("max"), element.GetAttribute("step")).Fraction(rv)
                     : FormValues.RangeFraction(element.GetAttribute("value"), element.GetAttribute("min"), element.GetAttribute("max"), element.GetAttribute("step"));
                 break;
             case ControlKind.Progress:
@@ -287,7 +299,8 @@ public sealed partial class HtmlFrontEnd
         v.ControlState = st;
     }
 
-    // A selected option of a list box shows the selection color (Chrome: #cbcbcb while the list is unfocused).
+    // A selected option of a list box shows the selection color (Chrome: #cbcbcb while the list is unfocused); the option of an open
+    // drop-down that is highlighted is drawn in the highlight colors.
     private StyleId AdjustOption(Node option, StyleId style)
     {
         Node select = option.Parent;
@@ -296,7 +309,14 @@ public sealed partial class HtmlFrontEnd
             select = select.Parent;
         }
 
-        if (select.IsNull || !IsHtmlTag(select, "select") || !IsListbox(select) || !IsOptionSelected(option))
+        if (select.IsNull || !IsHtmlTag(select, "select"))
+        {
+            return style;
+        }
+
+        bool selectedInList = IsListbox(select) && IsOptionSelected(option);
+        bool highlighted = Form is not null && Form.IsOpen(select) && Form.IsHighlighted(option);
+        if (!selectedInList && !highlighted)
         {
             return style;
         }
@@ -305,7 +325,12 @@ public sealed partial class HtmlFrontEnd
         ComputedValues v = table[style];
         v.Control = ControlKind.Option;
         v.ControlState = ControlStates.Checked;
-        if (v.BackgroundColor.A == 0)
+        if (highlighted)
+        {
+            v.BackgroundColor = new ColorValue(0, 117 / 255f, 1f, 1);
+            v.Color = new ColorValue(1, 1, 1, 1);
+        }
+        else if (v.BackgroundColor.A == 0)
         {
             v.BackgroundColor = new ColorValue(203 / 255f, 203 / 255f, 203 / 255f, 1);
         }
@@ -389,6 +414,58 @@ public sealed partial class HtmlFrontEnd
         }
 
         return f.Wrap >= 0 ? f.Wrap : f.Fieldset;
+    }
+
+    // The list of an open drop-down: a box under the select, as wide as it and above everything else of its stacking context. Its
+    // children are the select's options. Chrome draws this list in a native window that screenshots do not capture, so its look is
+    // ours (docs/forms.md).
+    private int _popupParent = -1;
+
+    private int AddSelectPopup(Node select, int idx)
+    {
+        StyleTable table = _tree.Styles;
+        StyleId owner = _tree.StyleOf(idx);
+        StyleId anon = table.GetAnonymous(owner, new DisplayType(OuterDisplay.Block, InnerDisplay.Flow));
+        ComputedValues v = table[anon];
+        v.Position = PositionKind.Absolute;
+        v.Left = Length.FromPx(-1);
+        v.Right = Length.FromPx(-1);
+        v.Top = Length.FromPercent(100);
+        v.MarginTop = Length.FromPx(1);
+        v.BoxSizing = BoxSizingKind.BorderBox;
+        v.ZIndexAuto = false;
+        v.ZIndex = int.MaxValue;
+        v.BackgroundColor = new ColorValue(1, 1, 1, 1);
+        var line = new ColorValue(118 / 255f, 118 / 255f, 118 / 255f, 1);
+        v.BorderTopWidth = v.BorderRightWidth = v.BorderBottomWidth = v.BorderLeftWidth = 1;
+        v.BorderTopStyle = v.BorderRightStyle = v.BorderBottomStyle = v.BorderLeftStyle = BorderStyleKind.Solid;
+        v.BorderTopColor = v.BorderRightColor = v.BorderBottomColor = v.BorderLeftColor = line;
+        v.MaxHeight = Length.FromPx(300);
+        v.OverflowY = OverflowKind.Auto;
+        int popup = _tree.NewNode(StyledNodeKind.Element, idx, table.Derive(anon, in v), -1);
+        _popupParent = popup;
+        return popup;
+    }
+
+    /// <summary>Puts the text a control shows after a state change into its anonymous text node (a drop-down shows the selected option).</summary>
+    internal void RefreshContent(Node element, int idx)
+    {
+        ControlKind kind = Classify(element);
+        if (kind != ControlKind.SelectMenu)
+        {
+            return;
+        }
+
+        Node o = SelectedOption(element);
+        string text = o.IsNull ? string.Empty : OptionLabel(o);
+        for (int c = _tree.FirstChildOf(idx); c >= 0; c = _tree.NextSiblingOf(c))
+        {
+            if ((StyledNodeKind)_tree.KindOf(c) == StyledNodeKind.Text)
+            {
+                _tree.SetText(c, text);
+                return;
+            }
+        }
     }
 
     // The baseline of a line of the control's text, from the top of its content box: the rounded ascent, moved by half the difference

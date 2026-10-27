@@ -80,12 +80,19 @@ public sealed partial class InteractivePage
         }
 
         outcome |= SetHovered(target, in input);
+        if (!_dragRange.IsNull)
+        {
+            outcome |= ContinueRangeDrag(in input, cancellationToken);
+        }
+
         switch (input.Action)
         {
             case PointerAction.Move:
                 FirePair("pointermove", "mousemove", true, true, target, in input, 0, default);
+                outcome |= HighlightUnderPointer(target, cancellationToken);
                 break;
             case PointerAction.Down:
+                outcome |= CloseDropdownOnOutsidePress(target, cancellationToken);
                 outcome |= PointerDown(target, in input);
                 break;
             case PointerAction.Up:
@@ -224,6 +231,7 @@ public sealed partial class InteractivePage
             Node focusable = FocusableAncestorOrSelf(target);
             _navigationStart = target;
             outcome |= SetFocus(focusable, FocusReason.PointingDevice, scroll: false);
+            outcome |= BeginRangeDrag(target, in p, default);
         }
 
         return outcome;
@@ -250,7 +258,7 @@ public sealed partial class InteractivePage
             {
                 if (button == 0)
                 {
-                    FirePointerOnly("click", true, true, clickTarget, in p, default, detail: _clickCount);
+                    FirePointerClick(clickTarget, in p, _clickCount, ref outcome);
                     if (_clickCount == 2)
                     {
                         FireMouseOnly("dblclick", true, true, clickTarget, in p, 2, default);
@@ -352,6 +360,19 @@ public sealed partial class InteractivePage
         e.IsPrimary = true;
         e.Pressure = p.Pressure > 0 ? p.Pressure : (p.Buttons != MouseButtons.None ? 0.5 : 0);
         return _events.Dispatch(e, EventTarget.Of(target));
+    }
+
+    // A click, with the default action of the control it activates.
+    private bool FirePointerClick(Node target, in PointerInput p, int detail, ref InputOutcome outcome)
+    {
+        PointerEvent e = _pe;
+        e.Reset("click", true, true, p.Time);
+        FillMouse(e, in p, detail, default);
+        e.PointerId = p.PointerId == 0 ? 1 : p.PointerId;
+        e.PointerType = p.PointerType ?? "mouse";
+        e.IsPrimary = true;
+        e.Pressure = p.Pressure > 0 ? p.Pressure : (p.Buttons != MouseButtons.None ? 0.5 : 0);
+        return DispatchClick(target, e, ref outcome, default);
     }
 
     private bool FireMouseOnly(string type, bool bubbles, bool cancelable, Node target, in PointerInput p, int detail, Node related)
