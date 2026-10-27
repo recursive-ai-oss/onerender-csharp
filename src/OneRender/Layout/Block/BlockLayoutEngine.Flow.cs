@@ -157,6 +157,7 @@ public sealed partial class BlockLayoutEngine
         if ((fl & FrameFlags.Multicol) != 0)
         {
             contentH = MulticolClose(ti);
+            _mcOpen--;
             t = ref _frames[ti];
         }
         else if (!double.IsNaN(t.SpecH))

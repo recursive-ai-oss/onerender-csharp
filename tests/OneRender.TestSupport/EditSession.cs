@@ -365,7 +365,8 @@ public sealed class EditSession
     }
 
     // A live node of a fresh tree exists only inside this method; the model's own handles belong to the page under test.
-    private LivePage BuildFresh()
+    /// <summary>A page built from scratch from the session's current content.</summary>
+    public LivePage BuildFresh()
     {
         var saved = new List<(M, StyledNode)>();
         var stack = new Stack<M>();

@@ -417,6 +417,7 @@ public sealed partial class BlockLayoutEngine
         if (v.IsMulticol && c.Context is FormattingContext.Block or FormattingContext.FlowRoot)
         {
             MulticolOpen(ref nf, in v, contentW);
+            _mcOpen++;
         }
 
         PushFrame(in nf);

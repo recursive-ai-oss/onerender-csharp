@@ -55,6 +55,9 @@ public sealed partial class BlockLayoutEngine
     private int _logPrevCount;
     private int _logCurCount;
     private bool _reuse;
+    // Multi-column containers currently open. Their columns are cut after the whole layout, so fragments inside one are rewritten
+    // by the cut and can neither be copied from an earlier layout nor recorded for one.
+    private int _mcOpen;
     private bool _recording;
     private bool _memoValid;
     private BoxTree? _memoBoxes;
@@ -100,6 +103,7 @@ public sealed partial class BlockLayoutEngine
         _logCurCount = 0;
         _reuse = same;
         _recording = true;
+        _mcOpen = 0;
         _prevTree = same ? output : null;
         _hits = 0;
         _stores = 0;
@@ -156,6 +160,7 @@ public sealed partial class BlockLayoutEngine
     private bool MemoEligible(Box c, in Frame nf)
     {
         return _recording
+            && _mcOpen == 0
             && c.Kind == BoxKind.Container
             && c.Context is FormattingContext.Block or FormattingContext.FlowRoot
             && (nf.Flags & (FrameFlags.Multicol | FrameFlags.Flex | FrameFlags.Float)) == 0
