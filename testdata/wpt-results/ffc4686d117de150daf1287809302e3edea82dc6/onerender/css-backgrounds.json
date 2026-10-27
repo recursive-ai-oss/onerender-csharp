@@ -8,13 +8,15 @@
   "sampleStride": 1,
   "counts": {
     "total": 847,
-    "pass": 297,
-    "fail": 314,
+    "pass": 299,
+    "fail": 312,
     "blank": 8,
     "skipped": 228
   },
-  "rate": "0.4798",
+  "rate": "0.4830",
   "pass": [
+    "css/css-backgrounds/animations/background-color-animation-in-body.html",
+    "css/css-backgrounds/animations/background-color-animation-with-images.html",
     "css/css-backgrounds/animations/background-color-animation-with-table1.html",
     "css/css-backgrounds/animations/background-color-animation-with-table2.html",
     "css/css-backgrounds/animations/background-color-animation-with-table3.html",
@@ -324,8 +326,6 @@
     "css/css-backgrounds/background-multiple-layers-table-cell.html"
   ],
   "fail": {
-    "css/css-backgrounds/animations/background-color-animation-in-body.html": "== background-color-animation-in-body-ref.html differs (max 255, 480000 px)",
-    "css/css-backgrounds/animations/background-color-animation-with-images.html": "== background-color-animation-with-images-ref.html differs (max 255, 30000 px)",
     "css/css-backgrounds/background-attachment-350.html": "== ref-if-there-is-no-red.xht differs (max 255, 10000 px)",
     "css/css-backgrounds/background-attachment-fixed-inside-transform-1.html": "== background-attachment-fixed-inside-transform-1-ref.html differs (max 255, 92562 px)",
     "css/css-backgrounds/background-attachment-local-hidden.html": "== background-attachment-local-hidden-ref.html differs (max 41, 4064 px)",

@@ -93,6 +93,24 @@ if (!ixHit || ixClicks != 1)
     throw new InvalidOperationException("interaction failed");
 }
 
+
+// Animations: a keyframe animation and a transition, ticked with the host clock; the events and the animated value must come out.
+InteractivePage mo = InteractivePage.Create(
+    "<style>@keyframes f{from{opacity:0;transform:rotate(0deg)}to{opacity:1;transform:rotate(90deg)}}#a{width:20px;height:20px;animation:f 1s linear both}#b{width:10px;height:10px;opacity:0;transition:opacity 1s linear}#b:focus{opacity:1}</style><body style='margin:0'><div id=a></div><div id=b tabindex=0></div></body>",
+    new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 100, ViewportHeight = 100 });
+int moStarts = 0;
+mo.Events.AddEventListener(mo.Page.Document.GetElementById("a"), "animationstart", _ => moStarts++);
+mo.Advance(0);
+mo.Focus(mo.Page.Document.GetElementById("b"));
+mo.Advance(500);
+double moOpacity = mo.Page.Styled.FindBySource(mo.Page.Document.GetElementById("a").Index).Values.Opacity;
+double moB = mo.Page.Styled.FindBySource(mo.Page.Document.GetElementById("b").Index).Values.Opacity;
+Console.WriteLine($"animation starts={moStarts} opacity={moOpacity:F2} transition={moB:F2}");
+if (moStarts != 1 || Math.Abs(moOpacity - 0.5) > 1e-6 || Math.Abs(moB - 0.5) > 1e-6)
+{
+    throw new InvalidOperationException("animation failed");
+}
+
 // Transforms, filters, clip paths, masks, blending and an inline svg on WebAssembly too.
 RgbaImage fxPage = HtmlRender.ToImage(
     "<body style='margin:0'><div style='width:20px;height:20px;background:#f00;transform:rotate(10deg);filter:blur(1px);clip-path:circle(50%);mask-image:linear-gradient(#000,#000);mix-blend-mode:multiply'></div>"

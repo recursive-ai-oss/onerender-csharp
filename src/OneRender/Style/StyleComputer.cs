@@ -357,7 +357,7 @@ internal sealed partial class StyleComputer
     private void SetFromInitial(PropertyId id) => CopyProperty(id, ref _r, in ComputedValues.Initial, false);
 
     /// <summary>Copies one property (all the fields that make it up) from <paramref name="s"/> to <paramref name="d"/>.</summary>
-    private void CopyProperty(PropertyId id, ref ComputedValues d, in ComputedValues s, bool fromParent)
+    internal void CopyProperty(PropertyId id, ref ComputedValues d, in ComputedValues s, bool fromParent)
     {
         switch (id)
         {
@@ -435,7 +435,7 @@ internal sealed partial class StyleComputer
             case PropertyId.TextAlignLast: d.TextAlignLast = s.TextAlignLast; break;
             case PropertyId.TextJustify: d.TextJustify = s.TextJustify; break;
             case PropertyId.OverflowClipMargin: d.OverflowClipMarginPx = s.OverflowClipMarginPx; d.OverflowClipMarginBox = s.OverflowClipMarginBox; break;
-            default: CopyFlexProperty(id, ref d, in s, fromParent); CopyGridProperty(id, ref d, in s); CopyPaintProperty(id, ref d, in s); CopyTableProperty(id, ref d, in s); CopyInteractionProperty(id, ref d, in s); CopyEffectsProperty(id, ref d, in s); break;
+            default: CopyFlexProperty(id, ref d, in s, fromParent); CopyGridProperty(id, ref d, in s); CopyPaintProperty(id, ref d, in s); CopyTableProperty(id, ref d, in s); CopyInteractionProperty(id, ref d, in s); CopyMotionProperty(id, ref d, in s); CopyEffectsProperty(id, ref d, in s); break;
         }
     }
 

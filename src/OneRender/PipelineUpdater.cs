@@ -51,6 +51,9 @@ internal sealed class PipelineUpdater
         _dirtyAll = true;
     }
 
+    /// <summary>Makes the next <see cref="UpdateBoxesAndLayout"/> generate the boxes again (style rows were rewritten under their ids).</summary>
+    public void InvalidateBoxes() => _boxesStale = true;
+
     /// <summary>Recomputes the styles the pending changes reach (everything after a resize).</summary>
     public void Restyle()
     {

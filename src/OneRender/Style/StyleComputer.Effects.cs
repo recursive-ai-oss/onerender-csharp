@@ -581,7 +581,7 @@ internal sealed partial class StyleComputer
         }
     }
 
-    private static void DescribeTransform(TransformFunction f, StringBuilder sb)
+    internal static void DescribeTransform(TransformFunction f, StringBuilder sb)
     {
         switch (f.Kind)
         {

@@ -210,6 +210,20 @@ ix.HandlePointer(new PointerInput { Action = PointerAction.Down, X = 5, Y = 5, B
 ix.HandlePointer(new PointerInput { Action = PointerAction.Up, X = 5, Y = 5, Button = 0, Time = 2 });
 bool ixOk = ixHit && ixClicks == 1 && ix.FocusedElement.Equals(ixButton);
 
+
+// Animations: a keyframe animation and a transition, ticked with the host clock; the events and the animated value must come out.
+InteractivePage mo = InteractivePage.Create(
+    "<style>@keyframes f{from{opacity:0;transform:rotate(0deg)}to{opacity:1;transform:rotate(90deg)}}#a{width:20px;height:20px;animation:f 1s linear both}#b{width:10px;height:10px;opacity:0;transition:opacity 1s linear}#b:focus{opacity:1}</style><body style='margin:0'><div id=a></div><div id=b tabindex=0></div></body>",
+    new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 100, ViewportHeight = 100 });
+int moStarts = 0;
+mo.Events.AddEventListener(mo.Page.Document.GetElementById("a"), "animationstart", _ => moStarts++);
+mo.Advance(0);
+mo.Focus(mo.Page.Document.GetElementById("b"));
+mo.Advance(500);
+double moOpacity = mo.Page.Styled.FindBySource(mo.Page.Document.GetElementById("a").Index).Values.Opacity;
+double moB = mo.Page.Styled.FindBySource(mo.Page.Document.GetElementById("b").Index).Values.Opacity;
+bool moOk = moStarts == 1 && Math.Abs(moOpacity - 0.5) < 1e-6 && Math.Abs(moB - 0.5) < 1e-6;
+
 // The rendered-facts producer: facts for a small page through the snapshot route, with colors behind text and form state.
 OneRender.Accessibility.RenderedPage factsPage = OneRender.Accessibility.AccessibilityFacts.Render(
     "<body style='margin:0'><div id=a style='background:#036;color:#fff'>Hi</div><input id=i value=x></body>",
@@ -237,7 +251,7 @@ byte[] pdfBytes = HtmlPdf.ToPdf(
     new HtmlPdfOptions { Output = new PdfOutputOptions { Profile = PdfProfile.PdfUA1 } });
 bool pdfOk = pdfBytes.Length > 500 && pdfBytes[0] == (byte)'%' && pdfBytes[1] == (byte)'P' && pdfBytes[2] == (byte)'D' && pdfBytes[3] == (byte)'F';
 
-return liveOk && pdfOk && factsOk && ixOk && names.Length == 3 && tableOk && sfnt && painted && pageOk && boxes >= 3 && scrollOk && shaped && again && woff2Ok ? 0 : 1;
+return moOk && liveOk && pdfOk && factsOk && ixOk && names.Length == 3 && tableOk && sfnt && painted && pageOk && boxes >= 3 && scrollOk && shaped && again && woff2Ok ? 0 : 1;
 
 internal sealed class NoFonts : OneRender.Layout.IFontProvider
 {

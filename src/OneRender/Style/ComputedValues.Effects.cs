@@ -6,14 +6,14 @@ namespace OneRender.Style;
 public partial struct ComputedValues
 {
     /// <summary>True when any of the transform properties does something (the element has a transform, Transforms 1 §2).</summary>
-    internal readonly bool HasTransform => !Transform.IsNone || !Translate.IsNone || !Rotate.IsNone || !Scale.IsNone;
+    internal readonly bool HasTransform => !Transform.IsNone || !Translate.IsNone || !Rotate.IsNone || !Scale.IsNone || AnimatesTransform;
 
     /// <summary>True when the element has a transform or a perspective: it then is a stacking context and the containing block of fixed and absolute boxes (Transforms 1 §2, Transforms 2 §10).</summary>
     internal readonly bool CreatesTransformContext => HasTransform || Perspective > 0;
 
     /// <summary>True when the element paints as a stacking context because of opacity, transforms, filters, masking or compositing (Compositing 1 §3, Transforms 1 §2, Filter Effects 1 §3, Masking 1 §5 and §6).</summary>
     internal readonly bool CreatesEffectContext =>
-        Opacity < 1.0 || CreatesTransformContext || TransformStyle == TransformStyleKind.Preserve3D || !Filter.IsNone || !BackdropFilter.IsNone
+        Opacity < 1.0 || AnimatesOpacity || CreatesTransformContext || TransformStyle == TransformStyleKind.Preserve3D || !Filter.IsNone || !BackdropFilter.IsNone
         || ClipPath.Kind != ClipPathKind.None || Mask.HasImages || MixBlendMode != BlendMode.Normal || Isolate;
 
     private static void InitEffects(ref ComputedValues v)
