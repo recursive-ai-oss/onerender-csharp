@@ -17,6 +17,9 @@ public sealed partial class HtmlFrontEnd
     // The form state the user changed (checkedness, a range value, a selection); null when the document's attributes are all there is.
     internal Forms.FormState? Form { get; set; }
 
+    /// <summary>Text of text nodes (by node index) that replaces what the document holds; null for none.</summary>
+    internal Dictionary<int, string>? TextOverrides { get; set; }
+
     private static readonly SelectorList DisabledSelector = SelectorList.Parse(":disabled");
     private static readonly SelectorList CheckedSelector = SelectorList.Parse(":checked");
     private static readonly SelectorList IndeterminateSelector = SelectorList.Parse(":indeterminate");

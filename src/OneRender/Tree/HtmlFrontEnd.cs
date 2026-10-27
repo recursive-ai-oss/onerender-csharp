@@ -61,6 +61,14 @@ public sealed partial class HtmlFrontEnd
     public void Build(DocumentStyles styles, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(styles);
+        BuildFor(styles, styles.Document, cancellationToken);
+    }
+
+    // Builds from the cascade's document while the tree's source document, the one hosts hold node handles from, is `identity`. They differ
+    // after an interactive page edited text or classes: the cascade then belongs to the edited snapshot, which has the same tree shape
+    // (same node indices) as the document the page was made from.
+    internal void BuildFor(DocumentStyles styles, Document identity, CancellationToken cancellationToken)
+    {
         Document doc = styles.Document;
         _tree.Clear();
         _cellPadding.Clear();
@@ -75,7 +83,7 @@ public sealed partial class HtmlFrontEnd
             Generated();
         }
 
-        _tree.SetDocument(doc, doc.NodeCount);
+        _tree.SetDocument(identity, doc.NodeCount);
         _current = styles;
         _tree.Styler = this;
         Node rootElement = doc.DocumentElement;
@@ -127,7 +135,7 @@ public sealed partial class HtmlFrontEnd
             switch (child.Kind)
             {
                 case NodeKind.Text:
-                    ReadOnlySpan<char> data = child.Data;
+                    ReadOnlySpan<char> data = TextOverrides is not null && TextOverrides.TryGetValue(child.Index, out string? replaced) ? replaced : child.Data;
                     if (!data.IsEmpty)
                     {
                         if (f.Fieldset >= 0 && !data.IsWhiteSpace())

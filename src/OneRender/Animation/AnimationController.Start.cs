@@ -211,7 +211,7 @@ internal sealed partial class AnimationController
             return false;
         }
 
-        RecursiveAI.OneHtml.Node n = doc.GetNode(tree.SourceIndexOf(node));
+        RecursiveAI.OneHtml.Node n = styles.Document.GetNode(tree.SourceIndexOf(node));
         return !n.IsNull && styles.GetStyle(n).GetSource(Properties.NameOf(id)) is { IsImportant: true };
     }
 

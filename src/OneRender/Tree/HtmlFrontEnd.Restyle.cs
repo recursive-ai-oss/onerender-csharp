@@ -28,7 +28,8 @@ public sealed partial class HtmlFrontEnd : INodeStyler
             return _wrapperOf.TryGetValue(node, out int owner) ? FieldsetContentStyle(tree.StyleOf(owner), owner) : new StyleId(tree.StyleOf(node).Index);
         }
 
-        Node element = doc.GetNode(source);
+        // The cascade may belong to an edited snapshot of the document; node indices are the same in both.
+        Node element = styles.Document.GetNode(source);
         int parent = tree.ParentOf(node);
         StyleId resolved = Resolve(styles.GetStyle(element), parentStyle, parent >= 0, parent < 0);
         resolved = AdjustControlStyle(element, SplitFieldset(element, node, resolved), parent < 0 ? default : tree.StyleOf(parent));
@@ -56,7 +57,7 @@ public sealed partial class HtmlFrontEnd : INodeStyler
             return tree.StyleOf(node);
         }
 
-        Node element = doc.GetNode(tree.SourceIndexOf(owner));
+        Node element = styles.Document.GetNode(tree.SourceIndexOf(owner));
         switch ((StyledNodeKind)tree.KindOf(node))
         {
             case StyledNodeKind.Marker:

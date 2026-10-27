@@ -13,9 +13,10 @@ There is no GPU code in the engine, and nothing here needs a clock, a thread or 
 5. [Damage](#damage)
 6. [Host scopes](#host-scopes)
 7. [Harness support](#harness-support)
-8. [Determinism and limits](#determinism-and-limits)
-9. [What the list already carries](#what-the-list-already-carries)
-10. [The cost of an animated layout property](#the-cost-of-an-animated-layout-property)
+8. [Changing text and classes after creation](#changing-text-and-classes-after-creation)
+9. [Determinism and limits](#determinism-and-limits)
+10. [What the list already carries](#what-the-list-already-carries)
+11. [The cost of an animated layout property](#the-cost-of-an-animated-layout-property)
 
 ## Two front ends, one list
 
@@ -156,6 +157,31 @@ page.Click(go, nowMs);
 ```
 
 A builder tree has no DOM, so it has no events to dispatch: the host that drives a builder UI dispatches its own input to the nodes it finds by name.
+
+## Changing text and classes after creation
+
+An `InteractivePage` is made from a OneHtml document, which is a read-only snapshot. These calls change what the page shows without making a new page; the result equals a page created from the equivalent HTML, and focus, hover, the active element, scroll positions, form state, editing sessions and listeners stay as they were.
+
+| Call | Does |
+|---|---|
+| `SetTextContent(element, text)` | Replaces the text of an element that holds exactly one text node (a label, a value readout). |
+| `SetClassName(element, value)`, `AddClass`, `RemoveClass`, `ToggleClass(element, token, force)` | Change the `class` attribute (`className`, `classList`); tokens are ordered, de-duplicated and single-space separated after a `classList` call. |
+| `GetTextContent(element)`, `GetClassName(element)` | Read the current values. A `Node` handle you hold still reads what the page was created with, because the document it points into never changes. |
+
+Each returns an `InputOutcome` (`Relaid` when something changed, `None` for a no-op) and takes a `CancellationToken`. Handles stay valid: nothing is re-parented or renumbered.
+
+**What it costs.**
+
+- *Text* does not touch the cascade. The characters are kept beside the document (a rebuild reads them from there), the one styled text node is rewritten, and only the affected text is laid out and painted again. Once warm it allocates **0 B** (measured on the 1,000-node HUD page) when the new text fits the room the old text had. A stylesheet with a `:empty` selector is the one case where the cascade reads text; then the change goes through the class path below.
+- *Classes* need the cascade for the edited document. OneHtml's document editor makes a new snapshot of the same shape (it re-parses the document source), and the cascade restyles from what the edit reaches. On the HUD page (69 KB of source, 1,800 nodes) one change allocates about 0.8 to 1 MB, nearly all of it the new snapshot (about 14 KB is the restyle); the page itself is updated in place with no further allocation, unless the change makes boxes come or go (`display`), or the stylesheet has `::before`, `::after`, `::marker`, `counter` or `content` rules, in which case the trees are built again from the edited document. A host that toggles a class every frame should not: toggle it on a state change, or drive per-frame changes with the builder path, `transform` and `opacity` (which patch the list at 0 B), or text.
+
+**Limits.** `SetTextContent` refuses elements without exactly one text child, `style`, `script`, `textarea`, `title`, `option`, `template` and non-HTML elements (`InvalidOperationException`), and empty text (`ArgumentException`; a single space shows nothing). Attributes other than `class` are not editable this way, because the engine itself reads attributes such as `disabled`, `type` and `src` from the original document; they wait for a mutable document in OneHtml. After a relayout under a stationary pointer the hover target is re-evaluated, as after a scroll.
+
+```csharp
+Node label = page.FindElement("volumeValue");
+page.SetTextContent(label, "7");
+page.ToggleClass(page.FindElement("mute"), "active", force: muted);
+```
 
 ## Determinism and limits
 
