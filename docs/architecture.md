@@ -224,6 +224,6 @@ Floats, `clear` and the boxes that avoid floats live in `Layout/Block/BlockLayou
   browsers do); a cleared box's border edge ignores its own margin when clearance applies; the 'separated from adjoining
   floats' rule for formatting-context boxes uses the smaller of the two outcomes (pulled down or not).
 - **Checked by.** `FloatLayoutTests` (spec examples by fragment border boxes, allocation and limits) and `WptFloatReftests`:
-  58 CSS2 `floats` and `floats-clear` reftests whose page and reference paint the same pixels, a stand-in for painting that
-  draws backgrounds and borders in Appendix E order. The test with `ONERENDER_FLOAT_SWEEP` set sweeps the whole
+  58 CSS2 `floats` and `floats-clear` reftests whose page and reference render to the same pixels through `HtmlRender`,
+  with the whole-pixel line height injected. The test with `ONERENDER_FLOAT_SWEEP` set sweeps the whole
   directories of a web-platform-tests checkout and writes one result per test.
