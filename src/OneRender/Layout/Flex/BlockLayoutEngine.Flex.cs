@@ -139,11 +139,16 @@ public sealed partial class BlockLayoutEngine
     private int _lineTop;
     private int _trialNesting;
     private long _flexWork;
+
+    /// <summary>The number of item measurements the last layout ran (memoized repeats are not counted); lets tests show the cost of nesting.</summary>
+    internal long FlexMeasurements => _flexWork;
     private long _flexBudget;
     private bool _budgetReported;
     private FlexMemo[] _memo = new FlexMemo[256];
     private int _memoGen;
     private int _memoCount;
+    private bool[] _pctBlock = [];
+    private bool _pctReady;
     private int[] _absBoxes = new int[16];
     private int _absTop;
 
@@ -164,6 +169,7 @@ public sealed partial class BlockLayoutEngine
         }
 
         _memoCount = 0;
+        _pctReady = false;
         if (_staticIdx.Length < boxCount)
         {
             _staticIdx = new int[Math.Max(boxCount, _staticIdx.Length * 2)];
@@ -402,7 +408,11 @@ public sealed partial class BlockLayoutEngine
                 p.OvT = Math.Min(p.OvT, py + ovT);
                 p.OvR = Math.Max(p.OvR, px + ovR);
                 p.OvB = Math.Max(p.OvB, py + ovB);
-                it.FinalLastBase = LastBaselineFromFragment(frag, h);
+                if ((it.Flags & LastBaselineFlag) != 0)
+                {
+                    // Walking down the last children costs the item's depth, so it is only done for items that align on it.
+                    it.FinalLastBase = LastBaselineFromFragment(frag, h);
+                }
             }
         }
 
@@ -488,8 +498,59 @@ public sealed partial class BlockLayoutEngine
         }
     }
 
+    /// <summary>
+    /// Whether anything in the box's subtree sizes itself from a percentage of a containing block's height. Only then does the height
+    /// of the item's container belong to the key of a memoized measurement; otherwise the same item measured under a container whose
+    /// height differs would be measured again for nothing, which is what makes deep nests of stretched containers quadratic.
+    /// </summary>
+    private double PctKey(int box, double ch)
+    {
+        if (!_pctReady)
+        {
+            ComputePctBlock();
+        }
+
+        return _pctBlock[box] ? ch : double.NaN;
+    }
+
+    private void ComputePctBlock()
+    {
+        int n = _boxes.Count;
+        if (_pctBlock.Length < n)
+        {
+            _pctBlock = new bool[Math.Max(n, _pctBlock.Length * 2)];
+        }
+
+        Array.Clear(_pctBlock, 0, n);
+        for (int i = n - 1; i >= 0; i--)
+        {
+            Box b = _boxes.Make(i);
+            if (b.Kind is BoxKind.Container or BoxKind.Replaced)
+            {
+                ref readonly ComputedValues v = ref b.Values;
+                if (v.Height.IsPercentage || v.MinHeight.IsPercentage || v.MaxHeight.IsPercentage || v.Height.Kind == LengthKind.Stretch
+                    || v.Top.IsPercentage || v.Bottom.IsPercentage || v.FlexBasis.IsPercentage || v.RowGap.IsPercentage)
+                {
+                    _pctBlock[i] = true;
+                }
+            }
+
+            if (_pctBlock[i])
+            {
+                int p = _boxes.ParentOf(i);
+                if (p >= 0)
+                {
+                    _pctBlock[p] = true;
+                }
+            }
+        }
+
+        _pctReady = true;
+    }
+
     private bool MemoLookup(int box, double w, double h, double cw, double ch, out double resH, out double resBase)
     {
+        ch = PctKey(box, ch);
         resH = 0;
         resBase = double.NaN;
         int mask = _memo.Length - 1;
@@ -515,6 +576,7 @@ public sealed partial class BlockLayoutEngine
 
     private void MemoStore(int box, double w, double h, double cw, double ch, double resH, double resBase)
     {
+        ch = PctKey(box, ch);
         if ((_memoCount + 1) * 2 > _memo.Length)
         {
             MemoGrow();
