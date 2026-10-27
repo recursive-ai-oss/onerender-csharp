@@ -23,6 +23,7 @@ Normative notes for the behavior in `Animation/` where the specifications leave 
 - Animated colors, shadows and filters repaint and are not patched in place; only transform and opacity are.
 - Pseudo-elements, `::marker` and `::first-line` do not animate.
 - `animation-composition`, `animation-timeline`, `animation-range` and `var()` inside `@keyframes` are not implemented.
+- A change that adds or removes elements from the styled tree (a `display: none` flip, generated content, list markers) builds the page again; transitions the same change started were already registered by then, and the second pass finds them running.
 - A page parsed without `HtmlPageOptions.AnimationTime` and not wrapped in `InteractivePage` is static.
 
 ## Replay of the WPT helpers
