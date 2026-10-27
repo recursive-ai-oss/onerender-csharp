@@ -1,0 +1,10 @@
+{
+  "classes": {
+    "positionOnly": 14,
+    "sizeOnly": 6,
+    "positionAndSize": 2,
+    "textRun": 20,
+    "missingOurs": 8,
+    "missingChrome": 18
+  }
+}

@@ -109,12 +109,13 @@ public sealed partial class BlockLayoutEngine
 
         ref GItem bi = ref L.Item[best];
         double baseline = _out.BaselineOf(bi.Frag);
+        Rect bb = _out.BorderBoxOf(bi.Frag);
         if (double.IsNaN(baseline))
         {
-            return double.NaN;
+            // CSS Align 3 §9.1: an item with no baseline of its own contributes one synthesized from its border box (its bottom edge).
+            return bb.Y + bb.Height;
         }
 
-        Rect bb = _out.BorderBoxOf(bi.Frag);
         return bb.Y + baseline;
     }
 
