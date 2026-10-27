@@ -1,0 +1,104 @@
+{
+  "formatVersion": 1,
+  "wptCommit": "ffc4686d117de150daf1287809302e3edea82dc6",
+  "renderer": "onerender",
+  "rendererVersion": "OneRender 0.0.1.0",
+  "modules": [
+    {
+      "module": "css-backgrounds",
+      "sampleStride": 1,
+      "discovered": 847,
+      "total": 847,
+      "pass": 257,
+      "fail": 354,
+      "blank": 8,
+      "skipped": 228,
+      "rate": "0.4152"
+    },
+    {
+      "module": "css-borders",
+      "sampleStride": 1,
+      "discovered": 181,
+      "total": 181,
+      "pass": 17,
+      "fail": 77,
+      "blank": 0,
+      "skipped": 87,
+      "rate": "0.1809"
+    },
+    {
+      "module": "css-images",
+      "sampleStride": 1,
+      "discovered": 510,
+      "total": 510,
+      "pass": 221,
+      "fail": 170,
+      "blank": 20,
+      "skipped": 99,
+      "rate": "0.5377"
+    },
+    {
+      "module": "css-inline",
+      "sampleStride": 1,
+      "discovered": 255,
+      "total": 255,
+      "pass": 14,
+      "fail": 149,
+      "blank": 0,
+      "skipped": 92,
+      "rate": "0.0859"
+    },
+    {
+      "module": "css-text-decor",
+      "sampleStride": 1,
+      "discovered": 357,
+      "total": 357,
+      "pass": 82,
+      "fail": 195,
+      "blank": 8,
+      "skipped": 72,
+      "rate": "0.2877"
+    },
+    {
+      "module": "css-text",
+      "sampleStride": 1,
+      "discovered": 1860,
+      "total": 1860,
+      "pass": 633,
+      "fail": 748,
+      "blank": 4,
+      "skipped": 475,
+      "rate": "0.4570"
+    },
+    {
+      "module": "css2-flow",
+      "sampleStride": 1,
+      "discovered": 2415,
+      "total": 2415,
+      "pass": 793,
+      "fail": 1469,
+      "blank": 4,
+      "skipped": 149,
+      "rate": "0.3500"
+    },
+    {
+      "module": "css2-generated",
+      "sampleStride": 1,
+      "discovered": 382,
+      "total": 382,
+      "pass": 93,
+      "fail": 266,
+      "blank": 0,
+      "skipped": 23,
+      "rate": "0.2591"
+    }
+  ],
+  "totals": {
+    "total": 6807,
+    "pass": 2110,
+    "fail": 3428,
+    "blank": 44,
+    "skipped": 1225,
+    "rate": "0.3780"
+  }
+}

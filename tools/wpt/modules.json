@@ -11,6 +11,8 @@
     { "id": "css-position", "dirs": ["css/css-position"] },
     { "id": "css-backgrounds", "dirs": ["css/css-backgrounds"] },
     { "id": "css-borders", "dirs": ["css/css-borders"] },
+    { "id": "css-images", "dirs": ["css/css-images"] },
+    { "id": "css-text-decor", "dirs": ["css/css-text-decor"] },
     { "id": "css-values", "dirs": ["css/css-values"] },
     { "id": "css-color", "dirs": ["css/css-color"] },
     { "id": "css-fonts", "dirs": ["css/css-fonts"] },

@@ -1,7 +1,7 @@
 namespace OneRender.Style;
 
 /// <summary>Serializes computed values the way <c>getComputedStyle</c> does, for tests and debug dumps.</summary>
-internal static class ComputedValueText
+internal static partial class ComputedValueText
 {
     private static readonly string[] BorderStyles = ["none", "hidden", "dotted", "dashed", "solid", "double", "groove", "ridge", "inset", "outset"];
     private static readonly string[] Overflows = ["visible", "hidden", "clip", "scroll", "auto"];
@@ -150,10 +150,15 @@ internal static class ComputedValueText
             case PropertyId.GridColumnEnd: return v.GridColumnEnd.ToCss();
             case PropertyId.JustifyItems: return AlignText(v.JustifyItems, v.JustifyItemsOverflow);
             case PropertyId.JustifySelf: return AlignText(v.JustifySelf, v.JustifySelfOverflow);
+            case PropertyId.BorderCollapse: return v.BorderCollapse == BorderCollapseKind.Collapse ? "collapse" : "separate";
+            case PropertyId.BorderSpacing: return CssText.Px(v.BorderSpacingH) + " " + CssText.Px(v.BorderSpacingV);
+            case PropertyId.EmptyCells: return v.EmptyCells == EmptyCellsKind.Hide ? "hide" : "show";
+            case PropertyId.CaptionSide: return v.CaptionSide == CaptionSideKind.Bottom ? "bottom" : "top";
+            case PropertyId.TableLayout: return v.TableLayout == TableLayoutKind.Fixed ? "fixed" : "auto";
             case PropertyId.PointerEvents: return v.PointerEvents == PointerEventsKind.None ? "none" : "auto";
             case PropertyId.Transform: return v.Transform.ToCss();
             case PropertyId.TransformOrigin: return v.TransformOriginX.ToCss() + " " + v.TransformOriginY.ToCss();
-            default: return string.Empty;
+            default: return PaintText(id, in v) ?? string.Empty;
         }
     }
 

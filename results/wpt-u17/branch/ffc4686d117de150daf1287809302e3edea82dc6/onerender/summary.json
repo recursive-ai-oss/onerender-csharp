@@ -1,0 +1,137 @@
+{
+  "formatVersion": 1,
+  "wptCommit": "ffc4686d117de150daf1287809302e3edea82dc6",
+  "renderer": "onerender",
+  "rendererVersion": "OneRender 0.0.1.0",
+  "modules": [
+    {
+      "module": "css-backgrounds",
+      "sampleStride": 1,
+      "discovered": 847,
+      "total": 847,
+      "pass": 262,
+      "fail": 349,
+      "blank": 8,
+      "skipped": 228,
+      "rate": "0.4233"
+    },
+    {
+      "module": "css-break",
+      "sampleStride": 1,
+      "discovered": 1191,
+      "total": 1191,
+      "pass": 82,
+      "fail": 962,
+      "blank": 0,
+      "skipped": 147,
+      "rate": "0.0785"
+    },
+    {
+      "module": "css-flexbox",
+      "sampleStride": 1,
+      "discovered": 1398,
+      "total": 1398,
+      "pass": 461,
+      "fail": 472,
+      "blank": 19,
+      "skipped": 446,
+      "rate": "0.4842"
+    },
+    {
+      "module": "css-grid",
+      "sampleStride": 1,
+      "discovered": 2481,
+      "total": 2481,
+      "pass": 393,
+      "fail": 1170,
+      "blank": 10,
+      "skipped": 908,
+      "rate": "0.2498"
+    },
+    {
+      "module": "css-multicol",
+      "sampleStride": 1,
+      "discovered": 563,
+      "total": 563,
+      "pass": 49,
+      "fail": 351,
+      "blank": 0,
+      "skipped": 163,
+      "rate": "0.1225"
+    },
+    {
+      "module": "css-tables",
+      "sampleStride": 1,
+      "discovered": 308,
+      "total": 308,
+      "pass": 53,
+      "fail": 85,
+      "blank": 0,
+      "skipped": 170,
+      "rate": "0.3841"
+    },
+    {
+      "module": "css-text",
+      "sampleStride": 1,
+      "discovered": 1860,
+      "total": 1860,
+      "pass": 639,
+      "fail": 742,
+      "blank": 4,
+      "skipped": 475,
+      "rate": "0.4614"
+    },
+    {
+      "module": "css2-floats",
+      "sampleStride": 1,
+      "discovered": 345,
+      "total": 345,
+      "pass": 91,
+      "fail": 223,
+      "blank": 0,
+      "skipped": 31,
+      "rate": "0.2898"
+    },
+    {
+      "module": "css2-flow",
+      "sampleStride": 1,
+      "discovered": 2415,
+      "total": 2415,
+      "pass": 828,
+      "fail": 1435,
+      "blank": 3,
+      "skipped": 149,
+      "rate": "0.3654"
+    },
+    {
+      "module": "css2-positioning",
+      "sampleStride": 1,
+      "discovered": 654,
+      "total": 654,
+      "pass": 108,
+      "fail": 512,
+      "blank": 0,
+      "skipped": 34,
+      "rate": "0.1742"
+    },
+    {
+      "module": "css2-tables",
+      "sampleStride": 1,
+      "discovered": 375,
+      "total": 375,
+      "pass": 95,
+      "fail": 154,
+      "blank": 0,
+      "skipped": 126,
+      "rate": "0.3815"
+    }
+  ],
+  "totals": {
+    "total": 12437,
+    "pass": 3061,
+    "fail": 6455,
+    "blank": 44,
+    "skipped": 2877,
+    "rate": "0.3202"
+  }
+}

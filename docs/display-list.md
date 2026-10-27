@@ -28,11 +28,11 @@ Types live in `RecursiveAI.OneRender`, namespace `OneRender.Painting`: `DisplayL
 
 ## Version
 
-The format has a major and a minor number (`DisplayList.FormatMajor`, `FormatMinor`; now 1.0).
+The format has a major and a minor number (`DisplayList.FormatMajor`, `FormatMinor`; now 1.1).
 
 - A reader of major *N* must refuse lists of any other major.
 - A minor release only **adds**: new item kinds (new numbers), new properties on existing kinds with defaults that mean "as before", new enum members. It never renumbers, repurposes or removes.
-- `DisplayList.RequiredMinor` is the lowest minor a reader needs to draw this particular list. A reader of minor *M* must refuse a list whose `RequiredMinor` is above *M*, because an item it does not know cannot be ignored: masks, filters and clip-path shapes change the pixels of everything inside them. A list that uses only items of version 1.0 has `RequiredMinor` 0 whatever library version made it.
+- `DisplayList.RequiredMinor` is the lowest minor a reader needs to draw this particular list. A reader of minor *M* must refuse a list whose `RequiredMinor` is above *M*, because an item it does not know cannot be ignored: masks, filters and clip-path shapes change the pixels of everything inside them. A list that uses only items of version 1.0 has `RequiredMinor` 0 whatever library version made it. Format 1.1 (below) adds two properties; a list that uses either has `RequiredMinor` 1.
 - Kind numbers 32 to 63 are reserved for effects that need a minor bump: `PushMask`/`PopMask` (mask images and mask borders), `PushFilter`/`PopFilter` (`filter`, `backdrop-filter`) and `PushClipShape` (`clip-path` with a reference box). They follow the same push/pop discipline as the existing pairs, and a reader that does not know them refuses the list rather than skipping them.
 - Everything that is not a public member (storage layout, pool indices, hash values) is not part of the format. Reading goes through `DisplayList[i]` and `DisplayItem`.
 
@@ -159,6 +159,8 @@ Styles, per side (`BorderStyle`):
 
 A backend must not sample outside the source rectangle: edges repeat the border texels (clamp), so scaled images neither fade at their edges nor bleed their neighbours.
 
+**Tiled images (1.1).** An `Image` item with the tiled flag (`IsTiledImage`, made by `DrawImageTiled`) repeats the destination rectangle (the *tile*) across `ImageTileArea`: tile *(i, j)* is the destination moved by `(i · (width + ImageTileGapX), j · (height + ImageTileGapY))` for every integer *i*, *j*, including negative ones, and only the part inside the area is drawn. A gap is what `background-repeat: space` leaves between tiles; `round` and `repeat` use a gap of 0. The painter emits one tiled item per `url()` background layer that repeats; gradient layers repeat as one filled rectangle per tile (at most 4,096 per layer, with a diagnostic beyond), each on the pixel-snapped edges of its tile. `Sampling` is bit 0 of the flags (bit 1 is the tiled flag). A reader of 1.0 refuses the list (`RequiredMinor` 1).
+
 ## Glyph runs
 
 A `GlyphRun` is one run of glyphs of one face, size and color.
@@ -168,6 +170,7 @@ A `GlyphRun` is one run of glyphs of one face, size and color.
 - Glyph *i* has id `GlyphIds[i]` in the face, and its **pen position** is `(OriginX + X[i], OriginY + Y[i])`; `Y` is the offset from the baseline, positive downward. Glyphs are in **visual order**, left to right on screen, whatever the text direction.
 - **Outline:** the face's outline for the glyph id, in font units with y up, scaled by `FontSize / face.UnitsPerEm` and flipped to y down: a font point `(fx, fy)` maps to `(pen.x + fx·s, pen.y − fy·s)` with `s = FontSize / UnitsPerEm`. Fill with the non-zero rule in `Color`.
 - `Text`: the source text of the run in **logical order** (UTF-16), and `Clusters[i]`: the index into `Text` of the first code unit of the cluster that produced glyph *i*. Glyphs of one cluster share a value; for a left-to-right run the values do not decrease along the glyphs, for a right-to-left run (`RightToLeft`) they do not increase. A cluster runs from its index to the next larger distinct index (or to the end). A PDF writer builds `/ToUnicode` from (glyph id → text of its cluster) and emits `/ActualText` when one cluster has several glyphs or a glyph stands for several characters (ligatures); a text extractor reads the clusters back in logical order.
+- `Blur` (1.1, default 0, CSS px): the standard deviation of a Gaussian blur is `Blur / 2`, as for box shadows. A run with a blur is a `text-shadow`: the glyphs are drawn into a mask, blurred, and filled with `Color`. Bounds grow by `1.5 × Blur`. A list with a blurred run has `RequiredMinor` 1; a run without blur is the same item as in 1.0.
 - Glyph-level details such as hinting are the backend's business; the list never contains hinted outlines.
 
 ## Clips, transforms, groups, tags
@@ -291,6 +294,8 @@ What the backend builds around oneimage, because oneimage has no direct equivale
 | `plus-lighter` | `AlphaComposition.Plus` | used for the composite |
 
 ## Choices the specs leave open
+
+- **Pixel snapping (painter, checked against Chrome 156 output):** each edge of a background, border, outline, clip and decoration rectangle is placed at `round(x · dpr) / dpr`, half rounding up, and a rectangle's far edge is snapped on its own, so a 10.4 px box at 10.4 px covers device pixels 10 to 20 inclusive and two boxes that meet on a fractional edge share one pixel edge with no blended column. Border widths are floored to whole device pixels with a minimum of one (1.6 px paints 1 px at scale 1, 3 device pixels at scale 2 for 1.6 px; 0.4 px paints 1). Glyph positions are not snapped. Evidence: `tools/snap/probe.py`, results in the Paint section of `architecture.md`.
 
 These are choices of the reference rasterizer where CSS does not decide. None has been compared with Chrome's output yet; each is a proposal to revisit with differential evidence.
 

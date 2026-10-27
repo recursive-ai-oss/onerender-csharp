@@ -93,6 +93,9 @@ public readonly struct GlyphRunView
         }
     }
 
+    /// <summary>Blur of the run (format 1.1): the glyphs are blurred with a Gaussian of standard deviation <c>Blur / 2</c>; 0 for sharp glyphs.</summary>
+    public float Blur => _list._num[Rec.Num + 7];
+
     /// <summary>True when the run's direction is right to left.</summary>
     public bool RightToLeft => (Rec.Flags & 1) != 0;
 
@@ -254,7 +257,19 @@ public readonly struct DisplayItem
     public RectF ImageDestination => Rec.Kind == ItemKind.Image ? ReadRect(4) : default;
 
     /// <summary>The sampling of an image item.</summary>
-    public ImageSampling Sampling => Rec.Kind == ItemKind.Image ? (ImageSampling)Rec.Flags : ImageSampling.Smooth;
+    public ImageSampling Sampling => Rec.Kind == ItemKind.Image ? (ImageSampling)(Rec.Flags & 1) : ImageSampling.Smooth;
+
+    /// <summary>True for an <see cref="ItemKind.Image"/> item made by <c>DrawImageTiled</c>: <see cref="ImageDestination"/> is then one tile.</summary>
+    public bool IsTiledImage => Rec.Kind == ItemKind.Image && (Rec.Flags & 2) != 0;
+
+    /// <summary>The area a tiled image is limited to.</summary>
+    public RectF ImageTileArea => IsTiledImage ? ReadRect(8) : default;
+
+    /// <summary>Horizontal space between the copies of a tiled image.</summary>
+    public float ImageTileGapX => IsTiledImage ? Num[12] : 0f;
+
+    /// <summary>Vertical space between the copies of a tiled image.</summary>
+    public float ImageTileGapY => IsTiledImage ? Num[13] : 0f;
 
     /// <summary>The glyph run of a <see cref="ItemKind.GlyphRun"/> item.</summary>
     public GlyphRunView GlyphRun => new(_list, _index);

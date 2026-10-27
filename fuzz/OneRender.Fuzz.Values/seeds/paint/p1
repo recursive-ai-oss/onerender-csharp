@@ -1,0 +1,1 @@
+0<p style="background:radial-gradient(circle at 10px 5px,red,blue),conic-gradient(from 1turn,red,blue 30%);background-attachment:fixed,local;background-clip:padding-box,text">text</p><ol style="list-style:upper-roman inside"><li>a</ol>*{border-radius:50%;object-fit:cover;object-position:left 10% top 20px}img{width:30px;height:20px}

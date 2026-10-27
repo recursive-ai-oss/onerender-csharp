@@ -116,6 +116,18 @@ if (gridPage.Fragments.Root.IsNull || gridPage.Fragments.Root.BorderBox.Width !=
     return 7;
 }
 
+// The second paint area (layered backgrounds, gradients, shadows, border-image, outlines, decoration, text-shadow, markers) draws
+// through the same style parsers and painter code that must survive trimming and AOT.
+RgbaImage paintPage = HtmlRender.ToImage(
+    "<body style='margin:0;font:14px Arial'><div style='width:40px;height:20px;background:linear-gradient(#f00,#f00) 0 0/10px 10px space,radial-gradient(circle,#fff,#00f);border:3px solid;border-image:linear-gradient(#0f0,#00f) 1;box-shadow:2px 2px 3px #888,inset 0 0 4px #000;outline:2px auto'></div><p style='text-decoration:underline wavy #f00;text-shadow:1px 1px 2px #000;margin:2px'>Hi</p><ul><li>x</li></ul></body>",
+    new HtmlRenderOptions { Width = 80, Height = 80 });
+int paintAt = ((12 * 80) + 20) * 4;
+bool paintOk = paintPage.Pixels[paintAt] > 200 && paintPage.Pixels[paintAt + 1] < 40 && paintPage.Pixels[paintAt + 2] < 40;
+if (!paintOk)
+{
+    return 7;
+}
+
 Console.WriteLine($"{styled.Count} styled nodes, {boxTree.Count} boxes, scroll patch {scrollOk}");
 if (boxTree.Count < 8 || !dump.Contains("flex", StringComparison.Ordinal))
 {
@@ -163,7 +175,15 @@ bool woff2Ok = decoded.Status == FontLoadStatus.Ok && decoded.Face!.HasGlyph(0x0
 Console.WriteLine($"shaped {run.GlyphCount} glyphs, width {run.Width:F2}, cached {again}, woff2 {decoded.Status}");
 
 
-return names.Length == 3 && sfnt && painted && pageOk && boxes >= 3 && scrollOk && shaped && again && woff2Ok ? 0 : 1;
+// Tables: anonymous table objects, spans, collapsed borders and their painting must survive trimming and AOT as well.
+HtmlPage tablePage = HtmlPage.Create(
+    "<body style='margin:0'><table style='border-collapse:collapse;width:100px'><tr><td colspan=2 style='border:1px solid #000;height:10px'></td></tr><tr><td style='border:2px solid #f00'></td><td style='display:table-cell;border:1px solid #000'></td></tr></table><div style='display:table-cell;height:4px'></div></body>",
+    new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 200, ViewportHeight = 100 });
+var tableList = new DisplayList();
+new Painter().Paint(tablePage.Fragments, tableList, new PaintOptions(200, 100));
+bool tableOk = tablePage.Fragments.Count > 8 && tableList.Count > 0;
+
+return names.Length == 3 && tableOk && sfnt && painted && pageOk && boxes >= 3 && scrollOk && shaped && again && woff2Ok ? 0 : 1;
 
 internal sealed class NoFonts : OneRender.Layout.IFontProvider
 {

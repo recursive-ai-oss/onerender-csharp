@@ -26,6 +26,7 @@ internal static class Program
         ["fontdata"] = FontDataTarget.Run,
         ["grid"] = GridTarget.Run,
         ["flow"] = FlowTarget.Run,
+        ["table"] = TableTarget.Run,
     };
 
     private static int Main(string[] args)
@@ -45,6 +46,11 @@ internal static class Program
             if (args[1] == "flow")
             {
                 return FlowTarget.WriteSeeds(args[2]);
+            }
+
+            if (args[1] == "table")
+            {
+                return TableTarget.WriteSeeds(args[2]);
             }
 
             return args[1] == "fontdata"
