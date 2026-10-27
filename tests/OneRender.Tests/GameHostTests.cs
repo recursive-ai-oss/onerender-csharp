@@ -141,6 +141,85 @@ public class GameHostTests
         Assert.Equal(40f, page.Display.Damage[0].Width);
     }
 
+    // ------------------------------------------------------------------ recycled node slots
+
+    private static LivePage SlotPage(StyledTree tree) => new(tree, new LivePageOptions(FontProviders.CreateDefault()) { ViewportWidth = 300, ViewportHeight = 300, Images = new Table() });
+
+    [Fact]
+    public void ARecycledSlotNeverKeepsTheOldName()
+    {
+        var tree = new StyledTree();
+        StyledNode root = tree.AddRoot("div", new StyleDeclaration().Set("display", "block"));
+        StyledNode a = tree.AddElement(root, "div", new StyleDeclaration().Set("display", "block"));
+        tree.SetName(a, "panel");
+        LivePage page = SlotPage(tree);
+        tree.Remove(a);
+        page.Flush();
+        Assert.False(a.IsValid);
+
+        StyledNode reused = tree.AddElement(root, "div", new StyleDeclaration().Set("display", "block"));
+        Assert.Equal(a.Index, reused.Index);
+        Assert.True(tree.FindByName("panel").IsNull);
+        Assert.Null(tree.NameOf(reused));
+
+        // the name is free for the new node, and a stale handle cannot rename or read what reuses the slot
+        tree.SetName(reused, "panel");
+        Assert.Equal(reused, tree.FindByName("panel"));
+        Assert.Throws<InvalidOperationException>(() => tree.SetName(a, "other"));
+        Assert.Throws<InvalidOperationException>(() => tree.NameOf(a));
+        Assert.Equal("panel", tree.NameOf(reused));
+    }
+
+    [Fact]
+    public void AHostScopeDoesNotSurviveItsNodesSlotAndIncrementalEqualsFull()
+    {
+        var tree = new StyledTree();
+        StyledNode root = tree.AddRoot("div", new StyleDeclaration().Set("display", "block").Set("width", "200px"));
+        StyledNode a = tree.AddElement(root, "div", new StyleDeclaration().Set("display", "block").Set("height", "20px").Set("background-color", "red").SetHostScope(7));
+        LivePage page = SlotPage(tree);
+        Assert.Equal(3, page.Display.Current.RequiredMinor);
+
+        tree.Remove(a);
+        page.Flush();
+        StyledNode reused = tree.AddElement(root, "div", new StyleDeclaration().Set("display", "block").Set("height", "20px").Set("background-color", "red"));
+        Assert.Equal(a.Index, reused.Index);
+        page.Flush();
+        Assert.True(page.Display.Current.RequiredMinor < 3);
+        string incremental = Sig(page.Display.Current);
+
+        var fresh = new StyledTree();
+        StyledNode froot = fresh.AddRoot("div", new StyleDeclaration().Set("display", "block").Set("width", "200px"));
+        fresh.AddElement(froot, "div", new StyleDeclaration().Set("display", "block").Set("height", "20px").Set("background-color", "red"));
+        Assert.Equal(Sig(SlotPage(fresh).Display.Current), incremental);
+
+        // and a scope given to the node in the reused slot is painted
+        tree.SetDeclaration(reused, new StyleDeclaration().Set("display", "block").Set("height", "20px").Set("background-color", "red").SetHostScope(9));
+        page.Flush();
+        Assert.Equal(3, page.Display.Current.RequiredMinor);
+    }
+
+    [Fact]
+    public void ImageInvalidationFollowsTheNodeNotTheSlot()
+    {
+        var tree = new StyledTree();
+        StyledNode root = tree.AddRoot("div", new StyleDeclaration().Set("width", "200px").Set("height", "100px"));
+        StyledNode img = tree.AddElement(root, "img", new StyleDeclaration().Set("display", "block").Set("width", "40px").Set("height", "20px"));
+        tree.SetReplacedSource(img, "a.png");
+        LivePage page = SlotPage(tree);
+        Assert.Equal(1, page.InvalidateImage(new ImageHandle(1)));
+
+        tree.Remove(img);
+        page.Flush();
+        Assert.Equal(0, page.InvalidateImage(new ImageHandle(1)));
+
+        StyledNode again = tree.AddElement(root, "img", new StyleDeclaration().Set("display", "block").Set("width", "40px").Set("height", "20px"));
+        Assert.Equal(img.Index, again.Index);
+        tree.SetReplacedSource(again, "b.png");
+        page.Flush();
+        Assert.Equal(0, page.InvalidateImage(new ImageHandle(1)));
+        Assert.Equal(1, page.InvalidateImage(new ImageHandle(2)));
+    }
+
     // ------------------------------------------------------------------ SVG keys
 
     [Fact]

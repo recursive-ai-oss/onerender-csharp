@@ -20,6 +20,8 @@ public sealed partial class StyledTree
             throw new ArgumentException("The node does not belong to this tree.", nameof(node));
         }
 
+        CheckCurrent(node);
+
         if (_nodeToName.Remove(node.Index, out string? old))
         {
             _nameToNode.Remove(old);
@@ -42,8 +44,34 @@ public sealed partial class StyledTree
     /// <summary>The name <see cref="SetName"/> gave the node, or null.</summary>
     /// <param name="node">A node of this tree.</param>
     /// <returns>The name, or null.</returns>
-    public string? NameOf(StyledNode node) =>
-        !node.IsNull && ReferenceEquals(node.Tree, this) && _nodeToName.TryGetValue(node.Index, out string? name) ? name : null;
+    public string? NameOf(StyledNode node)
+    {
+        if (node.IsNull || !ReferenceEquals(node.Tree, this))
+        {
+            return null;
+        }
+
+        CheckCurrent(node);
+        return _nodeToName.TryGetValue(node.Index, out string? name) ? name : null;
+    }
+
+    // Like every other member of a handle: a handle whose slot was reclaimed may not address the node that reuses the slot.
+    private void CheckCurrent(StyledNode node)
+    {
+        if (GenerationOf(node.Index) != node.Generation)
+        {
+            throw new InvalidOperationException("The node was removed from the tree; its slot may belong to another node now.");
+        }
+    }
+
+    // Called when a slot is given back, so a node that reuses it never inherits the old name.
+    private void ClearName(int index)
+    {
+        if (_nodeToName.Count != 0 && _nodeToName.Remove(index, out string? old))
+        {
+            _nameToNode.Remove(old);
+        }
+    }
 
     /// <summary>
     /// Finds a node by name, for test harnesses. The order is: the node given this name with <see cref="SetName"/>; then, in a tree built from
