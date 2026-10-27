@@ -2,8 +2,6 @@
 
 An HTML and CSS layout and rendering engine for .NET, written from the specifications. HTML in (or a styled tree built in C#), pixels, a tagged PDF, or a retained display list out. The same engine lays out a 200-page report and a game UI that updates every frame. It has no JavaScript, no networking and no clock: the host passes the time and supplies stylesheets, images and fonts.
 
-The name is provisional (it lives in one build property, `LibName`/`PackagePrefix` in `Directory.Build.props`), and the version is a pre-1.0 placeholder.
-
 ## Packages
 
 | Package | What it is | Depends on |
