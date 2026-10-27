@@ -15,6 +15,7 @@ internal static class Program
           facts-capture    --snapshots <dir> --out <dir> --chrome <exe> --fontconfig <file> [--viewport WxH]... [--jobs N] [--limit N] [--work <dir>]
           facts-compare    --captures <dir> --snapshots <dir> --set <name> --out <dir> [--detail <dir>] [--parallel N]
           pixels           --snapshots <dir> --out <dir> --set <name> --chrome <exe> --fontconfig <file> [--viewport WxH]... [--jobs N] [--max-height 4000] [--dump <dir>] [--work <dir>]
+          engine-table     --snapshots <dir> [--viewport WxH]
           perturb          --in <dir> --out <dir> --expect-out <file> [--seed 1]
           fonts-check      --page <html> --out <md> --chrome <exe> --fontconfig <file> [--work <dir>]
 
@@ -89,6 +90,23 @@ internal static class Program
                     {
                         List<ViewportSize> vps = o.TryGetValue("--viewport", out List<string>? v) ? [.. v.Select(Capture.ParseViewport)] : [new ViewportSize { Width = 1280, Height = 800 }];
                         return await Capture.RunAsync(Req("--snapshots"), Req("--out"), Req("--chrome"), Req("--fontconfig"), vps, OptInt("--jobs", 4), OptInt("--limit", 0), work, sandbox, cts.Token).ConfigureAwait(false);
+                    }
+                case "engine-table":
+                    {
+                        // Prints the engine's boxes in the table format of tools/forms/probe.sh, for reading beside Chrome's.
+                        ViewportSize evp = Capture.ParseViewport(Opt("--viewport") ?? "1280x800");
+                        foreach (string pageId in Snapshots.PageIds(Req("--snapshots")))
+                        {
+                            GeometryCapture ecap = EngineSide.LayOut(Req("--snapshots"), pageId, evp, cts.Token);
+                            Console.WriteLine("# " + pageId);
+                            foreach (ElementRecord er in ecap.Elements)
+                            {
+                                double[] b = er.Box ?? [];
+                                Console.WriteLine(er.Path + " " + er.Tag + " - " + (b.Length == 4 ? string.Join(' ', b.Select(static x => x.ToString("0.####", CultureInfo.InvariantCulture))) : "-"));
+                            }
+                        }
+
+                        return 0;
                     }
                 case "compare":
                     return Comparer.Run(new Comparer.Options

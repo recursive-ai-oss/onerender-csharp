@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Settings</title>
+<style>
+  body { margin: 0; font: 14px Arial, sans-serif; color: #1c1c1c; display: flex; min-height: 100vh; }
+  nav { width: 220px; background: #20232a; color: #cfd3da; padding: 16px 0; flex: none; }
+  nav a { display: block; padding: 8px 20px; color: inherit; text-decoration: none; }
+  nav a.active { background: #2f3440; color: #fff; }
+  main { flex: 1; padding: 24px 32px; max-width: 860px; }
+  h1 { font-size: 22px; margin: 0 0 16px; }
+  section { border-bottom: 1px solid #e1e4e8; padding: 16px 0 20px; }
+  h3 { margin: 0 0 12px; font-size: 16px; }
+  .field { display: grid; grid-template-columns: 180px 1fr; align-items: center; gap: 8px 16px; margin: 10px 0; }
+  .field > label { font-weight: bold; }
+  .field .control { display: flex; align-items: center; gap: 10px; }
+  input[type=text], input[type=number], input[type=search] { width: 260px; }
+  select { min-width: 180px; }
+  .switch { display: inline-flex; align-items: center; gap: 6px; }
+  textarea { width: 100%; font-family: Arial, sans-serif; }
+  .danger { border: 1px solid #d73a49; padding: 12px 16px; margin-top: 20px; }
+  .danger button { color: #d73a49; }
+  .meter-row { display: flex; align-items: center; gap: 12px; }
+</style></head>
+<body>
+<nav><a class="active" href="#">General</a><a href="#">Profile</a><a href="#">Billing</a><a href="#">Security</a><a href="#">Integrations</a></nav>
+<main>
+  <h1>General settings</h1>
+  <section>
+    <h3>Workspace</h3>
+    <div class="field"><label for="name">Workspace name</label><div class="control"><input id="name" type="text" value="Platform Engineering"></div></div>
+    <div class="field"><label for="url">Workspace URL</label><div class="control"><input id="url" type="text" value="platform" size="12"><span>.example.com</span></div></div>
+    <div class="field"><label for="tz">Time zone</label><div class="control"><select id="tz"><option>UTC</option><option selected>Europe/Berlin</option><option>America/Los_Angeles</option><option>Asia/Tokyo</option></select></div></div>
+    <div class="field"><label for="seats">Seats</label><div class="control"><input id="seats" type="number" value="25" min="1" style="width:90px"><span>of 50 used</span></div></div>
+    <div class="field"><label>Storage</label><div class="control meter-row"><meter min="0" max="100" low="60" high="85" optimum="20" value="72" style="width:240px"></meter><span>72 GB of 100 GB</span></div></div>
+  </section>
+  <section>
+    <h3>Notifications</h3>
+    <div class="field"><label>Email</label><div class="control"><label class="switch"><input type="checkbox" checked> Product updates</label><label class="switch"><input type="checkbox"> Weekly digest</label><label class="switch"><input type="checkbox" checked disabled> Security alerts</label></div></div>
+    <div class="field"><label>Frequency</label><div class="control"><label class="switch"><input type="radio" name="f" checked> Instant</label><label class="switch"><input type="radio" name="f"> Hourly</label><label class="switch"><input type="radio" name="f" disabled> Never</label></div></div>
+    <div class="field"><label for="vol">Volume</label><div class="control"><input id="vol" type="range" min="0" max="10" value="4"></div></div>
+    <div class="field"><label for="q">Search filter</label><div class="control"><input id="q" type="search" placeholder="Filter rules"><button type="button">Apply</button><button type="button" disabled>Reset</button></div></div>
+  </section>
+  <section>
+    <h3>About</h3>
+    <div class="field"><label for="bio">Description</label><div class="control"><textarea id="bio" rows="3">The platform team owns CI, deploys and the developer portal.</textarea></div></div>
+    <div class="field"><label for="tags">Tags</label><div class="control"><select id="tags" multiple size="4"><option>ci</option><option selected>deploy</option><option>portal</option><option selected>infra</option><option>sre</option></select></div></div>
+  </section>
+  <div class="danger"><h3>Delete workspace</h3><p>This removes all projects and cannot be undone.</p><button type="button">Delete this workspace</button></div>
+</main>
+</body></html>

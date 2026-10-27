@@ -277,6 +277,12 @@ public sealed partial class BlockLayoutEngine
         }
 
         Attach(pi, x, y2, wd, bh, mb, baseline, ovL, ovT, ovR, ovB, clipX, clipY, rdx, rdy);
+        if (tv.LegendGap > 0)
+        {
+            // HTML §15.3.13: the fieldset's padding follows its rendered legend; margins after the legend do not merge into it.
+            _frames[pi].Cursor += tv.LegendGap;
+        }
+
         if (emptyClearing && _frames[pi].NextChild >= 0)
         {
             // An empty block with `clear` is placed at its hypothetical position or below the floats, as CSS2 §9.5.2 says, but the margins

@@ -1,3 +1,4 @@
+using OneRender.Forms;
 using OneRender.Style;
 using RecursiveAI.OneHtml;
 using RecursiveAI.OneHtml.Css;
@@ -120,7 +121,7 @@ public sealed partial class HtmlFrontEnd
     }
 
     private bool ShouldDescend(int idx) =>
-        _tree.ReplacedOf(idx) == ReplacedKind.None && !_tree.Styles[_tree.StyleOf(idx)].Display.IsNone;
+        _tree.ReplacedOf(idx) == ReplacedKind.None && !_tree.Styles[_tree.StyleOf(idx)].Display.IsNone && !_noDescend;
 
     private int AddElement(DocumentStyles styles, Node element, int parentIdx)
     {
@@ -139,6 +140,9 @@ public sealed partial class HtmlFrontEnd
             _ => ReplacedKind.None,
         };
         _tree.SetElementInfo(idx, tag, replaced);
+        ControlKind control = Classify(element);
+        _noDescend = control is ControlKind.SelectMenu or ControlKind.Progress or ControlKind.Meter;
+        _tree.ReplaceStyle(idx, AdjustControlStyle(element, _tree.StyleOf(idx), parentIdx < 0 ? default : _tree.StyleOf(parentIdx)));
         if (element.Namespace == ElementNamespace.Html && tag.Length is 2 or 3 or 5 or 8 && IsSpanTag(tag))
         {
             ApplySpanAttributes(element, idx, tag);
@@ -166,7 +170,13 @@ public sealed partial class HtmlFrontEnd
         StyleTable table = _tree.Styles;
         if (table[_tree.StyleOf(idx)].Display.IsNone)
         {
+            _noDescend = false;
             return idx;
+        }
+
+        if (control != ControlKind.None)
+        {
+            AddControlContent(element, idx, control);
         }
 
         if (table[_tree.StyleOf(idx)].Display.IsListItem)

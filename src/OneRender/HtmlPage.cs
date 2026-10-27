@@ -102,7 +102,7 @@ public sealed partial class HtmlPage
     /// <para>HTML §15.5.5 (The details and summary elements): a closed <c>details</c> shows its first <c>summary</c> and nothing else. The
     /// rule is important so that an author's <c>display</c> on the hidden content does not reveal it.</para>
     /// </summary>
-    internal const string UserAgentSupplement = "body { margin: 8px; } details:not([open]) > :not(summary:first-of-type) { display: none !important; }";
+    internal const string UserAgentSupplement = "body { margin: 8px; } details:not([open]) > :not(summary:first-of-type) { display: none !important; }" + OneRender.Forms.FormDefaults.Css;
 
     /// <summary>Parses <paramref name="html"/>, cascades, builds the box tree and lays it out.</summary>
     /// <param name="html">The document source, decoded to text.</param>

@@ -156,6 +156,8 @@ internal static partial class ComputedValueText
             case PropertyId.CaptionSide: return v.CaptionSide == CaptionSideKind.Bottom ? "bottom" : "top";
             case PropertyId.TableLayout: return v.TableLayout == TableLayoutKind.Fixed ? "fixed" : "auto";
             case PropertyId.PointerEvents: return v.PointerEvents == PointerEventsKind.None ? "none" : "auto";
+            case PropertyId.Appearance: return v.Appearance == AppearanceKind.None ? "none" : "auto";
+            case PropertyId.AccentColor: return v.AccentColorAuto ? "auto" : v.AccentColor.ToCss();
             default: return PaintText(id, in v) ?? string.Empty;
         }
     }

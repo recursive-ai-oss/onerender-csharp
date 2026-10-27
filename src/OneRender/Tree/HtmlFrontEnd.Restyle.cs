@@ -31,6 +31,7 @@ public sealed partial class HtmlFrontEnd : INodeStyler
         Node element = doc.GetNode(source);
         int parent = tree.ParentOf(node);
         StyleId resolved = Resolve(styles.GetStyle(element), parentStyle, parent >= 0, parent < 0);
+        resolved = AdjustControlStyle(element, resolved, parent < 0 ? default : tree.StyleOf(parent));
         string tag = tree.TagNameOf(node);
         if (element.Namespace == ElementNamespace.Html && (tag.Equals("table", StringComparison.Ordinal) || tag.Equals("tr", StringComparison.Ordinal) || tag.Equals("td", StringComparison.Ordinal) || tag.Equals("th", StringComparison.Ordinal)))
         {

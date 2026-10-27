@@ -340,6 +340,53 @@ public partial struct ComputedValues
     /// <summary><c>pointer-events</c>; inherited.</summary>
     public PointerEventsKind PointerEvents { get; internal set; }
 
+    /// <summary>
+    /// True for a checkbox, radio button or slider drawn natively: as an inline-level box it sits on its border-box bottom edge, not on its
+    /// bottom margin edge, so the margin below it hangs under the baseline. Set by the HTML front end; not a CSS property.
+    /// </summary>
+    internal bool BaselineAtBorderEdge { get; set; }
+
+    /// <summary>
+    /// For a text field, input button or drop-down: the distance from the top of the content box to the baseline of the text it shows,
+    /// used as the box's baseline when it holds no line (an empty field still has one). NaN for every other box. Set by the HTML front end.
+    /// </summary>
+    internal double InnerBaseline { get; set; }
+
+    /// <summary>
+    /// The content width in px that a natively drawn control would have if its width were auto (NaN for every other box). It is the
+    /// control's intrinsic width for sizing contributions even when the author gave a width, so that a percentage width contributes zero
+    /// to a minimum and the widget size to a maximum, as for a replaced element. Set by the HTML front end.
+    /// </summary>
+    internal double ControlWidth { get; set; }
+
+    /// <summary>
+    /// True when <see cref="Width"/> is the widget width the front end filled in for an auto width, not an author's value. Grid and flex
+    /// stretch such a width like an auto one: a control in a stretched grid area or a column flex container fills it (probe: a select and a
+    /// checkbox in a grid column are as wide as the column).
+    /// </summary>
+    internal bool WidthIsIntrinsic { get; set; }
+
+    /// <summary>
+    /// For the rendered legend of a fieldset: the fieldset's top padding, which follows the legend as space that does not collapse with
+    /// the margin of the box after it. 0 for every other box. Set by the HTML front end.
+    /// </summary>
+    internal double LegendGap { get; set; }
+
+    /// <summary>
+    /// The horizontal padding in px that the front end added inside a drop-down select for its arrow and text inset. It is part of the
+    /// widget, not of the author's box, so a percentage width does not count it toward a minimum size. 0 for every other box.
+    /// </summary>
+    internal double ControlInnerPadding { get; set; }
+
+    /// <summary><c>appearance</c> (CSS UI 4 §6.1): <see cref="AppearanceKind.None"/> draws a form control as an ordinary box; every other keyword is the native look. Not inherited.</summary>
+    public AppearanceKind Appearance { get; internal set; }
+
+    /// <summary><c>accent-color</c> (CSS UI 4 §6.2) when <see cref="AccentColorAuto"/> is false; inherited.</summary>
+    public ColorValue AccentColor { get; internal set; }
+
+    /// <summary>True for <c>accent-color: auto</c>, the user agent's accent. Inherited.</summary>
+    public bool AccentColorAuto { get; internal set; }
+
     /// <summary><c>opacity</c>, clamped to 0 to 1.</summary>
     public double Opacity { get; internal set; }
 

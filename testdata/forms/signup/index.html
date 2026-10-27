@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Create your account</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 16px/1.5 Arial, Helvetica, sans-serif; color: #222; background: #f4f5f7; }
+  header { background: #1f3a5f; color: #fff; padding: 16px 24px; }
+  header h1 { margin: 0; font-size: 20px; }
+  main { max-width: 520px; margin: 32px auto; padding: 0 16px; }
+  form { background: #fff; border: 1px solid #d5d8de; border-radius: 6px; padding: 24px; }
+  h2 { margin: 0 0 4px; font-size: 24px; }
+  p.lead { margin: 0 0 20px; color: #555; }
+  label { display: block; font-weight: bold; margin: 16px 0 4px; }
+  input[type=text], input[type=email], input[type=password], input[type=tel], input[type=url], select, textarea {
+    width: 100%; padding: 8px 10px; border: 1px solid #b8bdc6; border-radius: 4px; font: inherit; background: #fff; }
+  .row { display: flex; gap: 12px; }
+  .row > div { flex: 1; }
+  .hint { font-size: 13px; color: #666; margin-top: 4px; }
+  fieldset { margin: 20px 0 0; padding: 12px 16px; border: 1px solid #b8bdc6; border-radius: 4px; }
+  legend { font-weight: bold; padding: 0 6px; }
+  .choice { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-weight: normal; }
+  .choice input { margin: 0; }
+  .actions { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; }
+  button { font: inherit; padding: 10px 20px; border: 0; border-radius: 4px; background: #1f6feb; color: #fff; cursor: pointer; }
+  button.secondary { background: #e6e8ec; color: #222; }
+  progress { width: 100%; height: 8px; }
+</style></head>
+<body>
+<header><h1>Acme Cloud</h1></header>
+<main>
+<form action="/signup" method="post">
+  <h2>Create your account</h2>
+  <p class="lead">Start your 30 day trial. No card needed.</p>
+  <progress value="2" max="4"></progress>
+  <div class="row">
+    <div><label for="first">First name</label><input id="first" type="text" name="first" value="Ada" autocomplete="given-name"></div>
+    <div><label for="last">Last name</label><input id="last" type="text" name="last" placeholder="Lovelace"></div>
+  </div>
+  <label for="email">Work email</label>
+  <input id="email" type="email" name="email" placeholder="you@company.com">
+  <div class="hint">We send a confirmation link to this address.</div>
+  <label for="pw">Password</label>
+  <input id="pw" type="password" name="pw" value="hunter2hunter2">
+  <div class="hint">At least 12 characters.</div>
+  <label for="phone">Phone (optional)</label>
+  <input id="phone" type="tel" name="phone" placeholder="+1 555 0100">
+  <div class="row">
+    <div><label for="country">Country</label>
+      <select id="country" name="country"><option>United States</option><option selected>Germany</option><option>Japan</option></select></div>
+    <div><label for="size">Team size</label>
+      <select id="size" name="size"><option>1-10</option><option>11-50</option><option>51-200</option></select></div>
+  </div>
+  <label for="about">What will you build?</label>
+  <textarea id="about" name="about" rows="4" placeholder="Tell us a little about your project"></textarea>
+  <fieldset>
+    <legend>Plan</legend>
+    <label class="choice"><input type="radio" name="plan" value="free" checked> Free</label>
+    <label class="choice"><input type="radio" name="plan" value="team"> Team</label>
+    <label class="choice"><input type="radio" name="plan" value="scale"> Scale</label>
+  </fieldset>
+  <label class="choice"><input type="checkbox" name="tos" checked> I agree to the terms of service</label>
+  <label class="choice"><input type="checkbox" name="news"> Send me product news</label>
+  <div class="actions">
+    <button type="button" class="secondary">Back</button>
+    <button type="submit">Create account</button>
+  </div>
+</form>
+</main>
+</body></html>
