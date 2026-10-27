@@ -133,13 +133,18 @@ internal sealed partial class Fragmenter
             double fy = 0, fT = 0, fB = 0;
             bool final = false;
             int f = p < c1 ? Math.Min(_nextForced[p], c1) : c1;
-            if (f < c1 && _c[f].Ye <= limit + Eps)
+            bool capped = k + 1 >= cap;
+            if (f < c1 && _c[f].Ye <= limit + Eps && !capped)
             {
                 cut = f;
             }
             else if (rowEnd <= limit + Eps)
             {
                 final = true;
+                if (capped && f < c1 && _c[f].Ye <= limit + Eps)
+                {
+                    res.Truncated = true; // a forced break past the page limit is not taken
+                }
             }
             else if (k + 1 >= cap)
             {

@@ -272,6 +272,15 @@ public class PagedMediaTests
     }
 
     [Fact]
+    public void ForcedBreaksAndBlankPagesStayWithinThePageLimit()
+    {
+        string body = string.Concat(Enumerable.Range(0, 30).Select(i => "<div style='break-before:" + (i % 2 == 0 ? "left" : "right") + ";height:10px'>x</div>"));
+        PagedDocument d = PagedDocument.Create("<!DOCTYPE html><html><head><style>html,body{margin:0}@page{margin:0}</style></head><body>" + body, new PagedOptions(FontProviders.CreateDefault()) { DefaultPage = Small, MaxPages = 7 });
+        Assert.True(d.PageCount <= 7, "pages: " + d.PageCount);
+        Assert.True(d.Truncated);
+    }
+
+    [Fact]
     public void TableHeadersAndFootersRepeatOnEveryPage()
     {
         string rows = string.Concat(Enumerable.Range(0, 30).Select(i => $"<tr><td>row{i}</td></tr>"));
