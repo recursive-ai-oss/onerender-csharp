@@ -500,15 +500,29 @@ public sealed partial class BlockLayoutEngine
         // CSS2 §17.5.3: the cell's content moves within the cell according to vertical-align.
         ref readonly ComputedValues cv = ref _boxes.Make(cell.Box).Values;
         double dy = 0;
+        double used = cell.Height;
+        if (cv.VerticalAlign is VerticalAlignKind.Bottom or VerticalAlignKind.Middle)
+        {
+            // A cell's own height is a minimum (CSS2 §17.5.3): the content to align is what its children fill, plus the bottom padding and border.
+            double inner = 0;
+            for (int c = _out.FirstChildOf(cell.Frag); c >= 0; c = _out.NextSiblingOf(c))
+            {
+                Rect cb = _out.BorderBoxOf(c);
+                inner = Math.Max(inner, cb.Y + cb.Height);
+            }
+
+            used = Math.Min(used, inner + cell.Bb + Pad(cv.PaddingBottom, cell.Width));
+        }
+
         switch (cv.VerticalAlign)
         {
             case VerticalAlignKind.Top:
                 break;
             case VerticalAlignKind.Bottom:
-                dy = h - cell.Height;
+                dy = h - used;
                 break;
             case VerticalAlignKind.Middle:
-                dy = (h - cell.Height) / 2;
+                dy = (h - used) / 2;
                 break;
             default:
                 if (cell.RowSpan == 1)

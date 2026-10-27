@@ -20,6 +20,23 @@ public class FormControlTests
     // ------------------------------------------------------------------ sizes (Chrome 156, Liberation Sans as Arial; docs/forms.md)
 
     [Fact]
+    public void ACellHeightIsAMinimumForVerticalAlignment()
+    {
+        InteractivePage p = Page("<div style='display:table'><div style='display:table-row'><div id=c style='display:table-cell;height:96px;width:96px;vertical-align:bottom;font:20px/1em serif'>X</div></div></div>");
+        DisplayList list = Paint(p);
+        float y = -1;
+        for (int i = 0; i < list.Count; i++)
+        {
+            if (list[i].Kind == ItemKind.GlyphRun)
+            {
+                y = list[i].RootBounds.Y;
+            }
+        }
+
+        Assert.True(y > 70, y.ToString());
+    }
+
+    [Fact]
     public void ADefinitePercentageHeightStillSizesAControl()
     {
         InteractivePage p = Page("<div style='height:200px'><input id=r type=range style='width:100%;height:100%;margin:0;box-sizing:border-box'></div>");
