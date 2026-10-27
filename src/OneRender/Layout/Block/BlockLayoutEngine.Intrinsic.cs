@@ -27,10 +27,11 @@ public sealed partial class BlockLayoutEngine
     }
 
     private int _atomicMeasureDepth;
+    private double _atomicCbHeight = double.NaN;
 
     /// <inheritdoc />
     Fragment IAtomicInlineHost.LayoutAtomic(Box box, Fragment parent, double containingWidth, out Insets margins) =>
-        LayoutIndependent(box, parent, containingWidth, double.NaN, true, out margins);
+        LayoutIndependent(box, parent, containingWidth, _atomicCbHeight, true, out margins);
 
     /// <inheritdoc />
     void IAtomicInlineHost.GetAtomicContribution(Box box, out double minContent, out double maxContent)

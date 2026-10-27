@@ -20,6 +20,13 @@ public class FormControlTests
     // ------------------------------------------------------------------ sizes (Chrome 156, Liberation Sans as Arial; docs/forms.md)
 
     [Fact]
+    public void ADefinitePercentageHeightStillSizesAControl()
+    {
+        InteractivePage p = Page("<div style='height:200px'><input id=r type=range style='width:100%;height:100%;margin:0;box-sizing:border-box'></div>");
+        Assert.Equal(200, Box(p, "r").Height, 0.01);
+    }
+
+    [Fact]
     public void StretchedControlsFillTheirAreaAndCenterTheirContent()
     {
         InteractivePage p = Page(

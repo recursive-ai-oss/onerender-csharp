@@ -200,7 +200,7 @@ public sealed partial class HtmlFrontEnd
 
                 bool bar = v.OverflowY is OverflowKind.Auto or OverflowKind.Scroll;
                 SetContentWidth(ref v, FormMetrics.TextAreaWidth(fonts, in v, cols, bar), borderBox);
-                SetContentHeight(ref v, rows * FormMetrics.UsedLineHeight(fonts, in v), borderBox);
+                SetContentHeight(ref v, rows * FormMetrics.UsedLineHeight(fonts, in v), borderBox, stretchable: true);
                 break;
             }
 
@@ -229,7 +229,7 @@ public sealed partial class HtmlFrontEnd
 
                 // Probe: a row is the larger of the line and 1.2em, plus the 1 px under each option's text; an empty list's rows have no extra.
                 double row = Math.Max(FormMetrics.LineSpacing(fonts, in v, withGap: true), Math.Floor(1.2 * v.FontSize * 64) / 64);
-                SetContentHeight(ref v, rows * (row + (element.FirstChild.IsNull ? 0 : 1)), borderBox);
+                SetContentHeight(ref v, rows * (row + (element.FirstChild.IsNull ? 0 : 1)), borderBox, stretchable: true);
                 break;
             }
         }
@@ -552,7 +552,7 @@ public sealed partial class HtmlFrontEnd
         v.PaddingTop = Length.FromPx(FormMetrics.Px(v.PaddingTop) + 1);
         v.PaddingBottom = Length.FromPx(FormMetrics.Px(v.PaddingBottom) + 1);
         SetContentWidth(ref v, inner, borderBox);
-        SetContentHeight(ref v, line, borderBox);
+        SetContentHeight(ref v, line, borderBox, stretchable: true);
         SingleLine(ref v);
         CenterVertically(ref v, line, borderBox);
     }
@@ -599,10 +599,12 @@ public sealed partial class HtmlFrontEnd
         }
     }
 
-    private static void SetContentHeight(ref ComputedValues v, double content, bool borderBox)
+    // stretchable: the widget height only stands in for auto, so a grid or flex item stretches and a box with both insets fills them.
+    private static void SetContentHeight(ref ComputedValues v, double content, bool borderBox, bool stretchable = false)
     {
         if (v.Height.IsAuto)
         {
+            v.HeightIsIntrinsic = stretchable;
             v.Height = Length.FromPx(content + (borderBox ? FormMetrics.Extra(in v, false) : 0));
         }
         else if (v.Height.IsPercentage && v.MinHeight.IsAuto)
