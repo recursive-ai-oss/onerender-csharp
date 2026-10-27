@@ -789,6 +789,16 @@ public class InlineLayoutTests
     }
 
     [Fact]
+    public void AbsurdFontSizesAndStretchesLayOutWithoutThrowing()
+    {
+        // Found by the fuzz target: a size beyond float range reached the font request and threw.
+        Lay l = Run("<div id=a style='font-size:66666666666666666666666666666666666666666666666666666666666666666666630px;font-stretch:99999999999999999999999999999999999999999999999999999%'>one <b>two</b></div>");
+        Assert.True(l.Has("a"));
+        Lay t = Run("<div id=a style='font-size:1e-60px'>one two</div>");
+        Assert.True(t.Has("a"));
+    }
+
+    [Fact]
     public void TheSameInputGivesTheSameFragments()
     {
         const string body = "<p id=a style='width:123px;text-align:justify'>Lorem ipsum <b>dolor</b> sit <i>amet, consectetur</i> adipiscing אבג elit.</p>";
