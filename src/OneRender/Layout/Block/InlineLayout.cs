@@ -16,7 +16,22 @@ public readonly struct InlineLayoutRequest
     /// <param name="bfcTop">Block offset of the content box's top edge in the content box of the block formatting context root, for float exclusions.</param>
     /// <param name="fonts">The font provider of the layout.</param>
     public InlineLayoutRequest(Box container, double availableWidth, double contentLeft, double contentTop, double bfcLeft, double bfcTop, IFontProvider fonts)
+        : this(container, availableWidth, contentLeft, contentTop, bfcLeft, bfcTop, fonts, null)
     {
+    }
+
+    /// <summary>Creates a request that carries the floats of the block formatting context.</summary>
+    /// <param name="container">The block container; its <see cref="Box.ChildLayout"/> is <see cref="ChildLayout.Inline"/>.</param>
+    /// <param name="availableWidth">The content-box width in px lines may fill.</param>
+    /// <param name="contentLeft">Offset of the content box's left edge from the container fragment's border-box left edge.</param>
+    /// <param name="contentTop">Offset of the content box's top edge from the container fragment's border-box top edge.</param>
+    /// <param name="bfcLeft">Inline offset of the content box's left edge in the content box of the block formatting context root.</param>
+    /// <param name="bfcTop">Block offset of the content box's top edge in the content box of the block formatting context root.</param>
+    /// <param name="fonts">The font provider of the layout.</param>
+    /// <param name="exclusions">The floats of the block formatting context; null means there are none.</param>
+    public InlineLayoutRequest(Box container, double availableWidth, double contentLeft, double contentTop, double bfcLeft, double bfcTop, IFontProvider fonts, IExclusionSpace? exclusions)
+    {
+        Exclusions = exclusions ?? NoExclusions.Instance;
         Container = container;
         AvailableWidth = availableWidth;
         ContentLeft = contentLeft;
@@ -46,6 +61,9 @@ public readonly struct InlineLayoutRequest
 
     /// <summary>The font provider of the layout.</summary>
     public IFontProvider Fonts { get; }
+
+    /// <summary>The floats of the block formatting context the container is in: where lines may go beside them, and the place to put floats met in inline content.</summary>
+    public IExclusionSpace Exclusions { get; }
 }
 
 /// <summary>What an inline layout reports back about the lines it produced.</summary>
@@ -120,15 +138,68 @@ public sealed class PlaceholderInlineLayout : IInlineLayout
     {
         ArgumentNullException.ThrowIfNull(output);
         Box container = request.Container;
+        IExclusionSpace ex = request.Exclusions;
+
+        // CSS2 §9.5.1 rule 6: floats in the content go at the top of the line, before the line is shortened by them.
+        PlaceFloats(in request, parent, ex);
         if (!HasText(container))
         {
             return new InlineLayoutResult(0, 0, double.NaN, double.NaN);
         }
 
         double height = LineHeight(in container.Values);
-        double baseline = height * 0.8;
-        output.AddLine(parent, new Rect(request.ContentLeft, request.ContentTop, request.AvailableWidth, height), baseline);
-        return new InlineLayoutResult(height, 1, baseline, baseline);
+
+        // CSS2 §9.4.2: the line box is as wide as the room between the floats that meet it; when there is none it goes below the next float edge.
+        double offset = 0;
+        double start, end;
+        for (int guard = 0; ; guard++)
+        {
+            ex.Query(request.BfcTop + offset, height, request.BfcLeft, request.BfcLeft + request.AvailableWidth, out start, out end, out double next);
+            if (end > start || double.IsPositiveInfinity(next) || guard >= MaxFloatSteps)
+            {
+                break;
+            }
+
+            offset = next - request.BfcTop;
+        }
+
+        double baseline = offset + height * 0.8;
+        output.AddLine(parent, new Rect(request.ContentLeft + (start - request.BfcLeft), request.ContentTop + offset, end - start, height), height * 0.8);
+        return new InlineLayoutResult(offset + height, 1, baseline, baseline);
+    }
+
+    private const int MaxFloatSteps = 1 << 20;
+
+    /// <summary>Hands every float among the inline-level descendants of the container to the exclusion space, at the top of the content box.</summary>
+    private static void PlaceFloats(in InlineLayoutRequest request, Fragment parent, IExclusionSpace ex)
+    {
+        Box container = request.Container;
+        Box b = container.FirstChild;
+        while (!b.IsNull)
+        {
+            if ((b.Flags & BoxTraits.OutOfFlow) != 0 && b.Values.Floating != FloatKind.None)
+            {
+                ex.PlaceFloat(in request, parent, b, request.BfcTop, out _);
+            }
+
+            Box next = b.Kind == BoxKind.Inline ? b.FirstChild : default;
+            while (next.IsNull)
+            {
+                next = b.NextSibling;
+                if (!next.IsNull)
+                {
+                    break;
+                }
+
+                b = b.Parent;
+                if (b.IsNull || b == container)
+                {
+                    return;
+                }
+            }
+
+            b = next;
+        }
     }
 
     /// <inheritdoc />
