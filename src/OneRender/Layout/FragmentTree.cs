@@ -225,13 +225,6 @@ public sealed class FragmentTree
         _h[i] = borderBox.Height;
     }
 
-    // For layouts in this assembly that learn a line's baseline after placing its content.
-    internal void SetBaseline(Fragment fragment, double baseline)
-    {
-        Check(fragment);
-        _baseline[fragment.Index] = baseline;
-    }
-
     /// <summary>Sets the scrollable overflow area of a fragment, in the fragment's own coordinates.</summary>
     /// <param name="fragment">A fragment of this tree.</param>
     /// <param name="overflow">The overflow rectangle.</param>
@@ -239,6 +232,15 @@ public sealed class FragmentTree
     {
         Check(fragment);
         _overflow[fragment.Index] = overflow;
+    }
+
+    /// <summary>Sets the baseline of a fragment, measured from its border-box top; NaN means the box has none.</summary>
+    /// <param name="fragment">A fragment of this tree.</param>
+    /// <param name="baseline">The baseline offset in px, or NaN.</param>
+    public void SetBaseline(Fragment fragment, double baseline)
+    {
+        Check(fragment);
+        _baseline[fragment.Index] = baseline;
     }
 
     /// <summary>Marks how a fragment continues into or from its box's other fragments.</summary>

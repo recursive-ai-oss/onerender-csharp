@@ -116,3 +116,58 @@ style. An implementation clears `output`, writes a fragment for the root and for
 order, reads nothing but its arguments, and checks the token every few hundred boxes. The result is a pure function of
 the box tree, the fonts and the available size. Block and inline flow, floats, positioning, flex, grid, tables and
 fragmentation are separate implementations behind this one entry.
+
+## Block layout (`BlockLayoutEngine`)
+
+`BlockLayoutEngine` implements `ILayoutEngine` for normal-flow block-level boxes: the block formatting context of CSS2
+§9.4.1, widths (§10.3.3, replaced §10.3.2/§10.3.4 with the constraint table of §10.4), heights (§10.5 percentages that
+behave as `auto`, §10.6.3, min/max §10.7), `box-sizing`, `aspect-ratio` (Sizing 4 §5), margin collapsing (§8.3.1) and
+intrinsic sizes (Sizing 3 §5). Flex, grid and table containers are laid out as plain block containers until their own
+layout exists; floats, positioned boxes and `clear` are not handled yet (floats and absolutely positioned boxes get no
+fragment).
+
+- **No recursion.** One explicit stack of frames (a struct array kept between runs) walks the box tree; a frame is a box
+  whose children are being placed. Depth is capped at 262,144 levels (a diagnostic, and the deeper boxes get no fragment).
+  Laying out an unchanged tree again allocates nothing.
+- **Coordinates.** Every fragment is added when its box is opened, with its border-box rectangle fixed when it closes. Child
+  rectangles are relative to the parent's border box, as the fragment tree requires. `Baseline` of a block is its first
+  in-flow line or child baseline from the border-box top, NaN when there is none.
+- **Margin collapsing.** One margin run (largest positive plus most negative) is kept for the block formatting context.
+  A box whose top margin adjoins its first child's (no top border or padding, not a BFC root) is *pending*: the run keeps
+  growing through the chain of pending boxes and, when the first thing with content (or a box with its own top border or
+  padding, or a BFC root) is reached, it is resolved once and moves the outermost pending box; nested pending boxes sit at
+  offset 0 in their parent. A pending box that closes without content collapses through: it sits where a box with a
+  non-zero bottom border would (§8.3.1), and its bottom margin joins the run. At the end of a box the run passes through to
+  the parent only if the height is auto, nothing is below the last child, the box is not a BFC root, and min/max/aspect-ratio
+  do not change the height; otherwise it is resolved into the content height. Boxes that establish a BFC are the root
+  element, anything but `display: block`/`list-item`/anonymous containers, floats, absolutely positioned boxes and
+  scroll containers (`overflow` other than `visible`/`clip`).
+- **Intrinsic sizes** (`GetIntrinsicSizes`) are content-box min-content and max-content widths, cached per box until the next
+  `Layout`, computed with an explicit stack. A block's sizes are the largest child contribution (the child's definite width
+  or intrinsic size, clamped by min/max width, plus fixed margins, border and padding). They back `min-content`,
+  `max-content`, `fit-content` and shrink-to-fit widths. Percentages count as auto.
+- **Re-entry.** `LayoutIndependent` lays out one box as its own BFC root, nested inside a running layout; inline layout
+  uses it for inline-block and other atomic boxes (`shrinkToFit` selects CSS2 §10.3.5 widths).
+- **List items.** An outside `::marker` box gets a fragment one `font-size` wide and one line high just outside the item's
+  start edge, at the content top. This is a placeholder until real markers.
+- **Not yet:** the `overflow` propagation from `body` to the viewport, `clear`, floats, and the block-axis `fit-content`.
+
+### The inline seam (`IInlineLayout`)
+
+A block container with `ChildLayout.Inline` hands its children to an `IInlineLayout`:
+
+```csharp
+InlineLayoutResult Layout(in InlineLayoutRequest request, FragmentTree output, Fragment parent, CancellationToken ct);
+void Measure(Box container, IFontProvider fonts, out double minContent, out double maxContent);
+```
+
+- The request carries the container, the content-box width to fill, the content box's offset inside the container's border
+  box (`ContentLeft`, `ContentTop`, where lines are added as children of `parent`), the content box's origin in the BFC
+  root's content box (`BfcLeft`, `BfcTop`, where float exclusions will be looked up) and the font provider. New fields can be
+  added for exclusions without changing implementations.
+- The result is the total line height, the line count and the first and last baselines from the content top. A container
+  with lines counts as having content for margin collapsing; the block layout settles the margin run before the call.
+- `Measure` returns the content-box min-content and max-content widths.
+- `PlaceholderInlineLayout` is the stand-in used until inline layout lands: a container with any non-blank text, replaced or
+  atomic inline child gets one empty line box as tall as `line-height` (`normal` is 1.2 × font size) and the intrinsic
+  inline sizes are 0.

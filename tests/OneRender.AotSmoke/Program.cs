@@ -24,6 +24,14 @@ new HtmlFrontEnd(styled).Build(styles);
 var boxTree = new BoxTree(styled);
 boxTree.Build();
 string dump = boxTree.Dump();
+// Block layout over that tree: no reflection or dynamic code, so it must trim and run the same way.
+var fragments = new OneRender.Layout.FragmentTree(boxTree);
+new OneRender.Layout.BlockLayoutEngine().Layout(boxTree, new OneRender.Layout.LayoutInput(800, 600, new NoFonts()), fragments);
+if (fragments.Root.IsNull || fragments.Root.BorderBox.Width != 800)
+{
+    return 4;
+}
+
 Console.WriteLine($"{styled.Count} styled nodes, {boxTree.Count} boxes");
 if (boxTree.Count < 8 || !dump.Contains("flex", StringComparison.Ordinal))
 {
@@ -55,3 +63,8 @@ RgbaImage image = DisplayListRasterizer.Render(list, 32, 32);
 bool painted = image.Pixels[((16 * 32) + 16) * 4 + 3] == 255 && image.Pixels[(((5 * 32) + 10) * 4) + 1] < 50;
 Console.WriteLine($"rasterized {image.Width}x{image.Height} painted={painted}");
 return names.Length == 3 && sfnt && painted && pageOk && boxes >= 3 ? 0 : 1;
+
+internal sealed class NoFonts : OneRender.Layout.IFontProvider
+{
+    public OneFont.FontFallbackChain GetFallbackChain(in OneRender.Style.ComputedValues style) => throw new NotSupportedException();
+}

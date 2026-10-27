@@ -1,11 +1,14 @@
+using System.Threading;
 using OneFont;
+using OneRender.Layout;
 using OneRender.Style;
 using OneRender.Tree;
 
-namespace OneRender.Layout;
+namespace OneRender.Tests.Support;
 
 /// <summary>
-/// A deliberately small layout: block-level boxes stack top to bottom with their margins, borders, padding and specified sizes,
+/// A test-only layout that places positioned boxes and floats and draws unwrapped text, so paint order can be tested while the
+/// real layouts for those are built. A deliberately small layout: block-level boxes stack top to bottom with their margins, borders, padding and specified sizes,
 /// inline content becomes one unwrapped line per run, and positioned boxes go where <c>top</c>/<c>left</c>/<c>right</c>/<c>bottom</c>
 /// in pixels say. It exists so the paint, image and harness plumbing can be exercised end to end; the real block, inline, float and
 /// positioning layouts replace it behind <see cref="ILayoutEngine"/>.
@@ -15,7 +18,7 @@ namespace OneRender.Layout;
 /// and take no space; text is not wrapped, shaped or kerned (one glyph per code point, advances from the font); percentage heights
 /// and <c>auto</c> offsets of absolutely positioned boxes use the static position. Nothing recurses on tree depth.
 /// </remarks>
-public sealed class StackingLayoutEngine : ILayoutEngine
+internal sealed class StackingLayout : ILayoutEngine
 {
     private struct Frame
     {

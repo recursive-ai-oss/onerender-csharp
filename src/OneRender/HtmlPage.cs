@@ -40,7 +40,7 @@ public sealed class HtmlPageOptions
     /// <summary>Tells the engine the natural size of replaced content such as images; null means unknown.</summary>
     public IResourceResolver? Replaced { get; init; }
 
-    /// <summary>The layout to run; null uses <see cref="StackingLayoutEngine"/>.</summary>
+    /// <summary>The layout to run; null uses <see cref="BlockLayoutEngine"/>.</summary>
     public ILayoutEngine? Layout { get; init; }
 
     /// <summary>Whether the user agent style sheet applies. Default true.</summary>
@@ -116,7 +116,7 @@ public sealed class HtmlPage
         var boxes = new BoxTree(styled);
         boxes.Build(cancellationToken);
         var fragments = new FragmentTree(boxes);
-        ILayoutEngine engine = options.Layout ?? new StackingLayoutEngine();
+        ILayoutEngine engine = options.Layout ?? new BlockLayoutEngine();
         engine.Layout(boxes, new LayoutInput(options.ViewportWidth, options.ViewportHeight, options.Fonts), fragments, cancellationToken);
         return new HtmlPage(document, styled, boxes, fragments, options);
     }
