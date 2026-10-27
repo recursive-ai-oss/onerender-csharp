@@ -14,6 +14,7 @@ public sealed partial class InteractivePage
     private int[] _patchBoxes = new int[64];
     private int _patchCount;
     private MotionLevel _lastMotion;
+    private PendingMotionEvent[] _eventBatch = new PendingMotionEvent[16];
 
     /// <summary>
     /// The page's animation clock: the largest time passed to <see cref="Advance"/> or carried by an input, in the host's milliseconds.
@@ -125,7 +126,7 @@ public sealed partial class InteractivePage
     /// </summary>
     /// <param name="painter">The painter that painted <paramref name="list"/>.</param>
     /// <param name="list">The retained list holding the last painted frame.</param>
-    /// <returns>The number of items patched.</returns>
+    /// <returns>The number of items patched, or -1 when a transform changed between planar and perspective and the page must be painted again.</returns>
     /// <exception cref="ArgumentNullException">An argument is null.</exception>
     public int PatchAnimations(Painter painter, RetainedDisplayList list)
     {
@@ -142,12 +143,20 @@ public sealed partial class InteractivePage
             return;
         }
 
-        // Copy first: a listener may call back into the page, which may queue more.
-        PendingMotionEvent[] batch = pending.ToArray();
-        motion.ClearEvents();
-        Document doc = _page.Document;
-        foreach (PendingMotionEvent p in batch)
+        // Copy first: a listener may call back into the page, which may queue more. The copy lives in a buffer kept between frames.
+        int count = pending.Length;
+        if (_eventBatch.Length < count)
         {
+            _eventBatch = new PendingMotionEvent[Math.Max(count, _eventBatch.Length * 2)];
+        }
+
+        pending.CopyTo(_eventBatch);
+        motion.ClearEvents();
+        PendingMotionEvent[] batch = _eventBatch;
+        Document doc = _page.Document;
+        for (int i = 0; i < count; i++)
+        {
+            PendingMotionEvent p = batch[i];
             if (p.Key < 0)
             {
                 continue;

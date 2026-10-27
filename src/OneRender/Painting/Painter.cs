@@ -136,6 +136,7 @@ public sealed partial class Painter
     private int[] _stickyEntryOf = new int[64];
     private PatchEntry[] _patch = new PatchEntry[16];
     private int _patchCount;
+    private FragmentTree? _lastTree;
 
     private const byte PatchScrollKind = 0;
     private const byte PatchStickyKind = 1;
@@ -205,6 +206,7 @@ public sealed partial class Painter
         _tree = fragments;
         _list = list;
         _boxes = fragments.Boxes;
+        _lastTree = fragments;
         try
         {
             Run(options, cancellationToken);
@@ -1075,15 +1077,31 @@ public sealed partial class Painter
     /// </summary>
     /// <param name="retained">The retained list holding the last painted frame.</param>
     /// <param name="boxes">Indexes of the boxes whose animated values changed.</param>
-    /// <returns>The number of items patched.</returns>
+    /// <returns>The number of items patched, or -1 when an animated transform changed between planar and perspective and the list must be painted again.</returns>
     public int PatchAnimated(RetainedDisplayList retained, ReadOnlySpan<int> boxes)
     {
         ArgumentNullException.ThrowIfNull(retained);
-        if (_boxes is null)
+        if (_lastTree is null || _patchCount == 0)
         {
             return 0;
         }
 
+        // The matrices are computed from the trees of the last paint, which were released when that paint ended.
+        _tree = _lastTree;
+        _boxes = _lastTree.Boxes;
+        try
+        {
+            return PatchAnimatedCore(retained, boxes);
+        }
+        finally
+        {
+            _tree = null!;
+            _boxes = null!;
+        }
+    }
+
+    private int PatchAnimatedCore(RetainedDisplayList retained, ReadOnlySpan<int> boxes)
+    {
         _animStampValue++;
         for (int i = 0; i < boxes.Length; i++)
         {
@@ -1097,6 +1115,7 @@ public sealed partial class Painter
         }
 
         int changed = 0;
+        bool needsRepaint = false;
         for (int k = 0; k < _patchCount; k++)
         {
             ref PatchEntry e = ref _patch[k];
@@ -1109,7 +1128,23 @@ public sealed partial class Painter
             if (e.Kind == PatchAnimTransformKind)
             {
                 ComputeBoxMatrix(e.Fragment, in v, out Matrix4x4 m);
-                retained.Current.PatchTransform3D(new ItemId(e.Id), m, retained.Damage);
+                bool perspective = m.M14 != 0f || m.M24 != 0f;
+                if (perspective != (e.LastX != 0f) || (!perspective && !(m.M44 > 0f)))
+                {
+                    // The item was written as the other kind of transform (planar or with perspective); it cannot be patched into that shape.
+                    needsRepaint = true;
+                    continue;
+                }
+
+                if (perspective)
+                {
+                    retained.Current.PatchTransform3D(new ItemId(e.Id), m, retained.Damage);
+                }
+                else
+                {
+                    float w = m.M44;
+                    retained.Current.PatchTransform(new ItemId(e.Id), new Matrix3x2(m.M11 / w, m.M12 / w, m.M21 / w, m.M22 / w, m.M41 / w, m.M42 / w), retained.Damage);
+                }
             }
             else
             {
@@ -1119,7 +1154,7 @@ public sealed partial class Painter
             changed++;
         }
 
-        return changed;
+        return needsRepaint ? -1 : changed;
     }
 
     // The containing-block chain of a positioned (or opacity) fragment up to its stacking context: every ancestor on it that clips

@@ -256,6 +256,7 @@ internal sealed partial class AnimationController
         }
 
         RebuildTouched(e);
+        BuildFollowers(tree, e, node);
         tree.ReplaceStyle(node, e.Row);
         if (!_active.Contains(e))
         {

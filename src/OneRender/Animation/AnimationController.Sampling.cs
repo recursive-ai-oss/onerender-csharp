@@ -165,6 +165,7 @@ internal sealed partial class AnimationController
             }
         }
 
+        PropagateToFollowers(table, e);
         return level;
     }
 

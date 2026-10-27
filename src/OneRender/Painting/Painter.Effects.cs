@@ -61,6 +61,7 @@ public sealed partial class Painter
                 {
                     // The host may patch this matrix in place while an animation runs (see PatchAnimated).
                     AddAnimEntry(PatchAnimTransformKind, f, tid);
+                    _patch[_patchCount - 1].LastX = m.M14 != 0f || m.M24 != 0f ? 1f : 0f;
                 }
 
                 if (v.BackfaceHidden && TransformGeometry.FacesAway(in m, new RectF(C(_absX[f]), C(_absY[f]), C(_tree.BorderBoxOf(f).Width), C(_tree.BorderBoxOf(f).Height))) && _scopes < MaxScopes)

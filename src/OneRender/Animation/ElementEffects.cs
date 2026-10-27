@@ -122,6 +122,11 @@ internal sealed class ElementEffects
     public bool ChangedCompositor;
     public bool ChangedOther;
     public PropertyId[] Touched = [];
+
+    /// <summary>Inherited properties among <see cref="Touched"/>, and the descendants whose private rows receive them.</summary>
+    public PropertyId[] Inherited = [];
+    public int[] FollowerNodes = [];
+    public StyleId[] FollowerRows = [];
     public double ReferenceWidth;
     public double ReferenceHeight;
 

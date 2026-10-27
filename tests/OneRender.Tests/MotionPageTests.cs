@@ -158,4 +158,95 @@ public class MotionPageTests
         HtmlPage page = HtmlPage.Create(html, new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 400, ViewportHeight = 300 });
         Assert.Equal(1, page.Styled.FindBySource(page.Document.GetElementById("a").Index).Values.Opacity, 6);
     }
+
+    private static string ColorOf(InteractivePage p, string id)
+    {
+        RecursiveAI.OneHtml.Node n = Ix.Id(p, id);
+        return OneRender.Style.ComputedValueText.Get(OneRender.Style.PropertyId.Color, in p.Page.Styled.FindBySource(n.Index).Values);
+    }
+
+    [Fact]
+    public void ATransitionedColorReachesTextAndInheritingDescendants()
+    {
+        InteractivePage p = Page("<div id=a tabindex=0 style='width:100px;height:50px'>text<span id=s>inner</span></div>", "#a{color:rgb(0 0 0);transition:color 1s linear}#a:focus{color:rgb(200 100 0)}");
+        p.Advance(0);
+        p.Focus(Ix.Id(p, "a"));
+        p.Advance(500);
+        Assert.Equal("rgb(100, 50, 0)", ColorOf(p, "a"));
+        // The span inherits the animated value; the text node of the div reads its parent's style.
+        Assert.Equal("rgb(100, 50, 0)", ColorOf(p, "s"));
+        RecursiveAI.OneHtml.Node a = Ix.Id(p, "a");
+        OneRender.Tree.StyledNode sa = p.Page.Styled.FindBySource(a.Index);
+        for (OneRender.Tree.StyledNode c = sa.FirstChild; !c.IsNull; c = c.NextSibling)
+        {
+            if (c.Kind == OneRender.Tree.StyledNodeKind.Text)
+            {
+                Assert.Equal("rgb(100, 50, 0)", OneRender.Style.ComputedValueText.Get(OneRender.Style.PropertyId.Color, in c.Values));
+            }
+        }
+    }
+
+    [Fact]
+    public void ChangingTransitionPropertyCancelsTheRunningTransition()
+    {
+        InteractivePage p = Page("<div id=a tabindex=0 style='width:100px;height:50px'>x</div>", "#a{opacity:0;transition:opacity 1s linear}#a:focus{opacity:1;transition:none}");
+        var log = new List<string>();
+        Log(p, log, "a", "transitionrun", "transitionend", "transitioncancel");
+        p.Advance(0);
+        p.Focus(Ix.Id(p, "a"));
+        p.Advance(100);
+        Assert.Equal(1, Opacity(p, "a"), 6);
+        Assert.Empty(log);
+    }
+
+    [Fact]
+    public void ARunningTransitionIsCancelledWhenItsPropertyLeavesTheList()
+    {
+        InteractivePage p = Page("<div id=a tabindex=0 style='width:100px;height:50px'>x</div>", "#a{opacity:0;transition:opacity 1s linear}#a:focus{opacity:0.5;transition:opacity 1s linear}#a:focus:hover{transition:width 1s}");
+        var log = new List<string>();
+        Log(p, log, "a", "transitionrun", "transitionstart", "transitionend", "transitioncancel");
+        p.Advance(0);
+        p.Focus(Ix.Id(p, "a"));
+        p.Advance(200);
+        p.HandlePointer(Ix.Move(10, 10, 200));
+        p.Advance(300);
+        Assert.Equal(["transitionrun:opacity", "transitionstart:opacity", "transitioncancel:opacity"], log);
+    }
+
+    [Fact]
+    public void EventsOfOneFrameArriveInScheduledOrder()
+    {
+        InteractivePage p = Page("<div id=a style='animation:f 1s linear 2'>x</div><div id=b style='animation:f 500ms linear 1'>y</div>", "@keyframes f{from{opacity:0}to{opacity:1}}");
+        var log = new List<string>();
+        foreach (string id in new[] { "a", "b" })
+        {
+            string label = id;
+            foreach (string t in new[] { "animationstart", "animationiteration", "animationend" })
+            {
+                p.Events.AddEventListener(EventTarget.Of(Ix.Id(p, id)), t, e => log.Add(label + ":" + e.Type));
+            }
+        }
+
+        p.Advance(0);
+        p.Advance(1200);
+        // b ended at 500 ms and a iterated at 1000 ms: a late frame still delivers them in that order.
+        Assert.Equal(["a:animationstart", "b:animationstart", "b:animationend", "a:animationiteration"], log);
+        p.Advance(2500);
+        Assert.Equal("a:animationend", log[^1]);
+    }
+
+    [Fact]
+    public void PausingAndResumingKeepsTheClockOfTheAnimation()
+    {
+        InteractivePage p = Page("<div id=a tabindex=0>x</div>", "@keyframes f{from{opacity:0}to{opacity:1}}#a{animation:f 1s linear both}#a:focus{animation-play-state:paused}");
+        p.Advance(0);
+        p.Advance(300);
+        p.Focus(Ix.Id(p, "a"));
+        p.Advance(900);
+        Assert.Equal(0.3, Opacity(p, "a"), 3);
+        p.Blur();
+        p.Advance(1000);
+        p.Advance(1200);
+        Assert.Equal(0.6, Opacity(p, "a"), 3);
+    }
 }
