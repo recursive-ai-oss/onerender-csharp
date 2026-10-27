@@ -199,13 +199,13 @@ public sealed class LivePage
         _updater.Restyle();
         FlushWork work = _updater.UpdateBoxesAndLayout(cancellationToken);
         int reused = _updater.ReusedSubtrees;
-        PaintAll(cancellationToken);
+        PaintFlush(work, cancellationToken);
         work |= FlushWork.Repainted;
         _generation++;
         return new FlushResult(work, reused);
     }
 
-    /// <summary>What the painter draws over the text control being edited (see <see cref="Interaction.LiveTextEditor"/>); null when none. Set by the editor, read at every paint.</summary>
+    /// <summary>What the painter draws over the text control being edited (see <see cref="Interaction.LiveTextEditor"/>); null when none. Set by the editor, read at every paint. While it is set every flush paints the whole list.</summary>
     public Forms.TextEditView? Editing { get; set; }
 
     /// <summary>Paints the display list again from the current layout, for a change that only touches painting (a caret blink, a selection, a scroll position).</summary>
@@ -217,16 +217,39 @@ public sealed class LivePage
         _generation++;
     }
 
+    private PaintOptions PaintOptionsNow() => new(_updater.Width, _updater.Height)
+    {
+        Scroll = Scroll,
+        Images = _options.Images,
+        Fonts = _options.Fonts,
+        DevicePixelRatio = _options.DevicePixelRatio,
+        Editing = Editing,
+    };
+
     private void PaintAll(CancellationToken cancellationToken)
     {
-        var paint = new PaintOptions(_updater.Width, _updater.Height)
-        {
-            Scroll = Scroll,
-            Images = _options.Images,
-            Fonts = _options.Fonts,
-            DevicePixelRatio = _options.DevicePixelRatio,
-            Editing = Editing,
-        };
+        PaintOptions paint = PaintOptionsNow();
         _painter.Paint(Fragments, Display, in paint, cancellationToken);
+        Boxes.ClearTouched();
     }
+
+    // Rewrites the items of the fragments that changed when the layout kept every fragment in place; otherwise paints the whole list.
+    private void PaintFlush(FlushWork work, CancellationToken cancellationToken)
+    {
+        if ((work & FlushWork.BoxesRebuilt) == 0)
+        {
+            PaintOptions paint = PaintOptionsNow();
+            bool layoutRan = (work & FlushWork.Relaid) != 0;
+            if (_painter.TryPatch(Fragments, Display, in paint, layoutRan ? _updater.LayoutDelta : null, layoutRan))
+            {
+                Boxes.ClearTouched();
+                return;
+            }
+        }
+
+        PaintAll(cancellationToken);
+    }
+
+    /// <summary>How many flushes rewrote only the changed items of the display list instead of painting all of it.</summary>
+    internal int PatchedPaints => _painter.PatchedPaints;
 }

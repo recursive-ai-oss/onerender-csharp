@@ -37,6 +37,9 @@ internal sealed class PipelineUpdater
 
     public int ReusedSubtrees => _engine.ReusedSubtrees;
 
+    /// <summary>How the last layout differs from the one before it; valid right after <see cref="UpdateBoxesAndLayout"/> reported <see cref="FlushWork.Relaid"/>.</summary>
+    internal LayoutDelta LayoutDelta => _engine.Delta;
+
     public bool NeedsFlush => _dirtyAll || _boxesStale || Styled.HasPending;
 
     public void Resize(double width, double height)
