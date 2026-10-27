@@ -5,6 +5,12 @@
     <RootNamespace>OneRender.WasmSmoke</RootNamespace>
     <IsPackable>false</IsPackable>
     <TrimmerSingleWarn>false</TrimmerSingleWarn>
+    <!-- The check is that the libraries trim cleanly for WebAssembly. Relinking the native runtime adds nothing to that,
+         and with the wasm-tools workload installed it would make every solution build run the native toolchain.
+         Invariant globalization requires that relink on WebAssembly, so this app alone keeps the default; the libraries'
+         culture independence is held by their own analyzers and tests, not by this setting. -->
+    <WasmBuildNative>false</WasmBuildNative>
+    <InvariantGlobalization>false</InvariantGlobalization>
   </PropertyGroup>
 
   <ItemGroup>
