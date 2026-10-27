@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The document benchmark, engine side: HTML to tagged PDF through HtmlPdf.ToPdf with default options. `render` is the one-shot
+       the process-level runner times (wall time, peak RSS, cold start); `bdn` runs BenchmarkDotNet for in-process time and allocation. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>OneRender.Benchmarks.Documents</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);CA1822</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/OneRender.Pdf/OneRender.Pdf.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts/OneRender.Fonts.csproj" />
+  </ItemGroup>
+
+</Project>

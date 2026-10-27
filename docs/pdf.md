@@ -41,6 +41,8 @@ Everything PDF can express is written as vector content:
 
 Islands: anything with `PdfNative == false` or that PDF cannot express (filters other than opacity, backdrop filters, inline SVG, blurred shadows and text shadows, masks with other composites) is rasterized by the reference rasterizer (`.Image`) at `RasterDpi`, at most 16 million pixels per island and 400 million per document, and placed as an image. Each island adds a diagnostic that names the item and the resolution. An island over the cap is drawn at reduced resolution (per island) or skipped with a diagnostic (per document).
 
+A blurred box shadow is an island at a lower resolution than `RasterDpi`: a blur has no detail finer than its standard deviation (half the blur radius, CSS Backgrounds 3 §7.2), so the picture is sampled at 3 samples per deviation at most, and a wide shadow is a small image. The picture is clipped in the page content by the border box (outside it removed for an outer shadow, inside it kept for an inset one), so the box edge stays exact whatever the picture resolution.
+
 Known gaps, each with a diagnostic where it changes the picture: blend modes `hue`, `saturation`, `color` and `luminosity` have no operator in the writer and draw as normal; graphics-state nesting beyond 28 levels is flattened; pixelated image sampling is not requested (PDF viewers interpolate).
 
 ## Text

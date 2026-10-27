@@ -124,6 +124,14 @@ internal sealed partial class PageEmitter
         }
 
         double scale = _s.Options.RasterDpi / 96.0;
+        bool shadow = what is "blurred shadow";
+        if (shadow && _list[from].ShadowBlur > 0)
+        {
+            // A blur has no detail finer than its standard deviation (CSS Backgrounds 3 §7.2: half the blur radius), so a few samples per
+            // deviation reproduce it and the picture of a wide shadow stays small. The edge of the box is cut by a vector clip below.
+            scale = Math.Min(scale, ShadowSamplesPerDeviation / (_list[from].ShadowBlur / 2.0));
+        }
+
         const double MaxPixelsPerImage = 16e6;
         double area = (double)b.Width * scale * ((double)b.Height * scale);
         bool reduced = false;
@@ -163,8 +171,40 @@ internal sealed partial class PageEmitter
         bool content = !(what is "blurred shadow");
         BeginLeaf(content, _list[from].RootBounds.IsEmpty ? b : _list[from].RootBounds);
         bool saved = BeginAlpha(1f);
+        if (shadow)
+        {
+            DisplayItem item = _list[from];
+            ClipShadow(in item, b);
+        }
+
         _b.DrawImage(image, b.X, b.Y + b.Height, b.Width, -b.Height);
+        if (shadow)
+        {
+            _b.Restore();
+        }
+
         EndAlpha(saved);
+    }
+
+    // Samples per standard deviation of a blurred shadow's picture: enough for a smooth ramp when the viewer enlarges it.
+    private const double ShadowSamplesPerDeviation = 3;
+
+    // §7.1 and §7.2: an outer shadow is clipped out of the border box, an inset one is clipped to it. The picture is soft and may be coarse, but
+    // this edge is exact. Balanced by the Restore after the picture is drawn.
+    private void ClipShadow(in DisplayItem it, RectF island)
+    {
+        _b.Save();
+        if (!it.ShadowInset)
+        {
+            _b.Rectangle(island.X - 1, island.Y - 1, island.Width + 2, island.Height + 2);
+            Geo.RoundedRect(_b, it.Rect.X, it.Rect.Y, it.Rect.Width, it.Rect.Height, it.Radii);
+            _b.Clip(true);
+        }
+        else
+        {
+            Geo.RoundedRect(_b, it.Rect.X, it.Rect.Y, it.Rect.Width, it.Rect.Height, it.Radii);
+            _b.Clip();
+        }
     }
 
     // ------------------------------------------------------------------ groups, filters, masks

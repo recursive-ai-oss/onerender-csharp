@@ -304,6 +304,12 @@ public readonly partial struct DisplayItem
     /// <summary>Link target of a tag, or null.</summary>
     public string? LinkTarget => Rec.Kind == ItemKind.BeginTag ? _list.StringAt(Rec.C) : null;
 
+    /// <summary>The number of columns a table cell's <see cref="ItemKind.BeginTag"/> covers; 1 otherwise.</summary>
+    public int ColumnSpan => Rec.Kind == ItemKind.BeginTag && Rec.E != 0 ? Rec.E & 0x7FF : 1;
+
+    /// <summary>The number of rows a table cell's <see cref="ItemKind.BeginTag"/> covers; 1 otherwise.</summary>
+    public int RowSpan => Rec.Kind == ItemKind.BeginTag && Rec.E != 0 ? Rec.E >> 11 : 1;
+
     /// <summary>Language of a tag, or null.</summary>
     public string? Language => Rec.Kind == ItemKind.BeginTag ? _list.StringAt(Rec.D) : null;
 
