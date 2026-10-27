@@ -104,8 +104,7 @@ public class MotionBenchmarks
         InputOutcome outcome = _mixed.Advance(_tMixed);
         if ((outcome & InputOutcome.Relaid) != 0)
         {
-            _mixedPainter.Paint(_mixed.Page.Fragments, _mixedList, _mixedOptions);
-            return _mixedList.Current.Count;
+            return _mixed.Repaint(_mixedPainter, _mixedList, _mixedOptions);
         }
 
         return _mixed.PatchAnimations(_mixedPainter, _mixedList);

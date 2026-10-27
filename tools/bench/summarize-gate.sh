@@ -50,6 +50,17 @@ for change in IdleFrame HoverRestyle TextChange SubtreeRelayout; do
   if awk -v e="$em" -v o="$om" 'BEGIN { exit !(e > o) }'; then ok=NO; same=0; fi
   echo "| $change | $om | $ob | $em | $eb | $ok |"
 done
+echo; echo "## Like for like: OneGame.UI's own flex-only page through the engine's builder front end"; echo
+if [ -s "$OUT/equivalence.txt" ]; then echo "Scene check (both trees built, compared node for node, border boxes within 0.5 px):"; echo; sed 's/^/    /' "$OUT/equivalence.txt"; echo; fi
+echo "| Change | OneGame.UI mean (us) | OneGame.UI B | engine mean (us) | engine B | engine / OneGame.UI |"; echo "|---|---:|---:|---:|---:|---:|"
+for pair in IdleFrame:IdleFrame HoverRestyle:HoverRestyle HoverRestyle:HoverWithHitTest TextChange:TextChange SubtreeRelayout:SubtreeRelayout; do
+  ogc=${pair%%:*}; enc=${pair##*:}
+  og=$(grep -P "^OneGameUiBenchmarks\.$ogc\t" "$B" | head -1); en=$(grep -P "^FlexHudBenchmarks\.$enc\t" "$B" | head -1)
+  if [ -z "$og" ] || [ -z "$en" ]; then continue; fi
+  om=$(echo "$og" | cut -f2); ob=$(echo "$og" | cut -f3); em=$(echo "$en" | cut -f2); eb=$(echo "$en" | cut -f3)
+  label=$enc; if [ "$enc" = HoverWithHitTest ]; then label="HoverWithHitTest (vs OneGame.UI hover)"; fi
+  echo "| $label | $om | $ob | $em | $eb | $(awk -v e="$em" -v o="$om" 'BEGIN { printf "%.2f", e / o }')x |"
+done
 echo; echo "Interactive bar: $([ $fail = 0 ] && echo PASS || echo FAIL)"
 echo "Engine no slower than OneGame.UI on every change: $([ $same = 1 ] && echo yes || echo NO)"
 exit 0

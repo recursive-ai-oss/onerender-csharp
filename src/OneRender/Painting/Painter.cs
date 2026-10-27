@@ -210,6 +210,12 @@ public sealed partial class Painter
     /// <exception cref="OperationCanceledException">Cancelled; <paramref name="list"/> is partly filled.</exception>
     public void Paint(FragmentTree fragments, DisplayList list, in PaintOptions options = default, CancellationToken cancellationToken = default)
     {
+        _journalValid = false;
+        PaintCore(fragments, list, in options, cancellationToken);
+    }
+
+    private void PaintCore(FragmentTree fragments, DisplayList list, in PaintOptions options, CancellationToken cancellationToken)
+    {
         ArgumentNullException.ThrowIfNull(fragments);
         ArgumentNullException.ThrowIfNull(list);
         list.Clear();
@@ -242,8 +248,14 @@ public sealed partial class Painter
     public void Paint(FragmentTree fragments, RetainedDisplayList retained, in PaintOptions options = default, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(retained);
-        Paint(fragments, retained.Begin(), options, cancellationToken);
+        _journalValid = false;
+        _journalPending = false;
+        PaintCore(fragments, retained.Begin(), options, cancellationToken);
         retained.Commit();
+        if (_journalPending)
+        {
+            RecordJournal(fragments, retained, in options);
+        }
     }
 
     private void Run(in PaintOptions options, CancellationToken ct)
@@ -251,6 +263,8 @@ public sealed partial class Painter
         int n = _tree.Count;
         _n = n;
         EnsureCapacity(options.Tags ? n * 2 : n);
+        _noPatch = options.Tags || Observer is not null || _tree.HasTableBorders;
+        _journalPending = false;
         Array.Fill(_head, -1, 0, n * PhaseCount);
         Array.Fill(_tail, -1, 0, n * PhaseCount);
         Array.Fill(_outlineHead, -1, 0, n);
@@ -280,13 +294,17 @@ public sealed partial class Painter
         ResolveEditing(in options);
         PrepareTags(in options);
         Prepass(n, ct);
+        _canvasStart = _list.Count;
         PaintCanvas(options);
+        _canvasCount = _list.Count - _canvasStart;
         LinkSorted();
         Execute(ct);
         while (_list.TopIsTag)
         {
             _list.EndTag();
         }
+
+        _journalPending = !_noPatch && Diagnostics.Items.Count == 0 && Diagnostics.Dropped == 0;
     }
 
     private void EnsureCapacity(int n)
@@ -316,6 +334,14 @@ public sealed partial class Painter
         _stickyAbove = new int[size];
         _scrollEntryOf = new int[size];
         _stickyEntryOf = new int[size];
+        _spanStart = new int[size];
+        _spanCount = new int[size];
+        _jflags = new byte[size];
+        _phaseOf = new long[size];
+        _rMark = new int[size];
+        _rDone = new int[size];
+        _rList = new int[size];
+        _chain = new int[size];
     }
 
     // ------------------------------------------------------------------ classification
@@ -355,14 +381,21 @@ public sealed partial class Painter
 
     private void Visit(int i)
     {
-        VisitCore(i);
-        if ((FragmentKind)_tree.KindOf(i) != FragmentKind.Box)
+        VisitCore(i, true);
+        FragmentKind kind = (FragmentKind)_tree.KindOf(i);
+        if (kind == FragmentKind.Column)
+        {
+            _noPatch = true;
+        }
+
+        if (kind != FragmentKind.Box)
         {
             return;
         }
 
         Box b = _boxes.Make(_tree.BoxOf(i));
         ref readonly ComputedValues v = ref b.Values;
+        _jflags[i] = JournalFlagsOf(b, in v);
         AddAnchor(i);
         if (v.OutlineWidth > 0 && (v.OutlineStyle != BorderStyleKind.None || v.OutlineAuto) && v.Visibility == VisibilityKind.Visible)
         {
@@ -391,7 +424,9 @@ public sealed partial class Painter
         }
     }
 
-    private void VisitCore(int i)
+    // link: this is the full classification pass, which also links the fragment into its owner's phase lists and resets the per-fragment
+    // counters; without it only the values that follow from geometry and style are recomputed (see TryPatch).
+    private void VisitCore(int i, bool link)
     {
         int parent = _tree.ParentOf(i);
         Rect bb = _tree.BorderBoxOf(i);
@@ -407,18 +442,30 @@ public sealed partial class Painter
         }
 
         _flags[i] = 0;
-        _nextEntry[i] = -1;
-        _nextOutline[i] = -1;
-        _listIndex[i] = 0;
-        _listCount[i] = 0;
+        _phaseOf[i] = 0;
+        if (link)
+        {
+            _nextEntry[i] = -1;
+            _nextOutline[i] = -1;
+            _listIndex[i] = 0;
+            _listCount[i] = 0;
+            _jflags[i] = 0;
+            _spanStart[i] = -1;
+            _spanCount[i] = 0;
+        }
+
         FragmentKind kind = (FragmentKind)_tree.KindOf(i);
         int owner = parent < 0 ? i : _ownerFor[parent];
         int context = parent < 0 ? i : _contextFor[parent];
         _ownerFor[i] = owner;
         _contextFor[i] = context;
         _baseY[i] = parent < 0 ? _absY[i] : _baseY[parent];
-        _scrollEntryOf[i] = -1;
-        _stickyEntryOf[i] = -1;
+        if (link)
+        {
+            _scrollEntryOf[i] = -1;
+            _stickyEntryOf[i] = -1;
+        }
+
         _scrollerFor[i] = parent < 0 ? -1 : ((_flags[parent] & FlagScroller) != 0 ? parent : _scrollerFor[parent]);
         _stickyAbove[i] = parent < 0 || (_flags[parent] & FlagScroller) != 0
             ? -1
@@ -438,14 +485,20 @@ public sealed partial class Painter
         }
 
         int boxIndex = _tree.BoxOf(i);
-        _ordinal[i] = boxIndex >= 0 ? _boxOrdinal[boxIndex]++ : 0;
+        if (link)
+        {
+            _ordinal[i] = boxIndex >= 0 ? _boxOrdinal[boxIndex]++ : 0;
+        }
 
         if (kind == FragmentKind.Text)
         {
             if (_tree.GlyphRunOf(i).IsValid)
             {
                 _flags[i] = FlagIsText;
-                AddEntry(owner, PhaseInlines, i);
+                if (link)
+                {
+                    AddEntry(owner, PhaseInlines, i);
+                }
             }
 
             return;
@@ -493,7 +546,12 @@ public sealed partial class Painter
             _flags[i] |= FlagAtomic | FlagStackingContext;
             _ownerFor[i] = i;
             _contextFor[i] = i;
-            Defer(context, i, z);
+            _phaseOf[i] = (1L << 40) | (uint)z;
+            if (link)
+            {
+                Defer(context, i, z);
+            }
+
             return;
         }
 
@@ -503,7 +561,12 @@ public sealed partial class Painter
             // belong to the parent's; they are found by this same walk and linked to the enclosing context.
             _flags[i] |= FlagAtomic;
             _ownerFor[i] = i;
-            Defer(context, i, 0);
+            _phaseOf[i] = 1L << 40;
+            if (link)
+            {
+                Defer(context, i, 0);
+            }
+
             return;
         }
 
@@ -511,7 +574,12 @@ public sealed partial class Painter
         {
             _flags[i] |= FlagAtomic;
             _ownerFor[i] = i;
-            AddEntry(owner, PhaseFloats, i);
+            _phaseOf[i] = (2L << 40) | (uint)owner;
+            if (link)
+            {
+                AddEntry(owner, PhaseFloats, i);
+            }
+
             return;
         }
 
@@ -523,7 +591,12 @@ public sealed partial class Painter
                 _ownerFor[i] = i;
             }
 
-            AddEntry(owner, PhaseInlines, i);
+            _phaseOf[i] = (3L << 40) | (uint)owner;
+            if (link)
+            {
+                AddEntry(owner, PhaseInlines, i);
+            }
+
             return;
         }
 
@@ -533,7 +606,11 @@ public sealed partial class Painter
             _ownerFor[i] = i;
         }
 
-        AddEntry(owner, PhaseBlocks, i);
+        _phaseOf[i] = (4L << 40) | (uint)owner;
+        if (link)
+        {
+            AddEntry(owner, PhaseBlocks, i);
+        }
     }
 
     private void AddEntry(int owner, int phase, int fragment)
@@ -593,6 +670,18 @@ public sealed partial class Painter
 
     // ------------------------------------------------------------------ canvas
 
+    // The canvas covers the root's border box and overflow, and at least the viewport.
+    private RectF CanvasRect(double viewportWidth, double viewportHeight)
+    {
+        Rect rb = _tree.BorderBoxOf(0);
+        Rect ov = _tree.OverflowOf(0);
+        double right = Math.Max(Math.Max(rb.Right, ov.Right), viewportWidth);
+        double bottom = Math.Max(Math.Max(rb.Bottom, ov.Bottom), viewportHeight);
+        double left = Math.Min(Math.Min(rb.X, ov.X), 0);
+        double top = Math.Min(Math.Min(rb.Y, ov.Y), 0);
+        return new RectF(C(left), C(top), C(right - left), C(bottom - top));
+    }
+
     private void PaintCanvas(in PaintOptions options)
     {
         int root = 0;
@@ -601,6 +690,8 @@ public sealed partial class Painter
         {
             return;
         }
+
+        _canvasRect = CanvasRect(options.ViewportWidth, options.ViewportHeight);
 
         ref readonly ComputedValues rv = ref rootBox.Values;
         ColorValue bg = rv.BackgroundColor;
@@ -632,13 +723,7 @@ public sealed partial class Painter
             return;
         }
 
-        Rect rb = _tree.BorderBoxOf(root);
-        Rect ov = _tree.OverflowOf(root);
-        double right = Math.Max(Math.Max(rb.Right, ov.Right), options.ViewportWidth);
-        double bottom = Math.Max(Math.Max(rb.Bottom, ov.Bottom), options.ViewportHeight);
-        double left = Math.Min(Math.Min(rb.X, ov.X), 0);
-        double top = Math.Min(Math.Min(rb.Y, ov.Y), 0);
-        var canvas = new RectF(C(left), C(top), C(right - left), C(bottom - top));
+        RectF canvas = _canvasRect;
         if (bg.A > 0f)
         {
             _list.FillRect(ItemId.Of(0, 5, 0), canvas, ToColor(bg, rv.Color));
@@ -669,7 +754,10 @@ public sealed partial class Painter
             int top = sp - 1;
             if (_stack[top].Phase < 0)
             {
+                int enterStart = _list.Count;
+                int entries = _patchCount;
                 Enter(top);
+                RecordEnter(top, enterStart, entries);
                 _stack[top].Phase = 0;
                 _stack[top].Cursor = _head[(_stack[top].Fragment * PhaseCount) + 0];
                 continue;
@@ -712,12 +800,18 @@ public sealed partial class Painter
             else if ((_flags[entry] & FlagIsText) != 0)
             {
                 SyncTags(entry, true);
+                int start = _list.Count;
                 PaintText(entry);
+                _spanStart[entry] = start;
+                _spanCount[entry] = _list.Count - start;
             }
             else
             {
                 SyncTags(entry, false);
+                int start = _list.Count;
                 PaintBoxDecoration(entry);
+                _spanStart[entry] = start;
+                _spanCount[entry] = _list.Count - start;
             }
         }
     }

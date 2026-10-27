@@ -31,6 +31,8 @@ The results folder (`$ONERENDER_WORK/bench/<mode>-<time>/`) holds:
 - `summary.md`: two tables.
   - *Bar*: every engine benchmark with its mean in microseconds and allocated bytes; PASS needs a mean of at most 1000 µs and 0 B.
   - *Comparison*: the same four changes through OneGame.UI and through the engine; the last column says whether the engine is no slower.
+  - *Like for like*: OneGame.UI's own flex-only page through the engine's builder front end (see below), next to OneGame.UI's numbers, with the
+    ratio, and the scene check that ran first (`equivalence.txt`).
 - `<project>/BenchmarkDotNet.Artifacts/results/`: BenchmarkDotNet's markdown, CSV, HTML and JSON per benchmark class, and `<project>/run.log`.
 
 The benchmarks:
@@ -45,6 +47,7 @@ The benchmarks:
 | | `MixedTick100Compositor4Layout` | the same 100, plus width animations on two slots and color and background-color animations; repaints when layout or paint properties changed |
 | | `IdleAdvance` | advances the clock on a page with no animation |
 | `OneGameUiBenchmarks` | the same four as `IncrementalBenchmarks` | the change, then `UiTree.Frame()` (bindings, style, layout, draw-list update) |
+| `FlexHudBenchmarks` | `IdleFrame`, `HoverRestyle`, `HoverWithHitTest`, `TextChange`, `SubtreeRelayout` | the same changes on the page `OneGameUiBenchmarks` builds, built through the engine's `StyledTree` (see below) |
 
 The setup of each benchmark runs its changes 200–400 times first so the JIT has promoted the code, because a running game is warm.
 
@@ -60,6 +63,28 @@ holds both sides. Differences to keep in mind when reading it:
 - the engine side runs the builder front end of the engine (`LivePage`), the way a game host would drive it;
 - OneGame.UI's hover goes through `UiTree.Dispatch` with a pointer move, which includes its hit test; the engine's hover sets the element
   states directly.
+
+## Like for like: the flex-only page through the engine
+
+The comparison above runs the engine on the page written in full CSS (a 192-cell grid for the minimap, a grid for the inventory), which is
+more than OneGame.UI can express, so the subtree row is not like for like. `FlexHudBenchmarks` reverses it: the page `OneGameUiBenchmarks`
+builds with OneGame.UI (about 1,000 nodes, flex only: wrapping rows of fixed-size cells in place of the grids) is built again as a
+`StyledTree` by `FlexHudScene`, with style declarations and no HTML, and driven through `LivePage` as a game host would. Every OneGame.UI
+`Row`, `Column`, `Box` and `Label` is one element, in the same order, with the other library's flex defaults written out
+(`display:flex`, row direction, `box-sizing:border-box`, `flex-shrink:1`).
+
+- **The scene check.** Before the benchmarks, `OneRender.Benchmarks.OneGameUi.dll --verify-scene` builds both pages and walks them
+  together: the same number of elements with the same nesting, and every border box within 0.5 px, after the first layout and again after
+  the text change and the resize. Any difference stops the run (setup of the benchmark class makes the same check). The result is in
+  `equivalence.txt` and in the summary. Two things were needed to make the pages agree: labels carry `line-height: 1.1499`, which is the
+  fractional line height OneGame.UI takes from the font (CSS `normal` rounds the line to a whole pixel, which drifts by 0.2 px per label), and the
+  bold face is registered with the OneGame.UI font library under the same family name as the regular one so that `font-weight: 700`
+  selects it (the earlier setup used a separate family name, so bold labels there were measured in the regular face; the numbers of
+  `OneGameUiBenchmarks` are not affected beyond that).
+- **The changes** are the ones above. `HoverRestyle` sets the element states directly; `HoverWithHitTest` finds the element under the
+  pointer first, which is what OneGame.UI's pointer dispatch does, so it is the fairer partner of OneGame.UI's hover row.
+- **Reading it.** The two sides still differ in what a frame includes: OneGame.UI's `Frame()` also runs data bindings and builds its own
+  draw list; the engine's `Flush` restyles, patches boxes, lays out what changed and repaints into the retained display list with damage.
 
 # The document benchmark
 

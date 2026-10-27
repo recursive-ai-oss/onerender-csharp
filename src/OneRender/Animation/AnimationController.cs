@@ -56,6 +56,8 @@ internal sealed partial class AnimationController
     private int _order;
     private int[] _changedNodes = new int[64];
     private int _changedCount;
+    private int[] _compositorNodes = new int[64];
+    private int _compositorCount;
     private StyledTree? _tree;
     private StyleTable? _table;
     private bool _sameTable;
@@ -87,6 +89,13 @@ internal sealed partial class AnimationController
 
     /// <summary>The node indexes of the styled tree whose styles the last <see cref="Tick"/> or <see cref="Recalc"/> changed.</summary>
     public ReadOnlySpan<int> ChangedNodes => new(_changedNodes, 0, _changedCount);
+
+    /// <summary>
+    /// After a <see cref="Tick"/> that also changed paint or layout properties: the nodes whose only change was transform or opacity.
+    /// They are not in <see cref="ChangedNodes"/> then, because the display list patches them without painting or laying out again. Empty
+    /// after a tick that changed nothing else (those nodes are <see cref="ChangedNodes"/> itself).
+    /// </summary>
+    public ReadOnlySpan<int> CompositorNodes => new(_compositorNodes, 0, _compositorCount);
 
     /// <summary>The earliest time, in the host's units, at which a live element next needs a tick; the host may sleep until then. NaN when nothing is live.</summary>
     public bool HasLiveEffects => _active.Count > 0;
@@ -389,12 +398,26 @@ internal sealed partial class AnimationController
     {
         now = EffectTiming.ClampTime(now);
         _changedCount = 0;
+        _compositorCount = 0;
         MotionLevel level = MotionLevel.None;
         for (int a = _active.Count - 1; a >= 0; a--)
         {
             ElementEffects e = _active[a];
             MotionLevel l = SampleElement(e, now, false);
-            if (l != MotionLevel.None)
+            if (l == MotionLevel.Compositor)
+            {
+                if (_compositorCount == _compositorNodes.Length)
+                {
+                    Array.Resize(ref _compositorNodes, _compositorCount * 2);
+                }
+
+                _compositorNodes[_compositorCount++] = e.NodeIndex;
+                if (level < MotionLevel.Compositor)
+                {
+                    level = MotionLevel.Compositor;
+                }
+            }
+            else if (l != MotionLevel.None)
             {
                 AddChanged(e.NodeIndex);
                 if (l >= MotionLevel.Paint)
@@ -417,6 +440,14 @@ internal sealed partial class AnimationController
             {
                 _active.RemoveAt(a);
             }
+        }
+
+        if (level == MotionLevel.Compositor)
+        {
+            // Only transform and opacity moved: they are the changed nodes.
+            (_changedNodes, _compositorNodes) = (_compositorNodes, _changedNodes);
+            _changedCount = _compositorCount;
+            _compositorCount = 0;
         }
 
         SortEvents();

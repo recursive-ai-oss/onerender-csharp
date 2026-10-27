@@ -78,11 +78,13 @@ public sealed partial class InteractivePage
             case MotionLevel.Paint:
                 // Anonymous boxes below the animated ones take the new values; nothing is laid out.
                 _page.Boxes.ApplyAnimatedRows(motion.ChangedNodes, false);
+                CollectPatchBoxes(motion.CompositorNodes);
                 outcome = InputOutcome.Animated | InputOutcome.Relaid;
                 _generation++;
                 break;
             case MotionLevel.Layout:
                 RelayoutAnimated(motion, cancellationToken);
+                CollectPatchBoxes(motion.CompositorNodes);
                 outcome = InputOutcome.Animated | InputOutcome.Relaid;
                 break;
         }
@@ -114,7 +116,11 @@ public sealed partial class InteractivePage
 
     private void CollectPatchBoxes(AnimationController motion)
     {
-        ReadOnlySpan<int> nodes = motion.ChangedNodes;
+        CollectPatchBoxes(motion.ChangedNodes);
+    }
+
+    private void CollectPatchBoxes(ReadOnlySpan<int> nodes)
+    {
         if (_patchBoxes.Length < nodes.Length)
         {
             _patchBoxes = new int[Math.Max(nodes.Length, _patchBoxes.Length * 2)];
@@ -147,6 +153,45 @@ public sealed partial class InteractivePage
         ArgumentNullException.ThrowIfNull(painter);
         ArgumentNullException.ThrowIfNull(list);
         return _patchCount == 0 ? 0 : painter.PatchAnimated(list, new ReadOnlySpan<int>(_patchBoxes, 0, _patchCount));
+    }
+
+    private Painter? _repaintPainter;
+    private RetainedDisplayList? _repaintList;
+
+    /// <summary>
+    /// Paints the page into <paramref name="list"/> after <see cref="Advance"/> or an input changed it. When the layout kept the fragments
+    /// where they were, only the fragments that changed and the boxes whose style or text changed are painted again, over their old items;
+    /// otherwise the whole list is painted. The result equals a full <see cref="Painter.Paint(FragmentTree, RetainedDisplayList, in PaintOptions, CancellationToken)"/>.
+    /// </summary>
+    /// <remarks>Call it with the same <paramref name="painter"/> and <paramref name="list"/> every time; a different pair is painted in full.</remarks>
+    /// <param name="painter">The painter that owns <paramref name="list"/>.</param>
+    /// <param name="list">The retained list; its damage region collects what changed.</param>
+    /// <param name="options">The paint options; pass the same ones every time to allow in-place updates.</param>
+    /// <returns>The number of items in the list.</returns>
+    /// <exception cref="ArgumentNullException">An argument is null.</exception>
+    public int Repaint(Painter painter, RetainedDisplayList list, in PaintOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(painter);
+        ArgumentNullException.ThrowIfNull(list);
+        FragmentTree fragments = _page.Fragments;
+        PipelineUpdater? updater = _page.Updater;
+        bool same = ReferenceEquals(painter, _repaintPainter) && ReferenceEquals(list, _repaintList);
+        if (same && updater is not null)
+        {
+            bool layoutRan = fragments.Version != painter.JournalVersion;
+            if (painter.TryPatch(fragments, list, in options, layoutRan ? updater.LayoutDelta : null, layoutRan)
+                && (_patchCount == 0 || painter.PatchAnimated(list, new ReadOnlySpan<int>(_patchBoxes, 0, _patchCount)) >= 0))
+            {
+                _page.Boxes.ClearTouched();
+                return list.Current.Count;
+            }
+        }
+
+        painter.Paint(fragments, list, in options);
+        _page.Boxes.ClearTouched();
+        _repaintPainter = painter;
+        _repaintList = list;
+        return list.Current.Count;
     }
 
     private void DispatchMotionEvents(AnimationController motion)

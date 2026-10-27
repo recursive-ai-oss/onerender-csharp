@@ -13,7 +13,7 @@ public class IncrementalEqualityTests
 {
     private static string Run(int firstSeed, int sessions, int steps, int size, bool calm = false)
     {
-        long nothing = 0, paint = 0, patched = 0, rebuilt = 0, reused = 0;
+        long nothing = 0, paint = 0, patched = 0, rebuilt = 0, reused = 0, repainted = 0;
         var fonts = FontProviders.CreateDefault();
         for (int s = 0; s < sessions; s++)
         {
@@ -32,6 +32,7 @@ public class IncrementalEqualityTests
                 patched += session.Stats.Patched;
                 rebuilt += session.Stats.Rebuilt;
                 reused += session.Stats.Reused;
+                repainted += session.Page.PatchedPaints;
             }
             catch (InvalidOperationException e)
             {
@@ -39,7 +40,7 @@ public class IncrementalEqualityTests
             }
         }
 
-        return $"nothing {nothing}, paint-only {paint}, patched {patched}, rebuilt {rebuilt}, reused subtrees {reused}";
+        return $"nothing {nothing}, paint-only {paint}, patched {patched}, rebuilt {rebuilt}, reused subtrees {reused}, in-place paints {repainted}";
     }
 
     [Fact]
@@ -47,6 +48,7 @@ public class IncrementalEqualityTests
     {
         string stats = Run(1000, 50, 220, 36);
         Console.WriteLine("STATS " + stats);
+        Assert.DoesNotContain("in-place paints 0", stats);
     }
 
     [Fact]

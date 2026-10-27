@@ -1,0 +1,2 @@
+initial: 763 elements (262 labels, 1025 styled nodes) on both sides, worst border-box difference 0.096 px
+after text change and resize: worst border-box difference 0.096 px

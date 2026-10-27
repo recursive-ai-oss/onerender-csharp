@@ -7,7 +7,9 @@
 # What it runs (BenchmarkDotNet, MemoryDiagnoser, Release):
 #   bench/OneRender.Benchmarks            IncrementalBenchmarks (idle frame, hover, text change, subtree relayout) and
 #                                         MotionBenchmarks (100 transform/opacity animations; the same plus width/color animations; idle clock)
-#   bench/OneRender.Benchmarks.OneGameUi  the same four changes through OneGame.UI and through the engine, side by side
+#   bench/OneRender.Benchmarks.OneGameUi  the same four changes through OneGame.UI and through the engine, side by side; and the like-for-like
+#                                         rows: OneGame.UI's own flex-only page built through the engine's builder front end (FlexHudBenchmarks),
+#                                         after a check that the two pages have the same nodes and border boxes (equivalence.txt)
 #
 # Output: $OUT (default $ONERENDER_WORK/bench/<mode>-<UTC time>) holds machine.txt (CPU, cores, load before, during, after), the BenchmarkDotNet
 # reports (markdown, CSV, JSON, logs) per project, and summary.md (the verdicts against the bar and the comparison table).
@@ -70,6 +72,10 @@ for p in OneRender.Benchmarks OneRender.Benchmarks.OneGameUi; do
   "${PRIORITY[@]}" dotnet build -c Release -m:1 "$ROOT/bench/$p" -v quiet -clp:NoSummary > "$OUT/build-$p.log" 2>&1 || { tail -20 "$OUT/build-$p.log"; echo "build failed"; exit 1; }
 done
 
+# The like-for-like page must be the same page on both sides; this stops the run when it is not.
+echo "checking the like-for-like scene"
+"${PRIORITY[@]}" taskset -c "$CORES" dotnet "$ONERENDER_ARTIFACTS/bin/OneRender.Benchmarks.OneGameUi/release/OneRender.Benchmarks.OneGameUi.dll" --verify-scene > "$OUT/equivalence.txt" 2>&1 || { tail -5 "$OUT/equivalence.txt"; echo "the like-for-like scenes differ"; exit 1; }
+
 if [ "$MODE" = gate ]; then
   set -o noclobber
   if ! echo "onerender interactive-gate $(date -u +%FT%TZ) expected end $(date -u -d '+40 minutes' +%FT%TZ)" > "$LOCK" 2>/dev/null; then
@@ -88,7 +94,7 @@ for p in OneRender.Benchmarks OneRender.Benchmarks.OneGameUi; do
   mkdir -p "$OUT/$p"
   case "$p" in
     OneRender.Benchmarks) FILTER=('*IncrementalBenchmarks*' '*MotionBenchmarks*') ;;
-    *) FILTER=('*OneGameUiBenchmarks*' '*IncrementalBenchmarks*') ;;
+    *) FILTER=('*OneGameUiBenchmarks*' '*IncrementalBenchmarks*' '*FlexHudBenchmarks*') ;;
   esac
   # BenchmarkDotNet finds the project to rebuild from the working directory, so it runs inside the project folder.
   ( cd "$ROOT/bench/$p" && "${PRIORITY[@]}" taskset -c "$CORES" dotnet "$ONERENDER_ARTIFACTS/bin/$p/release/$p.dll" "${BDN[@]}" --filter "${FILTER[@]}" --artifacts "$OUT/$p/BenchmarkDotNet.Artifacts" > "$OUT/$p/run.log" 2>&1 ) || { echo "$p failed, see $OUT/$p/run.log"; rc=1; }

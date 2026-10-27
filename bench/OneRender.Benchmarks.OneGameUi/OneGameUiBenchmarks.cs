@@ -28,19 +28,7 @@ public class OneGameUiBenchmarks
     [GlobalSetup]
     public void Setup()
     {
-        var fonts = new FontLibrary();
-        foreach (FontFaceInfo face in DefaultFonts.Faces)
-        {
-            if (face.Family == "Liberation Sans" && face.Slant == FontSlant.Normal)
-            {
-                fonts.Add(face.ReadAllBytes(), face.Weight == 700 ? "Liberation Sans Bold" : "Liberation Sans");
-            }
-        }
-
-        _ui = new UiTree(new FontTextMeasurer(fonts));
-        _ui.SetViewport(GameUiScene.Width, GameUiScene.Height);
-        _ui.AddStyleSheet(Hovers());
-        _ui.Root.Add(Scene());
+        _ui = CreateTree();
         _ui.Frame();
         _slotA = _ui.Find("slot3")!;
         _slotB = _ui.Find("slot20")!;
@@ -55,6 +43,25 @@ public class OneGameUiBenchmarks
             SubtreeRelayout();
             IdleFrame();
         }
+    }
+
+    /// <summary>The page as a laid-out OneGame.UI tree, with the style sheet, shaped with the Liberation Sans files.</summary>
+    internal static UiTree CreateTree()
+    {
+        var fonts = new FontLibrary();
+        foreach (FontFaceInfo face in DefaultFonts.Faces)
+        {
+            if (face.Family == "Liberation Sans" && face.Slant == FontSlant.Normal)
+            {
+                fonts.Add(face.ReadAllBytes(), "Liberation Sans");
+            }
+        }
+
+        var ui = new UiTree(new FontTextMeasurer(fonts));
+        ui.SetViewport(GameUiScene.Width, GameUiScene.Height);
+        ui.AddStyleSheet(Hovers());
+        ui.Root.Add(Scene());
+        return ui;
     }
 
     private static (float X, float Y) Center(Element e)

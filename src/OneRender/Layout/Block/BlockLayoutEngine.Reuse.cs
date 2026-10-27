@@ -9,10 +9,14 @@ public sealed partial class BlockLayoutEngine
     //
     // A block formatting context root whose subtree did not change, laid out with the same inputs as last time, produces the same
     // fragments again: its children depend on nothing but the root's own frame (widths, heights, flags) and on the box subtree.
-    // When the root is opened, the engine compares its frame with what it recorded at the end of the last layout. On a match it
+    // When the root is opened, the engine compares its frame with what it recorded when it last laid the box out. On a match it
     // copies the earlier children fragments, restores the few frame values the children would have left behind, and goes on to
     // close the box as usual. Subtrees that reach outside themselves (floats, out-of-flow positioning, columns, tables) are never
     // reused; see BoxTree hazards.
+    //
+    // One record per box describes the box's fragments in the published tree. A layout that lays the box out again replaces the
+    // record; a layout that copies it (or an ancestor) leaves it, because the copy is the same. Records written during a layout
+    // describe the tree being built, so that layout does not read them (Gen), and records of boxes that changed are dropped first.
     // ---------------------------------------------------------------------------------------------------------------------
 
     private readonly record struct MemoKey(
@@ -33,9 +37,14 @@ public sealed partial class BlockLayoutEngine
     private struct MemoEntry
     {
         public bool Valid;
+        public int Gen;
         public int Frag;
         public MemoKey Key;
         public double Cursor;
+        public double SpecH;
+        public double MinH;
+        public double MaxH;
+        public double RatioH;
         public double FirstBaseline;
         public double OvL;
         public double OvT;
@@ -48,12 +57,11 @@ public sealed partial class BlockLayoutEngine
 
     private const FrameFlags MemoFlagMask = ~(FrameFlags.TopPending | FrameFlags.Cleared | FrameFlags.ClearsFloats | FrameFlags.HasContent | FrameFlags.AnyChild);
 
-    private MemoEntry[] _mPrev = [];
-    private MemoEntry[] _mCur = [];
-    private int[] _logPrev = new int[64];
-    private int[] _logCur = new int[64];
-    private int _logPrevCount;
-    private int _logCurCount;
+    private MemoEntry[] _m = [];
+    private int[] _log = new int[64];
+    private int _logCount;
+    private int _gen;
+    private int _base;
     private bool _reuse;
     // Multi-column containers currently open. Their columns are cut after the whole layout, so fragments inside one are rewritten
     // by the cut and can neither be copied from an earlier layout nor recorded for one.
@@ -76,7 +84,7 @@ public sealed partial class BlockLayoutEngine
     private void BeginReuse(BoxTree boxes, in LayoutInput input, FragmentTree output)
     {
         bool same = _memoValid && ReferenceEquals(_memoBoxes, boxes) && _memoEpoch == boxes.Epoch && ReferenceEquals(_memoFonts, input.Fonts)
-            && ReferenceEquals(_memoOut, output) && _memoFontVersion == input.Fonts.Catalog.Version && _mPrev.Length >= boxes.Count * 2;
+            && ReferenceEquals(_memoOut, output) && _memoFontVersion == input.Fonts.Catalog.Version && _m.Length >= boxes.Count;
         _memoValid = false;
         if (_scratch is null || !ReferenceEquals(_scratch.Boxes, boxes))
         {
@@ -84,23 +92,34 @@ public sealed partial class BlockLayoutEngine
             same = false;
         }
 
-        int need = Math.Max(boxes.Count * 2, 2);
-        if (_mPrev.Length < need)
+        if (_m.Length < boxes.Count)
         {
-            _mPrev = new MemoEntry[need + need / 2];
-            _mCur = new MemoEntry[_mPrev.Length];
-            _logPrevCount = 0;
-            _logCurCount = 0;
+            _m = new MemoEntry[boxes.Count + (boxes.Count / 2) + 1];
             same = false;
         }
 
-        // The buffer written during this layout starts empty.
-        for (int i = 0; i < _logCurCount; i++)
+        if (++_gen == int.MaxValue)
         {
-            _mCur[_logCur[i]].Valid = false;
+            Array.Clear(_m);
+            _gen = 1;
+            same = false;
         }
 
-        _logCurCount = 0;
+        _logCount = 0;
+        if (same)
+        {
+            // What the boxes that changed laid out to is no longer described by their records.
+            for (int i = 0; i < boxes.DirtyCount; i++)
+            {
+                _m[boxes.DirtyAt(i)].Valid = false;
+            }
+        }
+        else
+        {
+            // Nothing from before is usable.
+            _base = _gen;
+        }
+
         _reuse = same;
         _recording = true;
         _mcOpen = 0;
@@ -108,24 +127,23 @@ public sealed partial class BlockLayoutEngine
         _hits = 0;
         _stores = 0;
         _out = _scratch;
-        if (!same)
-        {
-            // Nothing from before is usable: forget the previous buffer too.
-            for (int i = 0; i < _logPrevCount; i++)
-            {
-                _mPrev[_logPrev[i]].Valid = false;
-            }
-
-            _logPrevCount = 0;
-        }
     }
+
+    /// <summary>How the last reusing layout differs from the one before it; paint uses it to rewrite only what changed.</summary>
+    internal LayoutDelta Delta { get; } = new();
 
     private void EndReuse(BoxTree boxes, in LayoutInput input, FragmentTree output)
     {
+        if (_prevTree is not null)
+        {
+            _scratch!.DiffAgainst(output, Delta);
+        }
+        else
+        {
+            Delta.Reset(false);
+        }
+
         output.SwapContents(_scratch!);
-        (_mPrev, _mCur) = (_mCur, _mPrev);
-        (_logPrev, _logCur) = (_logCur, _logPrev);
-        (_logPrevCount, _logCurCount) = (_logCurCount, _logPrevCount);
         _memoBoxes = boxes;
         _memoOut = output;
         _memoFonts = input.Fonts;
@@ -162,12 +180,15 @@ public sealed partial class BlockLayoutEngine
         return _recording
             && _mcOpen == 0
             && c.Kind == BoxKind.Container
-            && c.Context is FormattingContext.Block or FormattingContext.FlowRoot
+            && (c.Context is FormattingContext.Block or FormattingContext.FlowRoot or FormattingContext.Flex || (c.Context == FormattingContext.Grid && !IsSubgridBox(c)))
             && (nf.Flags & (FrameFlags.Multicol | FrameFlags.Flex | FrameFlags.Float)) == 0
             && _boxes.HazardOf(c.Index) == 0
             && _gridIntrinsicMode == 0
             && _sp < 50_000;
     }
+
+    // A subgrid takes its tracks from the grid around it, which the frame key does not describe.
+    private static bool IsSubgridBox(Box c) => c.Values.GridTemplateColumns.IsSubgrid || c.Values.GridTemplateRows.IsSubgrid;
 
     private MemoKey KeyOf(in Frame f) => new(
         f.W,
@@ -200,97 +221,67 @@ public sealed partial class BlockLayoutEngine
 
         if (!MemoEligible(c, in f))
         {
+            // Laid out in a way the record does not describe: it must not be used for a later copy.
+            _m[c.Index].Valid = false;
             return false;
         }
 
         MemoKey key = KeyOf(in f);
         f.MemoKey = key;
-        f.MemoRec = true;
+        // A trial layout is undone, so there is nothing to record.
+        f.MemoRec = _trialNesting == 0;
         if (_prevTree is null || _boxes.IsDirty(c.Index))
         {
             return false;
         }
 
-        int b = c.Index * 2;
-        for (int w = 0; w < 2; w++)
+        ref MemoEntry e = ref _m[c.Index];
+        if (!e.Valid || e.Gen < _base || e.Gen == _gen || !e.Key.Equals(key))
         {
-            ref MemoEntry e = ref _mPrev[b + w];
-            if (!e.Valid || !e.Key.Equals(key))
-            {
-                continue;
-            }
-
-            FragmentTree prev = _prevTree;
-            if (e.Frag >= prev.CountInternal || prev.BoxColumnOf(e.Frag) != c.Index)
-            {
-                continue;
-            }
-
-            var observer = new Remap(this);
-            _out.CopyDescendants(prev, e.Frag, f.Frag, ref observer);
-            f.Cursor = e.Cursor;
-            f.FirstBaseline = e.FirstBaseline;
-            f.OvL = e.OvL;
-            f.OvT = e.OvT;
-            f.OvR = e.OvR;
-            f.OvB = e.OvB;
-            f.Flags |= (FrameFlags)e.FlagsAdded;
-            f.NextChild = -1;
-            _pos = e.Pos;
-            _neg = e.Neg;
-            f.MemoHit = true;
-            _hits++;
-            return true;
+            return false;
         }
 
-        return false;
-    }
-
-    private readonly struct Remap(BlockLayoutEngine engine) : IFragmentCopyObserver
-    {
-        public void Copied(int box, int sourceFragment, int newFragment) => engine.MemoCarry(box, sourceFragment, newFragment);
-    }
-
-    // A box inside a reused subtree keeps its record, pointing at the copy of its fragment.
-    private void MemoCarry(int box, int sourceFragment, int newFragment)
-    {
-        int b = box * 2;
-        for (int w = 0; w < 2; w++)
+        FragmentTree prev = _prevTree;
+        int pf = prev.FirstFragmentOfBox(c.Index);
+        if (pf < 0 || prev.BoxColumnOf(pf) != c.Index || prev.NextOfBoxOf(pf) >= 0)
         {
-            ref MemoEntry e = ref _mPrev[b + w];
-            if (!e.Valid || e.Frag != sourceFragment)
-            {
-                continue;
-            }
-
-            MemoEntry copy = e;
-            copy.Frag = newFragment;
-            MemoPut(box, in copy);
-            return;
+            return false;
         }
+
+        _out.CopyDescendants(prev, pf, f.Frag);
+        f.MemoHit = true;
+        f.Cursor = e.Cursor;
+        // A flex container turns its height into a definite one while it closes.
+        f.SpecH = e.SpecH;
+        f.MinH = e.MinH;
+        f.MaxH = e.MaxH;
+        f.RatioH = e.RatioH;
+        f.FirstBaseline = e.FirstBaseline;
+        f.OvL = e.OvL;
+        f.OvT = e.OvT;
+        f.OvR = e.OvR;
+        f.OvB = e.OvB;
+        f.Flags |= (FrameFlags)e.FlagsAdded;
+        f.NextChild = -1;
+        _pos = e.Pos;
+        _neg = e.Neg;
+        _hits++;
+        // The record still describes the copy.
+        f.MemoRec = false;
+        return true;
     }
 
     private void MemoPut(int box, in MemoEntry entry)
     {
-        int b = box * 2;
-        int way;
-        if (_mCur[b].Valid && !_mCur[b].Key.Equals(entry.Key))
+        _m[box] = entry;
+        _m[box].Valid = true;
+        _m[box].Gen = _gen;
+        if (_logCount == _log.Length)
         {
-            way = 1;
-        }
-        else
-        {
-            way = 0;
+            Array.Resize(ref _log, _log.Length * 2);
         }
 
-        _mCur[b + way] = entry;
-        _mCur[b + way].Valid = true;
-        if (_logCurCount == _logCur.Length)
-        {
-            Array.Resize(ref _logCur, _logCur.Length * 2);
-        }
-
-        _logCur[_logCurCount++] = b + way;
+        _log[_logCount++] = box;
     }
 
     // Called as a frame starts to close: its children are final, so what they left in the frame is what a reuse must restore.
@@ -301,6 +292,10 @@ public sealed partial class BlockLayoutEngine
             Frag = t.Frag,
             Key = t.MemoKey,
             Cursor = t.Cursor,
+            SpecH = t.SpecH,
+            MinH = t.MinH,
+            MaxH = t.MaxH,
+            RatioH = t.RatioH,
             FirstBaseline = t.FirstBaseline,
             OvL = t.OvL,
             OvT = t.OvT,
@@ -322,16 +317,16 @@ public sealed partial class BlockLayoutEngine
             return;
         }
 
-        while (_logCurCount > 0)
+        while (_logCount > 0)
         {
-            int slot = _logCur[_logCurCount - 1];
-            if (_mCur[slot].Frag < fragmentCount)
+            int box = _log[_logCount - 1];
+            if (_m[box].Frag < fragmentCount)
             {
                 break;
             }
 
-            _mCur[slot].Valid = false;
-            _logCurCount--;
+            _m[box].Valid = false;
+            _logCount--;
         }
     }
 }

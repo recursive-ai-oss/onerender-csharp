@@ -1,0 +1,242 @@
+mode: gate
+host: princess-donut
+cpu: AMD Ryzen 9 7950X3D 16-Core Processor
+cores: 32 logical; pinned to 8-15
+governor: powersave
+memory: 125 GB
+kernel: Linux 7.0.0-38-generic
+dotnet sdk: 10.0.402
+bdn arguments: --warmupCount 15 --iterationCount 40 --launchCount 3 --iterationTime 200 --exporters json --memory true
+commit: da3320f
+== load before 2026-10-27T13:19:51Z
+21.87 15.83 13.17 83/1419 4100891
+%CPU %MEM ELAPSED COMMAND
+ 495  0.9      52 (other workload)
+ 337  4.8      45 dotnet
+ 188  0.9     350 (other workload)
+ 146  0.2      10 dotnet
+ 107  0.1     190 (other workload)
+== load during 2026-10-27T13:20:33Z
+21.71 16.70 13.58 15/1288 4140373
+%CPU %MEM ELAPSED COMMAND
+ 425  4.1      94 (other workload)
+ 328  0.4      33 OneRender.Tests
+ 188  0.9     392 (other workload)
+ 179  0.2      52 dotnet
+ 107  0.0     232 (other workload)
+== load during 2026-10-27T13:21:03Z
+22.19 17.18 13.84 15/1501 4171216
+%CPU %MEM ELAPSED COMMAND
+ 463  4.2     124 (other workload)
+ 186  0.2      82 dotnet
+ 185  0.9     422 (other workload)
+ 137  0.3       5 (other workload)
+ 106  0.0     262 (other workload)
+== load during 2026-10-27T13:21:33Z
+21.21 17.50 14.05 57/1490 5938
+%CPU %MEM ELAPSED COMMAND
+ 439  4.6     154 (other workload)
+ 200  0.0       0 OneRender.PdfCl
+ 189  0.8     452 (other workload)
+ 188  0.2     112 dotnet
+ 106  0.0     292 (other workload)
+== load during 2026-10-27T13:22:03Z
+19.17 17.39 14.13 47/1332 38768
+%CPU %MEM ELAPSED COMMAND
+ 414  5.0     184 (other workload)
+ 193  1.0     482 (other workload)
+ 190  0.2     142 dotnet
+ 106  0.0       7 dotnet
+ 106  0.0     322 (other workload)
+== load during 2026-10-27T13:22:33Z
+19.30 17.74 14.36 16/1224 70756
+%CPU %MEM ELAPSED COMMAND
+ 381  3.2     214 (other workload)
+ 193  0.7     512 (other workload)
+ 191  0.2     172 dotnet
+ 183  0.0       0 dotnet
+ 112  0.0       0 dotnet
+== load during 2026-10-27T13:23:03Z
+15.24 16.91 14.19 11/1172 103849
+%CPU %MEM ELAPSED COMMAND
+ 321  0.4      30 dotnet
+ 193  0.2     202 dotnet
+ 182  0.6     542 (other workload)
+ 111  0.0       4 dotnet
+ 105  0.0     382 (other workload)
+== load during 2026-10-27T13:23:33Z
+11.95 15.94 13.95 6/1163 137553
+%CPU %MEM ELAPSED COMMAND
+ 196  0.2     232 dotnet
+ 173  0.6     572 (other workload)
+ 113  0.0       3 dotnet
+ 105  0.0     412 (other workload)
+ 101  0.0       5 dotnet
+== load during 2026-10-27T13:24:03Z
+11.70 15.56 13.89 10/1188 172374
+%CPU %MEM ELAPSED COMMAND
+ 534  0.3       0 dotnet
+ 197  0.2     262 dotnet
+ 166  0.7     602 (other workload)
+ 112  0.0       4 dotnet
+ 105  0.0     442 (other workload)
+== load during 2026-10-27T13:24:33Z
+10.23 14.84 13.70 7/1174 208277
+%CPU %MEM ELAPSED COMMAND
+ 198  0.2     292 dotnet
+ 158  0.6     632 (other workload)
+ 116  0.0       2 dotnet
+ 105  0.0     472 (other workload)
+ 100  0.0      65 dotnet
+== load during 2026-10-27T13:25:03Z
+8.94 14.06 13.48 4/1194 217461
+%CPU %MEM ELAPSED COMMAND
+ 199  0.2     322 dotnet
+ 159  1.0     662 (other workload)
+99.8  0.0      95 dotnet
+92.3  0.0       0 dotnet
+87.4  0.1     364 dotnet
+== load during 2026-10-27T13:25:33Z
+8.09 13.38 13.27 5/1150 219047
+%CPU %MEM ELAPSED COMMAND
+ 200  0.2     352 dotnet
+ 152  0.7     692 (other workload)
+ 107  0.0       3 dotnet
+99.8  0.0     125 dotnet
+88.2  0.1     394 dotnet
+== load during 2026-10-27T13:26:03Z
+9.54 13.27 13.24 13/1169 221224
+%CPU %MEM ELAPSED COMMAND
+ 541  0.2       0 dotnet
+ 200  0.2     382 dotnet
+ 147  0.8     722 (other workload)
+ 122  0.0       0 dotnet
+99.9  0.1     155 dotnet
+== load during 2026-10-27T13:26:33Z
+9.22 12.84 13.10 6/1151 223210
+%CPU %MEM ELAPSED COMMAND
+ 194  0.4     412 dotnet
+ 142  0.7     753 (other workload)
+ 128  0.0       1 dotnet
+ 106  0.0       0 (other workload)
+99.9  0.1     185 dotnet
+== load during 2026-10-27T13:27:03Z
+7.39 12.06 12.83 6/1129 224749
+%CPU %MEM ELAPSED COMMAND
+ 189  0.9     442 dotnet
+ 136  0.7     783 (other workload)
+ 113  0.0       2 dotnet
+99.9  0.1     215 dotnet
+90.0  0.1     484 dotnet
+== load during 2026-10-27T13:27:33Z
+6.03 11.29 12.55 4/1116 226379
+%CPU %MEM ELAPSED COMMAND
+ 131  0.6     813 (other workload)
+ 107  0.0       6 dotnet
+99.9  0.1     245 dotnet
+90.6  0.1     514 dotnet
+12.0  0.0     514 (other workload)
+== load during 2026-10-27T13:28:03Z
+7.94 11.32 12.52 5/1123 228741
+%CPU %MEM ELAPSED COMMAND
+ 128  0.7     843 (other workload)
+ 106  0.0       9 dotnet
+ 101  0.0       0 (other workload)
+99.9  0.1     275 dotnet
+91.0  0.1     544 dotnet
+== load during 2026-10-27T13:28:33Z
+7.54 10.90 12.34 6/1181 232056
+%CPU %MEM ELAPSED COMMAND
+ 129  1.0     873 (other workload)
+ 101  0.1       1 (other workload)
+ 101  0.0      12 dotnet
+ 100  0.0       0 (other workload)
+99.8  0.1     305 dotnet
+== load during 2026-10-27T13:29:03Z
+7.73 10.63 12.20 13/1160 265608
+%CPU %MEM ELAPSED COMMAND
+ 515  0.7       0 dotnet
+ 125  0.8     903 (other workload)
+ 112  0.1      31 (other workload)
+ 100  0.0      14 dotnet
+99.8  0.1     335 dotnet
+== load during 2026-10-27T13:29:33Z
+7.54 10.28 12.04 5/1131 304598
+%CPU %MEM ELAPSED COMMAND
+ 121  0.7     933 (other workload)
+ 110  0.1      61 (other workload)
+ 101  0.0      11 dotnet
+99.8  0.1     365 dotnet
+92.1  0.1     634 dotnet
+== load during 2026-10-27T13:30:03Z
+8.06 10.12 11.92 14/1263 343244
+%CPU %MEM ELAPSED COMMAND
+ 499  1.0      21 (other workload)
+ 120  0.8     963 (other workload)
+ 108  0.1      91 (other workload)
+ 102  0.0      11 dotnet
+99.8  0.1     395 dotnet
+== load during 2026-10-27T13:30:33Z
+8.00 9.93 11.80 8/1171 380115
+%CPU %MEM ELAPSED COMMAND
+ 424  1.4      51 (other workload)
+ 117  0.0       1 dotnet
+ 116  0.8     993 (other workload)
+ 108  0.1     121 (other workload)
+ 100  0.0       0 (other workload)
+== load during 2026-10-27T13:31:03Z
+8.95 9.97 11.76 13/1165 416974
+%CPU %MEM ELAPSED COMMAND
+ 479  4.3      81 (other workload)
+ 126  0.0       1 dotnet
+ 113  0.6    1023 (other workload)
+ 108  0.1     151 (other workload)
+99.8  0.1     456 dotnet
+== load during 2026-10-27T13:31:33Z
+8.50 9.77 11.63 7/1160 453610
+%CPU %MEM ELAPSED COMMAND
+ 462  5.5     111 (other workload)
+ 110  0.6    1053 (other workload)
+ 107  0.1     181 (other workload)
+ 101  0.0      12 dotnet
+99.8  0.1     486 dotnet
+== load during 2026-10-27T13:32:03Z
+7.95 9.51 11.49 8/1166 492844
+%CPU %MEM ELAPSED COMMAND
+ 413  5.7     141 (other workload)
+ 107  0.1     211 (other workload)
+ 107  0.6    1083 (other workload)
+ 103  0.0       3 dotnet
+99.8  0.1     516 dotnet
+== load during 2026-10-27T13:32:33Z
+6.68 9.06 11.27 5/1114 531520
+%CPU %MEM ELAPSED COMMAND
+ 107  0.1     241 (other workload)
+ 104  0.6    1113 (other workload)
+ 102  0.0       8 dotnet
+99.9  0.1     546 dotnet
+93.7  0.1     814 dotnet
+== load during 2026-10-27T13:33:03Z
+8.51 9.40 11.32 6/1128 570457
+%CPU %MEM ELAPSED COMMAND
+ 107  0.1     271 (other workload)
+ 105  0.0       7 dotnet
+ 102  0.6    1143 (other workload)
+ 101  0.0      12 dotnet
+99.9  0.1     576 dotnet
+== load during 2026-10-27T13:33:33Z
+7.61 9.08 11.15 7/1182 622791
+%CPU %MEM ELAPSED COMMAND
+ 107  0.1     301 (other workload)
+ 103  0.0       3 dotnet
+ 102  0.0      37 dotnet
+ 101  0.7    1173 (other workload)
+ 100  0.0       0 (other workload)
+== load after 2026-10-27T13:33:44Z
+8.48 9.21 11.17 7/1181 635998
+%CPU %MEM ELAPSED COMMAND
+ 107  0.1     311 (other workload)
+ 106  0.1       2 dotnet
+ 102  0.0      48 dotnet
+ 101  0.7    1184 (other workload)
+ 100  0.0       0 (other workload)
