@@ -144,7 +144,10 @@ internal sealed class EasingFunction : IEquatable<EasingFunction>
 
     /// <summary>A step function.</summary>
     /// <returns>The function, or null when the count is below 1 (below 2 for <c>jump-none</c>) or above <see cref="MaxSteps"/>.</returns>
-    public static EasingFunction? Step(int count, StepPosition position)
+    /// <param name="count">The number of steps.</param>
+    /// <param name="position">Where the jumps fall.</param>
+    /// <param name="startKeyword">The author wrote <c>start</c> rather than <c>jump-start</c>; only the serialized text differs.</param>
+    public static EasingFunction? Step(int count, StepPosition position, bool startKeyword = false)
     {
         if (count < 1 || count > MaxSteps || (position == StepPosition.JumpNone && count < 2))
         {
@@ -154,7 +157,7 @@ internal sealed class EasingFunction : IEquatable<EasingFunction>
         string text = position switch
         {
             StepPosition.JumpEnd => "steps(" + count.ToString(System.Globalization.CultureInfo.InvariantCulture) + ")",
-            StepPosition.JumpStart => "steps(" + count.ToString(System.Globalization.CultureInfo.InvariantCulture) + ", start)",
+            StepPosition.JumpStart => "steps(" + count.ToString(System.Globalization.CultureInfo.InvariantCulture) + (startKeyword ? ", start)" : ", jump-start)"),
             StepPosition.JumpNone => "steps(" + count.ToString(System.Globalization.CultureInfo.InvariantCulture) + ", jump-none)",
             _ => "steps(" + count.ToString(System.Globalization.CultureInfo.InvariantCulture) + ", jump-both)",
         };

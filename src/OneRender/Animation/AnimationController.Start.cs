@@ -327,6 +327,11 @@ internal sealed partial class AnimationController
             }
 
             var id = (PropertyId)p;
+            if (_onlyDisplay && id != PropertyId.Display)
+            {
+                continue;
+            }
+
             int ti = entryOf[p];
             bool allowDiscrete = Pick(after.TransitionBehavior, ti);
             if (!PropertyAnimator.IsAnimatable(id) || (!PropertyAnimator.IsInterpolable(id) && !allowDiscrete))

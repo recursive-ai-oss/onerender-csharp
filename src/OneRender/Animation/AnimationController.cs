@@ -181,7 +181,16 @@ internal sealed partial class AnimationController
 
             if (after.Display.IsNone)
             {
-                CancelAll(e, now);
+                // CSS Transitions 2 §3.1 / CSS Display 4 §2.7: an element with display: none runs no animations and no transitions, except
+                // a transition of display itself, which keeps the element shown until it ends.
+                CancelAllExceptDisplayTransition(e, now);
+                if (previous is not null && wantsTransitions)
+                {
+                    _onlyDisplay = true;
+                    UpdateTransitions(tree, previous, e, i, in baseValues, wantsTransitions, now);
+                    _onlyDisplay = false;
+                }
+
                 FinishRecalc(tree, e, i, hadRow, now);
                 continue;
             }

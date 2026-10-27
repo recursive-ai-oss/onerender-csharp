@@ -414,7 +414,8 @@ internal static partial class PropertyAnimator
             case Kind.LineHeight:
                 return (a.LineHeight.Kind == LengthKind.Number && b.LineHeight.Kind == LengthKind.Number) || (LengthLike(a.LineHeight, false) && LengthLike(b.LineHeight, false));
             case Kind.VerticalAlign:
-                return a.VerticalAlign == VerticalAlignKind.Length && b.VerticalAlign == VerticalAlignKind.Length && LengthLike(a.VerticalAlignOffset, false) && LengthLike(b.VerticalAlignOffset, false);
+                // `baseline` is the zero offset for interpolation (CSS Inline 3: vertical-align animates as a length-percentage).
+                return VerticalOffset(in a, out Length va) && VerticalOffset(in b, out Length vb) && LengthLike(va, false) && LengthLike(vb, false);
             case Kind.Color:
                 return true;
             case Kind.Radius:
@@ -443,6 +444,12 @@ internal static partial class PropertyAnimator
             default:
                 return false;
         }
+    }
+
+    private static bool VerticalOffset(in ComputedValues v, out Length offset)
+    {
+        offset = v.VerticalAlign == VerticalAlignKind.Baseline ? Length.Zero : v.VerticalAlignOffset;
+        return v.VerticalAlign is VerticalAlignKind.Baseline or VerticalAlignKind.Length;
     }
 
     private static bool LengthLike(Length l, bool zeroForNormal) => l.Kind is LengthKind.Px or LengthKind.Percent or LengthKind.Calc || (zeroForNormal && l.Kind == LengthKind.Normal);
@@ -514,7 +521,9 @@ internal static partial class PropertyAnimator
                 return true;
             case Kind.VerticalAlign:
                 result.VerticalAlign = VerticalAlignKind.Length;
-                result.VerticalAlignOffset = LerpLength(from.VerticalAlignOffset, to.VerticalAlignOffset, progress, false);
+                VerticalOffset(in from, out Length vf);
+                VerticalOffset(in to, out Length vt);
+                result.VerticalAlignOffset = LerpLength(vf, vt, progress, false);
                 return true;
             case Kind.Color:
             {
@@ -555,22 +564,22 @@ internal static partial class PropertyAnimator
             case Kind.Shadow:
                 if (id == PropertyId.BoxShadow)
                 {
-                    result.BoxShadow = LerpShadows(from.BoxShadow, to.BoxShadow, progress);
+                    result.BoxShadow = LerpShadows(from.BoxShadow, to.BoxShadow, progress, context.CurrentColor);
                 }
                 else
                 {
-                    result.TextShadow = LerpShadows(from.TextShadow, to.TextShadow, progress);
+                    result.TextShadow = LerpShadows(from.TextShadow, to.TextShadow, progress, context.CurrentColor);
                 }
 
                 return true;
             case Kind.Filter:
                 if (id == PropertyId.Filter)
                 {
-                    result.Filter = LerpFilters(from.Filter, to.Filter, progress);
+                    result.Filter = LerpFilters(from.Filter, to.Filter, progress, context.CurrentColor);
                 }
                 else
                 {
-                    result.BackdropFilter = LerpFilters(from.BackdropFilter, to.BackdropFilter, progress);
+                    result.BackdropFilter = LerpFilters(from.BackdropFilter, to.BackdropFilter, progress, context.CurrentColor);
                 }
 
                 return true;
@@ -591,6 +600,22 @@ internal static partial class PropertyAnimator
     // Web Animations 1 §5.3 "discrete": the first value for progress below 0.5, the second from there on.
     private static void CopyDiscrete(StyleTable table, PropertyId id, in ComputedValues from, in ComputedValues to, double progress, ref ComputedValues result)
     {
+        if (id == PropertyId.Display && (from.Display.IsNone != to.Display.IsNone))
+        {
+            // CSS Display 4 §2.7: between the ends of the animation the value that is not none applies, so the element stays displayed.
+            bool useTo = progress >= 1 || (progress > 0 && from.Display.IsNone);
+            if (useTo)
+            {
+                table.CopyProperty(id, ref result, in to);
+            }
+            else
+            {
+                table.CopyProperty(id, ref result, in from);
+            }
+
+            return;
+        }
+
         if (progress < 0.5)
         {
             table.CopyProperty(id, ref result, in from);
@@ -643,6 +668,13 @@ internal static partial class PropertyAnimator
     /// <summary>Linear interpolation of two lengths; a px and a percentage mix becomes a <c>calc()</c> (CSS Values 4 §10.? addition of lengths).</summary>
     internal static Length LerpLength(Length a, Length b, double t, bool nonNegative)
     {
+        // At the end of the range the result is the end value itself, not a calc() that adds up to it. (Chrome keeps the sum at the
+        // start of the range, e.g. calc(0% + 40px), and the WPT interpolation tests expect both.)
+        if (t == 1 && b.Kind != LengthKind.Calc)
+        {
+            return b;
+        }
+
         if (a.Kind == LengthKind.Px && b.Kind == LengthKind.Px)
         {
             double v = Lerp(a.Value, b.Value, t);

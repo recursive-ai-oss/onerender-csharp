@@ -230,7 +230,7 @@ internal static partial class PropertyAnimator
 
     // CSS Backgrounds 3 §7.2 (box-shadow) and Text Decoration 3 (text-shadow): lists of different length are padded with
     // transparent shadows of zero offset and blur; each shadow's color is interpolated premultiplied and its lengths linearly.
-    private static ShadowList LerpShadows(ShadowList a, ShadowList b, double t)
+    private static ShadowList LerpShadows(ShadowList a, ShadowList b, double t, ColorValue current)
     {
         int n = Math.Max(a.Items.Length, b.Items.Length);
         if (n == 0)
@@ -243,8 +243,8 @@ internal static partial class PropertyAnimator
         {
             ShadowSpec x = i < a.Items.Length ? a.Items[i] : new ShadowSpec(new ColorValue(0, 0, 0, 0), 0, 0, 0, 0, b.Items[i].Inset);
             ShadowSpec y = i < b.Items.Length ? b.Items[i] : new ShadowSpec(new ColorValue(0, 0, 0, 0), 0, 0, 0, 0, a.Items[i].Inset);
-            ColorValue cx = x.Color.IsCurrentColor ? ColorValue.Black : x.Color;
-            ColorValue cy = y.Color.IsCurrentColor ? ColorValue.Black : y.Color;
+            ColorValue cx = x.Color.Resolve(current);
+            ColorValue cy = y.Color.Resolve(current);
             items[i] = new ShadowSpec(
                 x.Color.IsCurrentColor && y.Color.IsCurrentColor ? x.Color : LerpColor(cx, cy, t),
                 Lerp(x.OffsetX, y.OffsetX, t),
@@ -290,7 +290,7 @@ internal static partial class PropertyAnimator
     }
 
     // Filter Effects 1 §"Interpolation": function by function with identity padding; amounts keep their ranges.
-    private static FilterSpec LerpFilters(FilterSpec a, FilterSpec b, double t)
+    private static FilterSpec LerpFilters(FilterSpec a, FilterSpec b, double t, ColorValue current)
     {
         int n = Math.Max(a.Functions.Length, b.Functions.Length);
         if (n == 0)
@@ -312,7 +312,7 @@ internal static partial class PropertyAnimator
                 FilterKind.HueRotate => amount,
                 _ => Math.Max(0, amount),
             };
-            ColorValue color = kind == FilterKind.DropShadow ? LerpColor(x.Color.IsCurrentColor ? ColorValue.Black : x.Color, y.Color.IsCurrentColor ? ColorValue.Black : y.Color, t) : x.Color;
+            ColorValue color = kind == FilterKind.DropShadow ? LerpColor(x.Color.Resolve(current), y.Color.Resolve(current), t) : x.Color;
             fns[i] = new FilterFunction(kind, amount, Lerp(x.OffsetX, y.OffsetX, t), Lerp(x.OffsetY, y.OffsetY, t), color, null);
             if (i > 0)
             {

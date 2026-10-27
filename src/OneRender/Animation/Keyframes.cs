@@ -129,7 +129,14 @@ internal sealed class KeyframesRule
                     continue;
                 }
 
-                decl.TrySet(pname, d.ValueText.ToString());
+                // The declaration store treats unset as "not declared", but in a keyframe it is a value: inherit or initial by property (CSS Animations 1 §4.2).
+                string text = d.ValueText.ToString();
+                if (text.Trim().Equals("unset", StringComparison.OrdinalIgnoreCase) && Properties.TryGet(pname, out PropertyId unsetId))
+                {
+                    text = Properties.IsInherited(unsetId) ? "inherit" : "initial";
+                }
+
+                decl.TrySet(pname, text);
             }
 
             for (int i = 0; i < Properties.Count; i++)

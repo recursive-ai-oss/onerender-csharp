@@ -329,6 +329,29 @@ internal sealed partial class AnimationController
         e.Touched = [];
     }
 
+    private bool _onlyDisplay;
+
+    private void CancelAllExceptDisplayTransition(ElementEffects e, double now)
+    {
+        for (int i = e.Transitions.Count - 1; i >= 0; i--)
+        {
+            TransitionInstance t = e.Transitions[i];
+            if (t.Property != PropertyId.Display)
+            {
+                CancelTransition(e, t, now);
+                e.Transitions.RemoveAt(i);
+            }
+        }
+
+        foreach (AnimationInstance a in e.Animations)
+        {
+            CancelAnimation(e, a, now);
+        }
+
+        e.Animations.Clear();
+        e.Touched = [];
+    }
+
     private void CancelTransition(ElementEffects e, TransitionInstance t, double now)
     {
         if (t.RunSent && !t.EndSent)

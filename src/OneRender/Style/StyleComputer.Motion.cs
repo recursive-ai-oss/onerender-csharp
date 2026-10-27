@@ -296,6 +296,11 @@ internal sealed partial class StyleComputer
                     ComponentValue p = segs[i][0];
                     if (p.Kind == ComponentValueKind.Token && p.Token.Kind == CssTokenKind.QuotedString)
                     {
+                        if (p.Token.Value.Length == 0)
+                        {
+                            return false;
+                        }
+
                         list[i] = p.Token.Value;
                     }
                     else if (IsIdent(p))
@@ -334,6 +339,10 @@ internal sealed partial class StyleComputer
                     if (IsIdent(p) && p.Token.ValueEqualsIgnoreCase("infinite"))
                     {
                         list[i] = double.PositiveInfinity;
+                    }
+                    else if (p.Kind == ComponentValueKind.Function && MathOf(p, QuantityKinds.Number | QuantityKinds.NonNegative, out double folded))
+                    {
+                        list[i] = folded;
                     }
                     else if (p.Kind == ComponentValueKind.Token && p.Token.Kind == CssTokenKind.Number && p.Token.NumberValue >= 0 && double.IsFinite(p.Token.NumberValue))
                     {
@@ -450,6 +459,7 @@ internal sealed partial class StyleComputer
             return true;
         }
 
+        string written = name;
         if (!name.StartsWith("--", StringComparison.Ordinal))
         {
             name = name.ToLowerInvariant();
@@ -465,10 +475,53 @@ internal sealed partial class StyleComputer
         }
         else
         {
-            target = new TransitionTarget(TransitionTargetKind.Unknown, default, name);
+            target = new TransitionTarget(TransitionTargetKind.Unknown, default, written);
         }
 
         return true;
+    }
+
+    // CSSOM "serialize an identifier" (escape what an identifier cannot hold); a name that reads as a keyword stays a quoted string.
+    internal static string AnimationNameText(string name)
+    {
+        if (name.Equals("none", StringComparison.OrdinalIgnoreCase) || WordIndex(name, CssWideWords) >= 0)
+        {
+            return "\"" + name + "\"";
+        }
+
+        var sb = new System.Text.StringBuilder(name.Length + 4);
+        for (int i = 0; i < name.Length; i++)
+        {
+            char c = name[i];
+            bool ident = char.IsAsciiLetterOrDigit(c) || c is '_' or '-' || c >= '\u0080';
+            if (!ident || (i == 0 && char.IsAsciiDigit(c)) || (i == 1 && char.IsAsciiDigit(c) && name[0] == '-'))
+            {
+                if (c < ' ' || c == '\u007f')
+                {
+                    sb.Append('\\').Append(((int)c).ToString("x", CultureInfo.InvariantCulture)).Append(' ');
+                    continue;
+                }
+
+                sb.Append('\\');
+            }
+
+            sb.Append(c);
+        }
+
+        return sb.ToString();
+    }
+
+    private static bool MathOf(ComponentValue function, QuantityKinds kinds, out double value)
+    {
+        value = 0;
+        string text = function.Token.Value + "(" + function.Children.Raw.ToString() + ")";
+        if (!CssQuantity.TryParse(CssTree.ParseComponentValueList(text).Values, kinds, out CssQuantity q))
+        {
+            return false;
+        }
+
+        value = q.Resolve(LengthContext.Default);
+        return double.IsFinite(value);
     }
 
     // <time>: a dimension in s or ms. Durations may not be negative; `auto` is a valid animation-duration (CSS Animations 2 §3.3).
@@ -485,6 +538,17 @@ internal sealed partial class StyleComputer
         {
             seconds = double.NaN;
             return true;
+        }
+
+        if (p.Kind == ComponentValueKind.Function)
+        {
+            // calc() and the other math functions (CSS Values 4 §10): folded to seconds when they need no layout context.
+            if (MathOf(p, QuantityKinds.Time | (duration ? QuantityKinds.NonNegative : QuantityKinds.None), out seconds))
+            {
+                return !duration || seconds >= 0;
+            }
+
+            return false;
         }
 
         if (p.Kind != ComponentValueKind.Token || p.Token.Kind != CssTokenKind.Dimension)
@@ -574,6 +638,7 @@ internal sealed partial class StyleComputer
                 }
 
                 StepPosition pos = StepPosition.JumpEnd;
+                bool startKeyword = false;
                 if (args.Count == 2)
                 {
                     if (args[1].Length != 1 || !IsIdent(args[1][0]))
@@ -583,7 +648,8 @@ internal sealed partial class StyleComputer
 
                     switch (args[1][0].Token.Value.ToLowerInvariant())
                     {
-                        case "jump-start": case "start": pos = StepPosition.JumpStart; break;
+                        case "jump-start": pos = StepPosition.JumpStart; break;
+                        case "start": pos = StepPosition.JumpStart; startKeyword = true; break;
                         case "jump-end": case "end": pos = StepPosition.JumpEnd; break;
                         case "jump-none": pos = StepPosition.JumpNone; break;
                         case "jump-both": pos = StepPosition.JumpBoth; break;
@@ -591,7 +657,7 @@ internal sealed partial class StyleComputer
                     }
                 }
 
-                e = EasingFunction.Step((int)count, pos);
+                e = EasingFunction.Step((int)count, pos, startKeyword);
                 break;
             }
 
@@ -687,8 +753,8 @@ internal static partial class ComputedValueText
             case PropertyId.TransitionDelay: return Join(v.TransitionDelay, static d => Seconds(d));
             case PropertyId.TransitionTimingFunction: return Join(v.TransitionTimingFunction, static e => e.Text);
             case PropertyId.TransitionBehavior: return Join(v.TransitionBehavior, static b => b ? "allow-discrete" : "normal");
-            case PropertyId.AnimationName: return Join(v.AnimationName, static n => n ?? "none");
-            case PropertyId.AnimationDuration: return Join(v.AnimationDuration, static d => double.IsNaN(d) ? "auto" : Seconds(d));
+            case PropertyId.AnimationName: return Join(v.AnimationName, static n => n is null ? "none" : StyleComputer.AnimationNameText(n));
+            case PropertyId.AnimationDuration: return Join(v.AnimationDuration, static d => double.IsNaN(d) ? "0s" : Seconds(d));
             case PropertyId.AnimationDelay: return Join(v.AnimationDelay, static d => Seconds(d));
             case PropertyId.AnimationTimingFunction: return Join(v.AnimationTimingFunction, static e => e.Text);
             case PropertyId.AnimationIterationCount: return Join(v.AnimationIterationCount, static c => double.IsPositiveInfinity(c) ? "infinite" : CssText.Number(c));
