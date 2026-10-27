@@ -150,6 +150,9 @@ internal static class ComputedValueText
             case PropertyId.GridColumnEnd: return v.GridColumnEnd.ToCss();
             case PropertyId.JustifyItems: return AlignText(v.JustifyItems, v.JustifyItemsOverflow);
             case PropertyId.JustifySelf: return AlignText(v.JustifySelf, v.JustifySelfOverflow);
+            case PropertyId.PointerEvents: return v.PointerEvents == PointerEventsKind.None ? "none" : "auto";
+            case PropertyId.Transform: return v.Transform.ToCss();
+            case PropertyId.TransformOrigin: return v.TransformOriginX.ToCss() + " " + v.TransformOriginY.ToCss();
             default: return string.Empty;
         }
     }

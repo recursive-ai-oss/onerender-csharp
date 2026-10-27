@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>paint order, clips, transforms, pointer-events</title>
+<style>
+  html, body { margin: 0; }
+  div { box-sizing: border-box; }
+  #blk { height: 100px; background: #ddd; }
+  #fl { float: left; width: 50px; height: 50px; margin-top: -100px; background: #fa0; }
+  #ib { display: inline-block; width: 20px; height: 20px; margin-left: -40px; vertical-align: top; background: #0af; }
+  #pos { position: absolute; left: 0; top: 0; width: 12px; height: 12px; background: #f00; }
+  #z2 { position: absolute; left: 150px; top: 10px; width: 80px; height: 80px; z-index: 2; background: #0a0; }
+  #z1a { position: absolute; left: 190px; top: 40px; width: 80px; height: 80px; z-index: 1; background: #00a; }
+  #z1b { position: absolute; left: 220px; top: 70px; width: 80px; height: 80px; z-index: 1; background: #a0a; }
+  #par { position: absolute; left: 10px; top: 130px; width: 100px; height: 60px; background: #eee; }
+  #neg { position: absolute; left: 0; top: 0; width: 40px; height: 40px; z-index: -1; background: #333; }
+  #clip { position: absolute; left: 130px; top: 160px; width: 100px; height: 60px; overflow: hidden; border-radius: 30px; background: #cde; }
+  #clipkid { width: 200px; height: 200px; background: #765; }
+  #rot { position: absolute; left: 260px; top: 200px; width: 100px; height: 20px; transform: rotate(90deg); background: #099; }
+  #tr { position: absolute; left: 10px; top: 210px; width: 60px; height: 40px; transform: translate(40px, 20px) scale(0.5); background: #909; }
+  #ghost { position: absolute; left: 80px; top: 130px; width: 40px; height: 40px; pointer-events: none; background: #f80; }
+  #live { position: absolute; left: 0; top: 0; width: 15px; height: 15px; pointer-events: auto; background: #08f; }
+  #hid { position: absolute; left: 300px; top: 10px; width: 60px; height: 60px; visibility: hidden; background: #000; }
+  #vis { position: absolute; left: 0; top: 0; width: 20px; height: 20px; visibility: visible; background: #0f0; }
+  #round { position: absolute; left: 300px; top: 100px; width: 60px; height: 60px; border-radius: 30px; background: #f0f; }
+</style>
+</head>
+<body>
+<div id="blk"></div>
+<div id="fl"></div><span id="ib"></span>
+<div id="pos"></div>
+<div id="z2"></div><div id="z1a"></div><div id="z1b"></div>
+<div id="par"><div id="neg"></div></div>
+<div id="clip"><div id="clipkid"></div></div>
+<div id="rot"></div>
+<div id="tr"></div>
+<div id="ghost"><div id="live"></div></div>
+<div id="hid"><div id="vis"></div></div>
+<div id="round"></div>
+<script src="../../../tools/interaction/probe.js"></script>
+</body>
+</html>

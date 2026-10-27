@@ -329,6 +329,18 @@ public partial struct ComputedValues
     /// <summary><c>color</c>; never <c>currentcolor</c> (it inherits).</summary>
     public ColorValue Color { get; internal set; }
 
+    /// <summary><c>pointer-events</c>; inherited.</summary>
+    public PointerEventsKind PointerEvents { get; internal set; }
+
+    /// <summary><c>transform</c> as one 2D matrix; <see cref="Transform2D.Identity"/> for <c>none</c>.</summary>
+    public Transform2D Transform { get; internal set; }
+
+    /// <summary><c>transform-origin</c>, horizontal part; initially 50%.</summary>
+    public Length TransformOriginX { get; internal set; }
+
+    /// <summary><c>transform-origin</c>, vertical part; initially 50%.</summary>
+    public Length TransformOriginY { get; internal set; }
+
     /// <summary><c>opacity</c>, clamped to 0 to 1.</summary>
     public double Opacity { get; internal set; }
 
@@ -553,6 +565,7 @@ public partial struct ComputedValues
         InitFlex(ref v);
         InitFragmentation(ref v);
         InitGrid(ref v);
+        InitInteraction(ref v);
         return v;
     }
 }
