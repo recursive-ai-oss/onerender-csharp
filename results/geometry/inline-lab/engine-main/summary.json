@@ -1,0 +1,251 @@
+{
+  "format": "onerender-geometry-summary/1",
+  "set": "inline-lab",
+  "label": "engine",
+  "ours": "engine",
+  "tolerancePx": 1,
+  "tolerancePercent": 0.5,
+  "gateRate": 0.99,
+  "browser": "Chrome/156.0.8078.47",
+  "fontSet": "8768bf2774f6c8e8 (20 files)",
+  "viewports": [
+    {
+      "viewport": "1280x800",
+      "pages": 7,
+      "elements": 155,
+      "matched": 0,
+      "rate": 0,
+      "classes": {
+        "positionOnly": 1,
+        "sizeOnly": 14,
+        "positionAndSize": 1,
+        "textRun": 61,
+        "missingOurs": 78,
+        "missingChrome": 0
+      },
+      "rootCauses": {
+        "positionOnly": 0,
+        "sizeOnly": 7,
+        "positionAndSize": 0,
+        "textRun": 0,
+        "missingOurs": 78,
+        "missingChrome": 0
+      },
+      "tagConflicts": 0,
+      "pagesAtGate": 0,
+      "medianPageRate": 0,
+      "minPageRate": 0,
+      "worstTags": [
+        {
+          "tag": "p",
+          "mismatches": 54,
+          "elements": 54
+        },
+        {
+          "tag": "span",
+          "mismatches": 49,
+          "elements": 49
+        },
+        {
+          "tag": "div",
+          "mismatches": 9,
+          "elements": 9
+        },
+        {
+          "tag": "body",
+          "mismatches": 7,
+          "elements": 7
+        },
+        {
+          "tag": "html",
+          "mismatches": 7,
+          "elements": 7
+        },
+        {
+          "tag": "br",
+          "mismatches": 6,
+          "elements": 6
+        },
+        {
+          "tag": "b",
+          "mismatches": 4,
+          "elements": 4
+        },
+        {
+          "tag": "code",
+          "mismatches": 2,
+          "elements": 2
+        },
+        {
+          "tag": "em",
+          "mismatches": 2,
+          "elements": 2
+        },
+        {
+          "tag": "small",
+          "mismatches": 2,
+          "elements": 2
+        }
+      ]
+    },
+    {
+      "viewport": "390x844",
+      "pages": 7,
+      "elements": 155,
+      "matched": 0,
+      "rate": 0,
+      "classes": {
+        "positionOnly": 1,
+        "sizeOnly": 14,
+        "positionAndSize": 1,
+        "textRun": 61,
+        "missingOurs": 78,
+        "missingChrome": 0
+      },
+      "rootCauses": {
+        "positionOnly": 0,
+        "sizeOnly": 7,
+        "positionAndSize": 0,
+        "textRun": 0,
+        "missingOurs": 78,
+        "missingChrome": 0
+      },
+      "tagConflicts": 0,
+      "pagesAtGate": 0,
+      "medianPageRate": 0,
+      "minPageRate": 0,
+      "worstTags": [
+        {
+          "tag": "p",
+          "mismatches": 54,
+          "elements": 54
+        },
+        {
+          "tag": "span",
+          "mismatches": 49,
+          "elements": 49
+        },
+        {
+          "tag": "div",
+          "mismatches": 9,
+          "elements": 9
+        },
+        {
+          "tag": "body",
+          "mismatches": 7,
+          "elements": 7
+        },
+        {
+          "tag": "html",
+          "mismatches": 7,
+          "elements": 7
+        },
+        {
+          "tag": "br",
+          "mismatches": 6,
+          "elements": 6
+        },
+        {
+          "tag": "b",
+          "mismatches": 4,
+          "elements": 4
+        },
+        {
+          "tag": "code",
+          "mismatches": 2,
+          "elements": 2
+        },
+        {
+          "tag": "em",
+          "mismatches": 2,
+          "elements": 2
+        },
+        {
+          "tag": "small",
+          "mismatches": 2,
+          "elements": 2
+        }
+      ]
+    }
+  ],
+  "total": {
+    "viewport": "all",
+    "pages": 14,
+    "elements": 310,
+    "matched": 0,
+    "rate": 0,
+    "classes": {
+      "positionOnly": 2,
+      "sizeOnly": 28,
+      "positionAndSize": 2,
+      "textRun": 122,
+      "missingOurs": 156,
+      "missingChrome": 0
+    },
+    "rootCauses": {
+      "positionOnly": 0,
+      "sizeOnly": 14,
+      "positionAndSize": 0,
+      "textRun": 0,
+      "missingOurs": 156,
+      "missingChrome": 0
+    },
+    "tagConflicts": 0,
+    "pagesAtGate": 0,
+    "medianPageRate": 0,
+    "minPageRate": 0,
+    "worstTags": [
+      {
+        "tag": "p",
+        "mismatches": 108,
+        "elements": 108
+      },
+      {
+        "tag": "span",
+        "mismatches": 98,
+        "elements": 98
+      },
+      {
+        "tag": "div",
+        "mismatches": 18,
+        "elements": 18
+      },
+      {
+        "tag": "body",
+        "mismatches": 14,
+        "elements": 14
+      },
+      {
+        "tag": "html",
+        "mismatches": 14,
+        "elements": 14
+      },
+      {
+        "tag": "br",
+        "mismatches": 12,
+        "elements": 12
+      },
+      {
+        "tag": "b",
+        "mismatches": 8,
+        "elements": 8
+      },
+      {
+        "tag": "code",
+        "mismatches": 4,
+        "elements": 4
+      },
+      {
+        "tag": "em",
+        "mismatches": 4,
+        "elements": 4
+      },
+      {
+        "tag": "small",
+        "mismatches": 4,
+        "elements": 4
+      }
+    ]
+  },
+  "gateMet": false
+}

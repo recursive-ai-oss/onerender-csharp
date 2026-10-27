@@ -13,27 +13,27 @@
       "viewport": "1280x800",
       "pages": 6,
       "elements": 3052,
-      "matched": 15,
-      "rate": 0.0049148099606815205,
+      "matched": 32,
+      "rate": 0.010484927916120577,
       "classes": {
-        "positionOnly": 306,
-        "sizeOnly": 32,
-        "positionAndSize": 622,
-        "textRun": 1616,
-        "missingOurs": 461,
+        "positionOnly": 954,
+        "sizeOnly": 37,
+        "positionAndSize": 608,
+        "textRun": 1421,
+        "missingOurs": 0,
         "missingChrome": 0
       },
       "rootCauses": {
-        "positionOnly": 3,
-        "sizeOnly": 5,
-        "positionAndSize": 1,
-        "textRun": 3,
-        "missingOurs": 461,
+        "positionOnly": 0,
+        "sizeOnly": 6,
+        "positionAndSize": 0,
+        "textRun": 0,
+        "missingOurs": 0,
         "missingChrome": 0
       },
       "tagConflicts": 0,
       "pagesAtGate": 0,
-      "medianPageRate": 0.005076142131979695,
+      "medianPageRate": 0.009943181818181818,
       "minPageRate": 0,
       "worstTags": [
         {
@@ -48,12 +48,12 @@
         },
         {
           "tag": "p",
-          "mismatches": 231,
+          "mismatches": 225,
           "elements": 235
         },
         {
           "tag": "strong",
-          "mismatches": 190,
+          "mismatches": 188,
           "elements": 190
         },
         {
@@ -92,22 +92,22 @@
       "viewport": "390x844",
       "pages": 6,
       "elements": 3052,
-      "matched": 9,
-      "rate": 0.002948885976408912,
+      "matched": 27,
+      "rate": 0.008846657929226736,
       "classes": {
-        "positionOnly": 154,
-        "sizeOnly": 23,
-        "positionAndSize": 682,
-        "textRun": 1723,
-        "missingOurs": 461,
+        "positionOnly": 929,
+        "sizeOnly": 32,
+        "positionAndSize": 608,
+        "textRun": 1456,
+        "missingOurs": 0,
         "missingChrome": 0
       },
       "rootCauses": {
-        "positionOnly": 3,
-        "sizeOnly": 5,
-        "positionAndSize": 1,
-        "textRun": 3,
-        "missingOurs": 461,
+        "positionOnly": 0,
+        "sizeOnly": 6,
+        "positionAndSize": 0,
+        "textRun": 0,
+        "missingOurs": 0,
         "missingChrome": 0
       },
       "tagConflicts": 0,
@@ -127,12 +127,12 @@
         },
         {
           "tag": "p",
-          "mismatches": 233,
+          "mismatches": 225,
           "elements": 235
         },
         {
           "tag": "strong",
-          "mismatches": 190,
+          "mismatches": 188,
           "elements": 190
         },
         {
@@ -152,7 +152,7 @@
         },
         {
           "tag": "span",
-          "mismatches": 85,
+          "mismatches": 84,
           "elements": 85
         },
         {
@@ -172,22 +172,22 @@
     "viewport": "all",
     "pages": 12,
     "elements": 6104,
-    "matched": 24,
-    "rate": 0.003931847968545216,
+    "matched": 59,
+    "rate": 0.009665792922673657,
     "classes": {
-      "positionOnly": 460,
-      "sizeOnly": 55,
-      "positionAndSize": 1304,
-      "textRun": 3339,
-      "missingOurs": 922,
+      "positionOnly": 1883,
+      "sizeOnly": 69,
+      "positionAndSize": 1216,
+      "textRun": 2877,
+      "missingOurs": 0,
       "missingChrome": 0
     },
     "rootCauses": {
-      "positionOnly": 6,
-      "sizeOnly": 10,
-      "positionAndSize": 2,
-      "textRun": 6,
-      "missingOurs": 922,
+      "positionOnly": 0,
+      "sizeOnly": 12,
+      "positionAndSize": 0,
+      "textRun": 0,
+      "missingOurs": 0,
       "missingChrome": 0
     },
     "tagConflicts": 0,
@@ -207,12 +207,12 @@
       },
       {
         "tag": "p",
-        "mismatches": 464,
+        "mismatches": 450,
         "elements": 470
       },
       {
         "tag": "strong",
-        "mismatches": 380,
+        "mismatches": 376,
         "elements": 380
       },
       {
@@ -232,7 +232,7 @@
       },
       {
         "tag": "span",
-        "mismatches": 170,
+        "mismatches": 169,
         "elements": 170
       },
       {
