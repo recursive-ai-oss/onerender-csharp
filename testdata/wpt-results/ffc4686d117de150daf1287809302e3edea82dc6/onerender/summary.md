@@ -16,27 +16,27 @@
 | css-flexbox | 1 | 1398 | 638 | 296 | 18 | 446 | 0.6702 |
 | css-fonts | 1 | 551 | 160 | 153 | 25 | 213 | 0.4734 |
 | css-grid | 1 | 2481 | 522 | 1041 | 10 | 908 | 0.3318 |
-| css-images | 1 | 510 | 218 | 174 | 19 | 99 | 0.5304 |
+| css-images | 1 | 510 | 231 | 161 | 19 | 99 | 0.5620 |
 | css-inline | 1 | 255 | 14 | 149 | 0 | 92 | 0.0859 |
 | css-masking | 1 | 448 | 94 | 180 | 8 | 166 | 0.3333 |
 | css-multicol | 1 | 563 | 184 | 216 | 0 | 163 | 0.4600 |
-| css-overflow | 1 | 892 | 112 | 383 | 11 | 386 | 0.2213 |
+| css-overflow | 1 | 892 | 114 | 381 | 11 | 386 | 0.2253 |
 | css-page | 1 | 247 | 2 | 5 | 0 | 240 | 0.2857 |
-| css-position | 1 | 367 | 34 | 96 | 1 | 236 | 0.2595 |
+| css-position | 1 | 367 | 38 | 92 | 1 | 236 | 0.2901 |
 | css-tables | 1 | 308 | 79 | 59 | 0 | 170 | 0.5725 |
 | css-text-decor | 1 | 357 | 83 | 194 | 8 | 72 | 0.2912 |
 | css-text | 1 | 1860 | 866 | 515 | 4 | 475 | 0.6253 |
 | css-transforms | 1 | 904 | 548 | 142 | 21 | 193 | 0.7707 |
 | css-transitions | 1 | 131 | 1 | 0 | 0 | 130 | 1.0000 |
 | css-ui | 1 | 1075 | 60 | 49 | 4 | 962 | 0.5310 |
-| css-values | 1 | 497 | 92 | 75 | 0 | 330 | 0.5509 |
+| css-values | 1 | 497 | 95 | 72 | 0 | 330 | 0.5689 |
 | css2-floats | 1 | 345 | 243 | 71 | 0 | 31 | 0.7739 |
 | css2-flow | 1 | 2415 | 1902 | 362 | 2 | 149 | 0.8394 |
 | css2-generated | 1 | 382 | 125 | 234 | 0 | 23 | 0.3482 |
 | css2-positioning | 1 | 654 | 486 | 134 | 0 | 34 | 0.7839 |
 | css2-tables | 1 | 375 | 144 | 105 | 0 | 126 | 0.5783 |
 | filter-effects | 1 | 367 | 129 | 137 | 4 | 97 | 0.4778 |
-| **all** | | 20216 | 7470 | 6145 | 147 | 6454 | 0.5428 |
+| **all** | | 20216 | 7492 | 6123 | 147 | 6454 | 0.5444 |
 
 ## Why tests failed or were skipped
 
@@ -78,7 +78,7 @@
 - Skipped: 758 × testharness.js test; 129 × script-dependent; 19 × reftest-wait (needs script); 2 × reference file missing
 ### css-images
 
-- Failures: 174 × == reference differs
+- Failures: 161 × == reference differs
 - Skipped: 42 × testharness.js test; 30 × script-dependent; 27 × reftest-wait (needs script)
 ### css-inline
 
@@ -94,7 +94,7 @@
 - Skipped: 95 × testharness.js test; 43 × reftest-wait (needs script); 21 × script-dependent; 4 × print reftest (paged output)
 ### css-overflow
 
-- Failures: 379 × == reference differs; 4 × != reference identical
+- Failures: 377 × == reference differs; 4 × != reference identical
 - Skipped: 228 × testharness.js test; 84 × reftest-wait (needs script); 73 × script-dependent; 1 × reference file missing
 ### css-page
 
@@ -102,7 +102,7 @@
 - Skipped: 217 × print reftest (paged output); 23 × testharness.js test
 ### css-position
 
-- Failures: 96 × == reference differs
+- Failures: 92 × == reference differs
 - Skipped: 115 × testharness.js test; 81 × script-dependent; 37 × reftest-wait (needs script); 3 × print reftest (paged output)
 ### css-tables
 
@@ -129,7 +129,7 @@
 - Skipped: 818 × script-dependent; 115 × testharness.js test; 29 × reftest-wait (needs script)
 ### css-values
 
-- Failures: 75 × == reference differs
+- Failures: 72 × == reference differs
 - Skipped: 284 × testharness.js test; 27 × script-dependent; 17 × reftest-wait (needs script); 2 × print reftest (paged output)
 ### css2-floats
 
