@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Drives a pinned Chrome for Testing over the DevTools protocol to screenshot pages. A calibration aid for the reftest runner; never part of a package.</Description>
+  </PropertyGroup>
+
+</Project>

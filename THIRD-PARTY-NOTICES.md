@@ -13,3 +13,26 @@ Each font file is the unmodified upstream release file. It is embedded in the pa
 | Caladea | commit 336a529cfad3d103d6527752686f8331d13e820a of <https://github.com/huertatipografica/Caladea> | Regular, Bold, Italic, Bold Italic | Copyright 2012 The Caladea Project Authors (<https://github.com/huertatipografica/Caladea>) |
 
 The full licence text for each family is the `OFL.txt` in its folder.
+
+## web-platform-tests (test use only)
+
+The reftest runner reads the web-platform-tests suite at the commit pinned in `tools/wpt/WPT_COMMIT`. It is fetched by `tools/wpt/fetch-wpt.sh` into a local cache and is not committed. Result files under `testdata/wpt-results/` contain test file names only.
+
+- Source: https://github.com/web-platform-tests/wpt, `LICENSE.md` (3-Clause BSD)
+- Copyright: web-platform-tests contributors; tests carry their own authors' notices.
+
+Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+## Chrome for Testing (test use only)
+
+The reftest runner can drive Chrome for Testing 156.0.8078.47 as a black box to calibrate the comparator. It is fetched by `tools/wpt/fetch-chrome.sh` (SHA-256 checked), is never redistributed and is not part of any package.
+
+## Chrome geometry differential (test use only)
+
+The tools under `tools/geomdiff/` drive Chrome for Testing 156.0.8078.47 as a black box, on frozen offline pages, and compare its layout with ours. It is fetched by `tools/geomdiff/scripts/fetch-chrome.sh` (SHA-256 checked), is never redistributed and is not part of any package. The pages in `testdata/tailwind/` are our own; they are compiled on the test machine with the Tailwind CSS v4.3.3 standalone CLI (MIT, Copyright (c) Tailwind Labs, Inc.), daisyUI 5.7.50 (MIT, Copyright (c) 2020 Pouya Saadeghi) and Flowbite 4.0.2 (MIT, Copyright (c) 2023 Bergside Inc.), each fetched at a pinned version and hash by `tools/geomdiff/scripts/build-tailwind.sh`. None of their files is committed or shipped; the compiled style sheets stay in the local cache.
+
+- Tailwind CSS: https://github.com/tailwindlabs/tailwindcss, `LICENSE` (MIT)
+- daisyUI: https://github.com/saadeghi/daisyui, `LICENSE` (MIT)
+- Flowbite: https://github.com/themesberg/flowbite, `LICENSE.md` (MIT)
+
+The MIT notice for each: "The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software."

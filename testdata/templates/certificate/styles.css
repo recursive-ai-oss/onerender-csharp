@@ -1,0 +1,16 @@
+body { margin: 0; background: #f4efe3; font-family: Cambria, Georgia, "Times New Roman", serif; color: #2b2b2b; }
+.frame { box-sizing: border-box; width: 1000px; min-height: 700px; margin: 24px auto; padding: 18px; border: 10px double #8a6d1d; background: #fffdf6; }
+.inner { box-sizing: border-box; min-height: 640px; border: 2px solid #8a6d1d; padding: 40px 56px; text-align: center; }
+.org { margin: 0; font-size: 18px; letter-spacing: 0.3em; text-transform: uppercase; color: #8a6d1d; }
+h1 { margin: 18px 0 24px; font-size: 46px; font-weight: normal; font-variant: small-caps; letter-spacing: 0.05em; }
+.lead { margin: 10px 0; font-style: italic; font-size: 18px; }
+.name { margin: 6px 0 12px; font-size: 40px; font-family: "Times New Roman", serif; border-bottom: 1px solid #8a6d1d; display: inline-block; padding: 0 40px 4px; }
+.course { margin: 8px 0; font-size: 28px; font-weight: bold; }
+.detail { max-width: 640px; margin: 12px auto 36px; font-size: 16px; line-height: 1.6; }
+.sign { display: flex; justify-content: space-between; align-items: flex-end; margin: 0 20px 28px; }
+.sign > div { width: 240px; }
+.line { border-top: 1px solid #333; margin-bottom: 6px; }
+.sign p { margin: 0; font-size: 15px; }
+.sign span { font-size: 12px; color: #666; }
+.seal { width: 96px; height: 96px; border-radius: 50%; border: 4px solid #8a6d1d; color: #8a6d1d; font: bold 16px/1.2 Arial, sans-serif; padding-top: 22px; box-sizing: border-box; }
+.id { font-size: 12px; color: #777; margin: 0; }

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>Projects</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="flex min-h-screen">
+  <aside class="bg-base-200 w-72 shrink-0 p-2"><ul class="menu w-full"><li class="menu-title">Workspace</li><li><a class="menu-active">Projects</a></li><li><a>Tasks</a></li><li><a>Calendar</a></li><li><details open><summary>Teams</summary><ul><li><a>Design</a></li><li><a>Platform</a></li><li><a>Support</a></li></ul></details></li><li class="menu-title">Account</li><li><a>Billing</a></li><li><a>Sign out</a></li></ul></aside>
+  <div class="flex-1">
+    <div class="navbar bg-base-100 border-b border-base-300"><div class="flex-1 px-4"><div class="breadcrumbs text-sm"><ul><li><a>Home</a></li><li><a>Projects</a></li><li>Atlas</li></ul></div></div><div class="flex-none gap-2 pr-4"><input type="text" placeholder="Search" class="input input-bordered input-sm w-40"><div class="avatar avatar-placeholder"><div class="bg-neutral text-neutral-content w-9 rounded-full"><span>KW</span></div></div></div></div>
+    <main class="space-y-6 p-6">
+      <div class="flex items-center justify-between"><h1 class="text-3xl font-bold">Atlas</h1><button class="btn btn-primary">New task</button></div>
+      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div class="stats bg-base-100 border-base-300 border"><div class="stat"><div class="stat-title">Open</div><div class="stat-value">31</div></div></div>
+        <div class="stats bg-base-100 border-base-300 border"><div class="stat"><div class="stat-title">In review</div><div class="stat-value">7</div></div></div>
+        <div class="stats bg-base-100 border-base-300 border"><div class="stat"><div class="stat-title">Done</div><div class="stat-value">212</div></div></div>
+        <div class="stats bg-base-100 border-base-300 border"><div class="stat"><div class="stat-title">Overdue</div><div class="stat-value text-error">3</div></div></div>
+      </div>
+      <div class="grid gap-6 lg:grid-cols-3">
+        <div class="card bg-base-100 border-base-300 border lg:col-span-2"><div class="card-body"><h2 class="card-title">Tasks</h2>
+          <ul class="list"><li class="list-row"><div><div>Wire up billing webhooks</div><div class="text-xs font-semibold uppercase opacity-60">Platform</div></div><span class="badge badge-warning">Review</span></li><li class="list-row"><div><div>Redesign onboarding</div><div class="text-xs font-semibold uppercase opacity-60">Design</div></div><span class="badge badge-info">Open</span></li><li class="list-row"><div><div>Fix timezone bug in exports</div><div class="text-xs font-semibold uppercase opacity-60">Support</div></div><span class="badge badge-success">Done</span></li></ul></div></div>
+        <div class="card bg-base-100 border-base-300 border"><div class="card-body"><h2 class="card-title">Quick add</h2><fieldset class="fieldset"><legend class="fieldset-legend">Title</legend><input type="text" class="input w-full" placeholder="What needs doing?"><legend class="fieldset-legend">Assignee</legend><select class="select w-full"><option>Unassigned</option><option>Kim</option></select><label class="label mt-2"><input type="checkbox" class="checkbox checkbox-sm"> Mark urgent</label></fieldset><div class="card-actions justify-end"><button class="btn btn-sm">Add</button></div></div></div>
+      </div>
+      <progress class="progress progress-primary w-full" value="70" max="100"></progress>
+    </main>
+  </div>
+</div>
+</body>
+</html>
