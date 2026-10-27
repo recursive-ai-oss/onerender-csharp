@@ -1,3 +1,5 @@
+using OneRender.Painting;
+
 namespace OneRender.Image;
 
 /// <summary>
@@ -77,8 +79,9 @@ public static class HtmlRenderSeam
         _ = documentUri;
         _ = resources;
 
-        byte[] pixels = new byte[checked(width * height * 4)];
-        pixels.AsSpan().Fill(0xFF);
-        return new RgbaImage(width, height, pixels);
+        // Layout and paint do not exist yet, so the display list is empty; it still goes through the rasterizer, which is the
+        // path the engine's real output will take.
+        DisplayList list = new();
+        return DisplayListRasterizer.Render(list, width, height, new RasterOptions(), cancellationToken);
     }
 }

@@ -39,10 +39,19 @@ public static class Allocation
     /// <param name="iterations">Measured runs.</param>
     public static void AssertZero(Action action, string what, int warmup = 3, int iterations = 10)
     {
+        // The runtime can allocate on the calling thread while it recompiles a hot method at a higher tier, which happens at a
+        // time the test does not control. That cost is one-off, so a path that allocates on every run fails all rounds,
+        // while a round hit by recompilation is followed by a clean one.
+        const int Rounds = 3;
         long bytes = Measure(action, warmup, iterations);
+        for (int round = 1; round < Rounds && bytes != 0; round++)
+        {
+            bytes = Measure(action, warmup: 0, iterations);
+        }
+
         if (bytes != 0)
         {
-            throw new InvalidOperationException($"{what} allocated {bytes} bytes over {iterations} runs; expected 0.");
+            throw new InvalidOperationException($"{what} allocated {bytes} bytes over {iterations} runs in each of {Rounds} rounds; expected 0.");
         }
     }
 }
