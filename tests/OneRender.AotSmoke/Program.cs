@@ -100,7 +100,8 @@ if (gridPage.Fragments.Root.IsNull || gridPage.Fragments.Root.BorderBox.Width !=
 RgbaImage paintPage = HtmlRender.ToImage(
     "<body style='margin:0;font:14px Arial'><div style='width:40px;height:20px;background:linear-gradient(#f00,#f00) 0 0/10px 10px space,radial-gradient(circle,#fff,#00f);border:3px solid;border-image:linear-gradient(#0f0,#00f) 1;box-shadow:2px 2px 3px #888,inset 0 0 4px #000;outline:2px auto'></div><p style='text-decoration:underline wavy #f00;text-shadow:1px 1px 2px #000;margin:2px'>Hi</p><ul><li>x</li></ul></body>",
     new HtmlRenderOptions { Width = 80, Height = 80 });
-bool paintOk = paintPage.Pixels[((8 * 80) + 5) * 4 + 1] == 255 || paintPage.Pixels[((8 * 80) + 5) * 4 + 2] == 255;
+int paintAt = ((12 * 80) + 20) * 4;
+bool paintOk = paintPage.Pixels[paintAt] > 200 && paintPage.Pixels[paintAt + 1] < 40 && paintPage.Pixels[paintAt + 2] < 40;
 if (!paintOk)
 {
     return 7;
