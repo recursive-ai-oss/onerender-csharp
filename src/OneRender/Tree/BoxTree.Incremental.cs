@@ -20,7 +20,7 @@ internal enum BoxUpdate : byte
 
 public sealed partial class BoxTree
 {
-    // What makes a subtree unsafe to reuse from an earlier layout: its layout leaks into or reads state outside the subtree
+    // What makes a subtree not reusable from an earlier layout: its layout leaks into or reads state outside the subtree
     // (floats, out-of-flow positioning, columns) or keeps side tables keyed by fragment (tables).
     internal const byte HazardOutOfFlow = 1;
     internal const byte HazardColumns = 2;
