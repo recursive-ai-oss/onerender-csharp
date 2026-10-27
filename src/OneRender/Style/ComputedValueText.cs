@@ -5,6 +5,7 @@ internal static class ComputedValueText
 {
     private static readonly string[] BorderStyles = ["none", "hidden", "dotted", "dashed", "solid", "double", "groove", "ridge", "inset", "outset"];
     private static readonly string[] Overflows = ["visible", "hidden", "clip", "scroll", "auto"];
+    private static readonly string[] ClipMarginBoxes = ["padding-box", "content-box", "border-box"];
     private static readonly string[] VerticalAligns = ["baseline", "sub", "super", "text-top", "text-bottom", "middle", "top", "bottom"];
     private static readonly string[] Collapses = ["collapse", "preserve", "preserve-breaks", "preserve-spaces", "break-spaces"];
     private static readonly string[] WordBreaks = ["normal", "break-all", "keep-all", "break-word"];
@@ -64,6 +65,8 @@ internal static class ComputedValueText
             case PropertyId.BorderBottomLeftRadius: return RadiusText(v.BorderBottomLeftRadius);
             case PropertyId.OverflowX: return Overflows[(int)v.OverflowX];
             case PropertyId.OverflowY: return Overflows[(int)v.OverflowY];
+            case PropertyId.OverflowClipMargin:
+                return ClipMarginBoxes[(int)v.OverflowClipMarginBox] + " " + CssText.Number(v.OverflowClipMarginPx) + "px";
             case PropertyId.ZIndex: return v.ZIndexAuto ? "auto" : v.ZIndex.ToString(System.Globalization.CultureInfo.InvariantCulture);
             case PropertyId.Visibility: return v.Visibility.ToString().ToLowerInvariant();
             case PropertyId.FontFamily: return v.FontFamily.ToCss();

@@ -499,9 +499,14 @@ internal sealed partial class InlineWorker
 
         // ---- fragments
         Fragment line = _out.AddLine(_parent, new Rect(request.ContentLeft + xOff, request.ContentTop + y, lineW, lineH), rb);
+        _lineX = request.ContentLeft + xOff;
+        _lineY = request.ContentTop + y;
+        AddOverflow(0, 0, lineW, lineH);
+        AddOverflow(x0, 0, x - x0, lineH); // text that runs past the line end
         int cur = -1;
         Fragment curFrag = line;
         double ox = 0, oy = 0;
+        bool inkSeen = false;
         for (int k = 0; k < _pn; k++)
         {
             ref Piece p = ref _pc[_order[k]];
@@ -554,8 +559,26 @@ internal sealed partial class InlineWorker
                         Rect bb = af.BorderBox;
                         _out.Reparent(af, curFrag);
                         _out.SetBorderBox(af, new Rect(p.X + el.Ml - ox, p.Base - el.Base + el.Mt - oy, bb.Width, bb.Height));
+                        AddOverflow(p.X + el.Ml, p.Base - el.Base + el.Mt, bb.Width, bb.Height);
                     }
 
+                    break;
+                }
+
+                case PK.Abs:
+                {
+                    // CSS2 §10.1 item 4: a positioned inline box is the containing block of the boxes inside it.
+                    int cbf = -1;
+                    for (int sIdx = p.Seg; sIdx >= 0; sIdx = _sg[sIdx].Parent)
+                    {
+                        if (V(_sg[sIdx].Box).Position != PositionKind.Static)
+                        {
+                            cbf = _segFragIndex[sIdx];
+                            break;
+                        }
+                    }
+
+                    QueueAbs(in request, p.Elem, _lineX + p.X, _lineY, cbf, inkSeen);
                     break;
                 }
 
@@ -569,6 +592,11 @@ internal sealed partial class InlineWorker
 
                 default:
                     break;
+            }
+
+            if (p.Kind != PK.Abs && p.W > Eps)
+            {
+                inkSeen = true;
             }
         }
 
@@ -605,7 +633,10 @@ internal sealed partial class InlineWorker
         double maxX = double.IsInfinity(s.MaxX) ? minX : s.MaxX;
         s.OriginX = minX;
         s.OriginY = top;
-        Fragment f = _out.AddBox(parentFrag, bx, new Rect(minX - px, top - py, maxX - minX, h));
+        AddOverflow(minX, top, maxX - minX, h);
+        // CSS2 §9.4.3: a relatively positioned inline box is drawn shifted; its content moves with it and the line does not change.
+        BlockLayoutEngine.RelativeOffset(in v, bw, double.NaN, _container.Values.Direction == DirectionKind.Rtl, out double relDx, out double relDy);
+        Fragment f = _out.AddBox(parentFrag, bx, new Rect(minX - px + relDx, top - py + relDy, maxX - minX, h));
         _out.SetEdges(f, new Insets(bt, rightB, bb, leftB), new Insets(pt, rightP, pb, leftP));
         _out.SetBaseline(f, bt + pt + m.A);
         FragmentTraits tr = FragmentTraits.None;

@@ -50,6 +50,21 @@ public sealed partial class BlockLayoutEngine
         }
     }
 
+    /// <inheritdoc />
+    void IAtomicInlineHost.QueueAbsolute(Box box, int containingFragment, double staticStart, double staticEnd, double staticTop)
+    {
+        if (_sp == 0 || _absCount >= MaxAbsolute || box.IsNull)
+        {
+            return;
+        }
+
+        Enqueue(in _frames[_sp - 1], box, staticStart, staticEnd, staticTop);
+        if (containingFragment >= 0 && box.Values.Position != PositionKind.Fixed)
+        {
+            _abs[_absCount - 1].Cb = containingFragment;
+        }
+    }
+
     private void PrepareIntrinsicCache(int boxCount)
     {
         if (_minContent.Length < boxCount)

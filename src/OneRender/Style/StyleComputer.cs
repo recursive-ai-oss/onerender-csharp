@@ -264,6 +264,7 @@ internal sealed partial class StyleComputer
             case PropertyId.TabSize: d.TabSize = s.TabSize; break;
             case PropertyId.TextAlignLast: d.TextAlignLast = s.TextAlignLast; break;
             case PropertyId.TextJustify: d.TextJustify = s.TextJustify; break;
+            case PropertyId.OverflowClipMargin: d.OverflowClipMarginPx = s.OverflowClipMarginPx; d.OverflowClipMarginBox = s.OverflowClipMarginBox; break;
         }
     }
 

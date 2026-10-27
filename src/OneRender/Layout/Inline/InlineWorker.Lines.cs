@@ -16,6 +16,7 @@ internal sealed partial class InlineWorker
         Tab,
         Hyphen,
         Br,
+        Abs,
         Dead,
     }
 
@@ -97,6 +98,19 @@ internal sealed partial class InlineWorker
     private double _firstBaseline;
     private double _lastBaseline;
     private double _maxRight;
+
+    // Extent of everything the lines occupy, in the container fragment's border-box coordinates (scrollable overflow).
+    private double _ovL, _ovT, _ovR, _ovB;
+    private double _lineX, _lineY;
+
+    private void AddOverflow(double x, double y, double w, double h)
+    {
+        // Line-local to container coordinates.
+        _ovL = Math.Min(_ovL, _lineX + x);
+        _ovT = Math.Min(_ovT, _lineY + y);
+        _ovR = Math.Max(_ovR, _lineX + x + w);
+        _ovB = Math.Max(_ovB, _lineY + y + h);
+    }
 
     private static void Ensure<T>(ref T[] a, int n)
     {
@@ -203,6 +217,8 @@ internal sealed partial class InlineWorker
         _firstBaseline = double.NaN;
         _lastBaseline = double.NaN;
         _maxRight = 0;
+        _ovL = _ovT = double.PositiveInfinity;
+        _ovR = _ovB = double.NegativeInfinity;
         IExclusionSpace ex = request.Exclusions;
         double y = 0;
         int lines = 0;
@@ -235,6 +251,12 @@ internal sealed partial class InlineWorker
                 ScanLine(e, c, avail, indent);
                 ee = _endE;
                 ec = _endC;
+                // Out-of-flow boxes right after the line's last item stay with it: they take no room and have no break of their own.
+                while (ec == 0 && !_endForced && ee < _elN && _el[ee].Kind == EK.Float && (_el[ee].Flags & EF.Abs) != 0)
+                {
+                    ee++;
+                }
+
                 if (PlaceLineFloats(in request, ex, e, c, ee, ec, avail, top))
                 {
                     continue; // a float joined this line: it is narrower now
@@ -287,6 +309,18 @@ internal sealed partial class InlineWorker
                 first = false;
             }
 
+            if (!hasContent && _host is not null)
+            {
+                // Out-of-flow boxes on a line that has nothing else: they sit at the start of the empty line.
+                for (int k = e; k < ee && k < _elN; k++)
+                {
+                    if (_el[k].Kind == EK.Float && (_el[k].Flags & EF.Abs) != 0)
+                    {
+                        QueueAbs(in request, k, request.ContentLeft + xOff, request.ContentTop + top, -1);
+                    }
+                }
+            }
+
             y = top + lineHeight;
             PlaceDeferredFloats(in request, ex, y);
             afterForced = _endForced;
@@ -294,7 +328,7 @@ internal sealed partial class InlineWorker
             c = ec;
         }
 
-        return new InlineLayoutResult(y, lines, _firstBaseline, _lastBaseline);
+        return new InlineLayoutResult(y, lines, _firstBaseline, _lastBaseline, _ovL, _ovT, _ovR, _ovB, _host is not null);
     }
 
     private const int MaxLineAttempts = 1 << 16;
@@ -320,7 +354,7 @@ internal sealed partial class InlineWorker
         for (int k = e0; k < _elN && (k < e1 || (k == e1 && c1 > 0)); k++)
         {
             ref Elem el = ref _el[k];
-            if (el.Kind != EK.Float || el.Frag >= 0)
+            if (el.Kind != EK.Float || el.Frag >= 0 || (el.Flags & EF.Abs) != 0)
             {
                 continue;
             }
@@ -350,6 +384,25 @@ internal sealed partial class InlineWorker
         }
 
         return placed;
+    }
+
+    /// <summary>
+    /// Hands an absolutely positioned box in the content to the block layout. Its static position (CSS2 §10.3.7, §10.6.4) is where the
+    /// box would have been as an inline-level box: at the inline position reached on the line, at the top of the line box.
+    /// </summary>
+    private void QueueAbs(in InlineLayoutRequest request, int elem, double x, double lineTop, int containingFrag, bool inkBefore = false)
+    {
+        Box b = _boxes.Make(_el[elem].Box);
+        double end = request.ContentLeft + _availW;
+        bool rtl = _container.Values.Direction == DirectionKind.Rtl;
+        if (!inkBefore)
+        {
+            // Nothing but out-of-flow boxes before it on the line: the box sits at the container's start edge, not after the floats.
+            _host!.QueueAbsolute(b, containingFrag, request.ContentLeft, end, lineTop);
+            return;
+        }
+
+        _host!.QueueAbsolute(b, containingFrag, rtl ? request.ContentLeft : x, rtl ? x : end, lineTop);
     }
 
     private void PlaceDeferredFloats(in InlineLayoutRequest request, IExclusionSpace ex, double lineBottom)
@@ -446,6 +499,11 @@ internal sealed partial class InlineWorker
                     ink = true;
                     break;
                 case EK.Float:
+                    if ((el.Flags & EF.Abs) != 0)
+                    {
+                        AddPiece(PK.Abs, e, 0, 0, 0, el.Owner, el.Level);
+                    }
+
                     break;
                 case EK.Tab:
                 {
@@ -515,7 +573,7 @@ internal sealed partial class InlineWorker
         while (t >= 0)
         {
             ref Piece p = ref _pc[t];
-            if (p.Kind == PK.Close)
+            if (p.Kind is PK.Close or PK.Abs)
             {
                 t--;
                 continue;

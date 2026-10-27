@@ -35,7 +35,17 @@ if (fragments.Root.IsNull || fragments.Root.BorderBox.Width != 800)
     return 4;
 }
 
-Console.WriteLine($"{styled.Count} styled nodes, {boxTree.Count} boxes");
+// Positioned boxes, overflow, sticky positioning and the in-place scroll patch must survive trimming and AOT as well.
+HtmlPage scrollPage = HtmlPage.Create(
+    "<body style='margin:0'><div style='position:relative;overflow:auto;width:50px;height:20px'><div style='position:absolute;left:5px;top:60px;width:10px;height:10px;background:#00f'></div><div style='height:100px'></div></div><div style='position:sticky;top:0;height:5px;background:#f00'></div><div style='height:200px'></div></body>",
+    new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 100, ViewportHeight = 50 });
+var scrollPainter = new Painter();
+var scrollList = new RetainedDisplayList();
+scrollPainter.Paint(scrollPage.Fragments, scrollList, new PaintOptions(100, 50) { Scroll = scrollPage.Scroll });
+scrollPage.Scroll.SetViewportOffset(0, 30);
+bool scrollOk = scrollPainter.PatchScroll(scrollList) > 0;
+
+Console.WriteLine($"{styled.Count} styled nodes, {boxTree.Count} boxes, scroll patch {scrollOk}");
 if (boxTree.Count < 8 || !dump.Contains("flex", StringComparison.Ordinal))
 {
     return 3;
@@ -82,7 +92,7 @@ bool woff2Ok = decoded.Status == FontLoadStatus.Ok && decoded.Face!.HasGlyph(0x0
 Console.WriteLine($"shaped {run.GlyphCount} glyphs, width {run.Width:F2}, cached {again}, woff2 {decoded.Status}");
 
 
-return names.Length == 3 && sfnt && painted && pageOk && boxes >= 3 && shaped && again && woff2Ok ? 0 : 1;
+return names.Length == 3 && sfnt && painted && pageOk && boxes >= 3 && scrollOk && shaped && again && woff2Ok ? 0 : 1;
 
 internal sealed class NoFonts : OneRender.Layout.IFontProvider
 {

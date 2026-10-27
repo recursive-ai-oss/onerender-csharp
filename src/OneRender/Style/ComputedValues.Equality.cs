@@ -47,6 +47,8 @@ public partial struct ComputedValues
         a.BorderBottomLeftRadius.Horizontal.Equals(b.BorderBottomLeftRadius.Horizontal) && a.BorderBottomLeftRadius.Vertical.Equals(b.BorderBottomLeftRadius.Vertical) &&
         a.OverflowX == b.OverflowX &&
         a.OverflowY == b.OverflowY &&
+        a.OverflowClipMarginPx.Equals(b.OverflowClipMarginPx) &&
+        a.OverflowClipMarginBox == b.OverflowClipMarginBox &&
         a.ZIndexAuto.Equals(b.ZIndexAuto) &&
         a.ZIndex.Equals(b.ZIndex) &&
         a.Visibility == b.Visibility &&
@@ -132,6 +134,8 @@ public partial struct ComputedValues
         h.Add(v.BorderBottomLeftRadius.Horizontal); h.Add(v.BorderBottomLeftRadius.Vertical);
         h.Add(v.OverflowX);
         h.Add(v.OverflowY);
+        h.Add(v.OverflowClipMarginPx);
+        h.Add(v.OverflowClipMarginBox);
         h.Add(v.ZIndexAuto);
         h.Add(v.ZIndex);
         h.Add(v.Visibility);

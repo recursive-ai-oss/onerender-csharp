@@ -247,6 +247,12 @@ public partial struct ComputedValues
     /// <summary><c>overflow-y</c>.</summary>
     public OverflowKind OverflowY { get; internal set; }
 
+    /// <summary>The length of <c>overflow-clip-margin</c> in px (CSS Overflow 4 §3.2); 0 initially.</summary>
+    public double OverflowClipMarginPx { get; internal set; }
+
+    /// <summary>The reference box of <c>overflow-clip-margin</c>; padding-box when the property omits it.</summary>
+    public ClipMarginBoxKind OverflowClipMarginBox { get; internal set; }
+
     /// <summary>True when <c>z-index</c> is <c>auto</c>.</summary>
     public bool ZIndexAuto { get; internal set; }
 

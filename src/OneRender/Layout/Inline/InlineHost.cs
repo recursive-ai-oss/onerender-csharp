@@ -25,6 +25,17 @@ public interface IAtomicInlineHost
     /// <param name="minContent">Receives the min-content contribution in px.</param>
     /// <param name="maxContent">Receives the max-content contribution in px.</param>
     void GetAtomicContribution(Box box, out double minContent, out double maxContent);
+
+    /// <summary>
+    /// Queues an absolutely or fixed positioned box found in inline content, with the place the box would have had in the flow
+    /// (its static position). The box is laid out once the containing blocks are final.
+    /// </summary>
+    /// <param name="box">The positioned box.</param>
+    /// <param name="containingFragment">The fragment of the nearest positioned inline box that contains it (CSS2 §10.1 item 4), or -1 to use the one of the block container.</param>
+    /// <param name="staticStart">The hypothetical box's start margin edge, in the container fragment's border-box coordinates.</param>
+    /// <param name="staticEnd">The end margin edge it would stretch to in the same coordinates.</param>
+    /// <param name="staticTop">The top margin edge, in the same coordinates.</param>
+    void QueueAbsolute(Box box, int containingFragment, double staticStart, double staticEnd, double staticTop);
 }
 
 /// <summary>An <see cref="IInlineLayout"/> that wants the block layout's atomic-inline services.</summary>

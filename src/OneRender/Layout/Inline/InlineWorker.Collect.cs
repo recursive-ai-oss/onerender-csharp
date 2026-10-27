@@ -47,6 +47,7 @@ internal sealed partial class InlineWorker
         Br = 16,
         WsPercent = 32,
         NoEdge = 64,
+        Abs = 128,
     }
 
     private struct Elem
@@ -256,7 +257,13 @@ internal sealed partial class InlineWorker
                     {
                         if (ch.Values.Floating == FloatKind.None)
                         {
-                            break; // absolutely positioned boxes take no part in the line
+                            if (_layout && ch.Values.Position is PositionKind.Absolute or PositionKind.Fixed)
+                            {
+                                // The box takes no part in the line, but its static position is where it met the line (CSS2 §10.3.7).
+                                AddRaw(EK.Float, ch.Index, fb, _n, 0).Flags = EF.Abs;
+                            }
+
+                            break;
                         }
 
                         if (_layout)

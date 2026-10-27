@@ -61,6 +61,10 @@ public sealed partial class BlockLayoutEngine
         public double OwnerWidth;
         public double OwnerContentLeft;
         public double OwnerContentTop;
+
+        // Relative positioning of the float (CSS2 §9.4.3): drawn shifted, but it occupies its normal place for everything else.
+        public double Dx;
+        public double Dy;
     }
 
     private FloatRect[] _floats = new FloatRect[64];
@@ -367,11 +371,11 @@ public sealed partial class BlockLayoutEngine
         }
 
         double borderLeft = x + r.Ml, borderTop = y + r.Mt;
-        s.OvL = Math.Min(s.OvL, borderLeft);
-        s.OvT = Math.Min(s.OvT, borderTop);
-        s.OvR = Math.Max(s.OvR, borderLeft + r.Bw);
-        s.OvB = Math.Max(s.OvB, borderTop + r.Bh);
-        _out.SetBorderBox(new Fragment(_out, r.Frag), new Rect(r.OwnerContentLeft + (borderLeft - r.OwnerBfcLeft), r.OwnerContentTop + (borderTop - ownerBfcTop), r.Bw, r.Bh));
+        s.OvL = Math.Min(s.OvL, borderLeft + r.Dx);
+        s.OvT = Math.Min(s.OvT, borderTop + r.Dy);
+        s.OvR = Math.Max(s.OvR, borderLeft + r.Dx + r.Bw);
+        s.OvB = Math.Max(s.OvB, borderTop + r.Dy + r.Bh);
+        _out.SetBorderBox(new Fragment(_out, r.Frag), new Rect(r.OwnerContentLeft + (borderLeft - r.OwnerBfcLeft) + r.Dx, r.OwnerContentTop + (borderTop - ownerBfcTop) + r.Dy, r.Bw, r.Bh));
         return new Rect(x, y, w, h);
     }
 
@@ -379,7 +383,7 @@ public sealed partial class BlockLayoutEngine
     /// A float of the block flow has been laid out (its fragment exists, its size is known): positions it at the current flow
     /// position of its parent, or, while the parent's top margin is still pending, holds it until that position is settled.
     /// </summary>
-    private void FinishFloat(int pi, int frag, double bw, double bh, double mt, double mr, double mb, double ml, in ComputedValues v)
+    private void FinishFloat(int pi, int frag, double bw, double bh, double mt, double mr, double mb, double ml, in ComputedValues v, double dx, double dy)
     {
         ref Frame p = ref _frames[pi];
         var rec = new PendingFloat
@@ -397,6 +401,8 @@ public sealed partial class BlockLayoutEngine
             OwnerWidth = p.ContentWidth,
             OwnerContentLeft = p.ContentLeft,
             OwnerContentTop = p.ContentTop,
+            Dx = dx,
+            Dy = dy,
         };
         if ((p.Flags & FrameFlags.TopPending) != 0)
         {
