@@ -78,7 +78,8 @@ public partial struct ComputedValues
         string.Equals(a.ContentText, b.ContentText, StringComparison.Ordinal) &&
         string.Equals(a.ListStyleType, b.ListStyleType, StringComparison.Ordinal) &&
         a.ListStyleTypeIsString.Equals(b.ListStyleTypeIsString) &&
-        a.ListStylePosition == b.ListStylePosition;
+        a.ListStylePosition == b.ListStylePosition &&
+        FlexEquals(in a, in b);
 
     internal static int ValueHash(in ComputedValues v)
     {
@@ -159,6 +160,7 @@ public partial struct ComputedValues
         h.Add(v.ListStyleType, StringComparer.Ordinal);
         h.Add(v.ListStyleTypeIsString);
         h.Add(v.ListStylePosition);
+        FlexHash(ref h, in v);
         return h.ToHashCode();
     }
 }

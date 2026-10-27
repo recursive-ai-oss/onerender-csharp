@@ -16,6 +16,17 @@
       "rate": "0.1987"
     },
     {
+      "module": "css-flexbox",
+      "sampleStride": 1,
+      "discovered": 1398,
+      "total": 1398,
+      "pass": 226,
+      "fail": 607,
+      "blank": 119,
+      "skipped": 446,
+      "rate": "0.2374"
+    },
+    {
       "module": "css-overflow",
       "sampleStride": 1,
       "discovered": 892,
@@ -72,11 +83,11 @@
     }
   ],
   "totals": {
-    "total": 5520,
-    "pass": 474,
-    "fail": 2669,
-    "blank": 1313,
-    "skipped": 1064,
-    "rate": "0.1064"
+    "total": 6918,
+    "pass": 700,
+    "fail": 3276,
+    "blank": 1432,
+    "skipped": 1510,
+    "rate": "0.1294"
   }
 }
