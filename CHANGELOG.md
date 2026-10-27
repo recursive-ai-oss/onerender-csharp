@@ -2,6 +2,17 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.0.1] - TBD
+
+### Fixed
+
+- **WebAssembly:** `HtmlPage`, `InteractivePage` and `LivePage` crashed the Mono runtime (`Assertion: should not be reached at class-accessors.c`, or `memory access out of bounds`) on the first garbage collection after the first page, in Debug and Release builds alike. `ComputedValues.Initial` was a large `static readonly` struct, and Mono on 32-bit WebAssembly does not keep the references held by such a static alive across a collection. `ComputedValues.Initial` is now a `ref readonly` property over a heap object (source compatible; code compiled against 1.0.0 must be recompiled).
+- A `LivePage` over a `StyledTree` with no nodes no longer loops until memory runs out.
+
+### Changed
+
+- The browser-wasm smoke app now runs in headless Chrome in CI, in Debug (interpreter, no native relink) and Release, instead of only being published.
+
 ## [1.0.0] - 2026-10-27
 
 First release. All packages share one version.
