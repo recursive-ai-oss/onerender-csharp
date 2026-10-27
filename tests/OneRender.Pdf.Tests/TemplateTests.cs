@@ -14,6 +14,7 @@ public class TemplateTests
             new HtmlPdfOptions
             {
                 Page = PdfPageSetup.A4,
+                BaseUrl = "https://templates.invalid/" + name + "/index.html",
                 Resources = Support.TemplateResources(name),
                 Output = new PdfOutputOptions { Profile = profile },
             });
