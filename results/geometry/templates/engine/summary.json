@@ -13,27 +13,27 @@
       "viewport": "1280x800",
       "pages": 6,
       "elements": 3052,
-      "matched": 32,
-      "rate": 0.010484927916120577,
+      "matched": 232,
+      "rate": 0.07601572739187418,
       "classes": {
-        "positionOnly": 954,
-        "sizeOnly": 37,
-        "positionAndSize": 608,
-        "textRun": 1421,
+        "positionOnly": 912,
+        "sizeOnly": 25,
+        "positionAndSize": 542,
+        "textRun": 1341,
         "missingOurs": 0,
         "missingChrome": 0
       },
       "rootCauses": {
         "positionOnly": 0,
-        "sizeOnly": 6,
+        "sizeOnly": 4,
         "positionAndSize": 0,
-        "textRun": 0,
+        "textRun": 1,
         "missingOurs": 0,
         "missingChrome": 0
       },
       "tagConflicts": 0,
-      "pagesAtGate": 0,
-      "medianPageRate": 0.009943181818181818,
+      "pagesAtGate": 1,
+      "medianPageRate": 0.16751269035532995,
       "minPageRate": 0,
       "worstTags": [
         {
@@ -48,23 +48,18 @@
         },
         {
           "tag": "p",
-          "mismatches": 225,
+          "mismatches": 200,
           "elements": 235
         },
         {
           "tag": "strong",
-          "mismatches": 188,
+          "mismatches": 178,
           "elements": 190
         },
         {
           "tag": "em",
-          "mismatches": 172,
+          "mismatches": 165,
           "elements": 172
-        },
-        {
-          "tag": "li",
-          "mismatches": 157,
-          "elements": 157
         },
         {
           "tag": "th",
@@ -72,19 +67,24 @@
           "elements": 135
         },
         {
-          "tag": "span",
-          "mismatches": 85,
-          "elements": 85
+          "tag": "li",
+          "mismatches": 128,
+          "elements": 157
         },
         {
           "tag": "h3",
-          "mismatches": 60,
+          "mismatches": 55,
           "elements": 60
         },
         {
           "tag": "ul",
           "mismatches": 47,
           "elements": 47
+        },
+        {
+          "tag": "span",
+          "mismatches": 31,
+          "elements": 85
         }
       ]
     },
@@ -92,27 +92,27 @@
       "viewport": "390x844",
       "pages": 6,
       "elements": 3052,
-      "matched": 27,
-      "rate": 0.008846657929226736,
+      "matched": 172,
+      "rate": 0.0563564875491481,
       "classes": {
-        "positionOnly": 929,
-        "sizeOnly": 32,
-        "positionAndSize": 608,
-        "textRun": 1456,
+        "positionOnly": 931,
+        "sizeOnly": 24,
+        "positionAndSize": 548,
+        "textRun": 1377,
         "missingOurs": 0,
         "missingChrome": 0
       },
       "rootCauses": {
         "positionOnly": 0,
-        "sizeOnly": 6,
+        "sizeOnly": 4,
         "positionAndSize": 0,
-        "textRun": 0,
+        "textRun": 1,
         "missingOurs": 0,
         "missingChrome": 0
       },
       "tagConflicts": 0,
-      "pagesAtGate": 0,
-      "medianPageRate": 0.005076142131979695,
+      "pagesAtGate": 1,
+      "medianPageRate": 0.030456852791878174,
       "minPageRate": 0,
       "worstTags": [
         {
@@ -127,12 +127,12 @@
         },
         {
           "tag": "p",
-          "mismatches": 225,
+          "mismatches": 212,
           "elements": 235
         },
         {
           "tag": "strong",
-          "mismatches": 188,
+          "mismatches": 185,
           "elements": 190
         },
         {
@@ -141,19 +141,14 @@
           "elements": 172
         },
         {
-          "tag": "li",
-          "mismatches": 157,
-          "elements": 157
-        },
-        {
           "tag": "th",
           "mismatches": 135,
           "elements": 135
         },
         {
-          "tag": "span",
-          "mismatches": 84,
-          "elements": 85
+          "tag": "li",
+          "mismatches": 128,
+          "elements": 157
         },
         {
           "tag": "h3",
@@ -164,6 +159,11 @@
           "tag": "ul",
           "mismatches": 47,
           "elements": 47
+        },
+        {
+          "tag": "span",
+          "mismatches": 32,
+          "elements": 85
         }
       ]
     }
@@ -172,27 +172,27 @@
     "viewport": "all",
     "pages": 12,
     "elements": 6104,
-    "matched": 59,
-    "rate": 0.009665792922673657,
+    "matched": 404,
+    "rate": 0.06618610747051114,
     "classes": {
-      "positionOnly": 1883,
-      "sizeOnly": 69,
-      "positionAndSize": 1216,
-      "textRun": 2877,
+      "positionOnly": 1843,
+      "sizeOnly": 49,
+      "positionAndSize": 1090,
+      "textRun": 2718,
       "missingOurs": 0,
       "missingChrome": 0
     },
     "rootCauses": {
       "positionOnly": 0,
-      "sizeOnly": 12,
+      "sizeOnly": 8,
       "positionAndSize": 0,
-      "textRun": 0,
+      "textRun": 2,
       "missingOurs": 0,
       "missingChrome": 0
     },
     "tagConflicts": 0,
-    "pagesAtGate": 0,
-    "medianPageRate": 0.005076142131979695,
+    "pagesAtGate": 2,
+    "medianPageRate": 0.05184659090909091,
     "minPageRate": 0,
     "worstTags": [
       {
@@ -207,23 +207,18 @@
       },
       {
         "tag": "p",
-        "mismatches": 450,
+        "mismatches": 412,
         "elements": 470
       },
       {
         "tag": "strong",
-        "mismatches": 376,
+        "mismatches": 363,
         "elements": 380
       },
       {
         "tag": "em",
-        "mismatches": 344,
+        "mismatches": 337,
         "elements": 344
-      },
-      {
-        "tag": "li",
-        "mismatches": 314,
-        "elements": 314
       },
       {
         "tag": "th",
@@ -231,19 +226,24 @@
         "elements": 270
       },
       {
-        "tag": "span",
-        "mismatches": 169,
-        "elements": 170
+        "tag": "li",
+        "mismatches": 256,
+        "elements": 314
       },
       {
         "tag": "h3",
-        "mismatches": 120,
+        "mismatches": 115,
         "elements": 120
       },
       {
         "tag": "ul",
         "mismatches": 94,
         "elements": 94
+      },
+      {
+        "tag": "span",
+        "mismatches": 63,
+        "elements": 170
       }
     ]
   },

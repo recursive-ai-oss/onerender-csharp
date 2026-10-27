@@ -75,6 +75,7 @@ internal enum PropertyId : byte
     TabSize,
     TextAlignLast,
     TextJustify,
+    TextTransform,
     OverflowClipMargin,
     FlexDirection,
     FlexWrap,
@@ -134,7 +135,7 @@ internal static class Properties
         "font-family", "font-weight", "font-style", "font-stretch", "line-height", "vertical-align",
         "white-space-collapse", "text-wrap-mode", "text-align", "text-indent", "letter-spacing", "word-spacing",
         "direction", "unicode-bidi", "color", "opacity", "background-color", "content", "list-style-type", "list-style-position",
-        "word-break", "overflow-wrap", "line-break", "hyphens", "tab-size", "text-align-last", "text-justify", "overflow-clip-margin",
+        "word-break", "overflow-wrap", "line-break", "hyphens", "tab-size", "text-align-last", "text-justify", "text-transform", "overflow-clip-margin",
         "flex-direction", "flex-wrap", "flex-grow", "flex-shrink", "flex-basis", "order",
         "justify-content", "align-content", "align-items", "align-self", "row-gap", "column-gap",
         "break-before", "break-after", "break-inside", "orphans", "widows", "box-decoration-break",
@@ -159,7 +160,7 @@ internal static class Properties
             or PropertyId.TextAlign or PropertyId.TextIndent or PropertyId.LetterSpacing or PropertyId.WordSpacing
             or PropertyId.Direction or PropertyId.Color or PropertyId.ListStyleType or PropertyId.ListStylePosition or PropertyId.Orphans or PropertyId.Widows
             or PropertyId.WordBreak or PropertyId.OverflowWrap or PropertyId.LineBreak or PropertyId.Hyphens or PropertyId.TabSize
-            or PropertyId.TextAlignLast or PropertyId.TextJustify => true,
+            or PropertyId.TextAlignLast or PropertyId.TextJustify or PropertyId.TextTransform => true,
         _ => false,
     };
 

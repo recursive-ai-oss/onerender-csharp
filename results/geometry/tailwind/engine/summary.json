@@ -16,10 +16,10 @@
       "matched": 55,
       "rate": 0.07343124165554073,
       "classes": {
-        "positionOnly": 255,
+        "positionOnly": 260,
         "sizeOnly": 38,
-        "positionAndSize": 153,
-        "textRun": 236,
+        "positionAndSize": 151,
+        "textRun": 233,
         "missingOurs": 1,
         "missingChrome": 11
       },
@@ -95,10 +95,10 @@
       "matched": 24,
       "rate": 0.033012379642365884,
       "classes": {
-        "positionOnly": 221,
+        "positionOnly": 226,
         "sizeOnly": 35,
-        "positionAndSize": 184,
-        "textRun": 251,
+        "positionAndSize": 182,
+        "textRun": 248,
         "missingOurs": 1,
         "missingChrome": 11
       },
@@ -175,10 +175,10 @@
     "matched": 79,
     "rate": 0.0535230352303523,
     "classes": {
-      "positionOnly": 476,
+      "positionOnly": 486,
       "sizeOnly": 73,
-      "positionAndSize": 337,
-      "textRun": 487,
+      "positionAndSize": 333,
+      "textRun": 481,
       "missingOurs": 2,
       "missingChrome": 22
     },

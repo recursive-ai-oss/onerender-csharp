@@ -543,11 +543,9 @@ internal sealed partial class InlineWorker
                 }
 
                 case EK.Newline:
-                    if ((el.Flags & EF.Br) != 0)
-                    {
-                        AddPiece(PK.Br, e, 0, 0, 0, el.Owner, el.Level);
-                    }
-
+                    // A <br> and a preserved segment break both end the line; either one on a line of its own leaves an empty line
+                    // as tall as the strut (CSS Text 3 §4.1.3), so both count as content. Only <br> has a box to emit.
+                    AddPiece(PK.Br, e, 0, 0, 0, el.Owner, el.Level);
                     ink = true;
                     break;
                 default:

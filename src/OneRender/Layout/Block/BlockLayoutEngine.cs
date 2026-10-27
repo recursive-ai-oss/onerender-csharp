@@ -73,6 +73,9 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace, 
         ClipY = 1024,
         Flex = 2048,
         Multicol = 4096,
+
+        // A block whose clear property names a side that has floats in its formatting context, whether or not clearance was needed.
+        ClearsFloats = 8192,
     }
 
     private struct Frame
