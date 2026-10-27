@@ -290,7 +290,9 @@ public sealed partial class Painter
 
         PrepareTags(in options);
         Prepass(n, ct);
+        _canvasStart = _list.Count;
         PaintCanvas(options);
+        _canvasCount = _list.Count - _canvasStart;
         LinkSorted();
         Execute(ct);
         while (_list.TopIsTag)
@@ -331,6 +333,7 @@ public sealed partial class Painter
         _spanStart = new int[size];
         _spanCount = new int[size];
         _jflags = new byte[size];
+        _phaseOf = new long[size];
         _rMark = new int[size];
         _rDone = new int[size];
         _rList = new int[size];
@@ -435,6 +438,7 @@ public sealed partial class Painter
         }
 
         _flags[i] = 0;
+        _phaseOf[i] = 0;
         if (link)
         {
             _nextEntry[i] = -1;
@@ -538,6 +542,7 @@ public sealed partial class Painter
             _flags[i] |= FlagAtomic | FlagStackingContext;
             _ownerFor[i] = i;
             _contextFor[i] = i;
+            _phaseOf[i] = (1L << 40) | (uint)z;
             if (link)
             {
                 Defer(context, i, z);
@@ -552,6 +557,7 @@ public sealed partial class Painter
             // belong to the parent's; they are found by this same walk and linked to the enclosing context.
             _flags[i] |= FlagAtomic;
             _ownerFor[i] = i;
+            _phaseOf[i] = 1L << 40;
             if (link)
             {
                 Defer(context, i, 0);
@@ -564,6 +570,7 @@ public sealed partial class Painter
         {
             _flags[i] |= FlagAtomic;
             _ownerFor[i] = i;
+            _phaseOf[i] = (2L << 40) | (uint)owner;
             if (link)
             {
                 AddEntry(owner, PhaseFloats, i);
@@ -580,6 +587,7 @@ public sealed partial class Painter
                 _ownerFor[i] = i;
             }
 
+            _phaseOf[i] = (3L << 40) | (uint)owner;
             if (link)
             {
                 AddEntry(owner, PhaseInlines, i);
@@ -594,6 +602,7 @@ public sealed partial class Painter
             _ownerFor[i] = i;
         }
 
+        _phaseOf[i] = (4L << 40) | (uint)owner;
         if (link)
         {
             AddEntry(owner, PhaseBlocks, i);
@@ -653,6 +662,18 @@ public sealed partial class Painter
 
     // ------------------------------------------------------------------ canvas
 
+    // The canvas covers the root's border box and overflow, and at least the viewport.
+    private RectF CanvasRect(double viewportWidth, double viewportHeight)
+    {
+        Rect rb = _tree.BorderBoxOf(0);
+        Rect ov = _tree.OverflowOf(0);
+        double right = Math.Max(Math.Max(rb.Right, ov.Right), viewportWidth);
+        double bottom = Math.Max(Math.Max(rb.Bottom, ov.Bottom), viewportHeight);
+        double left = Math.Min(Math.Min(rb.X, ov.X), 0);
+        double top = Math.Min(Math.Min(rb.Y, ov.Y), 0);
+        return new RectF(C(left), C(top), C(right - left), C(bottom - top));
+    }
+
     private void PaintCanvas(in PaintOptions options)
     {
         int root = 0;
@@ -661,6 +682,8 @@ public sealed partial class Painter
         {
             return;
         }
+
+        _canvasRect = CanvasRect(options.ViewportWidth, options.ViewportHeight);
 
         ref readonly ComputedValues rv = ref rootBox.Values;
         ColorValue bg = rv.BackgroundColor;
@@ -692,13 +715,7 @@ public sealed partial class Painter
             return;
         }
 
-        Rect rb = _tree.BorderBoxOf(root);
-        Rect ov = _tree.OverflowOf(root);
-        double right = Math.Max(Math.Max(rb.Right, ov.Right), options.ViewportWidth);
-        double bottom = Math.Max(Math.Max(rb.Bottom, ov.Bottom), options.ViewportHeight);
-        double left = Math.Min(Math.Min(rb.X, ov.X), 0);
-        double top = Math.Min(Math.Min(rb.Y, ov.Y), 0);
-        var canvas = new RectF(C(left), C(top), C(right - left), C(bottom - top));
+        RectF canvas = _canvasRect;
         if (bg.A > 0f)
         {
             _list.FillRect(ItemId.Of(0, 5, 0), canvas, ToColor(bg, rv.Color));

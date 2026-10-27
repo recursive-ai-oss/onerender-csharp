@@ -306,9 +306,39 @@ public sealed partial class BoxTree
         }
     }
 
+    // Text paints from its own box's values, which follow an ancestor's inherited color, font and visibility; the text boxes below a box whose
+    // style changed are touched with it, wherever their fragments end up.
+    private void TouchTextBelow(int root)
+    {
+        EnsureStack(_count);
+        int sp = 0;
+        _stack[sp++] = root;
+        while (sp > 0 && _touchedCount < MaxTouched)
+        {
+            int p = _stack[--sp];
+            for (int c = _first[p]; c >= 0; c = _next[c])
+            {
+                if (_kind[c] == (byte)BoxKind.Text)
+                {
+                    Touch(c);
+                }
+                else
+                {
+                    _stack[sp++] = c;
+                }
+            }
+        }
+
+        if (sp > 0)
+        {
+            _touchedOverflow = true;
+        }
+    }
+
     private void PatchStyle(int box, StyleId sid, bool layout)
     {
         Touch(box);
+        TouchTextBelow(box);
         if (_style[box] != sid.Index)
         {
             _style[box] = sid.Index;

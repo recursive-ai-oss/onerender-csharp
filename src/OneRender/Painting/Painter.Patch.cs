@@ -18,6 +18,9 @@ public sealed partial class Painter
     private int[] _spanCount = new int[64];
     private byte[] _jflags = new byte[64];
 
+    // Where the fragment sits in its paint owner's order: the phase list it is linked into and, for z-ordered entries, its z-index.
+    private long[] _phaseOf = new long[64];
+
     // Set at the full paint: the fragment's scopes or neighbours make a rewrite unsafe.
     private const byte JUnpatchable = 1;
 
@@ -28,13 +31,21 @@ public sealed partial class Painter
     // The box paints from data this path does not follow: columns, tables, sticky offsets, effects.
     private const byte JSpecial = 8;
 
+    // Some fragment below this one was painted inside clips of containing blocks that lie above it in the tree (a stacking-context child
+    // reached through this one). Those clips come from this fragment's geometry, so a change here may change what it painted.
+    private const byte JBelow = 16;
+
     private int[] _rMark = new int[64];
     private int[] _rDone = new int[64];
     private int[] _rList = new int[64];
     private int[] _chain = new int[64];
+    private int[] _tbMark = new int[64];
     private int _rStamp;
     private int _rCount;
 
+    private RectF _canvasRect;
+    private int _canvasStart;
+    private int _canvasCount;
     private bool _noPatch;
     private bool _journalPending;
     private bool _journalValid;
@@ -87,6 +98,14 @@ public sealed partial class Painter
         if (fr.PreClips > 0 || _patchCount != entriesBefore || fr.Group || fr.Outer || fr.Scroll || fr.FxOuter != 0 || fr.FxInner != 0)
         {
             _jflags[f] |= JUnpatchable;
+        }
+
+        if (fr.PreClips > 0)
+        {
+            for (int a = _tree.ParentOf(f); a >= 0 && (_jflags[a] & JBelow) == 0; a = _tree.ParentOf(a))
+            {
+                _jflags[a] |= JBelow;
+            }
         }
     }
 
@@ -210,17 +229,25 @@ public sealed partial class Painter
         {
             Array.Clear(_rMark);
             Array.Clear(_rDone);
+            Array.Clear(_tbMark);
             _rStamp = 1;
         }
 
         _rCount = 0;
         int limit = _n / 2;
+        bool canvasMoved = false;
         if (layoutRan)
         {
             for (int k = 0; k < delta!.Count; k++)
             {
                 int i = delta.IndexAt(k);
                 byte dflags = delta.FlagsAt(k);
+                if (i == 0 && !_canvasRect.Equals(CanvasRect(_vw, _vh)))
+                {
+                    // The canvas background spans the root's border box and overflow and is painted outside any fragment's span.
+                    canvasMoved = true;
+                }
+
                 if (dflags == LayoutDelta.OverflowOnly)
                 {
                     // Only boxes that clip or scroll read their overflow (whether they can scroll decides their scope).
@@ -245,14 +272,67 @@ public sealed partial class Painter
             }
         }
 
+        if (canvasMoved)
+        {
+            if (_canvasCount == 0)
+            {
+                // No canvas item exists; only the remembered extent moves.
+                _canvasRect = CanvasRect(_vw, _vh);
+            }
+            else
+            {
+                // A plain colored canvas is one item: it is painted again over its slot with the new extent.
+                if (_canvasCount != 1)
+                {
+                    return false;
+                }
+
+                _list.BeginRewrite(_canvasStart, 1, retained.Damage);
+                PaintCanvas(_journalOptions);
+                if (!_list.EndRewrite())
+                {
+                    return false;
+                }
+            }
+        }
+
         BoxTree boxes = _boxes;
+        bool textTouched = false;
         for (int t = 0; t < boxes.TouchedCount; t++)
         {
-            for (int f = _tree.FirstFragmentOfBox(boxes.TouchedAt(t)); f >= 0; f = _tree.NextOfBoxOf(f))
+            int tb = boxes.TouchedAt(t);
+            if (boxes.KindOf(tb) == (byte)BoxKind.Text)
+            {
+                // Text fragments are not chained by box; they are found by one scan below.
+                if (_tbMark.Length < boxes.Count)
+                {
+                    _tbMark = new int[Math.Max(boxes.Count, _tbMark.Length * 2)];
+                }
+
+                _tbMark[tb] = _rStamp;
+                textTouched = true;
+                continue;
+            }
+
+            for (int f = _tree.FirstFragmentOfBox(tb); f >= 0; f = _tree.NextOfBoxOf(f))
             {
                 Mark(f);
-                // Text paints from its own box's values, which follow an ancestor's inherited color, font and visibility.
-                MarkTextBelow(f);
+            }
+
+            if (_rCount > limit)
+            {
+                return false;
+            }
+        }
+
+        if (textTouched)
+        {
+            for (int f = 0; f < _n; f++)
+            {
+                if ((FragmentKind)_tree.KindOf(f) == FragmentKind.Text && _tbMark[_tree.BoxOf(f)] == _rStamp)
+                {
+                    Mark(f);
+                }
             }
 
             if (_rCount > limit)
@@ -307,47 +387,6 @@ public sealed partial class Painter
         _rList[_rCount++] = i;
     }
 
-    private void MarkTextBelow(int root)
-    {
-        int c = _tree.FirstChildOf(root);
-        while (c >= 0)
-        {
-            if ((FragmentKind)_tree.KindOf(c) == FragmentKind.Text)
-            {
-                Mark(c);
-            }
-
-            int f = _tree.FirstChildOf(c);
-            if (f >= 0)
-            {
-                c = f;
-                continue;
-            }
-
-            while (true)
-            {
-                int next = _tree.NextSiblingOf(c);
-                if (next >= 0)
-                {
-                    c = next;
-                    break;
-                }
-
-                c = _tree.ParentOf(c);
-                if (c == root || c < 0)
-                {
-                    c = -1;
-                    break;
-                }
-            }
-
-            if (_rCount > _n / 2)
-            {
-                return;
-            }
-        }
-    }
-
     private void MarkSubtree(int root)
     {
         int c = _tree.FirstChildOf(root);
@@ -390,8 +429,9 @@ public sealed partial class Painter
 
         byte flags = _flags[x];
         int owner = _ownerFor[x], context = _contextFor[x];
+        long phase = _phaseOf[x];
         VisitCore(x, false);
-        if (_flags[x] != flags || _ownerFor[x] != owner || _contextFor[x] != context)
+        if (_flags[x] != flags || _ownerFor[x] != owner || _contextFor[x] != context || _phaseOf[x] != phase)
         {
             return false;
         }
@@ -400,7 +440,7 @@ public sealed partial class Painter
         {
             Box b = _boxes.Make(_tree.BoxOf(x));
             byte now = JournalFlagsOf(b, in b.Values);
-            if (((_jflags[x] | now) & (JUnpatchable | JDecoration | JOutline | JSpecial)) != 0)
+            if (((_jflags[x] | now) & (JUnpatchable | JDecoration | JOutline | JSpecial | JBelow)) != 0)
             {
                 return false;
             }

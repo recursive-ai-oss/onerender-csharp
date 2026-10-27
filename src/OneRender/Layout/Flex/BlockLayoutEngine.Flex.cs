@@ -148,6 +148,7 @@ public sealed partial class BlockLayoutEngine
     private FlexMemo[] _memo = new FlexMemo[256];
     private int _memoGen;
     private int _memoBase;
+    private int[] _memoKill = [];
     private FlexMemo[] _memoSpare = [];
     private int _memoUsed;
     private bool[] _pctBlock = [];
@@ -169,6 +170,7 @@ public sealed partial class BlockLayoutEngine
         if (++_memoGen == int.MaxValue)
         {
             Array.Clear(_memo);
+            Array.Clear(_memoKill);
             _memoGen = 2;
             _memoBase = 1;
             _memoUsed = 0;
@@ -177,6 +179,19 @@ public sealed partial class BlockLayoutEngine
         if (!_reuse)
         {
             _memoBase = _memoGen;
+        }
+        else
+        {
+            // A box changed in this layout takes its earlier measurements with it for good: once it is clean again they must not come back.
+            if (_memoKill.Length < boxCount)
+            {
+                Array.Resize(ref _memoKill, boxCount + (boxCount / 2) + 1);
+            }
+
+            for (int i = 0; i < _boxes.DirtyCount; i++)
+            {
+                _memoKill[_boxes.DirtyAt(i)] = _memoGen - 1;
+            }
         }
 
         _pctReady = false;
@@ -567,7 +582,7 @@ public sealed partial class BlockLayoutEngine
 
     // An entry is live when it was written by this layout, or by an earlier one for a box that has not changed since: a measurement
     // depends on the box's subtree and on the inputs in its key, nothing else.
-    private bool FlexMemoLive(in FlexMemo m) => m.Gen == _memoGen || (m.Gen >= _memoBase && !_boxes.IsDirty(m.Box));
+    private bool FlexMemoLive(in FlexMemo m) => m.Gen == _memoGen || (m.Gen >= _memoBase && !_boxes.IsDirty(m.Box) && (uint)m.Box < (uint)_memoKill.Length && m.Gen > _memoKill[m.Box]);
 
     private bool MemoLookup(int box, double w, double h, double cw, double ch, out double resH, out double resBase)
     {
