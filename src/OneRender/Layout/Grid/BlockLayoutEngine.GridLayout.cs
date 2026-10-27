@@ -326,7 +326,7 @@ public sealed partial class BlockLayoutEngine
             }
 
             ref AbsEntry e = ref _abs[_absCount - 1];
-            e.HasArea = true;
+            e.HasGridArea = true;
             GridAxis ax0 = L.AxisOf(cx.Owner0, 0), ax1 = L.AxisOf(cx.Owner1, 1);
             AbsLines(c.Values.GridColumnStart, c.Values.GridColumnEnd, ax0, cx.Owner0 == k ? cx : L.Ctx[cx.Owner0], 0, out double l0, out double l1);
             AbsLines(c.Values.GridRowStart, c.Values.GridRowEnd, ax1, cx.Owner1 == k ? cx : L.Ctx[cx.Owner1], 1, out double t0, out double t1);
@@ -342,16 +342,16 @@ public sealed partial class BlockLayoutEngine
                     (a, z) = (double.IsNaN(z) ? double.NaN : w - z, double.IsNaN(a) ? double.NaN : w - a);
                 }
 
-                e.AreaL = double.IsNaN(a) ? double.NaN : padL + a;
-                e.AreaR = double.IsNaN(z) ? double.NaN : padL + z;
+                e.GridAreaL = double.IsNaN(a) ? double.NaN : padL + a;
+                e.GridAreaR = double.IsNaN(z) ? double.NaN : padL + z;
             }
             else
             {
-                e.AreaL = e.AreaR = double.NaN;
+                e.GridAreaL = e.GridAreaR = double.NaN;
             }
 
-            e.AreaT = double.IsNaN(t0) ? double.NaN : padT + t0 - (cx.Sub1 ? cx.Org1 : 0);
-            e.AreaB = double.IsNaN(t1) ? double.NaN : padT + t1 - (cx.Sub1 ? cx.Org1 : 0);
+            e.GridAreaT = double.IsNaN(t0) ? double.NaN : padT + t0 - (cx.Sub1 ? cx.Org1 : 0);
+            e.GridAreaB = double.IsNaN(t1) ? double.NaN : padT + t1 - (cx.Sub1 ? cx.Org1 : 0);
         }
     }
 

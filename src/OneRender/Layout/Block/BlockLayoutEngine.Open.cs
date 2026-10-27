@@ -7,7 +7,9 @@ public sealed partial class BlockLayoutEngine
 {
     private void OpenChild(int pi, Box c)
     {
-        bool parentIsRoot = _frames[pi].Box < 0;
+        // Items of a flex container are opened like the root of a block formatting context of their own, at the size flex layout chose.
+        bool parentIsFlex = (_frames[pi].Flags & FrameFlags.Flex) != 0;
+        bool parentIsRoot = _frames[pi].Box < 0 || parentIsFlex;
         bool shrink = _shrinkNext && parentIsRoot;
         _shrinkNext = false;
         int preFragment = _absPre;
@@ -67,6 +69,12 @@ public sealed partial class BlockLayoutEngine
         double pl = Pad(v.PaddingLeft, w), pr = Pad(v.PaddingRight, w), pt = Pad(v.PaddingTop, w), pb = Pad(v.PaddingBottom, w);
         double bl = v.BorderLeftWidth, br = v.BorderRightWidth, bt = v.BorderTopWidth, bb = v.BorderBottomWidth;
         double ph = pl + pr + bl + br, pv = pt + pb + bt + bb;
+        double forceW = double.NaN, forceH = double.NaN;
+        if (parentIsFlex)
+        {
+            forceW = _fx[f.FlexIndex].ForceW;
+            forceH = _fx[f.FlexIndex].ForceH;
+        }
         double mt = MarginPx(v.MarginTop, w), mb = MarginPx(v.MarginBottom, w);
         double mlv = MarginPx(v.MarginLeft, w), mrv = MarginPx(v.MarginRight, w);
         bool mlAuto = v.MarginLeft.IsAuto && !shrink, mrAuto = v.MarginRight.IsAuto && !shrink;
@@ -87,13 +95,29 @@ public sealed partial class BlockLayoutEngine
                 replacedW = _absRepW;
                 replacedH = _absRepH;
             }
+            else if (parentIsFlex)
+            {
+                ForceReplaced(forceW, forceH, ph, pv, ref replacedW, ref replacedH);
+            }
         }
         else
         {
             bfc = EstablishesBfc(c, in v, parentIsRoot);
         }
 
-        ResolveBoxWidth(c, in v, replaced, replacedW, w, w, ph, shrink, rtl, mlAuto, mrAuto, mlv, mrv, out double borderW, out double ml, out double mr, out double contentW);
+        double borderW, ml, mr, contentW;
+        if (!double.IsNaN(forceW))
+        {
+            // Flexbox §9.7: the flex algorithm has fixed the item's main or cross size; margins were resolved by the container.
+            borderW = forceW;
+            contentW = Math.Max(0, forceW - ph);
+            ml = mlAuto ? 0 : mlv;
+            mr = mrAuto ? 0 : mrv;
+        }
+        else
+        {
+            ResolveBoxWidth(c, in v, replaced, replacedW, w, w, ph, shrink, rtl, mlAuto, mrAuto, mlv, mrv, out borderW, out ml, out mr, out contentW);
+        }
 
         if (forced && !isFloat)
         {
@@ -184,6 +208,25 @@ public sealed partial class BlockLayoutEngine
         else
         {
             ResolveHeights(in v, f.SpecH, pv, mt, mb, borderW, contentW, out specH, out minH, out maxH, out ratioH);
+            if (parentIsFlex && !double.IsNaN(forceH))
+            {
+                // A negative forced height asks for the content height: height, min-height and max-height are ignored (Flexbox §4.5 content size suggestion).
+                if (forceH < 0)
+                {
+                    specH = double.NaN;
+                    minH = 0;
+                    maxH = double.PositiveInfinity;
+                    ratioH = double.NaN;
+                }
+                else
+                {
+                    specH = Math.Max(0, forceH - pv);
+                    minH = 0;
+                    maxH = double.PositiveInfinity;
+                    ratioH = double.NaN;
+                }
+            }
+
             if (forced && !double.IsNaN(_absH))
             {
                 specH = _absH;
@@ -330,6 +373,12 @@ public sealed partial class BlockLayoutEngine
         if (bfc)
         {
             PushBfc();
+        }
+
+        if (c.Context == FormattingContext.Flex)
+        {
+            FlexOpen(ni, c);
+            return;
         }
 
         if (c.Context == FormattingContext.Grid && !replaced && GridOpen(ni, c))

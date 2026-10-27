@@ -181,7 +181,7 @@ internal sealed class OneHtmlSource : DeclarationSource
         }
 
         // The cascade keeps these shorthands whole; expand the ones that were declared so the longhands can be computed.
-        foreach (string shorthand in ShorthandFallbacks.AllNames)
+        foreach (string shorthand in ShorthandFallbacks.Names)
         {
             StyleValue? sv = style.GetValue(shorthand);
             if (sv is null || sv.IsInitial || sv.Tokens.IsEmpty)

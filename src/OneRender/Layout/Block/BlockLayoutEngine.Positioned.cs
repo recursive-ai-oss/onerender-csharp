@@ -17,12 +17,21 @@ public sealed partial class BlockLayoutEngine
         public double StaticEnd;
         public double StaticTop;
 
-        // Grid 2 §10: the grid area that is the containing block, relative to the padding box (NaN: the padding edge).
+        // Set for a child of a flex container (Flexbox §4.1): the container's content box and where in it the box sits when its insets are auto.
         public bool HasArea;
-        public double AreaL;
-        public double AreaT;
-        public double AreaR;
-        public double AreaB;
+        public double AreaX;
+        public double AreaY;
+        public double AreaW;
+        public double AreaH;
+        public double FracX;
+        public double FracY;
+
+        // Grid 2 §10: the grid area that is the containing block, relative to the padding box (NaN: the padding edge).
+        public bool HasGridArea;
+        public double GridAreaL;
+        public double GridAreaT;
+        public double GridAreaR;
+        public double GridAreaB;
     }
 
     private const int MaxAbsolute = 1 << 22;
@@ -290,11 +299,11 @@ public sealed partial class BlockLayoutEngine
             cbw = Math.Max(0, cbb.Width - cbBorder.Horizontal);
             cbh = Math.Max(0, cbb.Height - cbBorder.Vertical);
             cbRtl = _boxes.Make(_out.BoxOf(a.Cb)).Values.Direction == DirectionKind.Rtl;
-            if (a.HasArea)
+            if (a.HasGridArea)
             {
                 // Grid 2 §10.1: the containing block is the grid area; a missing line is the padding edge.
-                double x0 = double.IsNaN(a.AreaL) ? 0 : a.AreaL, x1 = double.IsNaN(a.AreaR) ? cbw : a.AreaR;
-                double y0 = double.IsNaN(a.AreaT) ? 0 : a.AreaT, y1 = double.IsNaN(a.AreaB) ? cbh : a.AreaB;
+                double x0 = double.IsNaN(a.GridAreaL) ? 0 : a.GridAreaL, x1 = double.IsNaN(a.GridAreaR) ? cbw : a.GridAreaR;
+                double y0 = double.IsNaN(a.GridAreaT) ? 0 : a.GridAreaT, y1 = double.IsNaN(a.GridAreaB) ? cbh : a.GridAreaB;
                 cbx += x0;
                 cby += y0;
                 cbw = Math.Max(0, x1 - x0);
@@ -408,6 +417,20 @@ public sealed partial class BlockLayoutEngine
 
         double x = cbx + usedLeft + ml - px;
         double y = cby + usedTop + mt - py;
+        if (a.HasArea)
+        {
+            // Flexbox §4.1: with auto insets the box is aligned in the container's content box as the only flex item.
+            if (double.IsNaN(left) && double.IsNaN(right))
+            {
+                x = a.AreaX + ((a.AreaW - bb.Width - ml - mr) * a.FracX) + ml;
+            }
+
+            if (double.IsNaN(top) && double.IsNaN(bottom))
+            {
+                y = a.AreaY + ((a.AreaH - bb.Height - mt - (double.IsNaN(mbv) ? 0 : mbv)) * a.FracY) + mt;
+            }
+        }
+
         _out.SetBorderBox(frag, new Rect(x, y, bb.Width, bb.Height));
         EnsureOrigins(_out.Count);
         _ox[a.Frag] = px + x;

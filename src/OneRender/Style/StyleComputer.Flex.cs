@@ -81,12 +81,12 @@ internal sealed partial class StyleComputer
 
             case PropertyId.Order:
             {
-                if (!SinglePart(v, out ComponentValue p) || !PartNumber(p, out double n) || n != Math.Floor(n))
+                if (!SinglePart(v, out ComponentValue p) || p.Kind != ComponentValueKind.Token || p.Token.Kind != CssTokenKind.Number || double.IsInfinity(p.Token.NumberValue) || p.Token.NumberValue != Math.Floor(p.Token.NumberValue))
                 {
                     return false;
                 }
 
-                _r.Order = (int)Math.Clamp(n, int.MinValue, int.MaxValue);
+                _r.Order = (int)Math.Clamp(p.Token.NumberValue, int.MinValue, int.MaxValue);
                 return true;
             }
 

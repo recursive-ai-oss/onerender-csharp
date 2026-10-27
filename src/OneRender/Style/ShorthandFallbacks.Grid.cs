@@ -5,13 +5,6 @@ namespace OneRender.Style;
 /// <summary>The grid shorthands the OneHtml cascade keeps whole: <c>grid-area</c>, <c>grid-row</c>, <c>grid-column</c>, <c>grid-template</c>, <c>grid</c> and the <c>place-*</c> shorthands.</summary>
 internal static partial class ShorthandFallbacks
 {
-    /// <summary>Every shorthand this class expands, for the front end that reads declared shorthands from the cascade.</summary>
-    public static readonly string[] AllNames =
-    [
-        "white-space", "border-radius", "overflow",
-        "grid-area", "grid-row", "grid-column", "grid-template", "grid", "place-items", "place-self", "place-content",
-    ];
-
     private static readonly string[] GridNames = ["grid-area", "grid-row", "grid-column", "grid-template", "grid", "place-items", "place-self", "place-content"];
 
     private static bool IsGridShorthand(string name)
