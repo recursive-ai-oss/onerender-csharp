@@ -92,6 +92,7 @@ internal sealed partial class Fragmenter
             int c = _walk[top].Next;
             if (c < 0)
             {
+                EndGap(top);
                 _wsp--;
                 continue;
             }
@@ -104,6 +105,49 @@ internal sealed partial class Fragmenter
 
             Visit(top, c);
         }
+    }
+
+    // §4.1 class C: the room between the last child and the end of the box's content (a fixed height, bottom padding) has no content
+    // in it, so it can be cut anywhere, like an empty box.
+    private void EndGap(int wi)
+    {
+        ref Walk w = ref _walk[wi];
+        if (w.IsRoot || w.AvoidUp)
+        {
+            return;
+        }
+
+        Box box = _boxes.Make(_t.BoxOf(w.Frag));
+        if (AvoidInside(box.Values.BreakInside))
+        {
+            return;
+        }
+
+        double last = double.NegativeInfinity;
+        if (w.PrevFrag >= 0)
+        {
+            last = w.PrevBottom;
+        }
+
+        if (w.LineNo > 0)
+        {
+            last = Math.Max(last, w.PrevLineBottom);
+        }
+
+        Rect bb = _t.BorderBoxOf(w.Frag);
+        Insets border = _t.BorderOf(w.Frag), pad = _t.PaddingOf(w.Frag);
+        double end = w.Top + bb.Height - border.Bottom - pad.Bottom;
+        if (double.IsNegativeInfinity(last) || end - last <= Eps)
+        {
+            return;
+        }
+
+        if (_fn == _fillers.Length)
+        {
+            Array.Resize(ref _fillers, _fillers.Length * 2);
+        }
+
+        _fillers[_fn++] = new Filler { Top = last, Bottom = end, CloneTop = w.CloneTop, CloneBottom = w.CloneBottom };
     }
 
     private void ResetRow(int r)

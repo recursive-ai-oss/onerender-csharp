@@ -585,4 +585,89 @@ public class MulticolTests
         Assert.Equal(30, l["m"].Height, 2);
         Assert.Equal(2, l.Columns("m").Length);
     }
+    [Fact]
+    public void TheRoomBelowTheLastChildOfABoxCanBeCut()
+    {
+        // Fragmentation 3 §4.1 class C: a box taller than its content breaks in the empty part below the content.
+        string css = "#m{column-count:3;column-gap:0;column-fill:auto;height:100px;width:300px}";
+        Lay l = Run("<div id=m><div id=t style='height:250px'>" + Block("c", 30) + "</div></div>", css);
+        Rect[] pieces = l.Pieces("t");
+        Assert.Equal(3, pieces.Length);
+        Assert.Equal(30, l["c"].Height, 2);
+        Assert.Equal(0, l["c"].X, 2);
+        Assert.Equal(50, pieces[2].Height, 2);
+    }
+
+    [Fact]
+    public void ColumnsInsideAFlexItemSurviveTheTrialLayouts()
+    {
+        Lay l = Run("<div style='display:flex;width:400px'><div id=m style='column-count:2;column-gap:0;flex:1 1 auto'>" + Block("a", 50) + Block("b", 50) + "</div><div style='width:100px;height:10px'></div></div>");
+        Assert.Equal(2, l.Columns("m").Length);
+        Assert.Equal(300, l["m"].Width, 2);
+        Assert.Equal(150, l["b"].X, 2);
+        Assert.Equal(50, l["m"].Height, 2);
+    }
+
+    [Fact]
+    public void AbsolutelyPositionedBoxesInColumnsStayWhole()
+    {
+        string css = "#m{column-count:2;column-gap:0;column-fill:auto;height:100px;width:200px;position:relative}";
+        Lay l = Run("<div id=m>" + Block("a", 60) + "<div id=abs style='position:absolute;left:5px;top:10px;width:10px;height:10px'></div>" + Block("b", 60) + "</div>", css);
+        Assert.Single(l.Pieces("abs"));
+        Assert.Equal(100, l["b"].X, 2);
+    }
+
+    [Fact]
+    public void BreakInsideAvoidColumnKeepsABoxTogetherOnlyInColumns()
+    {
+        string css = "#m{column-count:2;column-gap:0;column-fill:auto;height:100px;width:200px}";
+        Lay column = Run("<div id=m>" + Block("a", 60) + "<div id=k style='break-inside:avoid-column'>" + Block("k1", 30) + Block("k2", 30) + "</div></div>", css);
+        Assert.Single(column.Pieces("k"));
+        Lay page = Run("<div id=m>" + Block("a", 60) + "<div id=k style='break-inside:avoid-page'>" + Block("k1", 30) + Block("k2", 30) + "</div></div>", css);
+        Assert.Equal(2, page.Pieces("k").Length);
+    }
+
+    [Fact]
+    public void LinesKnowTheColumnTheyLandedIn()
+    {
+        string css = "#m{column-count:2;column-gap:0;column-fill:auto;height:60px;width:200px;line-height:20px} p{margin:0}";
+        Lay l = Run("<div id=m><p id=t style='orphans:1;widows:1'>xxxxx</p></div>", css);
+        int[] cols = l.PieceColumns("t");
+        Assert.Equal([0, 1], cols);
+        int zero = 0, one = 0;
+        for (Fragment f = l.Frag("t"); !f.IsNull; f = f.NextOfBox)
+        {
+            for (Fragment c = f.FirstChild; !c.IsNull; c = c.NextSibling)
+            {
+                Assert.Equal(f.FragmentainerIndex, c.FragmentainerIndex);
+                if (c.FragmentainerIndex == 0)
+                {
+                    zero++;
+                }
+                else
+                {
+                    one++;
+                }
+            }
+        }
+
+        Assert.Equal(3, zero);
+        Assert.Equal(2, one);
+    }
+
+    [Fact]
+    public void ColumnsOfAnEmptyContainerCreateNoFragments()
+    {
+        Lay l = Run("<div id=m style='column-count:3;width:300px'></div>");
+        Assert.Empty(l.Columns("m"));
+        Assert.Equal(0, l["m"].Height, 2);
+    }
+
+    [Fact]
+    public void AMinHeightLargerThanTheColumnsKeepsBalancedColumns()
+    {
+        Lay l = Run("<div id=m style='column-count:2;column-gap:0;min-height:200px;width:200px'>" + Block("a", 30) + Block("b", 30) + "</div>");
+        Assert.Equal(200, l["m"].Height, 2);
+        Assert.Equal(100, l["b"].X, 2);
+    }
 }

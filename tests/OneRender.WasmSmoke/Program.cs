@@ -39,6 +39,12 @@ scrollPainter.Paint(scrollPage.Fragments, scrollList, new PaintOptions(100, 50) 
 scrollPage.Scroll.SetViewportOffset(0, 30);
 Console.WriteLine($"scroll patch changed {scrollPainter.PatchScroll(scrollList)} items");
 
+// Columns: balancing, a spanner and the rewrite of the fragment tree.
+HtmlPage columnPage = HtmlPage.Create(
+    "<body style='margin:0'><div style='columns:2;column-gap:0;width:100px'><div style='height:10px;break-inside:avoid'></div><div style='height:10px;break-inside:avoid'></div><div style='column-span:all;height:5px'></div><div style='height:10px'></div></div></body>",
+    new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 100, ViewportHeight = 50 });
+Console.WriteLine($"columns page {columnPage.Fragments.Count} fragments");
+
 // The rasterizer must trim and run on WebAssembly too.
 DisplayList list = new();
 list.FillRoundedRect(ItemId.Of(1), new RectF(2, 2, 28, 28), CornerRadii.Uniform(8), new PaintColor(1f, 0f, 0f, 1f));

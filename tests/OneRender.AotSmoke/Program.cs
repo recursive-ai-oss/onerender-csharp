@@ -54,6 +54,27 @@ if (flexPage.Fragments.Root.IsNull || flexPage.Fragments.Root.BorderBox.Width !=
     return 5;
 }
 
+// Columns: balancing, a spanner, a forced break and the rewrite of the fragment tree must survive trimming and AOT as well.
+HtmlPage columnPage = HtmlPage.Create(
+    "<body style='margin:0'><div id=m style='columns:2;column-gap:0;column-rule:2px solid;width:100px'><div style='height:10px;break-inside:avoid'></div><div style='height:10px;break-inside:avoid'></div><div style='column-span:all;height:5px'></div><div style='height:10px;break-after:column'></div><div style='height:10px'></div></div></body>",
+    new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 100, ViewportHeight = 50 });
+var columnPainter = new Painter();
+var columnList = new RetainedDisplayList();
+columnPainter.Paint(columnPage.Fragments, columnList, new PaintOptions(100, 50));
+int columnCount = 0;
+for (OneRender.Layout.Fragment cf = columnPage.Fragments.Root.FirstChild.FirstChild.FirstChild; !cf.IsNull; cf = cf.NextSibling)
+{
+    if (cf.Kind == OneRender.Layout.FragmentKind.Column)
+    {
+        columnCount++;
+    }
+}
+
+if (columnCount != 4)
+{
+    return 6;
+}
+
 Console.WriteLine($"{styled.Count} styled nodes, {boxTree.Count} boxes, scroll patch {scrollOk}");
 if (boxTree.Count < 8 || !dump.Contains("flex", StringComparison.Ordinal))
 {
