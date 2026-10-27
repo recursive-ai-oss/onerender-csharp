@@ -69,6 +69,7 @@ internal sealed partial class InlineWorker
         public double Ls;    // letter-spacing
         public double Ws;    // word-spacing (px, or percent when WsPercent)
         public int Frag;     // Atomic: fragment index, -1 when none
+        public bool Leader;  // Text: a leader (GCPM 3 section 3), a repeated pattern that fills the room left on its line
     }
 
     private struct CFrame
@@ -398,6 +399,8 @@ internal sealed partial class InlineWorker
     }
 
     /// <summary>CSS Text 3 §4.1: collapse, preserve and transform the white space of one text box into the paragraph text.</summary>
+    private const int LeaderChars = 200;
+
     private void AddText(Box tb, int owner)
     {
         ref readonly ComputedValues v = ref tb.Values;
@@ -410,6 +413,32 @@ internal sealed partial class InlineWorker
         for (int i = 0; i < s.Length && _n < MaxChars; i++)
         {
             char c = s[i];
+            if (c == ContentList.LeaderStart)
+            {
+                // GCPM 3 section 3: the pattern up to the end mark becomes a text run that line layout trims to the room it gets.
+                int close = s.Slice(i + 1).IndexOf(ContentList.LeaderEnd);
+                int pl = close < 0 ? s.Length - i - 1 : close;
+                if (pl > 0)
+                {
+                    FlushRun(tb, owner, ref runStart);
+                    int reps = (LeaderChars + pl - 1) / pl;
+                    for (int r = 0; r < reps && _n < MaxChars; r++)
+                    {
+                        for (int q = 0; q < pl && _n < MaxChars; q++)
+                        {
+                            Put(s[i + 1 + q], i + 1 + q, 0);
+                        }
+                    }
+
+                    AddRaw(EK.Text, tb.Index, owner, runStart, _n - runStart).Leader = true;
+                    runStart = _n;
+                }
+
+                _prevSpace = false;
+                i = close < 0 ? s.Length : i + 1 + close;
+                continue;
+            }
+
             if (c is ' ' or '\t' or '\n' or '\r')
             {
                 bool segmentBreak = c == '\n';

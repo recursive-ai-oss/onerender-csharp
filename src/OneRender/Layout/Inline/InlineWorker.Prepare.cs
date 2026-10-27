@@ -49,6 +49,13 @@ internal sealed partial class InlineWorker
             {
                 case EK.Text:
                 {
+                    if (e.Leader)
+                    {
+                        _opp[e.Start] = OppNone;
+                        _opp[Math.Min(n, e.Start + e.Len)] = OppNone;
+                        break;
+                    }
+
                     ref readonly ComputedValues v = ref V(e.Box);
                     bool wrap = v.TextWrapMode == TextWrapModeKind.Wrap;
                     int end = e.Start + e.Len;

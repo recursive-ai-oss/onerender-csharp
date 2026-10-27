@@ -298,6 +298,24 @@ public class PagedMediaTests
         Assert.Equal(0, region % 1);
     }
 
+    [Fact]
+    public void LeadersFillTheLineAndPushThePageNumberToTheEnd()
+    {
+        string css = "ul{margin:0;padding:0}li{list-style:none;margin:0;padding:0;font-size:12px}li a::after{content:leader('.') target-counter(attr(href url),page)}div.s{height:100px;break-inside:avoid}";
+        PagedDocument d = Doc("@page{size:400px 300px;margin:20px}" + css + "</style></head><body><ul><li><a href='#x1'>Intro</a></li><li><a href='#x2'>Later</a></li></ul><div class='s'></div><div class='s' id='x1'>t</div><div class='s'></div><div class='s' id='x2'>t</div>");
+        var list = new DisplayList();
+        d.PaintContent(list);
+        var runs = Runs(list);
+        (RectF b, string t) dots = runs.First(r => r.Text.StartsWith('.'));
+        Assert.DoesNotContain(runs, r => r.Text.Contains('\uE0FE', StringComparison.Ordinal) || r.Text.Contains('\uE0FF', StringComparison.Ordinal));
+        // Both page numbers end at the same place, the right edge of the line, whatever the title before the leader.
+        var numbers = runs.Where(r => r.Text.Length == 1 && char.IsDigit(r.Text[0])).ToList();
+        Assert.Equal(2, numbers.Count);
+        Assert.Equal(numbers[0].Bounds.Right, numbers[1].Bounds.Right, 2);
+        Assert.True(dots.b.Right <= numbers[0].Bounds.X + 10);
+        Assert.True(dots.b.Width > 200);
+    }
+
     private static string ContentText(PagedDocument d)
     {
         var list = new DisplayList();
