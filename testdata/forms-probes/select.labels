@@ -1,0 +1,28 @@
+select empty 10
+select 1opt A 10
+select 2opt 10
+select size3 4opt 10
+select multiple 2opt 10
+select empty 13.3333
+select 1opt A 13.3333
+select 2opt 13.3333
+select size3 4opt 13.3333
+select multiple 2opt 13.3333
+select empty 20
+select 1opt A 20
+select 2opt 20
+select size3 4opt 20
+select multiple 2opt 20
+select empty 30
+select 1opt A 30
+select 2opt 30
+select size3 4opt 30
+select multiple 2opt 30
+select optgroup
+select size=4 empty
+select multiple empty
+select width 200
+select width 200 height 50
+select pad 10
+select selected-longer
+select empty-option

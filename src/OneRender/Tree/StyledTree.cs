@@ -424,6 +424,11 @@ public sealed partial class StyledTree
         }
 
         _states[i] = 0;
+        if (_control is not null)
+        {
+            _control[i] = default;
+        }
+
         _textCap[i] = 0;
         _chg[i] = 0;
         if (parent >= 0)
@@ -603,6 +608,11 @@ public sealed partial class StyledTree
         Array.Resize(ref _src, n);
         Array.Resize(ref _decl, n);
         Array.Resize(ref _states, n);
+        if (_control is not null)
+        {
+            Array.Resize(ref _control, n);
+        }
+
         Array.Resize(ref _textCap, n);
         Array.Resize(ref _oldStyle, n);
         Array.Resize(ref _chg, n);

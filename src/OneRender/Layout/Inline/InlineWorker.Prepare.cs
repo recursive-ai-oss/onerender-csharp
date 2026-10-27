@@ -49,6 +49,13 @@ internal sealed partial class InlineWorker
             {
                 case EK.Text:
                 {
+                    if (e.Leader)
+                    {
+                        _opp[e.Start] = OppNone;
+                        _opp[Math.Min(n, e.Start + e.Len)] = OppNone;
+                        break;
+                    }
+
                     ref readonly ComputedValues v = ref V(e.Box);
                     bool wrap = v.TextWrapMode == TextWrapModeKind.Wrap;
                     int end = e.Start + e.Len;
@@ -433,7 +440,7 @@ internal sealed partial class InlineWorker
         e.Mt = m.Top;
         e.W = m.Left + bb.Width + m.Right;
         e.H = m.Top + bb.Height + m.Bottom;
-        e.Base = e.H;
+        e.Base = bv.BaselineAtBorderEdge ? m.Top + bb.Height : e.H;
         if (b.Kind == BoxKind.Container && b.Context is FormattingContext.Flex or FormattingContext.Grid && !double.IsNaN(f.Baseline))
         {
             // Flexbox §8.5 and Grid §11.6: an inline flex or grid container sits on the first baseline set it computed, whatever its
@@ -441,14 +448,22 @@ internal sealed partial class InlineWorker
             // items to look at (evidence: docs/layout-conventions.md, inline flex baseline).
             e.Base = m.Top + f.Baseline;
         }
-        else if (b.Kind == BoxKind.Container && b.Values.OverflowX == OverflowKind.Visible && b.Values.OverflowY == OverflowKind.Visible)
+        else if (b.Kind == BoxKind.Container && !b.Values.IsScrollContainer)
         {
             // CSS2 §10.8.1: the baseline of an inline-block is that of its last line box in normal flow; with none, or with a
-            // non-visible overflow, it is the bottom margin edge.
+            // scrolling overflow, it is the bottom margin edge. overflow: clip does not scroll (CSS Overflow 3 §3.1), so the baseline stays
+            // on the text; a text field depends on it (probe: the baseline of an input is its text's, not its bottom edge).
             double last = LastLineBaseline(f);
             if (!double.IsNaN(last))
             {
                 e.Base = m.Top + last;
+            }
+            else if (!double.IsNaN(bv.InnerBaseline))
+            {
+                // A text field with no text has no line, but sits on the baseline its text would have.
+                Insets pad = f.Padding;
+                Insets bor = f.Border;
+                e.Base = m.Top + bor.Top + pad.Top + bv.InnerBaseline;
             }
         }
     }

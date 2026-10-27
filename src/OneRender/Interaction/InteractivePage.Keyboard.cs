@@ -58,9 +58,24 @@ public sealed partial class InteractivePage
             return outcome;
         }
 
+        if (TryEditKey(in input, cancellationToken, out InputOutcome editOutcome))
+        {
+            return outcome | editOutcome | FlushStates(cancellationToken);
+        }
+
+        if (input.Down && TrySelectKey(key, input.Modifiers, cancellationToken, out InputOutcome selectOutcome))
+        {
+            return outcome | selectOutcome | FlushStates(cancellationToken);
+        }
+
+        if (input.Down && plain && TryRangeKey(key, cancellationToken, out InputOutcome rangeOutcome))
+        {
+            return outcome | rangeOutcome | FlushStates(cancellationToken);
+        }
+
         if (plain && ActivationKey(key, input.Down, _focused))
         {
-            Activate(_focused, input.Time);
+            outcome |= Activate(_focused, input.Time);
         }
         else if (input.Down && plain && !(!_focused.IsNull && FocusRules.IsTextEntry(_focused)))
         {
@@ -119,7 +134,7 @@ public sealed partial class InteractivePage
         && (t.Equals("checkbox", StringComparison.OrdinalIgnoreCase) || t.Equals("radio", StringComparison.OrdinalIgnoreCase));
 
     // A keyboard-synthesized click has no pointer position (detail 0), as HTML's "fire a synthetic pointer event" says.
-    private void Activate(Node target, double time)
+    private InputOutcome Activate(Node target, double time)
     {
         var p = new PointerInput { Action = PointerAction.Up, X = 0, Y = 0, Button = 0, Buttons = MouseButtons.None, Time = time };
         PointerEvent e = _pe;
@@ -129,7 +144,9 @@ public sealed partial class InteractivePage
         e.PointerType = string.Empty;
         e.IsPrimary = false;
         e.Pressure = 0;
-        _events.Dispatch(e, EventTarget.Of(target));
+        InputOutcome outcome = InputOutcome.None;
+        DispatchClick(target, e, ref outcome, default);
+        return outcome;
     }
 
     private InputOutcome ScrollByKey(string key, bool shift)

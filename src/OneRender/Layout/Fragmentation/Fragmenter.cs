@@ -126,7 +126,14 @@ internal sealed partial class Fragmenter
 
         // §4.1: rows of a table row group are block-level siblings for breaking, so a table and its row groups fragment between
         // rows. A row stays whole (its cells are not split), so a row taller than a fragmentainer overflows it.
-        if (b.Context is FormattingContext.Table or FormattingContext.TableRowGroup or FormattingContext.TableHeaderGroup or FormattingContext.TableFooterGroup)
+        // A header or footer group stays whole: a break inside it would leave a table page with half a header, and the group is
+        // the thing a break repeats (CSS 2 §17.5.2.2).
+        if (b.Context is FormattingContext.TableHeaderGroup or FormattingContext.TableFooterGroup)
+        {
+            return true;
+        }
+
+        if (b.Context is FormattingContext.Table or FormattingContext.TableRowGroup)
         {
             return b.Values.IsScrollContainer || b.Values.IsMulticol;
         }

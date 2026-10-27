@@ -788,7 +788,7 @@ public sealed partial class BlockLayoutEngine
             j = AlignKind.Start; // Box Alignment 3 §9.3: baseline alignment in the inline axis falls back to start.
         }
 
-        bool widthAuto = v.Width.Kind is LengthKind.Auto or LengthKind.Stretch;
+        bool widthAuto = v.Width.Kind is LengthKind.Auto or LengthKind.Stretch || v.WidthIsIntrinsic;
         bool stretch = (isSubgridInline || IsStretchLike(j, it.Replaced) && widthAuto) && !msAuto && !meAuto;
         double availContent = Math.Max(0, areaW - ms - me - ph);
         double borderW;
@@ -811,7 +811,7 @@ public sealed partial class BlockLayoutEngine
         }
         else
         {
-            double cwv = isSubgridInline ? availContent : ResolveWidthLength(b, v.Width, areaW, ph, v.BoxSizing, availContent, isMin: false);
+            double cwv = isSubgridInline ? availContent : v.WidthIsIntrinsic ? double.NaN : ResolveWidthLength(b, v.Width, areaW, ph, v.BoxSizing, availContent, isMin: false);
             double minW = isSubgridInline ? 0 : ResolveWidthLength(b, v.MinWidth, areaW, ph, v.BoxSizing, availContent, isMin: true);
             double maxW = isSubgridInline ? double.NaN : ResolveWidthLength(b, v.MaxWidth, areaW, ph, v.BoxSizing, availContent, isMin: false);
             if (double.IsNaN(cwv))

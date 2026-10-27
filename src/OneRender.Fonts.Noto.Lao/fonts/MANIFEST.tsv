@@ -1,0 +1,8 @@
+# Upstream provenance of every shipped file. Columns are tab-separated.
+# archive<TAB>url<TAB>sha256   a download that holds several files
+# file<TAB>path<TAB>url<TAB>member<TAB>sha256   path is relative to this folder; member is the name inside the archive, or - for a direct download
+# Tools: tools/fonts/optional_fonts.py verify
+archive	https://github.com/notofonts/lao/releases/download/NotoSansLao-v2.003/NotoSansLao-v2.003.zip	5a87c31b1a40ef8147c1e84437e5f0ceba2d4dbbfc0b56a65821ad29870da8c0
+file	NotoSansLao-Bold.ttf	https://github.com/notofonts/lao/releases/download/NotoSansLao-v2.003/NotoSansLao-v2.003.zip	NotoSansLao/unhinted/ttf/NotoSansLao-Bold.ttf	6fea2e9f231a4b9cfdeec90e9afaff8818b3d11f74cdb23559275f71eeff1ffd
+file	NotoSansLao-Regular.ttf	https://github.com/notofonts/lao/releases/download/NotoSansLao-v2.003/NotoSansLao-v2.003.zip	NotoSansLao/unhinted/ttf/NotoSansLao-Regular.ttf	d3976b0ac08702c54999ff42eae295d1597fd73b44e0c57d7f4917524e18afbe
+file	OFL.txt	https://github.com/notofonts/lao/releases/download/NotoSansLao-v2.003/NotoSansLao-v2.003.zip	OFL.txt	a42993999944845fb5af693ea678a372a053db1f0981d55e911dcfa9d330f279

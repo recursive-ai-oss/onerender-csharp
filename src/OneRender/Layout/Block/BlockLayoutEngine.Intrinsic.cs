@@ -27,10 +27,11 @@ public sealed partial class BlockLayoutEngine
     }
 
     private int _atomicMeasureDepth;
+    private double _atomicCbHeight = double.NaN;
 
     /// <inheritdoc />
     Fragment IAtomicInlineHost.LayoutAtomic(Box box, Fragment parent, double containingWidth, out Insets margins) =>
-        LayoutIndependent(box, parent, containingWidth, double.NaN, true, out margins);
+        LayoutIndependent(box, parent, containingWidth, _atomicCbHeight, true, out margins);
 
     /// <inheritdoc />
     void IAtomicInlineHost.GetAtomicContribution(Box box, out double minContent, out double maxContent)
@@ -250,6 +251,17 @@ public sealed partial class BlockLayoutEngine
             return;
         }
 
+        if (b.Kind == BoxKind.Container && !double.IsNaN(b.Values.ControlWidth))
+        {
+            // A form control behaves as a replaced element: its widget width is its max-content, and also its min-content unless
+            // its width is a percentage (CSS Sizing 3 §5.2.2). The text it shows is clipped, so it adds nothing.
+            max = b.Values.ControlWidth;
+            min = b.Values.Width.IsPercentage ? 0 : max;
+            _minContent[b.Index] = min;
+            _maxContent[b.Index] = max;
+            return;
+        }
+
         if (b.Kind == BoxKind.Replaced)
         {
             ref readonly ComputedValues v = ref b.Values;
@@ -298,6 +310,12 @@ public sealed partial class BlockLayoutEngine
         double ph = FixedPadding(in v);
         bool borderBox = v.BoxSizing == BoxSizingKind.BorderBox;
         Length w = v.Width;
+        if (v.ControlInnerPadding > 0 && w.IsPercentage)
+        {
+            // A percentage width leaves nothing of a control's widget to count toward a minimum, its inset included.
+            ph -= v.ControlInnerPadding;
+        }
+
         switch (w.Kind)
         {
             case LengthKind.Px:

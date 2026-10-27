@@ -1,0 +1,4 @@
+{"tool": "weasyprint", "doc": "invoice", "mode": "process", "run": 1, "ms": 531.5, "rssPeakKb": 67420, "pssPeakKb": 48922, "maxrssKb": 66664, "exit": 0, "pages": 3}
+{"tool": "weasyprint", "doc": "report", "mode": "process", "run": 1, "ms": 1512.9, "rssPeakKb": 103624, "pssPeakKb": 91309, "maxrssKb": 102532, "exit": 0, "pages": 50}
+{"tool": "weasyprint", "doc": "table10k", "mode": "process", "run": 1, "ms": 21661.1, "rssPeakKb": 931252, "pssPeakKb": 919467, "maxrssKb": 929312, "exit": 0, "pages": 218}
+{"tool": "weasyprint", "doc": "tailwind", "mode": "process", "run": 1, "ms": 677.4, "rssPeakKb": 69364, "pssPeakKb": 55052, "maxrssKb": 67772, "exit": 0, "pages": 7}

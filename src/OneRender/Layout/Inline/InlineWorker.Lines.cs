@@ -18,6 +18,7 @@ internal sealed partial class InlineWorker
         Br,
         Abs,
         Dead,
+        Leader,
     }
 
     private struct Piece
@@ -551,6 +552,13 @@ internal sealed partial class InlineWorker
                     break;
                 default:
                 {
+                    if (el.Leader)
+                    {
+                        AddPiece(PK.Leader, e, 0, 0, 0, el.Owner, el.Level);
+                        ink = true;
+                        break;
+                    }
+
                     int k = _shaped[e]!.Clusters.Length;
                     int cs = e == e0 ? c0 : 0;
                     int ce = e == e1 ? c1 : k;
@@ -642,7 +650,7 @@ internal sealed partial class InlineWorker
             }
 
             PK kind = _pc[m].Kind;
-            if (kind is PK.Text or PK.Atomic or PK.Tab or PK.Br or PK.Hyphen || (kind is PK.Open or PK.Close && _pc[m].W > 0))
+            if (kind is PK.Text or PK.Atomic or PK.Tab or PK.Br or PK.Hyphen or PK.Leader || (kind is PK.Open or PK.Close && _pc[m].W > 0))
             {
                 content = true;
             }

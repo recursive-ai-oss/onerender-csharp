@@ -4,6 +4,37 @@
     <Project Path="src/OneRender.Image/OneRender.Image.csproj" />
     <Project Path="src/OneRender.Pdf/OneRender.Pdf.csproj" />
     <Project Path="src/OneRender.Fonts/OneRender.Fonts.csproj" />
+    <Project Path="src/OneRender.Fonts.Cjk/OneRender.Fonts.Cjk.csproj" />
+    <Project Path="src/OneRender.Fonts.Emoji/OneRender.Fonts.Emoji.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Arabic/OneRender.Fonts.Noto.Arabic.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Armenian/OneRender.Fonts.Noto.Armenian.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Balinese/OneRender.Fonts.Noto.Balinese.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Bengali/OneRender.Fonts.Noto.Bengali.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Cherokee/OneRender.Fonts.Noto.Cherokee.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Devanagari/OneRender.Fonts.Noto.Devanagari.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Ethiopic/OneRender.Fonts.Noto.Ethiopic.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Georgian/OneRender.Fonts.Noto.Georgian.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Gujarati/OneRender.Fonts.Noto.Gujarati.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Gurmukhi/OneRender.Fonts.Noto.Gurmukhi.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Hebrew/OneRender.Fonts.Noto.Hebrew.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Javanese/OneRender.Fonts.Noto.Javanese.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Kannada/OneRender.Fonts.Noto.Kannada.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Khmer/OneRender.Fonts.Noto.Khmer.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Lao/OneRender.Fonts.Noto.Lao.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Malayalam/OneRender.Fonts.Noto.Malayalam.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Math/OneRender.Fonts.Noto.Math.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Mongolian/OneRender.Fonts.Noto.Mongolian.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Myanmar/OneRender.Fonts.Noto.Myanmar.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Nko/OneRender.Fonts.Noto.Nko.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Oriya/OneRender.Fonts.Noto.Oriya.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Sinhala/OneRender.Fonts.Noto.Sinhala.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Symbols/OneRender.Fonts.Noto.Symbols.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Syriac/OneRender.Fonts.Noto.Syriac.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Tamil/OneRender.Fonts.Noto.Tamil.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Telugu/OneRender.Fonts.Noto.Telugu.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Thaana/OneRender.Fonts.Noto.Thaana.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Thai/OneRender.Fonts.Noto.Thai.csproj" />
+    <Project Path="src/OneRender.Fonts.Noto.Tibetan/OneRender.Fonts.Noto.Tibetan.csproj" />
     <Project Path="src/OneRender.Razor/OneRender.Razor.csproj" />
     <Project Path="src/OneRender.Accessibility/OneRender.Accessibility.csproj" />
   </Folder>
@@ -13,14 +44,21 @@
     <Project Path="tests/OneRender.WptRunner.Tests/OneRender.WptRunner.Tests.csproj" />
     <Project Path="tests/OneRender.GeomDiff.Tests/OneRender.GeomDiff.Tests.csproj" />
     <Project Path="tests/OneRender.Pdf.Tests/OneRender.Pdf.Tests.csproj" />
+    <Project Path="tests/OneRender.OptionalFonts.Tests/OneRender.OptionalFonts.Tests.csproj" />
+    <Project Path="tests/OneRender.Razor.Tests/OneRender.Razor.Tests.csproj" />
     <Project Path="tests/OneRender.AotSmoke/OneRender.AotSmoke.csproj" />
     <Project Path="tests/OneRender.WasmSmoke/OneRender.WasmSmoke.csproj" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/InvoiceApp/InvoiceApp.csproj" />
   </Folder>
   <Folder Name="/tools/">
     <Project Path="tools/OneRender.WptRunner/OneRender.WptRunner.csproj" />
     <Project Path="tools/OneRender.WptRunner.Chrome/OneRender.WptRunner.Chrome.csproj" />
     <Project Path="tools/geomdiff/OneRender.GeomDiff.csproj" />
     <Project Path="tools/pdf/OneRender.PdfRun/OneRender.PdfRun.csproj" />
+    <Project Path="tools/bench/OneRender.ChromePdf/OneRender.ChromePdf.csproj" />
+    <Project Path="tools/bench/OneRender.PdfCli/OneRender.PdfCli.csproj" />
   </Folder>
   <Folder Name="/fuzz/">
     <Project Path="fuzz/OneRender.Fuzz.Values/OneRender.Fuzz.Values.csproj" />
@@ -29,5 +67,6 @@
   <Folder Name="/bench/">
     <Project Path="bench/OneRender.Benchmarks/OneRender.Benchmarks.csproj" />
     <Project Path="bench/OneRender.Benchmarks.OneGameUi/OneRender.Benchmarks.OneGameUi.csproj" />
+    <Project Path="bench/OneRender.Benchmarks.Documents/OneRender.Benchmarks.Documents.csproj" />
   </Folder>
 </Solution>

@@ -1,3 +1,4 @@
+using OneRender.Forms;
 using OneRender.Style;
 using RecursiveAI.OneHtml;
 using RecursiveAI.OneHtml.Css;
@@ -16,6 +17,34 @@ public sealed partial class HtmlFrontEnd
     private readonly OneHtmlSource _source = new();
     private Frame[] _stack = new Frame[64];
     private readonly System.Text.StringBuilder _svgText = new();
+    private readonly ReferenceTable _ownRefs = new();
+    private GeneratedContent? _gc;
+    private bool _gcConfigured;
+    private DocumentStyles? _styles;
+
+    /// <summary>
+    /// The table that carries targets (the counters in scope at elements with an id, and their pages) between builds of one document, or
+    /// null for a standalone build. Set by the paged-media driver; its presence switches generated content on.
+    /// </summary>
+    internal ReferenceTable? References { get; set; }
+
+    /// <summary>Whether generated content of the last build read page numbers (<c>counter(page)</c>, <c>target-counter(..., page)</c>).</summary>
+    internal bool UsedPageReferences => _gc?.UsesPageReferences ?? false;
+
+    /// <summary>Whether the last build found leaders in generated content.</summary>
+    internal bool UsedLeaders => _gc?.UsesLeaders ?? false;
+
+    private GeneratedContent Generated()
+    {
+        _gc ??= new GeneratedContent();
+        if (!_gcConfigured)
+        {
+            _gc.Configure(_styles!, References ?? _ownRefs);
+            _gcConfigured = true;
+        }
+
+        return _gc;
+    }
 
     /// <summary>Creates a front end that writes into <paramref name="tree"/>.</summary>
     /// <param name="tree">The tree to fill; <see cref="Build"/> clears it first.</param>
@@ -35,8 +64,17 @@ public sealed partial class HtmlFrontEnd
         Document doc = styles.Document;
         _tree.Clear();
         _cellPadding.Clear();
+        _fieldsetOrig.Clear();
+        _wrapperOf.Clear();
         _alignHint.Clear();
         _tableBorder.Clear();
+        _styles = styles;
+        _gcConfigured = false;
+        if (References is not null || GeneratedContent.Mentions(styles))
+        {
+            Generated();
+        }
+
         _tree.SetDocument(doc, doc.NodeCount);
         _current = styles;
         _tree.Styler = this;
@@ -46,7 +84,7 @@ public sealed partial class HtmlFrontEnd
             return;
         }
 
-        int rootIdx = AddElement(styles, rootElement, -1);
+        int rootIdx = AddElement(styles, rootElement, -1, 0);
         if (rootIdx < 0 || !ShouldDescend(rootIdx))
         {
             return;
@@ -54,6 +92,17 @@ public sealed partial class HtmlFrontEnd
 
         int top = 0;
         _stack[0] = new Frame(rootElement.FirstChild, rootIdx, rootElement);
+        if (_fieldsetOrig.ContainsKey(rootIdx))
+        {
+            _stack[0].Fieldset = rootIdx;
+        }
+
+        if (_eff.Length < _stack.Length)
+        {
+            _eff = new int[_stack.Length];
+        }
+
+        _eff[0] = 0;
         int counter = 0;
         while (top >= 0)
         {
@@ -67,7 +116,8 @@ public sealed partial class HtmlFrontEnd
             if (child.IsNull)
             {
                 // Children done: ::after comes last (CSS Pseudo-Elements 4 §4).
-                AddPseudo(styles, f.Owner, f.StyledParent, PseudoElementKind.After);
+                AddPseudo(styles, f.Owner, f.StyledParent, PseudoElementKind.After, ChildDepth(top, f.StyledParent));
+                _gc?.Exit(_eff[top]);
                 top--;
                 continue;
             }
@@ -80,13 +130,24 @@ public sealed partial class HtmlFrontEnd
                     ReadOnlySpan<char> data = child.Data;
                     if (!data.IsEmpty)
                     {
+                        if (f.Fieldset >= 0 && !data.IsWhiteSpace())
+                        {
+                            parentIdx = EnsureFieldsetContent(ref f);
+                        }
+
                         _tree.AppendText(parentIdx, data);
                     }
 
                     break;
                 case NodeKind.Element:
                 {
-                    int idx = AddElement(styles, child, parentIdx);
+                    int childDepth = ChildDepth(top, parentIdx);
+                    if (f.Fieldset >= 0 && !IsRenderedLegend(child))
+                    {
+                        parentIdx = EnsureFieldsetContent(ref f);
+                    }
+
+                    int idx = AddElement(styles, child, parentIdx, childDepth);
                     if (idx >= 0 && ShouldDescend(idx))
                     {
                         if (top + 1 == _stack.Length)
@@ -94,14 +155,43 @@ public sealed partial class HtmlFrontEnd
                             Array.Resize(ref _stack, _stack.Length * 2);
                         }
 
+                        if (_eff.Length < _stack.Length)
+                        {
+                            Array.Resize(ref _eff, _stack.Length);
+                        }
+
                         _stack[++top] = new Frame(child.FirstChild, idx, child);
+                        if (_fieldsetOrig.ContainsKey(idx))
+                        {
+                            _stack[top].Fieldset = idx;
+                        }
+                        _eff[top] = childDepth;
                     }
+                    else if (idx >= 0 && _popupParent >= 0)
+                    {
+                        // An open drop-down: its options go into the popup box.
+                        if (top + 1 == _stack.Length)
+                        {
+                            Array.Resize(ref _stack, _stack.Length * 2);
+                        }
+
+                        _stack[++top] = new Frame(child.FirstChild, _popupParent, child);
+                    }
+
+                    _popupParent = -1;
 
                     break;
                 }
             }
         }
     }
+
+    // Counter scopes ignore elements that generate no box of their own: the children of a display: contents element count as its siblings
+    // (CSS Lists 3 section 4.4.2).
+    private int[] _eff = new int[64];
+
+    private int ChildDepth(int top, int styledParent) =>
+        _eff[top] + (_tree.Styles[_tree.StyleOf(styledParent)].Display.IsContents ? 0 : 1);
 
     // Inline svg is replaced content: the subtree is serialized for the SVG renderer, and its size comes from width, height and viewBox.
     private void AddSvg(Node element, int idx)
@@ -120,9 +210,9 @@ public sealed partial class HtmlFrontEnd
     }
 
     private bool ShouldDescend(int idx) =>
-        _tree.ReplacedOf(idx) == ReplacedKind.None && !_tree.Styles[_tree.StyleOf(idx)].Display.IsNone;
+        _tree.ReplacedOf(idx) == ReplacedKind.None && !_tree.Styles[_tree.StyleOf(idx)].Display.IsNone && !_noDescend;
 
-    private int AddElement(DocumentStyles styles, Node element, int parentIdx)
+    private int AddElement(DocumentStyles styles, Node element, int parentIdx, int depth)
     {
         ComputedStyle cs = styles.GetStyle(element);
         int idx = Create(StyledNodeKind.Element, cs, parentIdx, element.Index);
@@ -139,6 +229,14 @@ public sealed partial class HtmlFrontEnd
             _ => ReplacedKind.None,
         };
         _tree.SetElementInfo(idx, tag, replaced);
+        ControlKind control = Classify(element);
+        _noDescend = control is ControlKind.SelectMenu or ControlKind.Progress or ControlKind.Meter or ControlKind.TextArea;
+        _tree.ReplaceStyle(idx, AdjustControlStyle(element, SplitFieldset(element, idx, _tree.StyleOf(idx)), parentIdx < 0 ? default : _tree.StyleOf(parentIdx)));
+        if (_gcConfigured && !_tree.Styles[_tree.StyleOf(idx)].Display.IsNone)
+        {
+            _gc!.Enter(cs, element, depth, false);
+        }
+
         if (element.Namespace == ElementNamespace.Html && tag.Length is 2 or 3 or 5 or 8 && IsSpanTag(tag))
         {
             ApplySpanAttributes(element, idx, tag);
@@ -166,7 +264,17 @@ public sealed partial class HtmlFrontEnd
         StyleTable table = _tree.Styles;
         if (table[_tree.StyleOf(idx)].Display.IsNone)
         {
+            _noDescend = false;
             return idx;
+        }
+
+        if (control != ControlKind.None)
+        {
+            AddControlContent(element, idx, control);
+            if (control == ControlKind.SelectMenu && Form is not null && Form.IsOpen(element))
+            {
+                AddSelectPopup(element, idx);
+            }
         }
 
         if (table[_tree.StyleOf(idx)].Display.IsListItem)
@@ -178,24 +286,24 @@ public sealed partial class HtmlFrontEnd
             }
             else
             {
-                CreatePseudoNode(StyledNodeKind.Marker, marker, idx);
+                CreatePseudoNode(StyledNodeKind.Marker, marker, idx, element, depth + 1);
             }
         }
 
-        AddPseudo(styles, element, idx, PseudoElementKind.Before);
+        AddPseudo(styles, element, idx, PseudoElementKind.Before, depth + 1);
         return idx;
     }
 
-    private void AddPseudo(DocumentStyles styles, Node owner, int ownerIdx, PseudoElementKind kind)
+    private void AddPseudo(DocumentStyles styles, Node owner, int ownerIdx, PseudoElementKind kind, int depth)
     {
         ComputedStyle? ps = styles.GetPseudoStyle(owner, kind);
         if (ps is not null)
         {
-            CreatePseudoNode(kind == PseudoElementKind.Before ? StyledNodeKind.Before : StyledNodeKind.After, ps, ownerIdx);
+            CreatePseudoNode(kind == PseudoElementKind.Before ? StyledNodeKind.Before : StyledNodeKind.After, ps, ownerIdx, owner, depth);
         }
     }
 
-    private void CreatePseudoNode(StyledNodeKind kind, ComputedStyle cs, int ownerIdx)
+    private void CreatePseudoNode(StyledNodeKind kind, ComputedStyle cs, int ownerIdx, Node owner, int depth)
     {
         StyleId sid = Resolve(cs, _tree.StyleOf(ownerIdx), true, false);
         ref readonly ComputedValues v = ref _tree.Styles[sid];
@@ -205,9 +313,22 @@ public sealed partial class HtmlFrontEnd
         }
 
         int idx = _tree.NewNode(kind, ownerIdx, sid, -1);
-        if (idx >= 0 && kind != StyledNodeKind.Marker && v.Content == ContentKind.Text)
+        if (idx >= 0 && kind != StyledNodeKind.Marker)
         {
-            _tree.SetText(idx, v.ContentText);
+            // CSS Generated Content 3 §2: counters change before the box's own content reads them.
+            if (_gcConfigured)
+            {
+                _gc!.Enter(cs, owner, depth, true);
+            }
+
+            if (v.Content == ContentKind.Text)
+            {
+                _tree.SetText(idx, v.ContentText);
+            }
+            else if (v.Content == ContentKind.Other)
+            {
+                _tree.SetText(idx, Generated().Evaluate(v.ContentText, owner));
+            }
         }
     }
 
@@ -590,5 +711,10 @@ public sealed partial class HtmlFrontEnd
         public Node Cursor = cursor;
         public int StyledParent = styledParent;
         public Node Owner = owner;
+
+        // A fieldset whose display is grid or flex: its rendered legend stays a child of the fieldset and every other child goes into the
+        // anonymous content box (HTML §15.3.13), made when the first of them arrives.
+        public int Fieldset = -1;
+        public int Wrap = -1;
     }
 }

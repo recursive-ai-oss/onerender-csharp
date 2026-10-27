@@ -95,6 +95,7 @@ internal enum PropertyId : byte
     Orphans,
     Widows,
     BoxDecorationBreak,
+    Page,
     ColumnCount,
     ColumnWidth,
     ColumnFill,
@@ -187,12 +188,15 @@ internal enum PropertyId : byte
     AnimationDirection,
     AnimationFillMode,
     AnimationPlayState,
+    Appearance,
+    AccentColor,
+    CaretColor,
 }
 
 /// <summary>Names and inheritance of <see cref="PropertyId"/> values.</summary>
 internal static class Properties
 {
-    public const int Count = (int)PropertyId.AnimationPlayState + 1;
+    public const int Count = (int)PropertyId.CaretColor + 1;
 
     private static readonly string[] Names =
     [
@@ -211,7 +215,7 @@ internal static class Properties
         "word-break", "overflow-wrap", "line-break", "hyphens", "tab-size", "text-align-last", "text-justify", "text-transform", "overflow-clip-margin",
         "flex-direction", "flex-wrap", "flex-grow", "flex-shrink", "flex-basis", "order",
         "justify-content", "align-content", "align-items", "align-self", "row-gap", "column-gap",
-        "break-before", "break-after", "break-inside", "orphans", "widows", "box-decoration-break",
+        "break-before", "break-after", "break-inside", "orphans", "widows", "box-decoration-break", "page",
         "column-count", "column-width", "column-fill", "column-span", "column-rule-width", "column-rule-style", "column-rule-color",
         "grid-template-columns", "grid-template-rows", "grid-template-areas", "grid-auto-columns", "grid-auto-rows", "grid-auto-flow",
         "grid-row-start", "grid-row-end", "grid-column-start", "grid-column-end", "justify-items", "justify-self",
@@ -222,6 +226,7 @@ internal static class Properties
         "border-collapse", "border-spacing", "empty-cells", "caption-side", "table-layout", "pointer-events",
         "transition-property", "transition-duration", "transition-timing-function", "transition-delay", "transition-behavior",
         "animation-name", "animation-duration", "animation-timing-function", "animation-delay", "animation-iteration-count", "animation-direction", "animation-fill-mode", "animation-play-state",
+        "appearance", "accent-color", "caret-color",
     ];
 
     private static readonly Dictionary<string, PropertyId> ByName = BuildByName();
@@ -243,7 +248,7 @@ internal static class Properties
             or PropertyId.TextUnderlineOffset or PropertyId.TextUnderlinePosition
             or PropertyId.WordBreak or PropertyId.OverflowWrap or PropertyId.LineBreak or PropertyId.Hyphens or PropertyId.TabSize
             or PropertyId.TextAlignLast or PropertyId.TextJustify or PropertyId.TextTransform
-            or PropertyId.BorderCollapse or PropertyId.BorderSpacing or PropertyId.EmptyCells or PropertyId.CaptionSide or PropertyId.PointerEvents => true,
+            or PropertyId.BorderCollapse or PropertyId.BorderSpacing or PropertyId.EmptyCells or PropertyId.CaptionSide or PropertyId.PointerEvents or PropertyId.AccentColor or PropertyId.CaretColor or PropertyId.Page => true,
         _ => false,
     };
 

@@ -147,6 +147,7 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace, 
 
         // Whether the result of this block formatting context root is recorded when it closes, and the inputs it was laid out with.
         public bool MemoRec;
+        public bool MemoHit; // the children were copied from the earlier layout, already in their final places
         public MemoKey MemoKey;
     }
 

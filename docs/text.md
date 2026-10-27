@@ -92,6 +92,48 @@ package that would cover it (`RecursiveAI.OneRender.Fonts.Noto.<Script>`, `.Font
 `FontPackages`). `TextDiagnostics` keeps 512 entries and counts the rest in `Dropped`. Canonical-equivalence matching
 (Fonts 4 §5.4's normalization step) is not done.
 
+## Opt-in fonts packages
+
+The default fonts cover Latin, Greek, Cyrillic and (through Liberation) most of Hebrew. Every other script comes from a package
+that ships unmodified upstream release files; `FontPackages` names the package for a missing character, and the table below is
+kept equal to it by a test (`OneRender.FontPackageTests`).
+
+| Package | Fonts (release) | Covers |
+|---|---|---|
+| `RecursiveAI.OneRender.Fonts.Noto.<Script>` | Noto Sans `<Script>` Regular and Bold where the release has a Bold (`unhinted/ttf` files; Noto Serif Tibetan, the only Tibetan family published) | Armenian, Hebrew, Arabic, Syriac, Thaana, Nko, Devanagari, Bengali, Gurmukhi, Gujarati, Oriya, Tamil, Telugu, Kannada, Malayalam, Sinhala, Thai, Lao, Tibetan, Myanmar, Georgian, Ethiopic, Cherokee, Khmer, Mongolian, Balinese, Javanese; `Symbols` (Noto Sans Symbols and Symbols 2), `Math` (Noto Sans Math) |
+| `RecursiveAI.OneRender.Fonts.Cjk` | Noto Sans CJK 2.004, the Regular and Bold `.ttc` collections | Chinese, Japanese, Korean; families `Noto Sans CJK JP`, `KR`, `SC`, `TC`, `HK` (collection faces 0 to 4) |
+| `RecursiveAI.OneRender.Fonts.Emoji` | Noto Color Emoji 2.051, `NotoColorEmoji_WindowsCompatible.ttf` | color emoji, ZWJ sequences, flags |
+
+Source URLs, release tags and SHA-256 hashes are in each package's `fonts/MANIFEST.tsv`; `tools/fonts/optional_fonts.py`
+fetches, lays out and verifies them. The Sans families are shipped in the two weights `font-weight` matching needs (400 and 700);
+the other weights of a release, the hinted and variable builds, the UI and Serif variants and the Mono CJK faces are left out to keep
+each package small (the largest, CJK, is about 40 MB; Noto Serif CJK would add more than 100 MB and is not shipped). The CJK
+collections are used as published: all five regional faces are registered from the same bytes, so `font-family: "Noto Sans CJK SC"`
+selects the Simplified Chinese forms. The engine does not choose a region from `lang`; without a family name the Japanese face is the
+fallback. The emoji file is the upstream build with color bitmaps (`CBDT`/`CBLC`, PNG) and an empty `glyf` table, which every
+TrueType reader accepts; the `NotoColorEmoji.ttf` build without `glyf` is refused by OneFont, and the COLRv1 build needs vector paint
+graphs that no backend draws.
+
+**Registration.** Each package has a static class (`NotoArabicFonts`, `CjkFonts`, `EmojiFonts`) with `Package` (the faces,
+`FaceIndex` for collections, the licence and manifest streams) and `Register()`. An application that references the package registers
+it at start-up: the package's build files add a module initializer to the application that calls `Register()` (no reflection, safe
+for NativeAOT and trimming). `OptionalFonts.Packages` lists the registered packages in a fixed order (text scripts by package id,
+then emoji), whatever the registration order. `FontProviders.CreateDefault` registers their faces after the default fonts, so they are
+fallback faces: they supply only characters the listed families and the default fonts lack, and a missing-glyph diagnostic for their
+script goes away. `ForCurrentThread()` starts a new provider when a package is registered later. A host with its own
+`FontCatalog` reads `OptionalFonts.Packages` (or one `Package`) and adds the faces itself.
+
+**Color bitmap glyphs.** `ColorBitmapGlyphs.TryGet` reads a glyph's PNG and metrics from `CBLC`/`CBDT` (strike with the most pixels
+per em that has the glyph; index formats 1 and 3, image formats 17 and 18; anything else is no glyph). `.Image` draws each glyph as
+its bitmap, scaled by `font-size / ppem`, placed by the bearings, ignoring `color`; a blurred text shadow of such a run is not drawn.
+`.Pdf` writes the run's text invisibly (so it stays selectable and extractable, with `/ToUnicode`/`/ActualText` as for any run) and
+draws the bitmaps as images over it. COLR (v0 or v1), sbix and SVG-in-OpenType glyphs are not drawn.
+
+**PDF/UA and complex scripts.** OnePdf writes the text of a cluster that shaping split into several glyphs (Arabic letters with dots,
+Indic conjuncts, Thai marks) as `/ActualText`, so extraction returns the source text exactly, but veraPDF's PDF/UA-1 rule 7.21.7 wants
+a `/ToUnicode` entry for each such glyph and reports them. Pages in those scripts are checked for extraction; pages in the other
+scripts, and in words that shape one glyph per cluster, pass veraPDF (`tools/pdf/run-verapdf-fonts.sh`).
+
 ## `ShapedText`
 
 Glyphs are in **visual (display) order**, in CSS px, **y down** from the baseline origin, advances unrounded (rounding policy is

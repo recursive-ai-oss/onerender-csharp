@@ -155,8 +155,12 @@ internal static partial class ComputedValueText
             case PropertyId.EmptyCells: return v.EmptyCells == EmptyCellsKind.Hide ? "hide" : "show";
             case PropertyId.CaptionSide: return v.CaptionSide == CaptionSideKind.Bottom ? "bottom" : "top";
             case PropertyId.TableLayout: return v.TableLayout == TableLayoutKind.Fixed ? "fixed" : "auto";
+            case PropertyId.Page: return v.PageName ?? "auto";
             case PropertyId.PointerEvents: return v.PointerEvents == PointerEventsKind.None ? "none" : "auto";
-            default: return (id > PropertyId.PointerEvents ? MotionText(id, in v) : PaintText(id, in v)) ?? string.Empty;
+            case PropertyId.Appearance: return v.Appearance == AppearanceKind.None ? "none" : "auto";
+            case PropertyId.CaretColor: return v.CaretColorAuto ? "auto" : v.CaretColor.ToCss();
+            case PropertyId.AccentColor: return v.AccentColorAuto ? "auto" : v.AccentColor.ToCss();
+            default: return (id >= PropertyId.TransitionProperty && id <= PropertyId.AnimationPlayState ? MotionText(id, in v) : PaintText(id, in v)) ?? string.Empty;
         }
     }
 

@@ -1,0 +1,8 @@
+# Upstream provenance of every shipped file. Columns are tab-separated.
+# archive<TAB>url<TAB>sha256   a download that holds several files
+# file<TAB>path<TAB>url<TAB>member<TAB>sha256   path is relative to this folder; member is the name inside the archive, or - for a direct download
+# Tools: tools/fonts/optional_fonts.py verify
+archive	https://github.com/notofonts/javanese/releases/download/NotoSansJavanese-v2.005/NotoSansJavanese-v2.005.zip	3d096aeee4dc607a91e7568785595643cb5fde4a0b7c9c7f13a762c48d37a0cf
+file	NotoSansJavanese-Bold.ttf	https://github.com/notofonts/javanese/releases/download/NotoSansJavanese-v2.005/NotoSansJavanese-v2.005.zip	NotoSansJavanese/unhinted/ttf/NotoSansJavanese-Bold.ttf	c864aee002f0fda2493814359a1d2232eb82fe7c4af6bd88e037d34d11ee15e3
+file	NotoSansJavanese-Regular.ttf	https://github.com/notofonts/javanese/releases/download/NotoSansJavanese-v2.005/NotoSansJavanese-v2.005.zip	NotoSansJavanese/unhinted/ttf/NotoSansJavanese-Regular.ttf	016f43b042c0b01e29688f71607e5d6fdb0effef6fc7aa3aa8eae6b4427fdca8
+file	OFL.txt	https://github.com/notofonts/javanese/releases/download/NotoSansJavanese-v2.005/NotoSansJavanese-v2.005.zip	OFL.txt	8a5665bd3b16a64f953b24a71f12e298f5233be8a4ed17424129c5524a397892

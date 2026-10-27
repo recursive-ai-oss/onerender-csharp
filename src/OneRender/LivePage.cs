@@ -205,12 +205,25 @@ public sealed class LivePage
         return new FlushResult(work, reused);
     }
 
+    /// <summary>What the painter draws over the text control being edited (see <see cref="Interaction.LiveTextEditor"/>); null when none. Set by the editor, read at every paint. While it is set every flush paints the whole list.</summary>
+    public Forms.TextEditView? Editing { get; set; }
+
+    /// <summary>Paints the display list again from the current layout, for a change that only touches painting (a caret blink, a selection, a scroll position).</summary>
+    /// <param name="cancellationToken">Cancels the paint.</param>
+    /// <exception cref="OperationCanceledException">Cancelled.</exception>
+    public void Repaint(CancellationToken cancellationToken = default)
+    {
+        PaintAll(cancellationToken);
+        _generation++;
+    }
+
     private PaintOptions PaintOptionsNow() => new(_updater.Width, _updater.Height)
     {
         Scroll = Scroll,
         Images = _options.Images,
         Fonts = _options.Fonts,
         DevicePixelRatio = _options.DevicePixelRatio,
+        Editing = Editing,
     };
 
     private void PaintAll(CancellationToken cancellationToken)

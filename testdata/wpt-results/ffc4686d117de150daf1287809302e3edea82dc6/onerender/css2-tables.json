@@ -165,7 +165,7 @@
     "css/CSS2/tables/anonymous-table-box-width-001.xht": "== ref-filled-green-100px-square.xht differs (max 255, 10000 px)",
     "css/CSS2/tables/border-collapse-empty-row.html": "== border-collapse-empty-row-ref.html differs (max 255, 3400 px)",
     "css/CSS2/tables/border-collapse-offset-001.xht": "== border-collapse-offset-001-ref.xht differs (max 255, 742 px)",
-    "css/CSS2/tables/border-collapse-offset-002.xht": "== border-collapse-offset-002-ref.xht differs (max 255, 1372 px)",
+    "css/CSS2/tables/border-collapse-offset-002.xht": "== border-collapse-offset-002-ref.xht differs (max 255, 1207 px)",
     "css/CSS2/tables/border-collapse-visibility-collapse-002.tentative.html": "== ref-filled-green-100px-square.xht differs (max 64, 200 px)",
     "css/CSS2/tables/border-conflict-element-001d.xht": "== border-conflict-element-001d-ref.xht differs (max 255, 7380 px)",
     "css/CSS2/tables/border-conflict-element-001e.xht": "== border-conflict-element-001e-ref.xht differs (max 255, 3110 px)",

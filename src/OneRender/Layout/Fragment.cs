@@ -34,6 +34,9 @@ public enum FragmentTraits : byte
 
     /// <summary>The box continues from an earlier fragment (this one starts after a break).</summary>
     ContinuesBefore = 2,
+
+    /// <summary>A copy of a table's header or footer group that a page break repeated on a later page (CSS 2 §17.5.2.2, CSS Tables 3 §9.1). It is only there for the eye: tagged output treats it as an artifact.</summary>
+    Repeated = 4,
 }
 
 /// <summary>Identifies a glyph run stored in a <see cref="FragmentTree"/>; the default value is "no run".</summary>

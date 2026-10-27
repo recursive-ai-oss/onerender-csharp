@@ -1,0 +1,63 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>OneRender.FontPackageTests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <NoWarn>$(NoWarn);xUnit1051</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Using Include="System" />
+    <Using Include="System.Collections.Generic" />
+    <Using Include="System.IO" />
+    <Using Include="System.Linq" />
+    <Using Include="System.Threading" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="RecursiveAI.OnePdf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/OneRender/OneRender.csproj" />
+    <ProjectReference Include="../../src/OneRender.Image/OneRender.Image.csproj" />
+    <ProjectReference Include="../../src/OneRender.Pdf/OneRender.Pdf.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts/OneRender.Fonts.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Cjk/OneRender.Fonts.Cjk.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Emoji/OneRender.Fonts.Emoji.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Arabic/OneRender.Fonts.Noto.Arabic.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Armenian/OneRender.Fonts.Noto.Armenian.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Balinese/OneRender.Fonts.Noto.Balinese.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Bengali/OneRender.Fonts.Noto.Bengali.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Cherokee/OneRender.Fonts.Noto.Cherokee.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Devanagari/OneRender.Fonts.Noto.Devanagari.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Ethiopic/OneRender.Fonts.Noto.Ethiopic.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Georgian/OneRender.Fonts.Noto.Georgian.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Gujarati/OneRender.Fonts.Noto.Gujarati.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Gurmukhi/OneRender.Fonts.Noto.Gurmukhi.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Hebrew/OneRender.Fonts.Noto.Hebrew.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Javanese/OneRender.Fonts.Noto.Javanese.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Kannada/OneRender.Fonts.Noto.Kannada.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Khmer/OneRender.Fonts.Noto.Khmer.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Lao/OneRender.Fonts.Noto.Lao.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Malayalam/OneRender.Fonts.Noto.Malayalam.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Math/OneRender.Fonts.Noto.Math.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Mongolian/OneRender.Fonts.Noto.Mongolian.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Myanmar/OneRender.Fonts.Noto.Myanmar.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Nko/OneRender.Fonts.Noto.Nko.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Oriya/OneRender.Fonts.Noto.Oriya.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Sinhala/OneRender.Fonts.Noto.Sinhala.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Symbols/OneRender.Fonts.Noto.Symbols.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Syriac/OneRender.Fonts.Noto.Syriac.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Tamil/OneRender.Fonts.Noto.Tamil.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Telugu/OneRender.Fonts.Noto.Telugu.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Thaana/OneRender.Fonts.Noto.Thaana.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Thai/OneRender.Fonts.Noto.Thai.csproj" />
+    <ProjectReference Include="../../src/OneRender.Fonts.Noto.Tibetan/OneRender.Fonts.Noto.Tibetan.csproj" />
+  </ItemGroup>
+
+</Project>

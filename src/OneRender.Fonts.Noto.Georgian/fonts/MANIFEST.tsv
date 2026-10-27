@@ -1,0 +1,8 @@
+# Upstream provenance of every shipped file. Columns are tab-separated.
+# archive<TAB>url<TAB>sha256   a download that holds several files
+# file<TAB>path<TAB>url<TAB>member<TAB>sha256   path is relative to this folder; member is the name inside the archive, or - for a direct download
+# Tools: tools/fonts/optional_fonts.py verify
+archive	https://github.com/notofonts/georgian/releases/download/NotoSansGeorgian-v2.005/NotoSansGeorgian-v2.005.zip	10e85011008108308e6feab0408242acb07804da61ede3d3ff236461ae07ab1b
+file	NotoSansGeorgian-Bold.ttf	https://github.com/notofonts/georgian/releases/download/NotoSansGeorgian-v2.005/NotoSansGeorgian-v2.005.zip	NotoSansGeorgian/unhinted/ttf/NotoSansGeorgian-Bold.ttf	517722454bbe6587ada79a0509db8c9b292b6a40b025eebe69c151a6508efc7e
+file	NotoSansGeorgian-Regular.ttf	https://github.com/notofonts/georgian/releases/download/NotoSansGeorgian-v2.005/NotoSansGeorgian-v2.005.zip	NotoSansGeorgian/unhinted/ttf/NotoSansGeorgian-Regular.ttf	f4b229b126859725b75031dd8c051335d20c85e4eb6d525af28f3e83e471baa4
+file	OFL.txt	https://github.com/notofonts/georgian/releases/download/NotoSansGeorgian-v2.005/NotoSansGeorgian-v2.005.zip	OFL.txt	8c02263c5d73d40544f9ed91e30c4e947407057a3cc430d7b786189aeceff6df

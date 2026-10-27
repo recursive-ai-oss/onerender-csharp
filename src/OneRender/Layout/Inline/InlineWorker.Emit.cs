@@ -322,6 +322,9 @@ internal sealed partial class InlineWorker
         int root = _container.Index;
         VerticalMetrics(out double rb, out double lineH);
 
+        // GCPM 3 section 3: leaders share the room the rest of the line leaves, so what follows them ends at the line's end.
+        ResolveLeaders(lineW - indent);
+
         // ---- alignment and justification (CSS Text 3 §7)
         double total = 0, hang = 0;
         int seps = 0;
@@ -551,6 +554,9 @@ internal sealed partial class InlineWorker
                 case PK.Hyphen:
                     EmitText(in p, curFrag, ox, oy, true);
                     break;
+                case PK.Leader:
+                    EmitText(in p, curFrag, ox, oy, false);
+                    break;
                 case PK.Atomic:
                 {
                     ref Elem el = ref _el[p.Elem];
@@ -559,8 +565,10 @@ internal sealed partial class InlineWorker
                         Fragment af = _out.Make(el.Frag);
                         Rect bb = af.BorderBox;
                         _out.Reparent(af, curFrag);
-                        _out.SetBorderBox(af, new Rect(p.X + el.Ml - ox, p.Base - el.Base + el.Mt - oy, bb.Width, bb.Height));
-                        AddOverflow(p.X + el.Ml, p.Base - el.Base + el.Mt, bb.Width, bb.Height);
+                        // CSS2 §9.4.3: an inline-block or replaced box that is relatively positioned is drawn shifted; the line keeps its place.
+                        BlockLayoutEngine.RelativeOffset(in _boxes.Make(el.Box).Values, _availW, double.NaN, _container.Values.Direction == DirectionKind.Rtl, out double adx, out double ady);
+                        _out.SetBorderBox(af, new Rect(p.X + el.Ml - ox + adx, p.Base - el.Base + el.Mt - oy + ady, bb.Width, bb.Height));
+                        AddOverflow(p.X + el.Ml + adx, p.Base - el.Base + el.Mt + ady, bb.Width, bb.Height);
                     }
 
                     break;
@@ -607,6 +615,62 @@ internal sealed partial class InlineWorker
 
         baseline = rb;
         return lineH;
+    }
+
+    private void ResolveLeaders(double room)
+    {
+        int count = 0;
+        double used = 0;
+        for (int i = 0; i < _pn; i++)
+        {
+            if (_pc[i].Kind == PK.Leader)
+            {
+                count++;
+            }
+            else
+            {
+                used += _pc[i].W;
+            }
+        }
+
+        if (count == 0)
+        {
+            return;
+        }
+
+        double share = Math.Max(0, room - used) / count;
+        for (int i = 0; i < _pn; i++)
+        {
+            ref Piece p = ref _pc[i];
+            if (p.Kind != PK.Leader)
+            {
+                continue;
+            }
+
+            // Whole pattern clusters only; the piece still takes the whole share, so the text after it is flush with the line end.
+            ref Elem el = ref _el[p.Elem];
+            ReadOnlySpan<GlyphCluster> cls = _shaped[p.Elem]!.Clusters;
+            int k = cls.Length;
+            bool rtl = (el.Flags & EF.Rtl) != 0;
+            double w = 0;
+            int fit = 0;
+            while (fit < k)
+            {
+                GlyphCluster cl = cls[rtl ? k - 1 - fit : fit];
+                double adv = ClusterAdvance(in el, in cl, _cf[el.Start + cl.TextStart]);
+                if (w + adv > share + Eps)
+                {
+                    break;
+                }
+
+                w += adv;
+                fit++;
+            }
+
+            p.Ca = 0;
+            p.Cb = fit;
+            p.W = share;
+        }
     }
 
     private int[] _segFragIndex = new int[16];

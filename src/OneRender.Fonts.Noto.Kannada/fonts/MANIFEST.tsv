@@ -1,0 +1,8 @@
+# Upstream provenance of every shipped file. Columns are tab-separated.
+# archive<TAB>url<TAB>sha256   a download that holds several files
+# file<TAB>path<TAB>url<TAB>member<TAB>sha256   path is relative to this folder; member is the name inside the archive, or - for a direct download
+# Tools: tools/fonts/optional_fonts.py verify
+archive	https://github.com/notofonts/kannada/releases/download/NotoSansKannada-v2.006/NotoSansKannada-v2.006.zip	902b1b92018f7c96862d68d0a39ef03b978203cd4c3f55d6760f597657b51c44
+file	NotoSansKannada-Bold.ttf	https://github.com/notofonts/kannada/releases/download/NotoSansKannada-v2.006/NotoSansKannada-v2.006.zip	NotoSansKannada/unhinted/ttf/NotoSansKannada-Bold.ttf	e989c72f6fec5a0b3366af5f90e3ce8b2b8a350fc5286c6374f0353937e513f5
+file	NotoSansKannada-Regular.ttf	https://github.com/notofonts/kannada/releases/download/NotoSansKannada-v2.006/NotoSansKannada-v2.006.zip	NotoSansKannada/unhinted/ttf/NotoSansKannada-Regular.ttf	2870274619c2a4abe5d6b11fcb7c4a372eba765b6b7881d459b0eb0a609a68eb
+file	OFL.txt	https://github.com/notofonts/kannada/releases/download/NotoSansKannada-v2.006/NotoSansKannada-v2.006.zip	OFL.txt	e01ae2ea75d7bc6fccb13c48a2f442b32e4bc4be46810fb52a4a1a095320801a

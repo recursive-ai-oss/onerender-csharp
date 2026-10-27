@@ -24,12 +24,14 @@ internal static class Program
     {
         ["displaylist"] = DisplayListTarget.Run,
         ["fontdata"] = FontDataTarget.Run,
+        ["colorglyphs"] = ColorGlyphTarget.Run,
         ["grid"] = GridTarget.Run,
         ["flow"] = FlowTarget.Run,
         ["table"] = TableTarget.Run,
         ["effects"] = EffectsTarget.Run,
         ["incremental"] = IncrementalTarget.Run,
         ["pdf"] = PdfTarget.Run,
+        ["paged"] = PagedTarget.Run,
     };
 
     private static int Main(string[] args)
@@ -69,6 +71,16 @@ internal static class Program
             if (args[1] == "table")
             {
                 return TableTarget.WriteSeeds(args[2]);
+            }
+
+            if (args[1] == "paged")
+            {
+                return PagedTarget.WriteSeeds(args[2]);
+            }
+
+            if (args[1] == "colorglyphs")
+            {
+                return ColorGlyphTarget.WriteSeeds(args[2], Environment.GetEnvironmentVariable("ONERENDER_FUZZ_COLOR_FONT") ?? "NotoColorEmoji_WindowsCompatible.ttf");
             }
 
             return args[1] == "fontdata"

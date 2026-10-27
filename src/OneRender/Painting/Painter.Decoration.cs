@@ -1,3 +1,4 @@
+using OneRender.Forms;
 using OneRender.Layout;
 using OneRender.Style;
 using OneRender.Tree;
@@ -83,7 +84,7 @@ public sealed partial class Painter
 
     // ------------------------------------------------------------------ the box
 
-    private void PaintBoxDecoration(int f)
+    private void PaintBoxDecorationCore(int f)
     {
         Observer?.Content(_tree.Make(f), _list.Count);
         Box box = _boxes.Make(_tree.BoxOf(f));
@@ -106,6 +107,16 @@ public sealed partial class Painter
         }
 
         BoxGeometry g = GeometryOf(f, in v);
+        bool legendGap = false;
+        RectF gap = default;
+        if (v.Control == ControlKind.Fieldset && FindLegend(f, out Rect legend) && legend.Height > v.BorderTopWidth)
+        {
+            double shift = Math.Floor((legend.Height - v.BorderTopWidth) / 2);
+            g.Border = new RectF(g.Border.X, g.Border.Y + C(shift), g.Border.Width, Math.Max(0, g.Border.Height - C(shift)));
+            gap = new RectF(C(Snap(legend.X)), g.Border.Y - 1, C(Snap(legend.Right) - Snap(legend.X)), C(v.BorderTopWidth) + 2);
+            legendGap = true;
+        }
+
         FragmentTraits traits = (FragmentTraits)_tree.TraitsOf(f);
         bool sliceStart = (traits & FragmentTraits.ContinuesBefore) != 0;
         bool sliceEnd = (traits & FragmentTraits.ContinuesAfter) != 0;
@@ -113,14 +124,23 @@ public sealed partial class Painter
 
         PaintOuterShadows(f, in v, in g, cur);
 
-        if (f != _skipBackground && f != 0)
+        // CSS UI 4 §6.1: a form control keeps its native look while appearance is auto and its border and background are the defaults.
+        NativeLook look = v.Control != ControlKind.None && v.Appearance == AppearanceKind.Auto && !sliceStart && !sliceEnd ? LookOf(in v, g.BorderRadii.IsZero) : NativeLook.None;
+        if (look == NativeLook.Replace)
         {
-            PaintBackground(f, in v, in g, cur, false, default);
+            PaintNativeFrame(f, in v, in g);
+        }
+        else
+        {
+            if (f != _skipBackground && f != 0)
+            {
+                PaintBackground(f, in v, in g, cur, false, default);
+            }
+
+            PaintInsetShadows(f, in v, in g, cur);
         }
 
-        PaintInsetShadows(f, in v, in g, cur);
-
-        Insets border = PaintTableBorders(f, g.Border) ? default : _tree.BorderOf(f);
+        Insets border = look == NativeLook.Replace ? default : PaintTableBorders(f, g.Border) ? default : _tree.BorderOf(f);
         double top = SideWidth(border.Top, v.BorderTopStyle);
         double right = sliceEnd ? 0 : SideWidth(border.Right, v.BorderRightStyle);
         double bottom = SideWidth(border.Bottom, v.BorderBottomStyle);
@@ -132,6 +152,15 @@ public sealed partial class Painter
         }
         else if (anyBorder)
         {
+            if (legendGap)
+            {
+                // The clip is the border box with the legend's span cut out of its top edge (even-odd fill of two nested rectangles).
+                float ox = g.Border.X - 2, oy = g.Border.Y - 2, ox2 = g.Border.X + g.Border.Width + 2, oy2 = g.Border.Y + g.Border.Height + 2;
+                ReadOnlySpan<byte> verbs = [(byte)PathVerb.Move, (byte)PathVerb.Line, (byte)PathVerb.Line, (byte)PathVerb.Line, (byte)PathVerb.Close, (byte)PathVerb.Move, (byte)PathVerb.Line, (byte)PathVerb.Line, (byte)PathVerb.Line, (byte)PathVerb.Close];
+                ReadOnlySpan<float> coords = [ox, oy, ox2, oy, ox2, oy2, ox, oy2, gap.X, gap.Y, gap.X + gap.Width, gap.Y, gap.X + gap.Width, gap.Y + gap.Height, gap.X, gap.Y + gap.Height];
+                _list.PushClipPath(Id2(f, 31, 0), verbs, coords, FillRule.EvenOdd);
+            }
+
             // Border widths snap down to whole device pixels, at least one when non-zero, so a 1.4px border draws as 1px.
             _list.DrawBorder(
                 Id(f, 1),
@@ -141,11 +170,20 @@ public sealed partial class Painter
                 new BorderSide(SnapWidth(right), MapStyle(v.BorderRightStyle), ToColor(v.BorderRightColor, cur)),
                 new BorderSide(SnapWidth(bottom), MapStyle(v.BorderBottomStyle), ToColor(v.BorderBottomColor, cur)),
                 new BorderSide(SnapWidth(left), MapStyle(v.BorderLeftStyle), ToColor(v.BorderLeftColor, cur)));
+            if (legendGap)
+            {
+                _list.PopClip();
+            }
         }
 
         if (v.IsMulticol && v.ColumnRuleWidth > 0)
         {
             PaintColumnRules(f, in v);
+        }
+
+        if (look == NativeLook.Overlay)
+        {
+            PaintNativeParts(f, in v, in g);
         }
 
         if (box.Kind == BoxKind.Replaced)
@@ -1053,11 +1091,12 @@ public sealed partial class Painter
         CornerRadii radii = ResolveRadii(in v, bb.Width, bb.Height, 0);
         if (v.OutlineAuto)
         {
-            // A focus-ring look: a 2 px ring in the outline color around a 1 px white ring, with a small corner radius.
-            // CSS UI 4 §4.4 leaves the rendering to the user agent.
-            double ring = 2;
-            DrawOutlineRing(f, 0, grow + 1, 1, PaintColor.White, BorderStyle.Solid, radii, 2);
-            DrawOutlineRing(f, 1, grow + 1 + ring, ring, color, BorderStyle.Solid, radii, 2);
+            // CSS UI 4 §4.4 leaves the rendering of `auto` to the user agent. Chrome 156 draws a 2 px ring, #101010 unless the author gave a
+            // color, whose outer edge lies `outline-offset` outside the border box when the box has no border, and exactly at the border box
+            // edge when it has one (probes: a plain div and a checkbox, a bordered text field, button and rounded div; docs/forms.md).
+            bool bordered = v.BorderTopWidth > 0 || v.BorderRightWidth > 0 || v.BorderBottomWidth > 0 || v.BorderLeftWidth > 0;
+            PaintColor ringColor = v.OutlineColor.IsCurrentColor ? new PaintColor(16 / 255f, 16 / 255f, 16 / 255f, 1f) : color;
+            DrawOutlineRing(f, 1, grow + (bordered ? 0 : 1), 2, ringColor, BorderStyle.Solid, radii, 2);
             return;
         }
 

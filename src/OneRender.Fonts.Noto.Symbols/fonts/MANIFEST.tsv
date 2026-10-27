@@ -1,0 +1,10 @@
+# Upstream provenance of every shipped file. Columns are tab-separated.
+# archive<TAB>url<TAB>sha256   a download that holds several files
+# file<TAB>path<TAB>url<TAB>member<TAB>sha256   path is relative to this folder; member is the name inside the archive, or - for a direct download
+# Tools: tools/fonts/optional_fonts.py verify
+archive	https://github.com/notofonts/symbols/releases/download/NotoSansSymbols-v2.003/NotoSansSymbols-v2.003.zip	0c113cdcf6c31d050b80dac39fba2d804a6985281012e76e9220c0a00da007f3
+archive	https://github.com/notofonts/symbols/releases/download/NotoSansSymbols2-v2.008/NotoSansSymbols2-v2.008.zip	346c930bbe8eb946701a05c54e9c11a2094dee1d93c387bf1771c0a3e335688f
+file	NotoSansSymbols-Bold.ttf	https://github.com/notofonts/symbols/releases/download/NotoSansSymbols-v2.003/NotoSansSymbols-v2.003.zip	NotoSansSymbols/unhinted/ttf/NotoSansSymbols-Bold.ttf	e1e81b03028777dcf556dc22c18cb34c8e8cecdca66a494d7a0dae02f7f491df
+file	NotoSansSymbols-Regular.ttf	https://github.com/notofonts/symbols/releases/download/NotoSansSymbols-v2.003/NotoSansSymbols-v2.003.zip	NotoSansSymbols/unhinted/ttf/NotoSansSymbols-Regular.ttf	6eea9cb4cd39269ea9f95ba5c2735f80ae74049dfc9e1a7c932a5cfc8f0c3030
+file	NotoSansSymbols2-Regular.ttf	https://github.com/notofonts/symbols/releases/download/NotoSansSymbols2-v2.008/NotoSansSymbols2-v2.008.zip	NotoSansSymbols2/unhinted/ttf/NotoSansSymbols2-Regular.ttf	c4a0a80f0041ce4be81e2478faad22776d23edb98ae3f0d19bd37044820ecf9d
+file	OFL.txt	https://github.com/notofonts/symbols/releases/download/NotoSansSymbols-v2.003/NotoSansSymbols-v2.003.zip	OFL.txt	b118dd41337806a5d4797052c77caf3bd096aed783e5eb21b4d11154351e1ac0

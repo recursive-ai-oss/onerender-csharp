@@ -76,6 +76,12 @@ public sealed partial class Painter
             f |= JOutline;
         }
 
+        if (v.Control != Forms.ControlKind.None)
+        {
+            // Controls paint from their state and from other boxes (a fieldset's legend, an open list in the top layer).
+            _noPatch = true;
+        }
+
         if (v.IsMulticol || b.Context is FormattingContext.Table or FormattingContext.TableCell || v.Position == PositionKind.Sticky || v.CreatesEffectContext)
         {
             f |= JSpecial;
@@ -126,7 +132,7 @@ public sealed partial class Painter
         o.ViewportWidth == _journalOptions.ViewportWidth && o.ViewportHeight == _journalOptions.ViewportHeight
         && ReferenceEquals(o.Scroll, _journalOptions.Scroll) && ReferenceEquals(o.Images, _journalOptions.Images)
         && ReferenceEquals(o.Fonts, _journalOptions.Fonts) && o.DevicePixelRatio == _journalOptions.DevicePixelRatio
-        && !o.Tags && string.Equals(o.BaseUrl, _journalOptions.BaseUrl, StringComparison.Ordinal);
+        && !o.Tags && o.Editing is null && _journalOptions.Editing is null && string.Equals(o.BaseUrl, _journalOptions.BaseUrl, StringComparison.Ordinal);
 
     /// <summary>
     /// Brings the retained list up to date by painting again only the fragments that can look different, over the items they wrote

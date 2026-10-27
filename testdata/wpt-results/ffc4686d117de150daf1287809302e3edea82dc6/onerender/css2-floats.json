@@ -8,12 +8,12 @@
   "sampleStride": 1,
   "counts": {
     "total": 345,
-    "pass": 243,
-    "fail": 71,
+    "pass": 245,
+    "fail": 69,
     "blank": 0,
     "skipped": 31
   },
-  "rate": "0.7739",
+  "rate": "0.7803",
   "pass": [
     "css/CSS2/floats-clear/adjacent-floats-001.xht",
     "css/CSS2/floats-clear/adjoining-float-before-clearance.html",
@@ -23,6 +23,7 @@
     "css/CSS2/floats-clear/adjoining-float-nested-forced-clearance.html",
     "css/CSS2/floats-clear/adjoining-float-new-fc.html",
     "css/CSS2/floats-clear/clear-001.xht",
+    "css/CSS2/floats-clear/clear-002.xht",
     "css/CSS2/floats-clear/clear-003.xht",
     "css/CSS2/floats-clear/clear-004.xht",
     "css/CSS2/floats-clear/clear-005.xht",
@@ -50,6 +51,7 @@
     "css/CSS2/floats-clear/clear-float-002.xht",
     "css/CSS2/floats-clear/clear-float-003.xht",
     "css/CSS2/floats-clear/clear-float-004.xht",
+    "css/CSS2/floats-clear/clear-float-005.xht",
     "css/CSS2/floats-clear/clear-float-006.xht",
     "css/CSS2/floats-clear/clear-float-007.xht",
     "css/CSS2/floats-clear/clear-float-008.xht",
@@ -261,9 +263,7 @@
   ],
   "blank": [],
   "fail": {
-    "css/CSS2/floats-clear/clear-002.xht": "== clear-002-ref.xht differs (max 255, 36864 px)",
     "css/CSS2/floats-clear/clear-applies-to-008.xht": "== clear-applies-to-008-ref.xht differs (max 255, 239 px)",
-    "css/CSS2/floats-clear/clear-float-005.xht": "== clear-float-005-ref.xht differs (max 255, 36864 px)",
     "css/CSS2/floats-clear/float-applies-to-001.xht": "== float-applies-to-001-ref.xht differs (max 255, 9216 px)",
     "css/CSS2/floats-clear/float-applies-to-001a.xht": "== float-applies-to-001-ref.xht differs (max 255, 9216 px)",
     "css/CSS2/floats-clear/float-applies-to-002.xht": "== float-applies-to-001-ref.xht differs (max 255, 9216 px)",

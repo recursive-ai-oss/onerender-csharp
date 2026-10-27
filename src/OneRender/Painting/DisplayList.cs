@@ -804,7 +804,9 @@ public sealed partial class DisplayList
     /// <param name="altText">Alternative text (<c>alt</c>, <c>aria-label</c>), or null.</param>
     /// <param name="linkTarget">The destination of a <see cref="TagRole.Link"/>: a URL or a <c>#fragment</c>; null otherwise.</param>
     /// <param name="language">A BCP 47 language tag when it differs from the parent's, or null.</param>
-    public void BeginTag(ItemId id, TagRole role, string? altText = null, string? linkTarget = null, string? language = null)
+    /// <param name="columnSpan">For a table cell, the number of columns it covers (1 to 1000); 1 for other roles.</param>
+    /// <param name="rowSpan">For a table cell, the number of rows it covers (1 to 65534); 1 for other roles.</param>
+    public void BeginTag(ItemId id, TagRole role, string? altText = null, string? linkTarget = null, string? language = null, int columnSpan = 1, int rowSpan = 1)
     {
         if ((int)role > (int)TagRole.Form)
         {
@@ -824,6 +826,13 @@ public sealed partial class DisplayList
         rec.B = StoreString(altText);
         rec.C = StoreString(linkTarget);
         rec.D = StoreString(language);
+        if (columnSpan > 1 || rowSpan > 1)
+        {
+            int c = Math.Clamp(columnSpan, 1, 1000), r = Math.Clamp(rowSpan, 1, 65534);
+            rec.E = c | (r << 11);
+            H((ulong)rec.E);
+        }
+
         FinishPush(_count - 1);
     }
 

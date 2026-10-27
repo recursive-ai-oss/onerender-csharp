@@ -50,6 +50,19 @@ internal static class Pixels
         return failures.Count == 0 ? 0 : 1;
     }
 
+    /// <summary>Renders every page of a snapshot directory with the engine only and writes PNGs, for looking at the result without Chrome.</summary>
+    public static int RenderOurs(string snapshotRoot, string outDir, ViewportSize vp, int height, CancellationToken ct)
+    {
+        Directory.CreateDirectory(outDir);
+        foreach (string id in Snapshots.PageIds(snapshotRoot))
+        {
+            (SnapshotPage page, string html, Dictionary<string, (byte[] Body, string Type)> res) = Snapshots.Load(snapshotRoot, id);
+            File.WriteAllBytes(Path.Combine(outDir, id + "-" + vp + "-ours.png"), EncodePng(Render(html, page.Url, res, vp, height, ct)));
+        }
+
+        return 0;
+    }
+
     private static async Task<Row> OnePageAsync(ChromeInstance chrome, string root, string id, ViewportSize vp, int maxHeight, string? dump, CancellationToken ct)
     {
         (SnapshotPage page, string html, Dictionary<string, (byte[] Body, string Type)> res) = Snapshots.Load(root, id);

@@ -1,6 +1,7 @@
 using System.IO;
 using OneRender.Image;
 using OneRender.Layout;
+using OneRender.Paged;
 using OneRender.Painting;
 using OneRender.Text;
 
@@ -44,9 +45,9 @@ public sealed record HtmlPdfResult(int PageCount, IReadOnlyList<Diagnostic> Diag
 /// <see cref="PageFragmentation"/>, <see cref="Painter"/>, <see cref="DisplayListPdfWriter"/>); a caller who needs control uses those.
 /// </summary>
 /// <remarks>
-/// The document is laid out once at the page's content width and cut into pages by the block fragmenter, which honours
-/// <c>break-before</c>, <c>break-after</c>, <c>break-inside</c>, <c>orphans</c> and <c>widows</c>. <c>@page</c> rules, margin boxes
-/// and page counters are not applied.
+/// The document is laid out for print media and cut into pages as <see cref="PagedDocument"/> does: <c>@page</c> rules give the page size
+/// and margins (<see cref="HtmlPdfOptions.Page"/> is the default where no rule does), page-margin boxes carry running headers, footers and
+/// page numbers, and links to <c>#id</c> become links to the page where the element starts.
 /// </remarks>
 public static class HtmlPdf
 {
@@ -69,49 +70,73 @@ public static class HtmlPdf
         setup.Validate();
 
         var images = options.Resources is null ? null : new ImageStore(options.Resources, options.BaseUrl);
-        var pageOptions = new HtmlPageOptions(options.Fonts ?? FontProviders.ForCurrentThread())
+        var pagedOptions = new PagedOptions(options.Fonts ?? FontProviders.ForCurrentThread())
         {
+            DefaultPage = new PageGeometry(setup.Width, setup.Height, setup.MarginTop, setup.MarginRight, setup.MarginBottom, setup.MarginLeft),
             Images = images,
             Replaced = images,
-            DevicePixelRatio = 1,
-            ViewportWidth = setup.ContentWidth,
-            ViewportHeight = setup.ContentHeight,
             BaseUrl = options.BaseUrl,
-            StylesheetBytes = options.Resources,
+            Resources = options.Resources,
             Layout = options.Layout,
+            MaxPages = Math.Min(options.Output.MaxPages, 100_000),
         };
-        HtmlPage page = HtmlPage.Create(html, pageOptions, cancellationToken);
-        int pages = PageFragmentation.Paginate(page.Fragments, setup.ContentWidth, setup.ContentHeight, cancellationToken);
-        var list = new DisplayList();
-        var painter = new Painter();
-        painter.Paint(
-            page.Fragments,
-            list,
-            new PaintOptions(setup.ContentWidth, setup.ContentHeight)
-            {
-                Scroll = page.Scroll,
-                Images = images,
-                Fonts = page.Options.Fonts,
-                DevicePixelRatio = 1,
-                Tags = options.Output.Tagged,
-                BaseUrl = options.BaseUrl,
-            },
-            cancellationToken);
-
-        PdfOutputOptions o = Complete(options.Output, page);
-        double stride = PageFragmentation.PageStride(setup.ContentWidth);
-        var diagnostics = new List<Diagnostic>();
-        diagnostics.AddRange(page.Styled.Diagnostics.Items);
-        diagnostics.AddRange(painter.Diagnostics.Items);
-        using var writer = new DisplayListPdfWriter(output, o, images);
-        for (int i = 0; i < pages; i++)
+        PagedDocument doc = PagedDocument.Create(html, pagedOptions, cancellationToken);
+        if (doc.Truncated)
         {
-            writer.AddPage(list, setup, new RectF((float)(i * stride), 0, (float)setup.ContentWidth, (float)setup.ContentHeight), cancellationToken);
+            throw new PdfRenderException("The document would have more than " + options.Output.MaxPages + " pages.");
+        }
+
+        var list = new DisplayList();
+        var diagnostics = new List<Diagnostic>();
+        CompactHeap(doc.PageCount);
+        PdfOutputOptions o = PaintAll(doc, list, options, diagnostics, cancellationToken);
+        CompactHeap(doc.PageCount);
+        using var writer = new DisplayListPdfWriter(output, o, images);
+        var names = new List<string>(doc.Destinations.Count);
+        foreach (PageDestination d in doc.Destinations)
+        {
+            names.Add(d.Name);
+        }
+
+        writer.DeclareDestinations(names);
+        int next = 0;
+        for (int i = 0; i < doc.PageCount; i++)
+        {
+            PageInfo p = doc.GetPage(i);
+            PageGeometry g = p.Geometry;
+            var ps = new PdfPageSetup(g.Width, g.Height, g.MarginTop, g.MarginRight, g.MarginBottom, g.MarginLeft);
+            writer.AddPage(list, ps, p.ContentRegion, doc.GetPageLayer(i, cancellationToken), cancellationToken);
+            for (; next < doc.Destinations.Count && doc.Destinations[next].PageIndex == i; next++)
+            {
+                writer.AddDestination(doc.Destinations[next].Name, i, ps, doc.Destinations[next].Y);
+            }
         }
 
         writer.Finish(cancellationToken);
         diagnostics.AddRange(writer.Diagnostics.Items);
-        return new HtmlPdfResult(pages, diagnostics);
+        return new HtmlPdfResult(doc.PageCount, diagnostics);
+    }
+
+    // A long document builds hundreds of megabytes of trees and then lists in turn; collecting between the phases keeps the working
+    // set near what is live instead of letting the generations grow to several times that.
+    private static void CompactHeap(int pages)
+    {
+        if (pages >= LargeDocumentPages)
+        {
+            GC.Collect();
+        }
+    }
+
+    private const int LargeDocumentPages = 40;
+
+    // The painter holds arrays as large as the fragment tree; keeping it in its own frame lets them go before the pages are written.
+    private static PdfOutputOptions PaintAll(PagedDocument doc, DisplayList list, HtmlPdfOptions options, List<Diagnostic> diagnostics, CancellationToken cancellationToken)
+    {
+        var painter = new Painter();
+        doc.PaintContent(list, painter, options.Output.Tagged, cancellationToken);
+        diagnostics.AddRange(doc.Diagnostics);
+        diagnostics.AddRange(painter.Diagnostics.Items);
+        return Complete(options.Output, doc.Content);
     }
 
     /// <summary>Renders <paramref name="html"/> to PDF bytes.</summary>

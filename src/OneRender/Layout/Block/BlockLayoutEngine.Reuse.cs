@@ -213,6 +213,7 @@ public sealed partial class BlockLayoutEngine
     {
         ref Frame f = ref _frames[ni];
         f.MemoRec = false;
+        f.MemoHit = false;
         if (!_recording)
         {
             return false;
@@ -248,6 +249,7 @@ public sealed partial class BlockLayoutEngine
         }
 
         _out.CopyDescendants(prev, pf, f.Frag);
+        f.MemoHit = true;
         f.Cursor = e.Cursor;
         // A flex container turns its height into a definite one while it closes.
         f.SpecH = e.SpecH;

@@ -305,6 +305,10 @@ internal sealed partial class StyleComputer
         ComputedValues v = ComputedValues.Initial;
         v.Visibility = p.Visibility;
         v.PointerEvents = p.PointerEvents;
+        v.AccentColor = p.AccentColor;
+        v.AccentColorAuto = p.AccentColorAuto;
+        v.CaretColor = p.CaretColor;
+        v.CaretColorAuto = p.CaretColorAuto;
         v.FontFamily = p.FontFamily;
         v.FontSize = p.FontSize;
         v.FontSizeKeyword = p.FontSizeKeyword;
@@ -334,6 +338,7 @@ internal sealed partial class StyleComputer
         v.ListStyleImage = p.ListStyleImage;
         v.Orphans = p.Orphans;
         v.Widows = p.Widows;
+        v.PageName = p.PageName;
         v.WordBreak = p.WordBreak;
         v.TextTransform = p.TextTransform;
         v.OverflowWrap = p.OverflowWrap;

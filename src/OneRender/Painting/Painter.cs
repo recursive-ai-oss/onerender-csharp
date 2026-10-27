@@ -51,6 +51,9 @@ public readonly struct PaintOptions
 
     /// <summary>The address links are resolved against when <see cref="Tags"/> is on. Default none (links keep their written form).</summary>
     public string? BaseUrl { get; init; }
+
+    /// <summary>The editing state of the focused text control (selection, caret, preedit), or null when nothing is being edited. See <see cref="OneRender.Forms.TextEditView"/>.</summary>
+    public OneRender.Forms.TextEditView? Editing { get; init; }
 }
 
 /// <summary>
@@ -288,6 +291,7 @@ public sealed partial class Painter
         ViewportOverflow.Resolve(_boxes, out _, out _, out _vpSource);
         _vpRange = _scroll is null ? default : ScrollState.GetViewportRange(_tree, _vw, _vh);
 
+        ResolveEditing(in options);
         PrepareTags(in options);
         Prepass(n, ct);
         _canvasStart = _list.Count;
@@ -647,11 +651,15 @@ public sealed partial class Painter
         {
             int f = _sortFrags[k];
             int z = (int)((_sortKeys[k] >> 32) - 0x80000000L);
-            int context = ContextOf(f);
+            int context = IsTopLayer(f) ? 0 : ContextOf(f);
             int phase = z < 0 ? PhaseNegative : (z == 0 ? PhaseZero : PhasePositive);
             AddEntry(context, phase, f);
         }
     }
+
+    // CSS Position 4 top layer (the open drop-down list): painted last in the root stacking context, outside the clips of its ancestors.
+    private bool IsTopLayer(int f) =>
+        (FragmentKind)_tree.KindOf(f) == FragmentKind.Box && _boxes.Make(_tree.BoxOf(f)).Values.Control == Forms.ControlKind.SelectPopup;
 
     // The stacking context a deferred fragment paints in: its parent's context.
     private int ContextOf(int f)
@@ -781,7 +789,7 @@ public sealed partial class Painter
                 // Stacking-context children come from further up the tree than their parent, so the clips of the
                 // containing blocks between are applied around them.
                 ulong mask = 0;
-                int clips = phaseNow is PhaseNegative or PhaseZero or PhasePositive ? PushDeferredClips(entry, _stack[top].Fragment, out mask) : 0;
+                int clips = phaseNow is PhaseNegative or PhaseZero or PhasePositive && !IsTopLayer(entry) ? PushDeferredClips(entry, _stack[top].Fragment, out mask) : 0;
                 PushFrame(ref sp, entry, clips);
                 _stack[sp - 1].PreMask = mask;
             }

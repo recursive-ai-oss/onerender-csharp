@@ -31,11 +31,11 @@
       "sampleStride": 1,
       "discovered": 847,
       "total": 847,
-      "pass": 299,
-      "fail": 312,
+      "pass": 306,
+      "fail": 305,
       "blank": 8,
       "skipped": 228,
-      "rate": "0.4830"
+      "rate": "0.4943"
     },
     {
       "module": "css-borders",
@@ -53,11 +53,11 @@
       "sampleStride": 1,
       "discovered": 1191,
       "total": 1191,
-      "pass": 166,
-      "fail": 878,
+      "pass": 167,
+      "fail": 877,
       "blank": 0,
       "skipped": 147,
-      "rate": "0.1590"
+      "rate": "0.1600"
     },
     {
       "module": "css-color",
@@ -75,11 +75,11 @@
       "sampleStride": 1,
       "discovered": 1398,
       "total": 1398,
-      "pass": 648,
-      "fail": 286,
-      "blank": 18,
+      "pass": 655,
+      "fail": 282,
+      "blank": 15,
       "skipped": 446,
-      "rate": "0.6807"
+      "rate": "0.6880"
     },
     {
       "module": "css-fonts",
@@ -98,8 +98,8 @@
       "discovered": 2481,
       "total": 2481,
       "pass": 533,
-      "fail": 1030,
-      "blank": 10,
+      "fail": 1032,
+      "blank": 8,
       "skipped": 908,
       "rate": "0.3388"
     },
@@ -130,11 +130,11 @@
       "sampleStride": 1,
       "discovered": 212,
       "total": 212,
-      "pass": 64,
-      "fail": 76,
-      "blank": 7,
+      "pass": 67,
+      "fail": 80,
+      "blank": 0,
       "skipped": 65,
-      "rate": "0.4354"
+      "rate": "0.4558"
     },
     {
       "module": "css-masking",
@@ -152,22 +152,22 @@
       "sampleStride": 1,
       "discovered": 563,
       "total": 563,
-      "pass": 185,
-      "fail": 215,
+      "pass": 188,
+      "fail": 212,
       "blank": 0,
       "skipped": 163,
-      "rate": "0.4625"
+      "rate": "0.4700"
     },
     {
       "module": "css-overflow",
       "sampleStride": 1,
       "discovered": 892,
       "total": 892,
-      "pass": 115,
-      "fail": 380,
+      "pass": 119,
+      "fail": 376,
       "blank": 11,
       "skipped": 386,
-      "rate": "0.2273"
+      "rate": "0.2352"
     },
     {
       "module": "css-page",
@@ -207,33 +207,33 @@
       "sampleStride": 1,
       "discovered": 357,
       "total": 357,
-      "pass": 83,
-      "fail": 194,
+      "pass": 84,
+      "fail": 193,
       "blank": 8,
       "skipped": 72,
-      "rate": "0.2912"
+      "rate": "0.2947"
     },
     {
       "module": "css-text",
       "sampleStride": 1,
       "discovered": 1860,
       "total": 1860,
-      "pass": 867,
-      "fail": 514,
+      "pass": 888,
+      "fail": 493,
       "blank": 4,
       "skipped": 475,
-      "rate": "0.6260"
+      "rate": "0.6412"
     },
     {
       "module": "css-transforms",
       "sampleStride": 1,
       "discovered": 904,
       "total": 904,
-      "pass": 550,
-      "fail": 140,
+      "pass": 551,
+      "fail": 139,
       "blank": 21,
       "skipped": 193,
-      "rate": "0.7736"
+      "rate": "0.7750"
     },
     {
       "module": "css-transitions",
@@ -251,66 +251,66 @@
       "sampleStride": 1,
       "discovered": 1075,
       "total": 1075,
-      "pass": 60,
-      "fail": 49,
-      "blank": 4,
+      "pass": 65,
+      "fail": 45,
+      "blank": 3,
       "skipped": 962,
-      "rate": "0.5310"
+      "rate": "0.5752"
     },
     {
       "module": "css-values",
       "sampleStride": 1,
       "discovered": 497,
       "total": 497,
-      "pass": 100,
-      "fail": 67,
+      "pass": 101,
+      "fail": 66,
       "blank": 0,
       "skipped": 330,
-      "rate": "0.5988"
+      "rate": "0.6048"
     },
     {
       "module": "css2-floats",
       "sampleStride": 1,
       "discovered": 345,
       "total": 345,
-      "pass": 243,
-      "fail": 71,
+      "pass": 245,
+      "fail": 69,
       "blank": 0,
       "skipped": 31,
-      "rate": "0.7739"
+      "rate": "0.7803"
     },
     {
       "module": "css2-flow",
       "sampleStride": 1,
       "discovered": 2415,
       "total": 2415,
-      "pass": 1904,
-      "fail": 360,
+      "pass": 1984,
+      "fail": 280,
       "blank": 2,
       "skipped": 149,
-      "rate": "0.8402"
+      "rate": "0.8756"
     },
     {
       "module": "css2-generated",
       "sampleStride": 1,
       "discovered": 382,
       "total": 382,
-      "pass": 126,
-      "fail": 233,
+      "pass": 301,
+      "fail": 58,
       "blank": 0,
       "skipped": 23,
-      "rate": "0.3510"
+      "rate": "0.8384"
     },
     {
       "module": "css2-positioning",
       "sampleStride": 1,
       "discovered": 654,
       "total": 654,
-      "pass": 486,
-      "fail": 134,
+      "pass": 489,
+      "fail": 131,
       "blank": 0,
       "skipped": 34,
-      "rate": "0.7839"
+      "rate": "0.7887"
     },
     {
       "module": "css2-tables",
@@ -337,10 +337,10 @@
   ],
   "totals": {
     "total": 20428,
-    "pass": 7630,
-    "fail": 6125,
-    "blank": 154,
+    "pass": 7944,
+    "fail": 5824,
+    "blank": 141,
     "skipped": 6519,
-    "rate": "0.5486"
+    "rate": "0.5711"
   }
 }

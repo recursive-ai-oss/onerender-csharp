@@ -4,7 +4,7 @@
 #   fuzz/run.sh <target> <seconds> [corpus dir] [extra libFuzzer flags...]
 #   fuzz/run.sh replay <target> <file>...      # run saved inputs once, without libFuzzer (reproduce a finding)
 #
-# Targets: displaylist, fontdata, grid, flow, table, effects, incremental, pdf   (see fuzz/README.md)
+# Targets: displaylist, fontdata, colorglyphs, grid, flow, table, effects, incremental, pdf   (see fuzz/README.md)
 #
 # Environment (nothing is baked into the script):
 #   ONERENDER_FUZZ_WORK    required: where builds, corpora and findings go. Keep it outside the checkout.
@@ -37,16 +37,18 @@ shift
 # Maximum input length per target.
 case "$target" in
   displaylist|pdf) maxlen=4096 ;;
-  fontdata) maxlen=262144 ;;
+  fontdata|colorglyphs) maxlen=262144 ;;
   grid) maxlen=2048 ;;
   flow) maxlen=2048 ;;
   table) maxlen=2048 ;;
   effects) maxlen=2048 ;;
   incremental) maxlen=2048 ;;
+  paged) maxlen=2048 ;;
   *) echo "unknown target '$target'" >&2; exit 2 ;;
 esac
 
 export ONERENDER_FUZZ_FONTS="$root/testdata/fonts"
+export ONERENDER_FUZZ_COLOR_FONT="$root/src/OneRender.Fonts.Emoji/fonts/NotoColorEmoji_WindowsCompatible.ttf"
 bin="$work/bin"
 rm -rf "$bin"
 mkdir -p "$bin"

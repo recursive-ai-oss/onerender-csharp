@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Checkout</title>
+<style>
+  body { margin: 0; font: 15px/1.4 Georgia, 'Times New Roman', serif; background: #fff; color: #222; }
+  .wrap { display: grid; grid-template-columns: 1fr 360px; gap: 40px; max-width: 1040px; margin: 0 auto; padding: 32px 24px; }
+  h1 { font: bold 26px Arial, sans-serif; margin: 0 0 20px; }
+  h2 { font: bold 17px Arial, sans-serif; margin: 24px 0 8px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; }
+  .full { grid-column: 1 / -1; }
+  label { display: block; font: 13px Arial, sans-serif; color: #444; margin-bottom: 4px; }
+  input[type=text], input[type=email], input[type=tel], select { display: block; width: 100%; height: 40px; padding: 0 12px; font: 15px Arial, sans-serif; border: 1px solid #c4c4c4; border-radius: 4px; background: #fff; box-sizing: border-box; }
+  input.error { border-color: #c0392b; }
+  .msg { color: #c0392b; font: 12px Arial, sans-serif; margin-top: 4px; }
+  .ship { border: 1px solid #c4c4c4; border-radius: 4px; padding: 0; margin: 0; }
+  .ship legend { font: bold 14px Arial, sans-serif; padding: 0 8px; margin-left: 8px; }
+  .ship label.opt { display: flex; align-items: center; gap: 10px; margin: 0; padding: 12px 14px; border-top: 1px solid #eee; font-size: 15px; color: #222; }
+  .ship label.opt:first-of-type { border-top: 0; }
+  .ship .price { margin-left: auto; font-weight: bold; }
+  aside { background: #f7f7f7; border-radius: 6px; padding: 20px; align-self: start; }
+  .line { display: flex; justify-content: space-between; margin: 8px 0; font-family: Arial, sans-serif; }
+  .total { font-weight: bold; font-size: 18px; border-top: 1px solid #ddd; padding-top: 12px; margin-top: 12px; }
+  .promo { display: flex; gap: 8px; margin-top: 16px; }
+  .promo input { flex: 1; height: 36px; padding: 0 10px; border: 1px solid #c4c4c4; border-radius: 4px; font: 14px Arial, sans-serif; }
+  button.pay { width: 100%; margin-top: 20px; height: 48px; border: 0; border-radius: 4px; background: #111; color: #fff; font: bold 16px Arial, sans-serif; }
+  button.apply { height: 36px; padding: 0 14px; border: 1px solid #111; background: #fff; border-radius: 4px; font: 14px Arial, sans-serif; }
+</style></head>
+<body>
+<div class="wrap">
+<form>
+  <h1>Checkout</h1>
+  <h2>Contact</h2>
+  <div class="grid2">
+    <div><label for="em">Email</label><input id="em" type="email" value="grace@navy.example"></div>
+    <div><label for="ph">Phone</label><input id="ph" type="tel" placeholder="(555) 010-0100"></div>
+  </div>
+  <h2>Shipping address</h2>
+  <div class="grid3">
+    <div class="full"><label for="nm">Full name</label><input id="nm" type="text" value="Grace Hopper"></div>
+    <div class="full"><label for="ad">Address</label><input id="ad" type="text" value="1701 Wharf Street"></div>
+    <div><label for="ct">City</label><input id="ct" type="text" value="Arlington"></div>
+    <div><label for="st">State</label><select id="st"><option>NY</option><option selected>VA</option><option>CA</option></select></div>
+    <div><label for="zp">ZIP</label><input id="zp" class="error" type="text" value="2220"><div class="msg">Enter a 5 digit ZIP</div></div>
+  </div>
+  <h2>Delivery</h2>
+  <fieldset class="ship">
+    <legend>Method</legend>
+    <label class="opt"><input type="radio" name="d" checked> Standard (5-7 days)<span class="price">Free</span></label>
+    <label class="opt"><input type="radio" name="d"> Express (2 days)<span class="price">$12.00</span></label>
+    <label class="opt"><input type="radio" name="d"> Next day<span class="price">$25.00</span></label>
+  </fieldset>
+  <h2>Payment</h2>
+  <div class="grid3">
+    <div class="full"><label for="cc">Card number</label><input id="cc" type="text" placeholder="1234 1234 1234 1234"></div>
+    <div><label for="nc">Name on card</label><input id="nc" type="text"></div>
+    <div><label for="ex">Expiry</label><input id="ex" type="text" placeholder="MM / YY"></div>
+    <div><label for="cv">CVC</label><input id="cv" type="text" placeholder="123"></div>
+  </div>
+  <p><label style="display:flex;gap:8px;align-items:center;font-size:14px"><input type="checkbox" checked style="margin:0"> Billing address is the same as shipping</label></p>
+</form>
+<aside>
+  <h2 style="margin-top:0">Order summary</h2>
+  <div class="line"><span>Linen shirt x 2</span><span>$96.00</span></div>
+  <div class="line"><span>Canvas tote</span><span>$28.00</span></div>
+  <div class="line"><span>Shipping</span><span>Free</span></div>
+  <div class="line total"><span>Total</span><span>$124.00</span></div>
+  <div class="promo"><input type="text" placeholder="Promo code"><button type="button" class="apply">Apply</button></div>
+  <button class="pay" type="submit">Pay $124.00</button>
+</aside>
+</div>
+</body></html>

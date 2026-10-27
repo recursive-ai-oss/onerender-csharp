@@ -9,7 +9,9 @@ namespace OneRender.Pdf;
 /// <param name="Alt">Alternative text, or null.</param>
 /// <param name="Link">Link destination, or null.</param>
 /// <param name="Lang">Language, or null.</param>
-internal readonly record struct TagRef(ulong Key, TagRole Role, string? Alt, string? Link, string? Lang);
+/// <param name="ColSpan">Columns a table cell covers; 1 otherwise.</param>
+/// <param name="RowSpan">Rows a table cell covers; 1 otherwise.</param>
+internal readonly record struct TagRef(ulong Key, TagRole Role, string? Alt, string? Link, string? Lang, int ColSpan = 1, int RowSpan = 1);
 
 /// <summary>
 /// Turns the stream of tag scopes in display lists into PDF structure elements (ISO 32000-2 14.7). An element is begun when the first
@@ -40,6 +42,9 @@ internal sealed class TagWriter
     }
 
     public bool Enabled { get; }
+
+    /// <summary>Anchors that in-document links may point to; a link to any other <c>#name</c> makes no annotation.</summary>
+    public HashSet<string>? Destinations { get; set; }
 
     public int Depth => _open.Count;
 
@@ -154,7 +159,11 @@ internal sealed class TagWriter
                 }
             }
 
-            attributes = PdfStructureAttributes.TableHeader(column ? "Column" : "Row");
+            attributes = PdfStructureAttributes.TableHeader(column ? "Column" : "Row", tag.ColSpan, tag.RowSpan);
+        }
+        else if (tag.Role == TagRole.TableDataCell && (tag.ColSpan > 1 || tag.RowSpan > 1))
+        {
+            attributes = PdfStructureAttributes.Table(tag.ColSpan, tag.RowSpan);
         }
 
         var options = new PdfStructureElementOptions
@@ -227,13 +236,21 @@ internal sealed class TagWriter
 
         o.HasRect = false;
         string? target = o.Ref.Link;
-        // Only external destinations make annotations: the display list does not say where an in-document anchor is.
-        if (page is not null && target is { Length: > 0 } && target[0] != '#' && o.Right > o.Left && o.Top > o.Bottom)
+        // External links go to their address; a #name link goes to the anchor of that name when the host declared it.
+        if (page is not null && target is { Length: > 0 } && o.Right > o.Left && o.Top > o.Bottom)
         {
             string description = !string.IsNullOrWhiteSpace(o.Ref.Alt) ? o.Ref.Alt : (!string.IsNullOrWhiteSpace(o.Text) ? o.Text.Trim() : target);
             try
             {
-                page.AddLink(new PdfRectangle(o.Left, o.Bottom, o.Right, o.Top), target, o.Element, description);
+                var area = new PdfRectangle(o.Left, o.Bottom, o.Right, o.Top);
+                if (target[0] != '#')
+                {
+                    page.AddLink(area, target, o.Element, description);
+                }
+                else if (target.Length > 1 && Destinations is not null && Destinations.Contains(Uri.UnescapeDataString(target[1..])))
+                {
+                    page.AddLinkToDestination(area, Uri.UnescapeDataString(target[1..]), o.Element, description);
+                }
             }
             catch (ArgumentException)
             {

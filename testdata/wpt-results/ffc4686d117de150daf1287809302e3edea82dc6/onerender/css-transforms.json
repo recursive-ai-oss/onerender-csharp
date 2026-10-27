@@ -8,12 +8,12 @@
   "sampleStride": 1,
   "counts": {
     "total": 904,
-    "pass": 550,
-    "fail": 140,
+    "pass": 551,
+    "fail": 139,
     "blank": 21,
     "skipped": 193
   },
-  "rate": "0.7736",
+  "rate": "0.7750",
   "pass": [
     "css/css-transforms/2d-rotate-001.html",
     "css/css-transforms/2d-rotate-notref.html",
@@ -242,6 +242,7 @@
     "css/css-transforms/preserve3d-and-flattening-z-order-002.html",
     "css/css-transforms/preserve3d-and-flattening-z-order-003.html",
     "css/css-transforms/preserve3d-and-flattening-z-order-004.html",
+    "css/css-transforms/preserve3d-button.html",
     "css/css-transforms/preserve3d-nested-perspective.html",
     "css/css-transforms/preserve3d-overflow-percent.html",
     "css/css-transforms/rotate-3d-parameters-noramlized.html",
@@ -627,7 +628,6 @@
     "css/css-transforms/preserve3d-and-flattening-z-order-006.html": "== preserve3d-and-flattening-002-ref.html differs (max 255, 5000 px)",
     "css/css-transforms/preserve3d-and-flattening-z-order-007.html": "== preserve3d-and-flattening-002-ref.html differs (max 255, 5000 px)",
     "css/css-transforms/preserve3d-and-flattening-z-order-008.html": "== green.html differs (max 255, 10000 px)",
-    "css/css-transforms/preserve3d-button.html": "== preserve3d-button-ref.html differs (max 255, 40000 px)",
     "css/css-transforms/preserve3d-pseudo-element.html": "== preserve3d-pseudo-element-ref.html differs (max 255, 40000 px)",
     "css/css-transforms/rotate/svg-rotate-3args-invalid-002.html": "== svg-rotate-3args-ref.html differs (max 255, 6400 px)",
     "css/css-transforms/scale-animation-with-var-001.html": "== ref-filled-green-100px-square-only.html differs (max 255, 7500 px)",

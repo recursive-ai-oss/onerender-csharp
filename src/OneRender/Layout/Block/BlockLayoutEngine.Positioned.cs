@@ -385,7 +385,9 @@ public sealed partial class BlockLayoutEngine
         }
         else
         {
-            if (v.Width.Kind == LengthKind.Stretch)
+            // CSS Position 3 §5.3: a form control is semi-replaced; with both insets given an automatic size fills the space (the
+            // widget width only stands in for auto).
+            if (v.Width.Kind == LengthKind.Stretch || (v.WidthIsIntrinsic && !double.IsNaN(left) && !double.IsNaN(right)))
             {
                 sizeW = Math.Max(0, cbw - (double.IsNaN(left) ? 0 : left) - (double.IsNaN(right) ? 0 : right) - (double.IsNaN(mlv) ? 0 : mlv) - (double.IsNaN(mrv) ? 0 : mrv) - ph);
             }
@@ -424,6 +426,11 @@ public sealed partial class BlockLayoutEngine
         if (!replaced)
         {
             ResolveHeights(in v, cbh, pv, double.IsNaN(mtv) ? 0 : mtv, double.IsNaN(mbv) ? 0 : mbv, usedW + ph, usedW, out double specH, out minH, out maxH, out double ratioH);
+            if (v.HeightIsIntrinsic && !double.IsNaN(top) && !double.IsNaN(bottom))
+            {
+                specH = double.NaN;
+            }
+
             sizeH = !double.IsNaN(specH) ? specH : (!double.IsNaN(ratioH) && (double.IsNaN(top) || double.IsNaN(bottom)) ? ratioH : double.NaN);
         }
 

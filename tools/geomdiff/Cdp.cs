@@ -195,6 +195,7 @@ internal sealed class ChromeInstance : IDisposable
     public string UserAgent { get; private set; } = "";
     public int PagesServed { get; set; }
     public bool Dead { get; private set; }
+    public int RootPid => _process.Id;
 
     private ChromeInstance(Process process, CdpConnection cdp, bool sandboxed)
     {

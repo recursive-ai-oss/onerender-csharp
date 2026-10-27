@@ -25,7 +25,16 @@ internal static class Capture
         await tab.NavigateAsync(page.Url, 60000, 300, ct, measure: true).ConfigureAwait(false);
         JsonElement metrics = await tab.SendAsync("Page.getLayoutMetrics", ct: ct).ConfigureAwait(false);
         JsonElement size = metrics.TryGetProperty("cssContentSize", out JsonElement cs) ? cs : metrics.GetProperty("contentSize");
-        JsonElement snap = await tab.SendAsync("DOMSnapshot.captureSnapshot", "{\"computedStyles\":[\"display\"]}", 120000, ct).ConfigureAwait(false);
+        // GEOMDIFF_STYLES (comma-separated property names) adds computed styles and writes the raw snapshot beside the capture, for probes of UA defaults.
+        string? extra = Environment.GetEnvironmentVariable("GEOMDIFF_STYLES");
+        string styleList = "\"display\"" + (string.IsNullOrEmpty(extra) ? "" : string.Concat(extra.Split(',').Select(static x => ",\"" + x + "\"")));
+        JsonElement snap = await tab.SendAsync("DOMSnapshot.captureSnapshot", "{\"computedStyles\":[" + styleList + "]}", 120000, ct).ConfigureAwait(false);
+        if (!string.IsNullOrEmpty(extra))
+        {
+            string dumpDir = Environment.GetEnvironmentVariable("GEOMDIFF_STYLES_OUT") ?? Path.GetTempPath();
+            Directory.CreateDirectory(dumpDir);
+            File.WriteAllText(Path.Combine(dumpDir, pageId + "-" + vp + ".styles.json"), snap.GetRawText());
+        }
         GeometryCapture cap = new()
         {
             Source = "chrome",

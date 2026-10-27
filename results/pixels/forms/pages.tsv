@@ -1,0 +1,9 @@
+page	viewport	height	cropped	ssim	differing-pixels
+checkout	390x844	1023	no	0.9852	0.0445
+checkout	1280x800	899	no	0.9925	0.0186
+gallery	390x844	1554	no	0.9922	0.0704
+gallery	1280x800	976	no	0.9926	0.0377
+settings	390x844	844	no	0.9947	0.0305
+settings	1280x800	825	no	0.9956	0.0260
+signup	390x844	1214	no	0.9762	0.0429
+signup	1280x800	1214	no	0.9908	0.0137

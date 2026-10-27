@@ -210,6 +210,31 @@ ix.HandlePointer(new PointerInput { Action = PointerAction.Down, X = 5, Y = 5, B
 ix.HandlePointer(new PointerInput { Action = PointerAction.Up, X = 5, Y = 5, Button = 0, Time = 2 });
 bool ixOk = ixHit && ixClicks == 1 && ix.FocusedElement.Equals(ixButton);
 
+// Form controls: native layout and paint, a checkbox toggled by a click, and a select opened and closed.
+InteractivePage fm = InteractivePage.Create(
+    "<body style='margin:0'><input id=c type=checkbox style='margin:0'><select id=s style='margin:0'><option>a</option><option>b</option></select><input id=t value=hello></body>",
+    new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 300, ViewportHeight = 100 });
+Node fmBox = fm.Page.Document.GetElementById("c");
+Node fmSelect = fm.Page.Document.GetElementById("s");
+fm.HandlePointer(new PointerInput { Action = PointerAction.Down, X = 5, Y = 5, Button = 0, Buttons = MouseButtons.Primary, Time = 1 });
+fm.HandlePointer(new PointerInput { Action = PointerAction.Up, X = 5, Y = 5, Button = 0, Time = 2 });
+fm.HandlePointer(new PointerInput { Action = PointerAction.Down, X = 30, Y = 5, Button = 0, Buttons = MouseButtons.Primary, Time = 3 });
+fm.HandlePointer(new PointerInput { Action = PointerAction.Up, X = 30, Y = 5, Button = 0, Time = 4 });
+var fmList = new DisplayList();
+fm.Page.Paint(fmList);
+bool formsOk = fm.IsChecked(fmBox) && fm.IsDropdownOpen(fmSelect) && fmList.Count > 10;
+
+// Text editing: type into a field, compose through the IME, undo and read the value back.
+Node fmText = fm.Page.Document.GetElementById("t");
+fm.Focus(fmText, FocusReason.Script);
+fm.SetSelection(fmText, 5, 5);
+fm.HandleKey(new KeyInput { Key = "!", Down = true });
+fm.CompositionStart();
+fm.CompositionUpdate("ab", 1);
+fm.CompositionEnd("ab");
+bool editOk = fm.GetValue(fmText) == "hello!ab";
+fm.Undo();
+editOk = editOk && fm.GetValue(fmText).Length < 8;
 
 // Animations: a keyframe animation and a transition, ticked with the host clock; the events and the animated value must come out.
 InteractivePage mo = InteractivePage.Create(
@@ -251,7 +276,14 @@ byte[] pdfBytes = HtmlPdf.ToPdf(
     new HtmlPdfOptions { Output = new PdfOutputOptions { Profile = PdfProfile.PdfUA1 } });
 bool pdfOk = pdfBytes.Length > 500 && pdfBytes[0] == (byte)'%' && pdfBytes[1] == (byte)'P' && pdfBytes[2] == (byte)'D' && pdfBytes[3] == (byte)'F';
 
-return moOk && liveOk && pdfOk && factsOk && ixOk && names.Length == 3 && tableOk && sfnt && painted && pageOk && boxes >= 3 && scrollOk && shaped && again && woff2Ok ? 0 : 1;
+// Paged media: @page with margin boxes, page counters, a target counter and a leader, over several pages.
+OneRender.Paged.PagedDocument paged = OneRender.Paged.PagedDocument.Create(
+    "<!DOCTYPE html><html><head><style>@page{size:200px 120px;margin:20px;@bottom-center{content:'Page ' counter(page) ' of ' counter(pages)}}"
+    + "a::after{content:leader('.') target-counter(attr(href url),page)}div{height:60px;break-inside:avoid}</style></head><body><p><a href='#t'>Go</a></p><div>a</div><div>b</div><div id='t'>c</div></body></html>",
+    new OneRender.Paged.PagedOptions(FontProviders.CreateDefault()));
+bool pagedOk = paged.PageCount >= 3 && paged.Destinations.Count == 1 && paged.GetPageLayer(0) is not null;
+
+return editOk && moOk && liveOk && pdfOk && pagedOk && factsOk && ixOk && formsOk && names.Length == 3 && tableOk && sfnt && painted && pageOk && boxes >= 3 && scrollOk && shaped && again && woff2Ok ? 0 : 1;
 
 internal sealed class NoFonts : OneRender.Layout.IFontProvider
 {

@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="OneRender.Pdf" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="../OneRender/OneRender.csproj" />
     <ProjectReference Include="../OneRender.Fonts/OneRender.Fonts.csproj" />
     <PackageReference Include="RecursiveAI.OneImage" />

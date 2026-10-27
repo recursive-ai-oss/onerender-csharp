@@ -82,6 +82,9 @@ internal sealed partial class PageEmitter
     /// <summary>The graphics-state levels this emitter has open (the caller's own page-level state is not counted).</summary>
     public int Depth => _depth;
 
+    /// <summary>Makes everything this emitter draws an artifact, outside the structure (page backgrounds and margin boxes).</summary>
+    public void DrawAsArtifacts() => _artifactTags++;
+
     /// <summary>Closes marked content and every scope still open.</summary>
     public void Finish()
     {
@@ -367,7 +370,7 @@ internal sealed partial class PageEmitter
                 Array.Resize(ref _chain, _chainN * 2);
             }
 
-            _chain[_chainN++] = new TagRef(it.Id.Value >> 16, it.Role, it.AltText, it.LinkTarget, it.Language);
+            _chain[_chainN++] = new TagRef(it.Id.Value >> 16, it.Role, it.AltText, it.LinkTarget, it.Language, it.ColumnSpan, it.RowSpan);
         }
     }
 

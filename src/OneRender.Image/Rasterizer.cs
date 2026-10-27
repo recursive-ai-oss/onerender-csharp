@@ -1,6 +1,7 @@
 using System.Numerics;
 using OneFont;
 using OneRender.Painting;
+using OneRender.Text;
 using AlphaComposition = OneImage.AlphaComposition;
 using Brush = OneImage.Drawing.Brush;
 using Canvas = OneImage.Canvas;
@@ -514,6 +515,12 @@ internal sealed partial class Rasterizer : IDisposable
         }
 
         FontFace face = run.Face;
+        if (ColorBitmapGlyphs.HasBitmaps(face))
+        {
+            DrawColorBitmapGlyphs(in it);
+            return;
+        }
+
         float scale = run.FontSize / Math.Max(1, face.UnitsPerEm);
         PathBuilder pb = new();
         GlyphSink sink = new(pb);

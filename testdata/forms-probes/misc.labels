@@ -1,0 +1,69 @@
+button Click 10
+input button Go 10
+textarea default 10
+textarea mono c5 r3 10
+checkbox 10
+radio 10
+range 10
+progress em 10
+meter em 10
+button Click 13.3333
+input button Go 13.3333
+textarea default 13.3333
+textarea mono c5 r3 13.3333
+checkbox 13.3333
+radio 13.3333
+range 13.3333
+progress em 13.3333
+meter em 13.3333
+button Click 20
+input button Go 20
+textarea default 20
+textarea mono c5 r3 20
+checkbox 20
+radio 20
+range 20
+progress em 20
+meter em 20
+button Click 30
+input button Go 30
+textarea default 30
+textarea mono c5 r3 30
+checkbox 30
+radio 30
+range 30
+progress em 30
+meter em 30
+textarea overflow hidden
+textarea cols=1
+textarea text 2 lines rows=1
+button width 200
+button height 60
+button two lines
+button block child
+input height 50
+input width 100pct in 300 box
+input border-box 100pct
+input display block
+checkbox display block
+input flex item
+input flex stretch
+button flex stretch
+input grid item
+input none appearance
+checkbox none appearance
+placeholder
+value long
+number value
+search value
+legend long
+legend only
+fieldset empty
+fieldset legend float
+fieldset legend align right
+fieldset legend margin
+fieldset border 10
+fieldset padding0 border0
+fieldset width auto in inline-block
+fieldset flex
+label wrap
