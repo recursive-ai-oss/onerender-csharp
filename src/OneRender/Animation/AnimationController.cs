@@ -412,6 +412,10 @@ internal sealed partial class AnimationController
                 }
 
                 _compositorNodes[_compositorCount++] = e.NodeIndex;
+                if (level < MotionLevel.Compositor)
+                {
+                    level = MotionLevel.Compositor;
+                }
             }
             else if (l != MotionLevel.None)
             {
