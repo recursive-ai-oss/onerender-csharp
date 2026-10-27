@@ -53,11 +53,11 @@
       "sampleStride": 1,
       "discovered": 1191,
       "total": 1191,
-      "pass": 176,
-      "fail": 932,
+      "pass": 385,
+      "fail": 723,
       "blank": 1,
       "skipped": 82,
-      "rate": "0.1587"
+      "rate": "0.3472"
     },
     {
       "module": "css-color",
@@ -75,11 +75,11 @@
       "sampleStride": 1,
       "discovered": 1398,
       "total": 1398,
-      "pass": 655,
-      "fail": 285,
+      "pass": 666,
+      "fail": 274,
       "blank": 15,
       "skipped": 443,
-      "rate": "0.6859"
+      "rate": "0.6974"
     },
     {
       "module": "css-fonts",
@@ -97,11 +97,11 @@
       "sampleStride": 1,
       "discovered": 2481,
       "total": 2481,
-      "pass": 532,
-      "fail": 1033,
+      "pass": 533,
+      "fail": 1032,
       "blank": 8,
       "skipped": 908,
-      "rate": "0.3382"
+      "rate": "0.3388"
     },
     {
       "module": "css-images",
@@ -119,11 +119,11 @@
       "sampleStride": 1,
       "discovered": 255,
       "total": 255,
-      "pass": 14,
-      "fail": 152,
+      "pass": 20,
+      "fail": 146,
       "blank": 0,
       "skipped": 89,
-      "rate": "0.0843"
+      "rate": "0.1205"
     },
     {
       "module": "css-lists",
@@ -152,11 +152,11 @@
       "sampleStride": 1,
       "discovered": 563,
       "total": 563,
-      "pass": 190,
-      "fail": 214,
+      "pass": 191,
+      "fail": 213,
       "blank": 0,
       "skipped": 159,
-      "rate": "0.4703"
+      "rate": "0.4728"
     },
     {
       "module": "css-overflow",
@@ -174,11 +174,11 @@
       "sampleStride": 1,
       "discovered": 247,
       "total": 247,
-      "pass": 78,
-      "fail": 139,
+      "pass": 86,
+      "fail": 131,
       "blank": 0,
       "skipped": 30,
-      "rate": "0.3594"
+      "rate": "0.3963"
     },
     {
       "module": "css-position",
@@ -273,22 +273,22 @@
       "sampleStride": 1,
       "discovered": 345,
       "total": 345,
-      "pass": 245,
-      "fail": 69,
+      "pass": 246,
+      "fail": 68,
       "blank": 0,
       "skipped": 31,
-      "rate": "0.7803"
+      "rate": "0.7834"
     },
     {
       "module": "css2-flow",
       "sampleStride": 1,
       "discovered": 2415,
       "total": 2415,
-      "pass": 1984,
-      "fail": 280,
+      "pass": 1986,
+      "fail": 278,
       "blank": 2,
       "skipped": 149,
-      "rate": "0.8756"
+      "rate": "0.8764"
     },
     {
       "module": "css2-generated",
@@ -337,10 +337,10 @@
   ],
   "totals": {
     "total": 20428,
-    "pass": 8037,
-    "fail": 6022,
+    "pass": 8276,
+    "fail": 5783,
     "blank": 143,
     "skipped": 6226,
-    "rate": "0.5659"
+    "rate": "0.5827"
   }
 }

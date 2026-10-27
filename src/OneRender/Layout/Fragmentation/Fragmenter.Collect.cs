@@ -29,6 +29,9 @@ internal sealed partial class Fragmenter
         /// <summary>Inside a table row: breaks here split the cells, so they rank with the avoid-rule breaks (level 2) but fillers stay usable.</summary>
         public bool RowUp;
 
+        /// <summary>The strip offset of the bottom of the table row this walk is inside (see <see cref="RowUp"/>).</summary>
+        public double RowBottom;
+
         /// <summary>The candidate added for the start of the current flex line, or -1.</summary>
         public int LineCand;
 
@@ -46,6 +49,12 @@ internal sealed partial class Fragmenter
 
         /// <summary>The box has size containment: it is only cut when it is taller than a fragmentainer.</summary>
         public bool Mono;
+
+        /// <summary>The box is inside a table row: it is cut only when no break between rows is available (CSS Tables 3 §17).</summary>
+        public bool InRow;
+
+        /// <summary>For a filler inside a table row: the strip offset of the row's bottom.</summary>
+        public double RowBottom;
     }
 
     private struct Span2
@@ -271,6 +280,7 @@ internal sealed partial class Fragmenter
             bool clone = v.BoxDecorationBreak == BoxDecorationBreakKind.Clone;
             w.AvoidUp = parent.AvoidUp || AvoidInside(v.BreakInside);
             w.RowUp = parent.RowUp || box.Context == FormattingContext.TableRow;
+            w.RowBottom = box.Context == FormattingContext.TableRow ? top + bb.Height : parent.RowBottom;
             w.CloneTop = parent.CloneTop + (clone ? border.Top + pad.Top : 0);
             w.CloneBottom = parent.CloneBottom + (clone ? border.Bottom + pad.Bottom : 0);
         }
@@ -563,6 +573,8 @@ internal sealed partial class Fragmenter
                     CloneTop = w.CloneTop + (clone ? border.Top + pad.Top : 0),
                     CloneBottom = w.CloneBottom + (clone ? border.Bottom + pad.Bottom : 0),
                     Mono = v.HasSizeContainment,
+                    InRow = w.RowUp,
+                    RowBottom = w.RowBottom,
                 };
             }
         }

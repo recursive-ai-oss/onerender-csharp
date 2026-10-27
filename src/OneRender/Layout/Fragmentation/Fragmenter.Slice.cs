@@ -58,9 +58,11 @@ internal sealed partial class Fragmenter
     }
 
     // A filler (an empty box with a height) that the fragmentainer's end falls inside: the cut position, or NaN.
-    private bool FindFiller(double limit, double start, double h, int k, out double y, out double cloneTop, out double cloneBottom)
+    private bool FindFiller(double limit, double start, double h, int k, out double y, out double cloneTop, out double cloneBottom, out bool inRow, out double rowBottom)
     {
         y = 0;
+        inRow = false;
+        rowBottom = 0;
         cloneTop = cloneBottom = 0;
         int lo = 0, hi = _fn;
         while (lo < hi)
@@ -97,6 +99,8 @@ internal sealed partial class Fragmenter
             if (cut > f.Top + Eps && cut < f.Bottom - Eps && cut > start + Eps)
             {
                 y = cut;
+                inRow = f.InRow;
+                rowBottom = f.RowBottom;
                 cloneTop = f.CloneTop;
                 cloneBottom = f.CloneBottom;
                 return true;
@@ -187,7 +191,10 @@ internal sealed partial class Fragmenter
                     }
                 }
 
-                if (FindFiller(limit, s, h, k, out fy, out fT, out fB) && (cut < 0 || _c[cut].Level > 0 || fy > _c[cut].Ye))
+                // A filler inside a table row never beats a break between rows that breaks no rule when the row then fits a page whole:
+                // the row moves instead of being cut. A row that would not fit even at the top of the next page is cut where the page ends.
+                if (FindFiller(limit, s, h, k, out fy, out fT, out fB, out bool inRow, out double rowBottom)
+                    && (cut < 0 || _c[cut].Level > 0 || (inRow ? rowBottom - _c[cut].Ys > h + Eps : fy > _c[cut].Ye)))
                 {
                     filler = true;
                 }
