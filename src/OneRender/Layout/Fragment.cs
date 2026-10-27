@@ -14,6 +14,12 @@ public enum FragmentKind : byte
 
     /// <summary>A run of text on one line: a range of a text box's text with its shaped glyphs.</summary>
     Text,
+
+    /// <summary>
+    /// A fragmentainer: one column of a multi-column container (and, later, one page). It has no box. Its children are the fragments
+    /// of the content that landed in it, positioned relative to its top-left corner. See <see cref="Fragment.FragmentainerIndex"/>.
+    /// </summary>
+    Column,
 }
 
 /// <summary>Facts about how a fragment relates to the other pieces of its box.</summary>
@@ -134,6 +140,13 @@ public readonly struct Fragment : IEquatable<Fragment>
 
     /// <summary>The next sibling, or the null handle.</summary>
     public Fragment NextSibling => Tree!.Make(Tree.NextSiblingOf(Index));
+
+    /// <summary>
+    /// The index of the fragmentainer (column) this fragment landed in, counted from 0 in the order of the container's columns,
+    /// across all of its rows. A <see cref="FragmentKind.Column"/> fragment reports its own index. Fragments outside any
+    /// fragmentation context report 0; fragments inside nested containers report the index in the innermost one.
+    /// </summary>
+    public int FragmentainerIndex => Tree!.FragmentainerOf(Index);
 
     /// <summary>The next fragment of the same box (the box's next piece), or the null handle.</summary>
     public Fragment NextOfBox => Tree!.Make(Tree.NextOfBoxOf(Index));

@@ -89,6 +89,19 @@ internal enum PropertyId : byte
     AlignSelf,
     RowGap,
     ColumnGap,
+    BreakBefore,
+    BreakAfter,
+    BreakInside,
+    Orphans,
+    Widows,
+    BoxDecorationBreak,
+    ColumnCount,
+    ColumnWidth,
+    ColumnFill,
+    ColumnSpan,
+    ColumnRuleWidth,
+    ColumnRuleStyle,
+    ColumnRuleColor,
     GridTemplateColumns,
     GridTemplateRows,
     GridTemplateAreas,
@@ -125,6 +138,8 @@ internal static class Properties
         "word-break", "overflow-wrap", "line-break", "hyphens", "tab-size", "text-align-last", "text-justify", "text-transform", "overflow-clip-margin",
         "flex-direction", "flex-wrap", "flex-grow", "flex-shrink", "flex-basis", "order",
         "justify-content", "align-content", "align-items", "align-self", "row-gap", "column-gap",
+        "break-before", "break-after", "break-inside", "orphans", "widows", "box-decoration-break",
+        "column-count", "column-width", "column-fill", "column-span", "column-rule-width", "column-rule-style", "column-rule-color",
         "grid-template-columns", "grid-template-rows", "grid-template-areas", "grid-auto-columns", "grid-auto-rows", "grid-auto-flow",
         "grid-row-start", "grid-row-end", "grid-column-start", "grid-column-end", "justify-items", "justify-self",
     ];
@@ -143,7 +158,7 @@ internal static class Properties
         PropertyId.Visibility or PropertyId.FontSize or PropertyId.FontFamily or PropertyId.FontWeight or PropertyId.FontStyle
             or PropertyId.FontStretch or PropertyId.LineHeight or PropertyId.WhiteSpaceCollapse or PropertyId.TextWrapMode
             or PropertyId.TextAlign or PropertyId.TextIndent or PropertyId.LetterSpacing or PropertyId.WordSpacing
-            or PropertyId.Direction or PropertyId.Color or PropertyId.ListStyleType or PropertyId.ListStylePosition
+            or PropertyId.Direction or PropertyId.Color or PropertyId.ListStyleType or PropertyId.ListStylePosition or PropertyId.Orphans or PropertyId.Widows
             or PropertyId.WordBreak or PropertyId.OverflowWrap or PropertyId.LineBreak or PropertyId.Hyphens or PropertyId.TabSize
             or PropertyId.TextAlignLast or PropertyId.TextJustify or PropertyId.TextTransform => true,
         _ => false,

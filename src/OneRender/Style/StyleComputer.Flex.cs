@@ -120,7 +120,7 @@ internal sealed partial class StyleComputer
             }
 
             default:
-                return false;
+                return ApplyFragmentation(id, v);
         }
     }
 
@@ -232,7 +232,7 @@ internal sealed partial class StyleComputer
     private static bool IsPosition(AlignKind k) =>
         k is AlignKind.FlexStart or AlignKind.FlexEnd or AlignKind.Start or AlignKind.End or AlignKind.SelfStart or AlignKind.SelfEnd or AlignKind.Center or AlignKind.Left or AlignKind.Right;
 
-    private static void CopyFlexProperty(PropertyId id, ref ComputedValues d, in ComputedValues s)
+    private void CopyFlexProperty(PropertyId id, ref ComputedValues d, in ComputedValues s, bool fromParent)
     {
         switch (id)
         {
@@ -248,6 +248,7 @@ internal sealed partial class StyleComputer
             case PropertyId.AlignSelf: d.AlignSelf = s.AlignSelf; d.AlignSelfOverflow = s.AlignSelfOverflow; break;
             case PropertyId.RowGap: d.RowGap = s.RowGap; break;
             case PropertyId.ColumnGap: d.ColumnGap = s.ColumnGap; break;
+            default: CopyFragmentationProperty(id, ref d, in s, fromParent); break;
         }
     }
 }

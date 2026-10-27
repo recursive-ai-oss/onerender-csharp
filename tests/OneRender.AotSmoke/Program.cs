@@ -86,13 +86,34 @@ if (flexPage.Fragments.Root.IsNull || flexPage.Fragments.Root.BorderBox.Width !=
     return 6;
 }
 
+// Columns: balancing, a spanner, a forced break and the rewrite of the fragment tree must survive trimming and AOT as well.
+HtmlPage columnPage = HtmlPage.Create(
+    "<body style='margin:0'><div id=m style='columns:2;column-gap:0;column-rule:2px solid;width:100px'><div style='height:10px;break-inside:avoid'></div><div style='height:10px;break-inside:avoid'></div><div style='column-span:all;height:5px'></div><div style='height:10px;break-after:column'></div><div style='height:10px'></div></div></body>",
+    new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 100, ViewportHeight = 50 });
+var columnPainter = new Painter();
+var columnList = new RetainedDisplayList();
+columnPainter.Paint(columnPage.Fragments, columnList, new PaintOptions(100, 50));
+int columnCount = 0;
+for (OneRender.Layout.Fragment cf = columnPage.Fragments.Root.FirstChild.FirstChild.FirstChild; !cf.IsNull; cf = cf.NextSibling)
+{
+    if (cf.Kind == OneRender.Layout.FragmentKind.Column)
+    {
+        columnCount++;
+    }
+}
+
+if (columnCount != 4)
+{
+    return 6;
+}
+
 // A grid with fr tracks, auto-fill, a subgrid and a named line: placement, track sizing and subgrid must survive trimming and AOT.
 HtmlPage gridPage = HtmlPage.Create(
     "<body style='margin:0'><div style='display:grid;grid-template-columns:[a] 20px repeat(auto-fill,minmax(10px,1fr));gap:2px;width:100px'><div style='grid-column:a / span 2;display:grid;grid-template-columns:subgrid'><i style='display:block;height:5px'></i></div><i style='display:block;height:7px'></i></div></body>",
     new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 100, ViewportHeight = 50 });
 if (gridPage.Fragments.Root.IsNull || gridPage.Fragments.Root.BorderBox.Width != 100)
 {
-    return 6;
+    return 7;
 }
 
 Console.WriteLine($"{styled.Count} styled nodes, {boxTree.Count} boxes, scroll patch {scrollOk}");

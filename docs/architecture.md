@@ -87,7 +87,8 @@ for non-images and NaN for images.
 Layout writes a `FragmentTree` and paint, hit testing and the harnesses read it.
 
 - Kinds: `Box` (a box fragment, one per box or per split piece), `Line` (a line box inside an inline formatting
-  context) and `Text` (a run of text in one line, referencing a glyph run).
+  context), `Text` (a run of text in one line, referencing a glyph run) and `Column` (a fragmentainer, see
+  "Fragmentation"; it has no box).
 - **Coordinates.** Every fragment's `BorderBox` is in **CSS px, relative to the border-box origin of its parent
   fragment**; the root's is relative to the initial containing block. `AbsoluteBorderBox` and `AbsoluteOrigin` walk up the
   chain. `Border` and `Padding` are the resolved edge widths; the content box follows from them. `ScrollableOverflow`
@@ -96,7 +97,8 @@ Layout writes a `FragmentTree` and paint, hit testing and the harnesses read it.
 - **Glyph runs.** `AddGlyphRun` stores a OneFont `FontFace`, the font size, glyph ids, x/y positions and cluster
   indexes (into the box's text) in shared columns; a `Text` fragment holds a `GlyphRunId`.
 - **Fragmentation.** A box that splits (inline pieces, later fragmentainers) has several fragments chained by
-  `Fragment.NextOfBox`; `FragmentOf(box)` returns the first.
+  `Fragment.NextOfBox`; `FragmentOf(box)` returns the first. `Fragment.FragmentainerIndex` is the index of the column a
+  fragment landed in (0 outside any fragmentation context).
 - **Keyed by element.** `TryGetBorderBox(StyledNode, out Rect)` and `TryGetBorderBox(Node, out Rect)` (a OneHtml node)
   return the union of the element's fragments in document coordinates; this is what the geometry differential compares.
 - `FragmentTree.Dump()` prints the tree as text.
@@ -115,8 +117,8 @@ decides) and an `IFontProvider`, the text service layout calls: `Resolve(in Comp
 per-character fallback, `Shape(text, in ComputedValues, rtl)` returns a cached `ShapedText`, and `GetMetrics(in ComputedValues)`
 returns the primary face's metrics (see `text.md`; `TextFontProvider` is the engine's implementation). An implementation clears `output`, writes a fragment for the root and for every box that generates one in tree
 order, reads nothing but its arguments, and checks the token every few hundred boxes. The result is a pure function of
-the box tree, the fonts and the available size. Block and inline flow, floats, positioning, flex, grid, tables and
-fragmentation are separate implementations behind this one entry.
+the box tree, the fonts and the available size. Block and inline flow, floats, positioning, flex, grid and tables are separate implementations behind this one entry; fragmentation is a
+stage the block engine runs at the end (see "Fragmentation").
 
 ## Block layout (`BlockLayoutEngine`)
 
@@ -425,6 +427,96 @@ is a formatting-context root like a BFC root, so floats stay outside it and marg
   `flex-basis` in column containers (treated as `content`), multi-line column containers size trial layouts from the container
   width rather than the line width, vertical writing modes, fragmentation of flex containers across pages. Text items take their min-content and
   max-content from the inline layout's intrinsic sizes and their baselines from its lines.
+
+## Fragmentation (`Layout/Fragmentation/`)
+
+CSS Fragmentation 3 over the fragment tree. The design is **lay out as one strip, then cut**: a fragmented flow is first laid out
+as one tall continuous block at the fragmentainers' inline size, which the block and inline engines already do; the
+`Fragmenter` then finds the break points in that strip, chooses breaks, and rewrites the fragment tree into one fragment per
+fragmentainer. Breaking never feeds back into inline layout, because every fragmentainer of a flow has the same inline size.
+
+- **Fragmentainers.** `FragmentationKind` says what is being filled. `Column` is used by multi-column layout. `Page` selects the page
+  values of the break properties (`page`, `left`, `right`, `recto`, `verso` force; `avoid-page` discourages) and is what paged media
+  uses with `Slice` over fragmentainer sizes that differ page by page (`Slice` takes the block size of the first fragmentainer, the second
+  and so on, the last one repeating). A paged unit supplies the sizes, calls `Collect`, `Finish`, `Slice` and `Apply` (or `Plan`), and
+  lays its page boxes and margin boxes around the fragmentainers; the core does not change. `left`/`right`/`recto`/`verso` are carried
+  in `BreakCandidate.Bits`; inserting blank pages is the page layer's job.
+- **Strip coordinates** are block offsets from the top of the unfragmented flow. A break point is a pair: where the content above ends
+  (`Ye`) and where the content below resumes in the next fragmentainer (`Ys`). The distance between them is the truncated margin.
+- **Break points** (§4.1), found by one explicit-stack walk of the strip (`Collect`): class A between in-flow block siblings and class B
+  between the lines of a block container. Class C (between a container's content edge and its content) is used only for the empty
+  room below the last child of a box, which behaves like an empty box. Floats are not break points and are never cut. Boxes that
+  cannot fragment are *monolithic* (§4.1): replaced boxes, markers, scroll containers (`overflow` other than `visible`/`clip`),
+  flex, grid and table containers (these three are kept whole for now), and nested multi-column containers. Their insides contribute
+  no break points and a forced break inside them has no effect. An empty box with a height has no break points but may be cut
+  anywhere when it is what does not fit (the "break anywhere" last resort of §4.4, applied to boxes that have nothing in them).
+- **Break values** (§3). `break-before` and `break-after` on the first and last in-flow child propagate to the parent chain (§3.1.1),
+  and the values at a break point combine. A forced value (`column` in columns, the page values in pages) forces the break and
+  overrides avoid values; `break-inside` of every ancestor applies (rules 2 and 4); `always` and the `page-break-*` aliases are
+  accepted (§3.4).
+- **Choosing breaks** (§4.3, §4.4, `Slice`). For each fragmentainer: the first forced break that fits wins; if the rest of the flow fits, it is the
+  last fragmentainer; otherwise the break is the latest candidate that fits (counting the border and padding that
+  `box-decoration-break: clone` repeats at the break) among those no rule forbids. Candidates carry a *level*: 0 breaks no rule,
+  1 breaks only orphans/widows (rule 3), 2 breaks an avoid rule (rules 1, 2, 4). The search takes the latest level-0 candidate,
+  else the latest level-1 one, else the latest candidate of any level, so conflicting avoids end in the latest possible break. If
+  nothing fits, the first break after the point where content stops fitting is used and the content overflows the fragmentainer
+  (monolithic overflow). A break at the very top of a fragmentainer is never chosen unless forced (§4.4 progress), fragmentainers
+  are at least 1px high (§4), and a break that would cut through a float is level 2. Orphans and widows: a break between lines `j` and
+  `n - j` is level 1 unless `j >= orphans` and `n - j >= widows`; a block with fewer lines than either value is kept whole.
+- **Margins at breaks** (§5.2). At an unforced break the margin between the two boxes is dropped (the next fragmentainer starts at the
+  top of the later box); at a forced break the margin above is dropped and the later box keeps its own top margin (clamped to the
+  collapsed gap). Cloned margins are always zero.
+- **Splitting boxes** (§5.3, §5.4, `Apply`). A box that crosses breaks gets one fragment per fragmentainer it occupies. The first keeps
+  the original fragment, so handles stay valid; the others are copies without children, chained after it with `NextOfBox`. A piece
+  that continues extends to the end of its fragmentainer (the box's content box "fills the remaining extent"). With `slice` the pieces
+  take the original border and padding only at the real start and end (the top and bottom edges of the other pieces are 0, so
+  painting needs no special case); with `clone` every piece keeps all of them and the break leaves less room. Lines, text, floats,
+  absolutely positioned boxes and monolithic boxes are not split; each goes to the fragmentainer where its top is.
+  Every fragment records its `FragmentainerIndex`; pieces of a box are in index order.
+- **Bounds.** No recursion (explicit stacks, 3,000-deep and 100,000-line flows are tested). `Slice` is O(fragmentainers × log candidates)
+  with prefix tables, so a 100,000-line paragraph cuts in milliseconds. A flow makes at most 100,000 fragmentainers and 4,000,000
+  extra box pieces; past either the rest stays whole in the last or current fragmentainer and a diagnostic is recorded. All storage is
+  pooled: re-cutting an unchanged flow allocates nothing.
+- **Choices where the specs leave room.** Class C points other than the end gap are not used. Floats and absolutely positioned
+  boxes are never fragmented (Fragmentation 3 leaves their fragmentation to the layout mode). A box whose containing block is
+  inside the strip is placed by the strip's coordinates, so an absolutely positioned box is assigned to the column its top lands
+  in. Percentage heights inside a fragmented flow resolve against the container, not the column.
+
+## Multi-column layout (`Layout/Multicol/`)
+
+CSS Multi-column Layout 1. A container with `column-count` or `column-width` other than `auto` (`ComputedValues.IsMulticol`) is a
+block container that establishes a block formatting context (§2).
+
+- **Used count and width** (§3.4, `BlockLayoutEngine.ResolveColumns`): with only `column-width`, `N = max(1, floor((W + gap) / (width + gap)))`; with both,
+  `N` is capped by `column-count`; with only `column-count`, `N = count`. The used width is `(W - (N - 1) * gap) / N`. `column-gap: normal` is
+  `1em`; percentages resolve against the content width. At most 10,000 columns per row.
+- **Layout.** The container's children are laid out as a normal block flow at the column width (the frame's content width is the column
+  width). When the container closes, `Fragmenter.Plan` picks each row's column height and cuts the strip; after the whole layout (and the
+  resolution of absolutely positioned boxes) `Apply` rewrites the container: its children become `Column` fragments, each positioned at
+  `contentLeft + k * (columnWidth + gap)` (mirrored for `direction: rtl`) with its content as children relative to the column.
+  A trial layout that is discarded (flex measurement) drops its plans.
+- **Rows and spanners** (§6). A direct in-flow block child with `column-span: all` is laid out at the container's full content width and
+  splits the flow into rows: the content before it is balanced on its own, then the spanner, then the content after. The gaps in the
+  strip around a spanner (margins) are kept. A row with no content creates no columns. Spanners deeper than a direct child have no
+  effect yet.
+- **Height.** Every row's columns share one height. Non-final rows always balance. The final row balances (`column-fill: balance`, the
+  default) or fills (`auto`): balancing finds the smallest height, in steps of 1/64 px, at which the row fits in `N` columns without
+  overflow and without breaking an avoid or orphans/widows rule (`Fragmenter.Balance`: a binary search of at most 40 trial slices, repeated
+  once with the rules relaxed if that fails; each trial stops as soon as it needs more than `N` columns). With a definite `height` (or a
+  `max-height`) the final row is limited to what is left; if the content still does not fit, the extra columns are added in the inline
+  direction after the last one (§8) and become scrollable overflow. With `column-fill: auto` and an `auto` height all the content stays in
+  one column unless a forced break splits it. The container's height is its `height`, or the rows and spanners, clamped by `min-height`/`max-height`.
+- **Column rules** (§4): `Painter` draws one border item (part 10 of the container's box id, sub id the column's index) in the middle of the gap
+  between two adjacent columns of the same row, as high as the columns, after the container's background and border and before its
+  content. Rules separate columns that exist; a spanner ends the run. `column-rule` and `columns` expand to their longhands
+  (`ShorthandFallbacks`).
+- **Intrinsic sizes** (no section in level 1): min-content is `N * max(content min, column-width) + (N - 1) * gap` with `N = max(1, column-count)`;
+  max-content is the same with the max-content width.
+- **Scrollable overflow** of the container is its border box plus the columns, so overflow columns extend it sideways; overflow of the
+  content inside columns is not propagated past the container.
+- **Not done:** `column-span: all` on non-children, nested multi-column containers that break across the outer columns (a nested
+  container stays whole in one outer column), fragmentation of flex, grid and table containers, `column-height`, `column-wrap`,
+  and vertical writing modes.
 
 ## Grid layout (`Layout/Grid/`)
 

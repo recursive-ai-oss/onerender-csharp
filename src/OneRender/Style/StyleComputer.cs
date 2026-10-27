@@ -79,6 +79,7 @@ internal sealed partial class StyleComputer
         _floatLogical = 0;
         _clearLogical = 0;
         _rawBorderWidth[0] = _rawBorderWidth[1] = _rawBorderWidth[2] = _rawBorderWidth[3] = 3;
+        _rawColumnRuleWidth = 3;
         _parentCtx = LengthContext.Default with
         {
             FontSize = _parent.FontSize,
@@ -234,6 +235,8 @@ internal sealed partial class StyleComputer
         v.ListStyleType = p.ListStyleType;
         v.ListStyleTypeIsString = p.ListStyleTypeIsString;
         v.ListStylePosition = p.ListStylePosition;
+        v.Orphans = p.Orphans;
+        v.Widows = p.Widows;
         v.WordBreak = p.WordBreak;
         v.TextTransform = p.TextTransform;
         v.OverflowWrap = p.OverflowWrap;
@@ -330,7 +333,7 @@ internal sealed partial class StyleComputer
             case PropertyId.TextAlignLast: d.TextAlignLast = s.TextAlignLast; break;
             case PropertyId.TextJustify: d.TextJustify = s.TextJustify; break;
             case PropertyId.OverflowClipMargin: d.OverflowClipMarginPx = s.OverflowClipMarginPx; d.OverflowClipMarginBox = s.OverflowClipMarginBox; break;
-            default: CopyFlexProperty(id, ref d, in s); CopyGridProperty(id, ref d, in s); break;
+            default: CopyFlexProperty(id, ref d, in s, fromParent); CopyGridProperty(id, ref d, in s); break;
         }
     }
 
@@ -339,6 +342,7 @@ internal sealed partial class StyleComputer
     private void Finalize(bool isRoot)
     {
         // CSS Backgrounds 3 §4.1: a border whose style is none or hidden has a computed width of 0.
+        _r.ColumnRuleWidth = VisibleBorder(_r.ColumnRuleStyle) ? _rawColumnRuleWidth : 0;
         _r.BorderTopWidth = VisibleBorder(_r.BorderTopStyle) ? _rawBorderWidth[0] : 0;
         _r.BorderRightWidth = VisibleBorder(_r.BorderRightStyle) ? _rawBorderWidth[1] : 0;
         _r.BorderBottomWidth = VisibleBorder(_r.BorderBottomStyle) ? _rawBorderWidth[2] : 0;
