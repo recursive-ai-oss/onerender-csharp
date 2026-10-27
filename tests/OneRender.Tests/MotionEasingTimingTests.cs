@@ -48,7 +48,7 @@ public class EasingTests
     [InlineData(4, 1, 0.0, 0.25)]
     [InlineData(4, 1, 0.5, 0.75)]
     [InlineData(4, 2, 0.0, 0.0)]
-    [InlineData(4, 2, 0.5, 1.0 / 3)]
+    [InlineData(4, 2, 0.5, 2.0 / 3)]
     [InlineData(4, 2, 1.0, 1.0)]
     [InlineData(2, 3, 0.0, 1.0 / 3)]
     [InlineData(2, 3, 0.5, 2.0 / 3)]
@@ -93,8 +93,9 @@ public class EasingTests
     public void LinearExtrapolatesAlongTheEndSegments()
     {
         EasingFunction e = EasingFunction.FromStops([0.2, 0.8], [0.25, 0.75])!;
-        Assert.Equal(0.2 - 0.12, e.Evaluate(0.2), 9);
-        Assert.Equal(0.8 + 0.12, e.Evaluate(0.8), 9);
+        // The end segments have slope 0.6 / 0.5 = 1.2, so 0.05 of input either side moves the output by 0.06.
+        Assert.Equal(0.2 - 0.06, e.Evaluate(0.2), 9);
+        Assert.Equal(0.8 + 0.06, e.Evaluate(0.8), 9);
     }
 
     [Fact]

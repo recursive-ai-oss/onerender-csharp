@@ -65,7 +65,7 @@ public sealed partial class InteractivePage
         HtmlPage page = HtmlPage.CreateWithStyles(html, options, out DocumentStyles styles, cancellationToken, true, interaction.AnimationStartTime);
         var created = new InteractivePage(page, styles, options, interaction);
         created._motionNow = interaction.AnimationStartTime;
-        created.DispatchMotionEvents(page.Motion!);
+        // Events of the first frame (animationstart, transitionrun) stay queued until the first Advance, so listeners added after Create see them.
         return created;
     }
 

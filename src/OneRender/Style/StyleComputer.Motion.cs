@@ -74,16 +74,21 @@ public partial struct ComputedValues
     /// <summary>Most items one comma-separated transition or animation list keeps; a longer list is invalid.</summary>
     internal const int MaxMotionListItems = 64;
 
-    private static readonly TransitionTarget[] InitialTransitionProperty = [TransitionTarget.All];
-    private static readonly double[] ZeroTime = [0];
-    private static readonly EasingFunction[] InitialEasing = [EasingFunction.Ease];
-    private static readonly bool[] InitialBehavior = [false];
-    private static readonly string?[] InitialAnimationName = [null];
-    private static readonly double[] InitialAnimationDuration = [double.NaN];
-    private static readonly double[] InitialIterations = [1];
-    private static readonly AnimationDirectionKind[] InitialDirection = [AnimationDirectionKind.Normal];
-    private static readonly AnimationFillKind[] InitialFill = [AnimationFillKind.None];
-    private static readonly bool[] InitialPlaying = [true];
+
+    // A nested class so these exist before CreateInitial runs: static field order across the partial files is not defined.
+    private static class Defaults
+    {
+        internal static readonly TransitionTarget[] InitialTransitionProperty = [TransitionTarget.All];
+        internal static readonly double[] ZeroTime = [0];
+        internal static readonly EasingFunction[] InitialEasing = [EasingFunction.Ease];
+        internal static readonly bool[] InitialBehavior = [false];
+        internal static readonly string?[] InitialAnimationName = [null];
+        internal static readonly double[] InitialAnimationDuration = [double.NaN];
+        internal static readonly double[] InitialIterations = [1];
+        internal static readonly AnimationDirectionKind[] InitialDirection = [AnimationDirectionKind.Normal];
+        internal static readonly AnimationFillKind[] InitialFill = [AnimationFillKind.None];
+        internal static readonly bool[] InitialPlaying = [true];
+    }
 
     /// <summary>True when the style names at least one animation.</summary>
     internal readonly bool HasAnimations
@@ -104,19 +109,19 @@ public partial struct ComputedValues
 
     private static void InitMotion(ref ComputedValues v)
     {
-        v.TransitionProperty = InitialTransitionProperty;
-        v.TransitionDuration = ZeroTime;
-        v.TransitionTimingFunction = InitialEasing;
-        v.TransitionDelay = ZeroTime;
-        v.TransitionBehavior = InitialBehavior;
-        v.AnimationName = InitialAnimationName;
-        v.AnimationDuration = InitialAnimationDuration;
-        v.AnimationTimingFunction = InitialEasing;
-        v.AnimationDelay = ZeroTime;
-        v.AnimationIterationCount = InitialIterations;
-        v.AnimationDirection = InitialDirection;
-        v.AnimationFillMode = InitialFill;
-        v.AnimationPlayState = InitialPlaying;
+        v.TransitionProperty = Defaults.InitialTransitionProperty;
+        v.TransitionDuration = Defaults.ZeroTime;
+        v.TransitionTimingFunction = Defaults.InitialEasing;
+        v.TransitionDelay = Defaults.ZeroTime;
+        v.TransitionBehavior = Defaults.InitialBehavior;
+        v.AnimationName = Defaults.InitialAnimationName;
+        v.AnimationDuration = Defaults.InitialAnimationDuration;
+        v.AnimationTimingFunction = Defaults.InitialEasing;
+        v.AnimationDelay = Defaults.ZeroTime;
+        v.AnimationIterationCount = Defaults.InitialIterations;
+        v.AnimationDirection = Defaults.InitialDirection;
+        v.AnimationFillMode = Defaults.InitialFill;
+        v.AnimationPlayState = Defaults.InitialPlaying;
     }
 
     private static bool MotionEquals(in ComputedValues a, in ComputedValues b) =>
@@ -160,12 +165,12 @@ public partial struct ComputedValues
         h.Add(v.AnimationName.Length);
         foreach (TransitionTarget t in v.TransitionProperty)
         {
-            h.Add(t.Name, StringComparer.Ordinal);
+            h.Add(t.Name ?? string.Empty, StringComparer.Ordinal);
         }
 
         foreach (string? n in v.AnimationName)
         {
-            h.Add(n, StringComparer.Ordinal);
+            h.Add(n ?? string.Empty, StringComparer.Ordinal);
         }
     }
 }
