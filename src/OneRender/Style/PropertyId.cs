@@ -68,6 +68,7 @@ internal enum PropertyId : byte
     Content,
     ListStyleType,
     ListStylePosition,
+    OverflowClipMargin,
     FlexDirection,
     FlexWrap,
     FlexGrow,
@@ -100,7 +101,7 @@ internal static class Properties
         "overflow-x", "overflow-y", "z-index", "visibility",
         "font-family", "font-weight", "font-style", "font-stretch", "line-height", "vertical-align",
         "white-space-collapse", "text-wrap-mode", "text-align", "text-indent", "letter-spacing", "word-spacing",
-        "direction", "unicode-bidi", "color", "opacity", "background-color", "content", "list-style-type", "list-style-position",
+        "direction", "unicode-bidi", "color", "opacity", "background-color", "content", "list-style-type", "list-style-position", "overflow-clip-margin",
         "flex-direction", "flex-wrap", "flex-grow", "flex-shrink", "flex-basis", "order",
         "justify-content", "align-content", "align-items", "align-self", "row-gap", "column-gap",
     ];

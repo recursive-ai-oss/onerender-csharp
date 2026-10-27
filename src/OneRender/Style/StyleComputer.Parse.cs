@@ -22,6 +22,7 @@ internal sealed partial class StyleComputer
     private static readonly string[] ClearWords = ["none", "left", "right", "both", "inline-start", "inline-end"];
     private static readonly string[] BoxSizingWords = ["content-box", "border-box"];
     private static readonly string[] BorderStyleWords = ["none", "hidden", "dotted", "dashed", "solid", "double", "groove", "ridge", "inset", "outset"];
+    private static readonly string[] ClipMarginWords = ["padding-box", "content-box", "border-box"];
     private static readonly string[] OverflowWords = ["visible", "hidden", "clip", "scroll", "auto"];
     private static readonly string[] VisibilityWords = ["visible", "hidden", "collapse"];
     private static readonly string[] VerticalAlignWords = ["baseline", "sub", "super", "text-top", "text-bottom", "middle", "top", "bottom"];
@@ -175,6 +176,7 @@ internal sealed partial class StyleComputer
                 return true;
             }
 
+            case PropertyId.OverflowClipMargin: return ParseOverflowClipMargin(v);
             case PropertyId.ZIndex: return ParseZIndex(v);
             case PropertyId.Visibility:
             {
@@ -1006,6 +1008,48 @@ internal sealed partial class StyleComputer
             default: _r.BorderBottomLeftRadius = radius; break;
         }
 
+        return true;
+    }
+
+    private bool ParseOverflowClipMargin(ComponentValueList v)
+    {
+        // CSS Overflow 4 §3.2: <visual-box> || <length [0,∞]>; the box defaults to padding-box.
+        int n = SplitParts(v);
+        if (n < 1 || n > 2)
+        {
+            return false;
+        }
+
+        bool haveBox = false, haveLength = false;
+        var box = ClipMarginBoxKind.PaddingBox;
+        double px = 0;
+        for (int i = 0; i < n; i++)
+        {
+            if (IsIdentPart(_parts[i], out ReadOnlySpan<char> t))
+            {
+                int k = WordIndex(t, ClipMarginWords);
+                if (k < 0 || haveBox)
+                {
+                    return false;
+                }
+
+                box = (ClipMarginBoxKind)k;
+                haveBox = true;
+            }
+            else
+            {
+                if (haveLength || !Len(RecursiveAI.OneHtml.Css.CssTree.ParseComponentValueList(_parts[i].Raw.ToString()).Values, LengthAllow.NonNegative, out Length l) || l.Kind != LengthKind.Px)
+                {
+                    return false;
+                }
+
+                px = l.Value;
+                haveLength = true;
+            }
+        }
+
+        _r.OverflowClipMarginBox = box;
+        _r.OverflowClipMarginPx = px;
         return true;
     }
 

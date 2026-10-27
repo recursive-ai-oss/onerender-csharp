@@ -5,29 +5,6 @@ namespace OneRender.Layout;
 
 public sealed partial class BlockLayoutEngine
 {
-    private int[] _staticIdx = [];
-    private FlexStaticPosition[] _statics = new FlexStaticPosition[16];
-    private int _staticCount;
-
-    /// <summary>
-    /// Where an absolutely positioned child of a flex container sits when its insets leave it at the static position (Flexbox §4.1): the
-    /// child is placed as if it were the only flex item of the container. The hook is valid after the container has been laid out.
-    /// </summary>
-    /// <param name="box">An out-of-flow child box of a flex container.</param>
-    /// <param name="position">The static-position rectangle and alignment.</param>
-    /// <returns>False when the box is not a positioned child of a flex container in the last layout.</returns>
-    public bool TryGetFlexStaticPosition(Box box, out FlexStaticPosition position)
-    {
-        position = default;
-        if (box.IsNull || !ReferenceEquals(box.Tree, _boxes) || box.Index >= _staticIdx.Length || _staticIdx[box.Index] < 0)
-        {
-            return false;
-        }
-
-        position = _statics[_staticIdx[box.Index]];
-        return true;
-    }
-
     private static double GapPx(Length g, double basis)
     {
         switch (g.Kind)
@@ -122,12 +99,19 @@ public sealed partial class BlockLayoutEngine
 
             if (k.Values.Position is PositionKind.Absolute or PositionKind.Fixed)
             {
-                if (_absTop == _absBoxes.Length)
+                // Flexbox §4.1: laid out later, with the container's content box as its static-position rectangle. A trial
+                // layout is thrown away, so it queues nothing.
+                if (!fx.Trial && _absCount < MaxAbsolute)
                 {
-                    Array.Resize(ref _absBoxes, _absBoxes.Length * 2);
+                    Enqueue(in _frames[top], k, fr.ContentLeft, fr.ContentLeft + cw, fr.ContentTop);
+                    if (_absTop == _absBoxes.Length)
+                    {
+                        Array.Resize(ref _absBoxes, _absBoxes.Length * 2);
+                    }
+
+                    _absBoxes[_absTop++] = _absCount - 1;
                 }
 
-                _absBoxes[_absTop++] = k.Index;
                 continue;
             }
 

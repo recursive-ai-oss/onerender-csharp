@@ -65,7 +65,9 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace
         Marker = 64,
         Float = 128,
         Cleared = 256,
-        Flex = 512,
+        ClipX = 512,
+        ClipY = 1024,
+        Flex = 2048,
     }
 
     private struct Frame
@@ -109,6 +111,11 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace
         public double OvR;
         public double OvB;
 
+        // Positioning: the fragment of the nearest positioned ancestor (-1: the initial containing block) and the
+        // relative-positioning shift applied when the box closes (CSS2 §9.4.3).
+        public int CbFrag;
+        public double RelDx;
+        public double RelDy;
         // For a box whose top margin is still pending: the nearest ancestor with a settled top.
         public int Settled;
 
@@ -156,7 +163,18 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace
         }
 
         _shrinkNext = false;
-        RunIndependent(boxes.Root, default, input.AvailableWidth, input.AvailableHeight, out _);
+        BeginPositioning(boxes, in input);
+        if (boxes.Root.Values.Position is PositionKind.Absolute or PositionKind.Fixed)
+        {
+            // The root element can itself be positioned; its containing block is the initial containing block (CSS2 §10.1).
+            EnqueueRoot(boxes.Root);
+        }
+        else
+        {
+            RunIndependent(boxes.Root, default, input.AvailableWidth, input.AvailableHeight, out _);
+        }
+
+        ResolveAbsolutes();
     }
 
     /// <summary>
@@ -195,10 +213,12 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace
         double savedPos = _pos, savedNeg = _neg;
         _pos = _neg = 0;
         int baseSp = _sp;
+        int inheritedCb = _sp > 0 ? _frames[_sp - 1].CbFrag : -1;
         int savedBsp = _bsp, savedFloats = _floatCount, savedLive = _liveCount, savedDef = _defCount;
         int savedFlex = _fxCount, savedItems = _itemTop, savedLines = _lineTop;
         PushFrame(new Frame
         {
+            CbFrag = inheritedCb,
             Box = -1,
             Frag = parent.IsNull ? -1 : parent.Index,
             NextChild = -1,

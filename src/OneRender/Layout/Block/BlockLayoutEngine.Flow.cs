@@ -28,12 +28,12 @@ public sealed partial class BlockLayoutEngine
     }
 
     /// <summary>CSS2 §9.4.1 and CSS Display 3 §2.1: whether a box is the root of a new block formatting context.</summary>
-    private static bool EstablishesBfc(Box c, in ComputedValues v, bool parentIsRoot) =>
+    private bool EstablishesBfc(Box c, in ComputedValues v, bool parentIsRoot) =>
         parentIsRoot
         || c.Context != FormattingContext.Block
         || v.Floating != FloatKind.None
         || v.Position is PositionKind.Absolute or PositionKind.Fixed
-        || v.IsScrollContainer;
+        || (v.IsScrollContainer && c.Index != _vpSource);
 
     private Fragment FragmentAt(in Frame f) => f.Frag < 0 ? _rootParent : new Fragment(_out, f.Frag);
 
@@ -65,12 +65,12 @@ public sealed partial class BlockLayoutEngine
     /// Adds a finished in-flow child to its parent's running state: the cursor moves to the child's border-box bottom, its
     /// bottom margin joins the margin run, its overflow joins the parent's and its baseline may become the parent's first baseline.
     /// </summary>
-    private void Attach(int pi, double x, double y, double w, double h, double mb, double baseline, double ovL, double ovT, double ovR, double ovB, bool scrollContainer)
+    private void Attach(int pi, double x, double y, double w, double h, double mb, double baseline, double ovL, double ovT, double ovR, double ovB, bool clipX, bool clipY, double dx, double dy)
     {
         ref Frame p = ref _frames[pi];
         if ((p.Flags & FrameFlags.Flex) != 0)
         {
-            FlexItemDone(pi, x, y, w, h, baseline, ovL, ovT, ovR, ovB, scrollContainer);
+            FlexItemDone(pi, w, h, baseline, ovL, ovT, ovR, ovB, clipX, clipY, dx, dy);
             return;
         }
 
@@ -82,18 +82,23 @@ public sealed partial class BlockLayoutEngine
             p.FirstBaseline = y + baseline;
         }
 
-        if (scrollContainer)
+        if (clipX)
         {
             ovL = 0;
-            ovT = 0;
             ovR = w;
+        }
+
+        if (clipY)
+        {
+            ovT = 0;
             ovB = h;
         }
 
-        p.OvL = Math.Min(p.OvL, x + ovL);
-        p.OvT = Math.Min(p.OvT, y + ovT);
-        p.OvR = Math.Max(p.OvR, x + ovR);
-        p.OvB = Math.Max(p.OvB, y + ovB);
+        // A relatively positioned box overflows where it is drawn, not where it sat in the flow (Overflow 3 §2.2).
+        p.OvL = Math.Min(p.OvL, x + dx + ovL);
+        p.OvT = Math.Min(p.OvT, y + dy + ovT);
+        p.OvR = Math.Max(p.OvR, x + dx + ovR);
+        p.OvB = Math.Max(p.OvB, y + dy + ovB);
     }
 
     private void CloseTop()
@@ -115,7 +120,7 @@ public sealed partial class BlockLayoutEngine
                 double y = (pp.Flags & FrameFlags.TopPending) != 0 ? pp.ContentTop + pp.Cursor : pp.ContentTop + pp.Cursor + (_pos + _neg);
                 t.Y = y;
                 var fragment = new Fragment(_out, t.Frag);
-                _out.SetBorderBox(fragment, new Rect(t.X, y, t.W, 0));
+                _out.SetBorderBox(fragment, new Rect(t.X + t.RelDx, y + t.RelDy, t.W, 0));
                 _out.SetBaseline(fragment, double.NaN);
                 _out.SetScrollableOverflow(fragment, new Rect(0, 0, t.W, 0));
                 StrutAdd(t.MarginBottom);
@@ -187,12 +192,39 @@ public sealed partial class BlockLayoutEngine
         }
 
         var frag = new Fragment(_out, t.Frag);
-        _out.SetBorderBox(frag, new Rect(t.X, t.Y, t.W, bh));
+        _out.SetBorderBox(frag, new Rect(t.X + t.RelDx, t.Y + t.RelDy, t.W, bh));
         _out.SetBaseline(frag, t.FirstBaseline);
-        double ovB = Math.Max(t.OvB, bh);
-        _out.SetScrollableOverflow(frag, new Rect(t.OvL, t.OvT, t.OvR - t.OvL, ovB - t.OvT));
+        double ovB, ovR = t.OvR;
+        if (scroll)
+        {
+            // Overflow 3 §2.2: a scroll container's scrollable overflow is its padding box plus its content, and content that
+            // overflows at the end edge also brings the end padding into the scrollable area.
+            Insets border = _out.BorderOf(t.Frag);
+            Insets padding = _out.PaddingOf(t.Frag);
+            if (ovR > t.W - border.Right - padding.Right)
+            {
+                ovR += padding.Right;
+            }
+
+            ovR = Math.Max(t.W - border.Right, ovR);
+            ovB = t.OvB;
+            if (ovB > bh - t.BottomEdge)
+            {
+                ovB += padding.Bottom;
+            }
+
+            ovB = Math.Max(bh - border.Bottom, ovB);
+        }
+        else
+        {
+            ovB = Math.Max(t.OvB, bh);
+        }
+
+        _out.SetScrollableOverflow(frag, new Rect(t.OvL, t.OvT, ovR - t.OvL, ovB - t.OvT));
         double x = t.X, y2 = t.Y, wd = t.W, mb = t.MarginBottom, baseline = t.FirstBaseline;
-        double ovL = t.OvL, ovT = t.OvT, ovR = t.OvR;
+        double ovL = t.OvL, ovT = t.OvT;
+        bool clipX = (fl & FrameFlags.ClipX) != 0, clipY = (fl & FrameFlags.ClipY) != 0;
+        double rdx = t.RelDx, rdy = t.RelDy;
         if ((fl & FrameFlags.Float) != 0)
         {
             // A float takes no part in the flow: the margin run of the flow it sat in resumes, and it is positioned by CSS2 §9.5.1.
@@ -202,12 +234,12 @@ public sealed partial class BlockLayoutEngine
             int fragIndex = t.Frag;
             Box floatBox = _boxes.Make(t.Box);
             _sp--;
-            FinishFloat(pi, fragIndex, wd, bh, fmt, fmr, fmb, fml, in floatBox.Values);
+            FinishFloat(pi, fragIndex, wd, bh, fmt, fmr, fmb, fml, in floatBox.Values, rdx, rdy);
             return;
         }
 
         RecordTop(pi, frag, t.MarginTop, t.MarginRight, t.MarginBottom, t.MarginLeft);
-        Attach(pi, x, y2, wd, bh, mb, baseline, ovL, ovT, ovR, ovB, scroll);
+        Attach(pi, x, y2, wd, bh, mb, baseline, ovL, ovT, ovR, ovB, clipX, clipY, rdx, rdy);
         _sp--;
     }
 

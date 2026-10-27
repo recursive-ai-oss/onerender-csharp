@@ -75,6 +75,7 @@ public sealed partial class BlockLayoutEngine
         public double AvailMain;
         public double Baseline;
         public FragmentMark Mark;
+        public int AbsMark;
     }
 
     /// <summary>One flex item. Margins and sizes are in flow coordinates: "main" and "cross" run from the start edge of the axis.</summary>
@@ -170,13 +171,6 @@ public sealed partial class BlockLayoutEngine
 
         _memoCount = 0;
         _pctReady = false;
-        if (_staticIdx.Length < boxCount)
-        {
-            _staticIdx = new int[Math.Max(boxCount, _staticIdx.Length * 2)];
-        }
-
-        Array.Fill(_staticIdx, -1, 0, boxCount);
-        _staticCount = 0;
     }
 
     /// <summary>Turns the frame just pushed for a flex container into a flex frame; <see cref="FlexStep"/> drives it from then on.</summary>
@@ -343,6 +337,7 @@ public sealed partial class BlockLayoutEngine
         if (trial)
         {
             fx.Mark = _out.Mark(new Fragment(_out, _frames[top].Frag));
+            fx.AbsMark = _absCount;
             _trialNesting++;
         }
 
@@ -360,15 +355,13 @@ public sealed partial class BlockLayoutEngine
         }
 
         // Nothing was laid out for the item (a depth limit): it counts as empty.
-        FlexItemDone(top, 0, 0, 0, 0, double.NaN, 0, 0, 0, 0, false);
+        FlexItemDone(top, 0, 0, double.NaN, 0, 0, 0, 0, false, false, 0, 0);
         return true;
     }
 
     /// <summary>An item finished (called from <c>Attach</c>): a measurement is memoized and undone, a real layout is placed.</summary>
-    private void FlexItemDone(int pi, double x, double y, double w, double h, double baseline, double ovL, double ovT, double ovR, double ovB, bool scroll)
+    private void FlexItemDone(int pi, double w, double h, double baseline, double ovL, double ovT, double ovR, double ovB, bool clipX, bool clipY, double dx, double dy)
     {
-        _ = x;
-        _ = y;
         int fi = _frames[pi].FlexIndex;
         ref FlexFrame fx = ref _fx[fi];
         if (!fx.Pending)
@@ -385,6 +378,7 @@ public sealed partial class BlockLayoutEngine
             it.TrialBaseLast = baseline;
             MemoStore(it.Box, fx.ForceW, fx.ForceH, fx.CW, fx.SpecH, h, baseline);
             _out.Truncate(fx.Mark);
+            _absCount = fx.AbsMark;
             _trialNesting--;
         }
         else
@@ -395,19 +389,23 @@ public sealed partial class BlockLayoutEngine
             {
                 ref Frame p = ref _frames[pi];
                 double px = p.ContentLeft + it.X, py = p.ContentTop + it.Y;
-                _out.SetBorderBox(frag, new Rect(px, py, w, h));
-                if (scroll)
+                _out.SetBorderBox(frag, new Rect(px + dx, py + dy, w, h));
+                if (clipX)
                 {
                     ovL = 0;
-                    ovT = 0;
                     ovR = w;
+                }
+
+                if (clipY)
+                {
+                    ovT = 0;
                     ovB = h;
                 }
 
-                p.OvL = Math.Min(p.OvL, px + ovL);
-                p.OvT = Math.Min(p.OvT, py + ovT);
-                p.OvR = Math.Max(p.OvR, px + ovR);
-                p.OvB = Math.Max(p.OvB, py + ovB);
+                p.OvL = Math.Min(p.OvL, px + dx + ovL);
+                p.OvT = Math.Min(p.OvT, py + dy + ovT);
+                p.OvR = Math.Max(p.OvR, px + dx + ovR);
+                p.OvB = Math.Max(p.OvB, py + dy + ovB);
                 if ((it.Flags & LastBaselineFlag) != 0)
                 {
                     // Walking down the last children costs the item's depth, so it is only done for items that align on it.
@@ -455,7 +453,7 @@ public sealed partial class BlockLayoutEngine
     {
         ref FlexFrame fx = ref _fx[fi];
         FlexComputeBaseline(fi);
-        FlexRecordStatics(fi);
+        FlexPatchAbsolute(fi);
         double contentH = fx.Row ? fx.CrossSize : fx.MainSize;
         if (double.IsNaN(contentH))
         {

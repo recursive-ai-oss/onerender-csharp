@@ -3,30 +3,6 @@ using OneRender.Tree;
 
 namespace OneRender.Layout;
 
-/// <summary>
-/// The static position of an absolutely positioned child of a flex container (CSS Flexible Box Layout 1 §4.1): the child is placed in
-/// <see cref="Area"/> as if it were the container's only flex item. A child of size (w, h) with auto insets has its margin box at
-/// x = <c>Area.X + (Area.Width - w) * FractionX</c> and y = <c>Area.Y + (Area.Height - h) * FractionY</c>.
-/// </summary>
-public readonly struct FlexStaticPosition
-{
-    internal FlexStaticPosition(Rect area, double fractionX, double fractionY)
-    {
-        Area = area;
-        FractionX = fractionX;
-        FractionY = fractionY;
-    }
-
-    /// <summary>The content box of the flex container, relative to its border box, in CSS px.</summary>
-    public Rect Area { get; }
-
-    /// <summary>Where the child sits horizontally in the free space: 0 at the left, 0.5 centered, 1 at the right.</summary>
-    public double FractionX { get; }
-
-    /// <summary>Where the child sits vertically in the free space: 0 at the top, 0.5 centered, 1 at the bottom.</summary>
-    public double FractionY { get; }
-}
-
 public sealed partial class BlockLayoutEngine
 {
     /// <summary>
@@ -393,7 +369,8 @@ public sealed partial class BlockLayoutEngine
         fx.Baseline = it.Y + b;
     }
 
-    private void FlexRecordStatics(int fi)
+    /// <summary>Gives the absolutely positioned children of a container the alignment of a sole flex item (Flexbox §4.1).</summary>
+    private void FlexPatchAbsolute(int fi)
     {
         ref FlexFrame fx = ref _fx[fi];
         if (fx.AbsCount == 0)
@@ -404,10 +381,10 @@ public sealed partial class BlockLayoutEngine
         ref Frame t = ref _frames[fx.FrameIdx];
         Box c = _boxes.Make(fx.BoxIdx);
         double h = fx.Row ? fx.CrossSize : fx.MainSize;
-        var area = new Rect(t.ContentLeft, t.ContentTop, fx.CW, double.IsNaN(h) ? 0 : h);
         for (int i = fx.AbsStart; i < fx.AbsStart + fx.AbsCount; i++)
         {
-            Box k = _boxes.Make(_absBoxes[i]);
+            ref AbsEntry e = ref _abs[_absBoxes[i]];
+            Box k = _boxes.Make(e.Box);
             ref readonly ComputedValues kv = ref k.Values;
             AlignKind cross = kv.AlignSelf == AlignKind.Auto ? c.Values.AlignItems : kv.AlignSelf;
             AlignOverflowKind crossOv = kv.AlignSelf == AlignKind.Auto ? c.Values.AlignItemsOverflow : kv.AlignSelfOverflow;
@@ -425,13 +402,13 @@ public sealed partial class BlockLayoutEngine
                 cf = 1 - cf;
             }
 
-            if (_staticCount == _statics.Length)
-            {
-                Array.Resize(ref _statics, _statics.Length * 2);
-            }
-
-            _statics[_staticCount] = new FlexStaticPosition(area, fx.Row ? mf : cf, fx.Row ? cf : mf);
-            _staticIdx[k.Index] = _staticCount++;
+            e.HasArea = true;
+            e.AreaX = t.ContentLeft;
+            e.AreaY = t.ContentTop;
+            e.AreaW = fx.CW;
+            e.AreaH = double.IsNaN(h) ? 0 : h;
+            e.FracX = fx.Row ? mf : cf;
+            e.FracY = fx.Row ? cf : mf;
         }
     }
 }

@@ -385,16 +385,27 @@ public class FlexLayoutTests
         Assert.Equal(77, l["f"].Width, 6);
     }
 
-    // ---- static position hook ----
+    // ---- absolutely positioned children (Flexbox §4.1) ----
 
     [Fact]
-    public void AbsolutelyPositionedChildrenGetAStaticPositionHint()
+    public void AbsolutelyPositionedChildrenAreAlignedAsTheOnlyFlexItem()
     {
-        Lay l = Run("<div id=c style='display:flex;width:200px;height:100px;justify-content:center;align-items:flex-end'><div id=p style='position:absolute;width:10px;height:10px'></div></div>");
-        Assert.True(l.Engine.TryGetFlexStaticPosition(l.BoxOf("p"), out FlexStaticPosition sp));
-        Assert.Equal(0.5, sp.FractionX, 6);
-        Assert.Equal(1, sp.FractionY, 6);
-        Assert.Equal(new Rect(0, 0, 200, 100), sp.Area);
-        Assert.Null(l.F.FragmentOf(l.BoxOf("p")).Tree);
+        Lay l = Run("<div id=c style='display:flex;position:relative;width:200px;height:100px;justify-content:center;align-items:flex-end'><div id=p style='position:absolute;width:10px;height:20px'></div></div>");
+        Assert.Equal(new Rect(95, 80, 10, 20), l["p"]);
+    }
+
+    [Fact]
+    public void AbsolutelyPositionedChildrenTakeNoSpaceAmongTheItems()
+    {
+        Lay l = Run(Flex("position:relative;width:300px", Item("a", "width:50px;height:10px"), Item("p", "position:absolute;width:70px;height:5px"), Item("b", "width:50px;height:10px")));
+        Assert.Equal(50, l["b"].X, 6);
+        Assert.Equal(0, l["p"].X, 6);
+    }
+
+    [Fact]
+    public void InsetsOverrideTheStaticPosition()
+    {
+        Lay l = Run("<div id=c style='display:flex;position:relative;width:200px;height:100px;justify-content:center'><div id=p style='position:absolute;left:5px;top:7px;width:10px;height:20px'></div></div>");
+        Assert.Equal(new Rect(5, 7, 10, 20), l["p"]);
     }
 }

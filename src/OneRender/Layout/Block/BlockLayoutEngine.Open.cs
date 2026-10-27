@@ -12,10 +12,19 @@ public sealed partial class BlockLayoutEngine
         bool parentIsRoot = _frames[pi].Box < 0 || parentIsFlex;
         bool shrink = _shrinkNext && parentIsRoot;
         _shrinkNext = false;
+        int preFragment = _absPre;
+        _absPre = -1;
+        bool forced = _absForce;
+        _absForce = false;
         bool outOfFlow = !parentIsRoot && (c.Flags & BoxTraits.OutOfFlow) != 0;
         if (outOfFlow && c.Values.Floating == FloatKind.None)
         {
-            // Absolutely positioned boxes are laid out by their own unit; they produce no fragment here.
+            // Absolutely positioned boxes wait until their containing block is final (CSS2 §10.1); until then they only hold a place.
+            if (c.Values.Position is PositionKind.Absolute or PositionKind.Fixed)
+            {
+                QueueAbsolute(pi, c);
+            }
+
             return;
         }
 
@@ -101,6 +110,18 @@ public sealed partial class BlockLayoutEngine
         else
         {
             ResolveBoxWidth(c, in v, replaced, replacedW, w, w, ph, shrink, rtl, mlAuto, mrAuto, mlv, mrv, out borderW, out ml, out mr, out contentW);
+        }
+
+        if (forced && !isFloat)
+        {
+            // An absolutely positioned box whose size CSS2 §10.3.7 / §10.6.4 already solved.
+            if (!replaced)
+            {
+                borderW = _absW;
+                ml = _absMl;
+                mr = _absMr;
+                contentW = Math.Max(0, borderW - ph);
+            }
         }
 
         double x = 0, y = 0;
@@ -198,27 +219,41 @@ public sealed partial class BlockLayoutEngine
                     ratioH = double.NaN;
                 }
             }
+
+            if (forced && !double.IsNaN(_absH))
+            {
+                specH = _absH;
+                minH = 0;
+                maxH = double.PositiveInfinity;
+                ratioH = double.NaN;
+            }
         }
 
+        RelativeOffset(in v, w, f.SpecH, rtl, out double relDx, out double relDy);
         if (replaced)
         {
             double bh = replacedH + pv;
-            Fragment rf = _out.AddBox(FragmentAt(in f), c, new Rect(x, y, borderW, bh));
+            Fragment rf = NewFragment(preFragment, in f, c, new Rect(x, y, borderW, bh));
             _out.SetEdges(rf, new Insets(bt, br, bb, bl), new Insets(pt, pr, pb, pl));
             _out.SetBaseline(rf, double.NaN);
             if (isFloat)
             {
-                FinishFloat(pi, rf.Index, borderW, bh, mt, mr, mb, ml, in v);
+                FinishFloat(pi, rf.Index, borderW, bh, mt, mr, mb, ml, in v, relDx, relDy);
                 return;
             }
 
-            Attach(pi, x, y, borderW, bh, mb, double.NaN, 0, 0, borderW, bh, scrollContainer: false);
+            if (relDx != 0 || relDy != 0)
+            {
+                _out.SetBorderBox(rf, new Rect(x + relDx, y + relDy, borderW, bh));
+            }
+
+            Attach(pi, x, y, borderW, bh, mb, double.NaN, 0, 0, borderW, bh, false, false, relDx, relDy);
             RecordTop(pi, rf, mt, mr, mb, ml);
             return;
         }
 
         f = ref _frames[pi];
-        Fragment frag = _out.AddBox(FragmentAt(in f), c, new Rect(x, y, borderW, 0));
+        Fragment frag = NewFragment(preFragment, in f, c, new Rect(x, y, borderW, 0));
         _out.SetEdges(frag, new Insets(bt, br, bb, bl), new Insets(pt, pr, pb, pl));
         FrameFlags flags = FrameFlags.None;
         if (pending)
@@ -246,9 +281,24 @@ public sealed partial class BlockLayoutEngine
             flags |= FrameFlags.Rtl;
         }
 
-        if (v.IsScrollContainer)
+        bool scrollC = v.IsScrollContainer && c.Index != _vpSource;
+        if (scrollC)
         {
             flags |= FrameFlags.ScrollContainer;
+        }
+
+        // CSS Overflow 3 §3: each axis that is not visible clips, and a clipped box adds only its own border box to its parent's overflow.
+        if (c.Index != _vpSource)
+        {
+            if (v.OverflowX != OverflowKind.Visible)
+            {
+                flags |= FrameFlags.ClipX;
+            }
+
+            if (v.OverflowY != OverflowKind.Visible)
+            {
+                flags |= FrameFlags.ClipY;
+            }
         }
 
         // The horizontal origin is known as soon as the box is opened; the vertical one only once its top margin is settled.
@@ -299,10 +349,13 @@ public sealed partial class BlockLayoutEngine
             FirstBaseline = double.NaN,
             BfcLeft = bfcLeft,
             BfcTop = bfcTop,
-            OvL = 0,
-            OvT = 0,
-            OvR = borderW,
-            OvB = 0,
+            OvL = scrollC ? bl : 0,
+            OvT = scrollC ? bt : 0,
+            OvR = scrollC ? double.NegativeInfinity : borderW,
+            OvB = scrollC ? double.NegativeInfinity : 0,
+            CbFrag = v.Position != PositionKind.Static ? frag.Index : f.CbFrag,
+            RelDx = relDx,
+            RelDy = relDy,
             Settled = settled,
             SavedPos = savedPos,
             SavedNeg = savedNeg,
@@ -344,6 +397,7 @@ public sealed partial class BlockLayoutEngine
 
             t.NextChild = -1;
             t.Flags |= FrameFlags.AnyChild;
+            QueueInlineAbsolutes(ni);
         }
     }
 
