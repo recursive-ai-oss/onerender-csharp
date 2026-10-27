@@ -1,0 +1,1350 @@
+{
+  "set": "tailwind",
+  "reference": "Chrome/156.0.8078.47",
+  "viewports": {
+    "1280x800": {
+      "pages": 7,
+      "refused": 0,
+      "failed": 0,
+      "nodes": 1459,
+      "kinds": {
+        "bg.color.exact": {
+          "compared": 389,
+          "agree": 159
+        },
+        "bg.color.within2": {
+          "compared": 389,
+          "agree": 160
+        },
+        "bg.presence": {
+          "compared": 737,
+          "agree": 737
+        },
+        "box.borderBox": {
+          "compared": 737,
+          "agree": 206
+        },
+        "box.exists.element": {
+          "compared": 744,
+          "agree": 737
+        },
+        "box.exists.text": {
+          "compared": 427,
+          "agree": 417
+        },
+        "form.inputChecked": {
+          "compared": 4,
+          "agree": 4
+        },
+        "form.inputValue": {
+          "compared": 14,
+          "agree": 14
+        },
+        "form.optionSelected": {
+          "compared": 3,
+          "agree": 3
+        },
+        "form.textValue": {
+          "compared": 1,
+          "agree": 1
+        },
+        "generated.bounds": {
+          "compared": 25,
+          "agree": 10
+        },
+        "generated.text": {
+          "compared": 25,
+          "agree": 18
+        },
+        "generated.types": {
+          "compared": 66,
+          "agree": 66
+        },
+        "paint.order.exact": {
+          "compared": 737,
+          "agree": 521
+        },
+        "paint.order.relative": {
+          "compared": 730,
+          "agree": 728
+        },
+        "rect.client": {
+          "compared": 737,
+          "agree": 396
+        },
+        "rect.client.within1": {
+          "compared": 737,
+          "agree": 397
+        },
+        "rect.offset": {
+          "compared": 737,
+          "agree": 221
+        },
+        "rect.offset.within1": {
+          "compared": 737,
+          "agree": 228
+        },
+        "rect.scroll": {
+          "compared": 737,
+          "agree": 388
+        },
+        "rect.scroll.within1": {
+          "compared": 737,
+          "agree": 389
+        },
+        "stacking.context": {
+          "compared": 737,
+          "agree": 737
+        },
+        "stacking.root": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style.all": {
+          "compared": 58223,
+          "agree": 50644
+        },
+        "style.uncomputed": {
+          "compared": 12529,
+          "agree": 0
+        },
+        "style:background-attachment": {
+          "compared": 737,
+          "agree": 707
+        },
+        "style:background-clip": {
+          "compared": 737,
+          "agree": 707
+        },
+        "style:background-color": {
+          "compared": 737,
+          "agree": 607
+        },
+        "style:background-image": {
+          "compared": 737,
+          "agree": 732
+        },
+        "style:background-repeat": {
+          "compared": 737,
+          "agree": 707
+        },
+        "style:background-size": {
+          "compared": 737,
+          "agree": 703
+        },
+        "style:border-bottom-color": {
+          "compared": 737,
+          "agree": 30
+        },
+        "style:border-bottom-style": {
+          "compared": 737,
+          "agree": 736
+        },
+        "style:border-bottom-width": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:border-left-color": {
+          "compared": 737,
+          "agree": 30
+        },
+        "style:border-left-style": {
+          "compared": 737,
+          "agree": 736
+        },
+        "style:border-left-width": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:border-right-color": {
+          "compared": 737,
+          "agree": 30
+        },
+        "style:border-right-style": {
+          "compared": 737,
+          "agree": 733
+        },
+        "style:border-right-width": {
+          "compared": 737,
+          "agree": 734
+        },
+        "style:border-top-color": {
+          "compared": 737,
+          "agree": 30
+        },
+        "style:border-top-style": {
+          "compared": 737,
+          "agree": 736
+        },
+        "style:border-top-width": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:bottom": {
+          "compared": 737,
+          "agree": 687
+        },
+        "style:box-shadow": {
+          "compared": 737,
+          "agree": 706
+        },
+        "style:clear": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:clip-path": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:color": {
+          "compared": 737,
+          "agree": 23
+        },
+        "style:content": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:direction": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:display": {
+          "compared": 737,
+          "agree": 604
+        },
+        "style:filter": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:float": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:font-family": {
+          "compared": 737,
+          "agree": 0
+        },
+        "style:font-size": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:font-style": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:font-weight": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:height": {
+          "compared": 737,
+          "agree": 541
+        },
+        "style:isolation": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:left": {
+          "compared": 737,
+          "agree": 689
+        },
+        "style:letter-spacing": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:line-height": {
+          "compared": 737,
+          "agree": 734
+        },
+        "style:list-style-type": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:margin-bottom": {
+          "compared": 737,
+          "agree": 732
+        },
+        "style:margin-left": {
+          "compared": 737,
+          "agree": 728
+        },
+        "style:margin-right": {
+          "compared": 737,
+          "agree": 733
+        },
+        "style:margin-top": {
+          "compared": 737,
+          "agree": 731
+        },
+        "style:max-height": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:max-width": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:min-height": {
+          "compared": 737,
+          "agree": 735
+        },
+        "style:min-width": {
+          "compared": 737,
+          "agree": 735
+        },
+        "style:mix-blend-mode": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:opacity": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:outline-color": {
+          "compared": 737,
+          "agree": 28
+        },
+        "style:outline-offset": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:outline-style": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:outline-width": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:overflow-wrap": {
+          "compared": 737,
+          "agree": 736
+        },
+        "style:overflow-x": {
+          "compared": 737,
+          "agree": 735
+        },
+        "style:overflow-y": {
+          "compared": 737,
+          "agree": 735
+        },
+        "style:padding-bottom": {
+          "compared": 737,
+          "agree": 641
+        },
+        "style:padding-left": {
+          "compared": 737,
+          "agree": 617
+        },
+        "style:padding-right": {
+          "compared": 737,
+          "agree": 617
+        },
+        "style:padding-top": {
+          "compared": 737,
+          "agree": 641
+        },
+        "style:pointer-events": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:position": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:right": {
+          "compared": 737,
+          "agree": 687
+        },
+        "style:table-layout": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:text-align": {
+          "compared": 737,
+          "agree": 598
+        },
+        "style:text-decoration-color": {
+          "compared": 737,
+          "agree": 23
+        },
+        "style:text-decoration-line": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:text-decoration-style": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:text-indent": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:text-shadow": {
+          "compared": 737,
+          "agree": 720
+        },
+        "style:text-transform": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:top": {
+          "compared": 737,
+          "agree": 687
+        },
+        "style:transform": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:unicode-bidi": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:vertical-align": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:visibility": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:width": {
+          "compared": 737,
+          "agree": 311
+        },
+        "style:word-break": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:word-spacing": {
+          "compared": 737,
+          "agree": 737
+        },
+        "style:z-index": {
+          "compared": 737,
+          "agree": 737
+        },
+        "text.bounds": {
+          "compared": 417,
+          "agree": 98
+        },
+        "text.boxes.bounds": {
+          "compared": 416,
+          "agree": 98
+        },
+        "text.boxes.count": {
+          "compared": 417,
+          "agree": 416
+        },
+        "text.boxes.ranges": {
+          "compared": 416,
+          "agree": 406
+        },
+        "text.layoutText": {
+          "compared": 417,
+          "agree": 417
+        },
+        "text.opacity": {
+          "compared": 737,
+          "agree": 737
+        }
+      }
+    },
+    "390x844": {
+      "pages": 7,
+      "refused": 0,
+      "failed": 0,
+      "nodes": 1459,
+      "kinds": {
+        "bg.color.exact": {
+          "compared": 367,
+          "agree": 143
+        },
+        "bg.color.within2": {
+          "compared": 367,
+          "agree": 144
+        },
+        "bg.presence": {
+          "compared": 715,
+          "agree": 708
+        },
+        "box.borderBox": {
+          "compared": 715,
+          "agree": 36
+        },
+        "box.exists.element": {
+          "compared": 722,
+          "agree": 715
+        },
+        "box.exists.text": {
+          "compared": 411,
+          "agree": 401
+        },
+        "form.inputChecked": {
+          "compared": 4,
+          "agree": 4
+        },
+        "form.inputValue": {
+          "compared": 14,
+          "agree": 14
+        },
+        "form.optionSelected": {
+          "compared": 3,
+          "agree": 3
+        },
+        "form.textValue": {
+          "compared": 1,
+          "agree": 1
+        },
+        "generated.bounds": {
+          "compared": 25,
+          "agree": 1
+        },
+        "generated.text": {
+          "compared": 25,
+          "agree": 18
+        },
+        "generated.types": {
+          "compared": 66,
+          "agree": 66
+        },
+        "paint.order.exact": {
+          "compared": 715,
+          "agree": 499
+        },
+        "paint.order.relative": {
+          "compared": 708,
+          "agree": 706
+        },
+        "rect.client": {
+          "compared": 715,
+          "agree": 311
+        },
+        "rect.client.within1": {
+          "compared": 715,
+          "agree": 312
+        },
+        "rect.offset": {
+          "compared": 715,
+          "agree": 94
+        },
+        "rect.offset.within1": {
+          "compared": 715,
+          "agree": 101
+        },
+        "rect.scroll": {
+          "compared": 715,
+          "agree": 301
+        },
+        "rect.scroll.within1": {
+          "compared": 715,
+          "agree": 302
+        },
+        "stacking.context": {
+          "compared": 715,
+          "agree": 715
+        },
+        "stacking.root": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style.all": {
+          "compared": 56485,
+          "agree": 49053
+        },
+        "style.uncomputed": {
+          "compared": 12155,
+          "agree": 0
+        },
+        "style:background-attachment": {
+          "compared": 715,
+          "agree": 685
+        },
+        "style:background-clip": {
+          "compared": 715,
+          "agree": 685
+        },
+        "style:background-color": {
+          "compared": 715,
+          "agree": 588
+        },
+        "style:background-image": {
+          "compared": 715,
+          "agree": 710
+        },
+        "style:background-repeat": {
+          "compared": 715,
+          "agree": 685
+        },
+        "style:background-size": {
+          "compared": 715,
+          "agree": 681
+        },
+        "style:border-bottom-color": {
+          "compared": 715,
+          "agree": 29
+        },
+        "style:border-bottom-style": {
+          "compared": 715,
+          "agree": 714
+        },
+        "style:border-bottom-width": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:border-left-color": {
+          "compared": 715,
+          "agree": 29
+        },
+        "style:border-left-style": {
+          "compared": 715,
+          "agree": 714
+        },
+        "style:border-left-width": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:border-right-color": {
+          "compared": 715,
+          "agree": 29
+        },
+        "style:border-right-style": {
+          "compared": 715,
+          "agree": 711
+        },
+        "style:border-right-width": {
+          "compared": 715,
+          "agree": 712
+        },
+        "style:border-top-color": {
+          "compared": 715,
+          "agree": 29
+        },
+        "style:border-top-style": {
+          "compared": 715,
+          "agree": 714
+        },
+        "style:border-top-width": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:bottom": {
+          "compared": 715,
+          "agree": 665
+        },
+        "style:box-shadow": {
+          "compared": 715,
+          "agree": 684
+        },
+        "style:clear": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:clip-path": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:color": {
+          "compared": 715,
+          "agree": 22
+        },
+        "style:content": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:direction": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:display": {
+          "compared": 715,
+          "agree": 597
+        },
+        "style:filter": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:float": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:font-family": {
+          "compared": 715,
+          "agree": 0
+        },
+        "style:font-size": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:font-style": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:font-weight": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:height": {
+          "compared": 715,
+          "agree": 496
+        },
+        "style:isolation": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:left": {
+          "compared": 715,
+          "agree": 667
+        },
+        "style:letter-spacing": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:line-height": {
+          "compared": 715,
+          "agree": 712
+        },
+        "style:list-style-type": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:margin-bottom": {
+          "compared": 715,
+          "agree": 710
+        },
+        "style:margin-left": {
+          "compared": 715,
+          "agree": 708
+        },
+        "style:margin-right": {
+          "compared": 715,
+          "agree": 713
+        },
+        "style:margin-top": {
+          "compared": 715,
+          "agree": 710
+        },
+        "style:max-height": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:max-width": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:min-height": {
+          "compared": 715,
+          "agree": 713
+        },
+        "style:min-width": {
+          "compared": 715,
+          "agree": 713
+        },
+        "style:mix-blend-mode": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:opacity": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:outline-color": {
+          "compared": 715,
+          "agree": 27
+        },
+        "style:outline-offset": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:outline-style": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:outline-width": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:overflow-wrap": {
+          "compared": 715,
+          "agree": 714
+        },
+        "style:overflow-x": {
+          "compared": 715,
+          "agree": 713
+        },
+        "style:overflow-y": {
+          "compared": 715,
+          "agree": 713
+        },
+        "style:padding-bottom": {
+          "compared": 715,
+          "agree": 621
+        },
+        "style:padding-left": {
+          "compared": 715,
+          "agree": 598
+        },
+        "style:padding-right": {
+          "compared": 715,
+          "agree": 598
+        },
+        "style:padding-top": {
+          "compared": 715,
+          "agree": 621
+        },
+        "style:pointer-events": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:position": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:right": {
+          "compared": 715,
+          "agree": 665
+        },
+        "style:table-layout": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:text-align": {
+          "compared": 715,
+          "agree": 576
+        },
+        "style:text-decoration-color": {
+          "compared": 715,
+          "agree": 22
+        },
+        "style:text-decoration-line": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:text-decoration-style": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:text-indent": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:text-shadow": {
+          "compared": 715,
+          "agree": 698
+        },
+        "style:text-transform": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:top": {
+          "compared": 715,
+          "agree": 665
+        },
+        "style:transform": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:unicode-bidi": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:vertical-align": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:visibility": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:width": {
+          "compared": 715,
+          "agree": 257
+        },
+        "style:word-break": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:word-spacing": {
+          "compared": 715,
+          "agree": 715
+        },
+        "style:z-index": {
+          "compared": 715,
+          "agree": 715
+        },
+        "text.bounds": {
+          "compared": 401,
+          "agree": 30
+        },
+        "text.boxes.bounds": {
+          "compared": 392,
+          "agree": 30
+        },
+        "text.boxes.count": {
+          "compared": 401,
+          "agree": 392
+        },
+        "text.boxes.ranges": {
+          "compared": 392,
+          "agree": 378
+        },
+        "text.layoutText": {
+          "compared": 401,
+          "agree": 401
+        },
+        "text.opacity": {
+          "compared": 715,
+          "agree": 715
+        }
+      }
+    }
+  },
+  "all": {
+    "pages": 14,
+    "refused": 0,
+    "failed": 0,
+    "nodes": 2918,
+    "kinds": {
+      "bg.color.exact": {
+        "compared": 756,
+        "agree": 302
+      },
+      "bg.color.within2": {
+        "compared": 756,
+        "agree": 304
+      },
+      "bg.presence": {
+        "compared": 1452,
+        "agree": 1445
+      },
+      "box.borderBox": {
+        "compared": 1452,
+        "agree": 242
+      },
+      "box.exists.element": {
+        "compared": 1466,
+        "agree": 1452
+      },
+      "box.exists.text": {
+        "compared": 838,
+        "agree": 818
+      },
+      "form.inputChecked": {
+        "compared": 8,
+        "agree": 8
+      },
+      "form.inputValue": {
+        "compared": 28,
+        "agree": 28
+      },
+      "form.optionSelected": {
+        "compared": 6,
+        "agree": 6
+      },
+      "form.textValue": {
+        "compared": 2,
+        "agree": 2
+      },
+      "generated.bounds": {
+        "compared": 50,
+        "agree": 11
+      },
+      "generated.text": {
+        "compared": 50,
+        "agree": 36
+      },
+      "generated.types": {
+        "compared": 132,
+        "agree": 132
+      },
+      "paint.order.exact": {
+        "compared": 1452,
+        "agree": 1020
+      },
+      "paint.order.relative": {
+        "compared": 1438,
+        "agree": 1434
+      },
+      "rect.client": {
+        "compared": 1452,
+        "agree": 707
+      },
+      "rect.client.within1": {
+        "compared": 1452,
+        "agree": 709
+      },
+      "rect.offset": {
+        "compared": 1452,
+        "agree": 315
+      },
+      "rect.offset.within1": {
+        "compared": 1452,
+        "agree": 329
+      },
+      "rect.scroll": {
+        "compared": 1452,
+        "agree": 689
+      },
+      "rect.scroll.within1": {
+        "compared": 1452,
+        "agree": 691
+      },
+      "stacking.context": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "stacking.root": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style.all": {
+        "compared": 114708,
+        "agree": 99697
+      },
+      "style.uncomputed": {
+        "compared": 24684,
+        "agree": 0
+      },
+      "style:background-attachment": {
+        "compared": 1452,
+        "agree": 1392
+      },
+      "style:background-clip": {
+        "compared": 1452,
+        "agree": 1392
+      },
+      "style:background-color": {
+        "compared": 1452,
+        "agree": 1195
+      },
+      "style:background-image": {
+        "compared": 1452,
+        "agree": 1442
+      },
+      "style:background-repeat": {
+        "compared": 1452,
+        "agree": 1392
+      },
+      "style:background-size": {
+        "compared": 1452,
+        "agree": 1384
+      },
+      "style:border-bottom-color": {
+        "compared": 1452,
+        "agree": 59
+      },
+      "style:border-bottom-style": {
+        "compared": 1452,
+        "agree": 1450
+      },
+      "style:border-bottom-width": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:border-left-color": {
+        "compared": 1452,
+        "agree": 59
+      },
+      "style:border-left-style": {
+        "compared": 1452,
+        "agree": 1450
+      },
+      "style:border-left-width": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:border-right-color": {
+        "compared": 1452,
+        "agree": 59
+      },
+      "style:border-right-style": {
+        "compared": 1452,
+        "agree": 1444
+      },
+      "style:border-right-width": {
+        "compared": 1452,
+        "agree": 1446
+      },
+      "style:border-top-color": {
+        "compared": 1452,
+        "agree": 59
+      },
+      "style:border-top-style": {
+        "compared": 1452,
+        "agree": 1450
+      },
+      "style:border-top-width": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:bottom": {
+        "compared": 1452,
+        "agree": 1352
+      },
+      "style:box-shadow": {
+        "compared": 1452,
+        "agree": 1390
+      },
+      "style:clear": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:clip-path": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:color": {
+        "compared": 1452,
+        "agree": 45
+      },
+      "style:content": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:direction": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:display": {
+        "compared": 1452,
+        "agree": 1201
+      },
+      "style:filter": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:float": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:font-family": {
+        "compared": 1452,
+        "agree": 0
+      },
+      "style:font-size": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:font-style": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:font-weight": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:height": {
+        "compared": 1452,
+        "agree": 1037
+      },
+      "style:isolation": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:left": {
+        "compared": 1452,
+        "agree": 1356
+      },
+      "style:letter-spacing": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:line-height": {
+        "compared": 1452,
+        "agree": 1446
+      },
+      "style:list-style-type": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:margin-bottom": {
+        "compared": 1452,
+        "agree": 1442
+      },
+      "style:margin-left": {
+        "compared": 1452,
+        "agree": 1436
+      },
+      "style:margin-right": {
+        "compared": 1452,
+        "agree": 1446
+      },
+      "style:margin-top": {
+        "compared": 1452,
+        "agree": 1441
+      },
+      "style:max-height": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:max-width": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:min-height": {
+        "compared": 1452,
+        "agree": 1448
+      },
+      "style:min-width": {
+        "compared": 1452,
+        "agree": 1448
+      },
+      "style:mix-blend-mode": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:opacity": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:outline-color": {
+        "compared": 1452,
+        "agree": 55
+      },
+      "style:outline-offset": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:outline-style": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:outline-width": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:overflow-wrap": {
+        "compared": 1452,
+        "agree": 1450
+      },
+      "style:overflow-x": {
+        "compared": 1452,
+        "agree": 1448
+      },
+      "style:overflow-y": {
+        "compared": 1452,
+        "agree": 1448
+      },
+      "style:padding-bottom": {
+        "compared": 1452,
+        "agree": 1262
+      },
+      "style:padding-left": {
+        "compared": 1452,
+        "agree": 1215
+      },
+      "style:padding-right": {
+        "compared": 1452,
+        "agree": 1215
+      },
+      "style:padding-top": {
+        "compared": 1452,
+        "agree": 1262
+      },
+      "style:pointer-events": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:position": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:right": {
+        "compared": 1452,
+        "agree": 1352
+      },
+      "style:table-layout": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:text-align": {
+        "compared": 1452,
+        "agree": 1174
+      },
+      "style:text-decoration-color": {
+        "compared": 1452,
+        "agree": 45
+      },
+      "style:text-decoration-line": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:text-decoration-style": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:text-indent": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:text-shadow": {
+        "compared": 1452,
+        "agree": 1418
+      },
+      "style:text-transform": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:top": {
+        "compared": 1452,
+        "agree": 1352
+      },
+      "style:transform": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:unicode-bidi": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:vertical-align": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:visibility": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:width": {
+        "compared": 1452,
+        "agree": 568
+      },
+      "style:word-break": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:word-spacing": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "style:z-index": {
+        "compared": 1452,
+        "agree": 1452
+      },
+      "text.bounds": {
+        "compared": 818,
+        "agree": 128
+      },
+      "text.boxes.bounds": {
+        "compared": 808,
+        "agree": 128
+      },
+      "text.boxes.count": {
+        "compared": 818,
+        "agree": 808
+      },
+      "text.boxes.ranges": {
+        "compared": 808,
+        "agree": 784
+      },
+      "text.layoutText": {
+        "compared": 818,
+        "agree": 818
+      },
+      "text.opacity": {
+        "compared": 1452,
+        "agree": 1452
+      }
+    }
+  }
+}
