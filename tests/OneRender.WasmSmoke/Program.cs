@@ -93,6 +93,13 @@ if (!ixHit || ixClicks != 1)
     throw new InvalidOperationException("interaction failed");
 }
 
+// Transforms, filters, clip paths, masks, blending and an inline svg on WebAssembly too.
+RgbaImage fxPage = HtmlRender.ToImage(
+    "<body style='margin:0'><div style='width:20px;height:20px;background:#f00;transform:rotate(10deg);filter:blur(1px);clip-path:circle(50%);mask-image:linear-gradient(#000,#000);mix-blend-mode:multiply'></div>"
+    + "<svg width='20' height='20'><rect width='20' height='20' fill='#0a0'/></svg></body>",
+    new HtmlRenderOptions { Width = 64, Height = 64 });
+Console.WriteLine($"effects {fxPage.Pixels[((10 * 64) + 10) * 4]}");
+
 internal sealed class NoFonts : OneRender.Layout.IFontProvider
 {
     public OneRender.Text.FontCatalog Catalog => throw new NotSupportedException();
@@ -103,10 +110,3 @@ internal sealed class NoFonts : OneRender.Layout.IFontProvider
 
     public OneRender.Text.FontMetricsInfo GetMetrics(in OneRender.Style.ComputedValues style) => throw new NotSupportedException();
 }
-
-// Transforms, filters, clip paths, masks, blending and an inline svg on WebAssembly too.
-RgbaImage fxPage = HtmlRender.ToImage(
-    "<body style='margin:0'><div style='width:20px;height:20px;background:#f00;transform:rotate(10deg);filter:blur(1px);clip-path:circle(50%);mask-image:linear-gradient(#000,#000);mix-blend-mode:multiply'></div>"
-    + "<svg width='20' height='20'><rect width='20' height='20' fill='#0a0'/></svg></body>",
-    new HtmlRenderOptions { Width = 64, Height = 64 });
-Console.WriteLine($"effects {fxPage.Pixels[((10 * 64) + 10) * 4]}");
