@@ -2,6 +2,17 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] - TBD
+
+### Added
+
+- `InteractivePage.SetTextContent`, `SetClassName`, `AddClass`, `RemoveClass`, `ToggleClass`, `SetAttribute`, `RemoveAttribute`, `GetTextContent`, `GetClassName` and `GetAttribute`: change the text of an element with one text node, and classes and attributes (`disabled`, `hidden`, `style`, `checked`, `value`, `href`, `tabindex`, `name` ...) of HTML elements, after the page was created. The page restyles, lays out and paints incrementally where it can (otherwise it is built again from the edited document), keeps focus, hover, scroll and form state, moves focus off an element that stops being focusable, and equals a page created from the equivalent HTML. Text changes allocate nothing once warm; class and attribute changes make a new OneHtml document snapshot (about 0.8 MB on a 1,800-node page; attributes a control reads when its boxes are made, such as `value`, `checked` and `type`, rebuild the page, about 7 MB). Use text, `transform`, `opacity` or a hover rule for per-frame changes. See `docs/game-hosts.md`.
+
+### Fixed
+
+- A radio group whose checked radio is the page's first tab stop kept the wrong stop (the first or last radio instead of the checked one).
+- `InteractivePage.SetValue` threw a `NullReferenceException` on a text control that had never been focused.
+
 ## [1.0.1] - 2026-10-27
 
 ### Fixed
@@ -45,5 +56,6 @@ First release. All packages share one version.
 - Container queries and `@scope` depend on OneHtml support that is not yet available.
 - WOFF2 fonts on browser WebAssembly need decoded bytes from the host (the platform has no Brotli).
 
+[1.1.0]: https://github.com/recursive-ai-oss/onerender-csharp/releases/tag/v1.1.0
 [1.0.1]: https://github.com/recursive-ai-oss/onerender-csharp/releases/tag/v1.0.1
 [1.0.0]: https://github.com/recursive-ai-oss/onerender-csharp/releases/tag/v1.0.0
