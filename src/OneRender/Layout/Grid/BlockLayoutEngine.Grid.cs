@@ -384,6 +384,12 @@ public sealed partial class BlockLayoutEngine
                 continue;
             }
 
+            if (list.IsSubgrid)
+            {
+                // A subgrid that cannot share its parent's tracks (too deep, or measured on its own) behaves as `none`.
+                list = GridTrackList.None;
+            }
+
             double size = a == 0 ? cx.CW : cx.CH;
             double max = a == 0 ? double.NaN : cx.MaxCH;
             double min = a == 0 ? double.NaN : cx.MinCH;

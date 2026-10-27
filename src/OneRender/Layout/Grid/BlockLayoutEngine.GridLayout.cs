@@ -225,6 +225,23 @@ public sealed partial class BlockLayoutEngine
                 child.CH = Math.Max(0, h - child.BpT - child.BpB);
                 child.Org1 = it.Y + child.BpT;
             }
+            else
+            {
+                // The subgrid's own rows were sized before the item's final height was known: auto rows now take the extra room.
+                double room = Math.Max(0, h - child.BpT - child.BpB);
+                if (room > child.CH + 1e-6)
+                {
+                    ref readonly ComputedValues cv = ref _boxes.Make(child.Box).Values;
+                    GridAxis own = L.AxisOf(it.Child, 1);
+                    if (cv.AlignContent is AlignKind.Normal or AlignKind.Stretch)
+                    {
+                        GridTrackSizer.StretchAuto(own, room, double.NaN);
+                    }
+
+                    AlignTracks(own, in cv, 1, room, false);
+                    child.CH = room;
+                }
+            }
         }
         else
         {

@@ -1002,7 +1002,7 @@ internal sealed class GridTrackSizer
 
     // ---- §12.8 ----
 
-    private static void StretchAuto(GridAxis ax, double available, double containerMin)
+    internal static void StretchAuto(GridAxis ax, double available, double containerMin)
     {
         int n = ax.Count;
         double space = double.IsNaN(available) ? containerMin : available;
