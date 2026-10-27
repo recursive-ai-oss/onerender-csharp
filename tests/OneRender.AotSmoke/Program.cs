@@ -95,6 +95,17 @@ if (gridPage.Fragments.Root.IsNull || gridPage.Fragments.Root.BorderBox.Width !=
     return 6;
 }
 
+// The second paint area (layered backgrounds, gradients, shadows, border-image, outlines, decoration, text-shadow, markers) draws
+// through the same style parsers and painter code that must survive trimming and AOT.
+RgbaImage paintPage = HtmlRender.ToImage(
+    "<body style='margin:0;font:14px Arial'><div style='width:40px;height:20px;background:linear-gradient(#f00,#f00) 0 0/10px 10px space,radial-gradient(circle,#fff,#00f);border:3px solid;border-image:linear-gradient(#0f0,#00f) 1;box-shadow:2px 2px 3px #888,inset 0 0 4px #000;outline:2px auto'></div><p style='text-decoration:underline wavy #f00;text-shadow:1px 1px 2px #000;margin:2px'>Hi</p><ul><li>x</li></ul></body>",
+    new HtmlRenderOptions { Width = 80, Height = 80 });
+bool paintOk = paintPage.Pixels[((8 * 80) + 5) * 4 + 1] == 255 || paintPage.Pixels[((8 * 80) + 5) * 4 + 2] == 255;
+if (!paintOk)
+{
+    return 7;
+}
+
 Console.WriteLine($"{styled.Count} styled nodes, {boxTree.Count} boxes, scroll patch {scrollOk}");
 if (boxTree.Count < 8 || !dump.Contains("flex", StringComparison.Ordinal))
 {
