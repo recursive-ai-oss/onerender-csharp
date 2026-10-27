@@ -45,6 +45,15 @@ scrollPainter.Paint(scrollPage.Fragments, scrollList, new PaintOptions(100, 50) 
 scrollPage.Scroll.SetViewportOffset(0, 30);
 bool scrollOk = scrollPainter.PatchScroll(scrollList) > 0;
 
+// A wrapping flex container with grow and gap: the flex algorithm must survive trimming and AOT.
+HtmlPage flexPage = HtmlPage.Create(
+    "<body style='margin:0'><div style='display:flex;flex-wrap:wrap;gap:10px;width:100px'><div style='flex:1 1 40px;height:10px'></div><div style='flex:1 1 40px;height:10px'></div><div style='flex:1 1 40px;height:10px'></div></div></body>",
+    new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 100, ViewportHeight = 50 });
+if (flexPage.Fragments.Root.IsNull || flexPage.Fragments.Root.BorderBox.Width != 100)
+{
+    return 5;
+}
+
 Console.WriteLine($"{styled.Count} styled nodes, {boxTree.Count} boxes, scroll patch {scrollOk}");
 if (boxTree.Count < 8 || !dump.Contains("flex", StringComparison.Ordinal))
 {
