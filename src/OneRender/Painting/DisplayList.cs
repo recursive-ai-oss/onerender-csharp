@@ -1121,6 +1121,7 @@ public sealed partial class DisplayList
         public RectF Device;
         public RectF Rel;
         public int Num;
+        public int NumN;
         public int A;
         public int B;
         public int C;

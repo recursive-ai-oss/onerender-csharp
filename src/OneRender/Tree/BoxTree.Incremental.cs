@@ -26,6 +26,45 @@ public sealed partial class BoxTree
     internal const byte HazardColumns = 2;
     internal const byte HazardTable = 4;
 
+    private const int MaxTouched = 4096;
+    private int[] _touched = new int[64];
+    private int _touchedCount;
+    private bool _touchedOverflow = true;
+
+    /// <summary>
+    /// True when the list of touched boxes cannot be trusted: the boxes were generated again or more than 4,096 were touched since
+    /// <see cref="ClearTouched"/>.
+    /// </summary>
+    internal bool TouchedOverflow => _touchedOverflow;
+
+    /// <summary>How many boxes had their style or text patched since <see cref="ClearTouched"/> (a box can appear twice).</summary>
+    internal int TouchedCount => _touchedCount;
+
+    internal int TouchedAt(int i) => _touched[i];
+
+    /// <summary>Forgets the touched boxes once paint has used them; the list is trusted again from here.</summary>
+    internal void ClearTouched()
+    {
+        _touchedCount = 0;
+        _touchedOverflow = false;
+    }
+
+    private void Touch(int box)
+    {
+        if (_touchedCount == MaxTouched)
+        {
+            _touchedOverflow = true;
+            return;
+        }
+
+        if (_touchedCount == _touched.Length)
+        {
+            Array.Resize(ref _touched, _touchedCount * 2);
+        }
+
+        _touched[_touchedCount++] = box;
+    }
+
     private byte[] _dirty = new byte[64];
     private byte[] _hazard = new byte[64];
     private int[] _dirtyList = new int[64];
@@ -72,6 +111,8 @@ public sealed partial class BoxTree
     private void PrepareIncremental()
     {
         _epoch++;
+        _touchedOverflow = true;
+        _touchedCount = 0;
         if (_dirty.Length < _count)
         {
             int size = Math.Max(_count, _dirty.Length * 2);
@@ -231,6 +272,7 @@ public sealed partial class BoxTree
             {
                 for (int b = principal; b >= 0; b = _nextPiece[b])
                 {
+                    Touch(b);
                     MarkDirty(b);
                 }
 
@@ -266,6 +308,7 @@ public sealed partial class BoxTree
 
     private void PatchStyle(int box, StyleId sid, bool layout)
     {
+        Touch(box);
         if (_style[box] != sid.Index)
         {
             _style[box] = sid.Index;
@@ -320,6 +363,7 @@ public sealed partial class BoxTree
                 StyleId ns = Styled.Styles.GetAnonymous(new StyleId(_style[p]), display);
                 if (ns.Index != _style[c])
                 {
+                    Touch(c);
                     _style[c] = ns.Index;
                     if (layout)
                     {

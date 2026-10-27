@@ -99,6 +99,9 @@ public sealed class LivePage
     private readonly PipelineUpdater _updater;
     private readonly Painter _painter = new();
     private int _generation;
+#pragma warning disable CA2211, CS1591
+    public static long TRestyle, TLayout, TPaint, TCount;
+#pragma warning restore CA2211
 
     /// <summary>Builds the boxes of <paramref name="tree"/>, lays them out and paints them. The tree starts recording edits from here.</summary>
     /// <param name="tree">The styled tree; it must not be shared with another page.</param>
@@ -196,24 +199,52 @@ public sealed class LivePage
         }
 
         cancellationToken.ThrowIfCancellationRequested();
+        long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
         _updater.Restyle();
+        long t1 = System.Diagnostics.Stopwatch.GetTimestamp();
         FlushWork work = _updater.UpdateBoxesAndLayout(cancellationToken);
         int reused = _updater.ReusedSubtrees;
-        PaintAll(cancellationToken);
+        long t2 = System.Diagnostics.Stopwatch.GetTimestamp();
+        PaintFlush(work, cancellationToken);
+        long t3 = System.Diagnostics.Stopwatch.GetTimestamp();
+        TRestyle += t1 - t0; TLayout += t2 - t1; TPaint += t3 - t2; TCount++;
         work |= FlushWork.Repainted;
         _generation++;
         return new FlushResult(work, reused);
     }
 
+    private PaintOptions PaintOptionsNow() => new(_updater.Width, _updater.Height)
+    {
+        Scroll = Scroll,
+        Images = _options.Images,
+        Fonts = _options.Fonts,
+        DevicePixelRatio = _options.DevicePixelRatio,
+    };
+
     private void PaintAll(CancellationToken cancellationToken)
     {
-        var paint = new PaintOptions(_updater.Width, _updater.Height)
-        {
-            Scroll = Scroll,
-            Images = _options.Images,
-            Fonts = _options.Fonts,
-            DevicePixelRatio = _options.DevicePixelRatio,
-        };
+        PaintOptions paint = PaintOptionsNow();
         _painter.Paint(Fragments, Display, in paint, cancellationToken);
+        Boxes.ClearTouched();
     }
+
+    // Rewrites the items of the fragments that changed when the layout kept every fragment in place; otherwise paints the whole list.
+    private void PaintFlush(FlushWork work, CancellationToken cancellationToken)
+    {
+        if ((work & FlushWork.BoxesRebuilt) == 0)
+        {
+            PaintOptions paint = PaintOptionsNow();
+            bool layoutRan = (work & FlushWork.Relaid) != 0;
+            if (_painter.TryPatch(Fragments, Display, in paint, layoutRan ? _updater.LayoutDelta : null, layoutRan))
+            {
+                Boxes.ClearTouched();
+                return;
+            }
+        }
+
+        PaintAll(cancellationToken);
+    }
+
+    /// <summary>How many flushes rewrote only the changed items of the display list instead of painting all of it.</summary>
+    internal int PatchedPaints => _painter.PatchedPaints;
 }

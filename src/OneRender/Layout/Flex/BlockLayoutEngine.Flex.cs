@@ -147,7 +147,9 @@ public sealed partial class BlockLayoutEngine
     private bool _budgetReported;
     private FlexMemo[] _memo = new FlexMemo[256];
     private int _memoGen;
-    private int _memoCount;
+    private int _memoBase;
+    private FlexMemo[] _memoSpare = [];
+    private int _memoUsed;
     private bool[] _pctBlock = [];
     private bool _pctReady;
     private int[] _absBoxes = new int[16];
@@ -163,13 +165,20 @@ public sealed partial class BlockLayoutEngine
         _flexWork = 0;
         _flexBudget = FlexBudgetBase + FlexBudgetPerBox * boxCount;
         _budgetReported = false;
+        // Measurements are kept between layouts for boxes whose subtree did not change (see FlexMemoLive); anything else starts over.
         if (++_memoGen == int.MaxValue)
         {
             Array.Clear(_memo);
-            _memoGen = 1;
+            _memoGen = 2;
+            _memoBase = 1;
+            _memoUsed = 0;
         }
 
-        _memoCount = 0;
+        if (!_reuse)
+        {
+            _memoBase = _memoGen;
+        }
+
         _pctReady = false;
     }
 
@@ -556,6 +565,10 @@ public sealed partial class BlockLayoutEngine
         _pctReady = true;
     }
 
+    // An entry is live when it was written by this layout, or by an earlier one for a box that has not changed since: a measurement
+    // depends on the box's subtree and on the inputs in its key, nothing else.
+    private bool FlexMemoLive(in FlexMemo m) => m.Gen == _memoGen || (m.Gen >= _memoBase && !_boxes.IsDirty(m.Box));
+
     private bool MemoLookup(int box, double w, double h, double cw, double ch, out double resH, out double resBase)
     {
         ch = PctKey(box, ch);
@@ -566,12 +579,12 @@ public sealed partial class BlockLayoutEngine
         while (true)
         {
             ref FlexMemo m = ref _memo[i];
-            if (m.Gen != _memoGen)
+            if (m.Gen == 0)
             {
                 return false;
             }
 
-            if (m.Box == box && Bits(m.W) == Bits(w) && Bits(m.H) == Bits(h) && Bits(m.CW) == Bits(cw) && Bits(m.CH) == Bits(ch))
+            if (m.Box == box && Bits(m.W) == Bits(w) && Bits(m.H) == Bits(h) && Bits(m.CW) == Bits(cw) && Bits(m.CH) == Bits(ch) && FlexMemoLive(in m))
             {
                 resH = m.ResH;
                 resBase = m.ResBase;
@@ -585,36 +598,61 @@ public sealed partial class BlockLayoutEngine
     private void MemoStore(int box, double w, double h, double cw, double ch, double resH, double resBase)
     {
         ch = PctKey(box, ch);
-        if ((_memoCount + 1) * 2 > _memo.Length)
+        if ((_memoUsed + 1) * 2 > _memo.Length)
         {
             MemoGrow();
         }
 
         int mask = _memo.Length - 1;
         int i = MemoHash(box, w, h, cw, ch) & mask;
-        while (_memo[i].Gen == _memoGen)
+        while (_memo[i].Gen != 0 && FlexMemoLive(in _memo[i]))
         {
             i = (i + 1) & mask;
         }
 
+        if (_memo[i].Gen == 0)
+        {
+            _memoUsed++;
+        }
+
         _memo[i] = new FlexMemo { Gen = _memoGen, Box = box, W = w, H = h, CW = cw, CH = ch, ResH = resH, ResBase = resBase };
-        _memoCount++;
     }
 
+    // Rebuilds the table from its live entries, larger when they fill more than a quarter of it.
     private void MemoGrow()
     {
         FlexMemo[] old = _memo;
-        _memo = new FlexMemo[old.Length * 2];
-        int mask = _memo.Length - 1;
+        int live = 0;
         foreach (FlexMemo m in old)
         {
-            if (m.Gen != _memoGen)
+            if (m.Gen != 0 && FlexMemoLive(in m))
+            {
+                live++;
+            }
+        }
+
+        int size = old.Length;
+        while (live * 4 > size)
+        {
+            size *= 2;
+        }
+
+        // The table already in the spare slot is reused when it has the size; growing is the only allocation.
+        FlexMemo[] fresh = _memoSpare.Length == size ? _memoSpare : new FlexMemo[size];
+        Array.Clear(fresh);
+        _memoSpare = old;
+        _memo = fresh;
+        _memoUsed = live;
+        int mask = size - 1;
+        foreach (FlexMemo m in old)
+        {
+            if (m.Gen == 0 || !FlexMemoLive(in m))
             {
                 continue;
             }
 
             int i = MemoHash(m.Box, m.W, m.H, m.CW, m.CH) & mask;
-            while (_memo[i].Gen == _memoGen)
+            while (_memo[i].Gen != 0)
             {
                 i = (i + 1) & mask;
             }

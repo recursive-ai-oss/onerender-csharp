@@ -36,6 +36,12 @@ public sealed partial class DisplayList
             throw new DisplayListException("Item id 0 is reserved.");
         }
 
+        if (_ow >= 0)
+        {
+            BeginStaged(kind, id, in local, flags, numReserve);
+            return;
+        }
+
         if (_count >= DisplayListLimits.MaxItems)
         {
             throw new DisplayListLimitException("A list holds at most " + DisplayListLimits.MaxItems + " items.");
@@ -78,17 +84,36 @@ public sealed partial class DisplayList
     {
         ref ItemRecord rec = ref _items[idx];
         rec.ContentHash = _hash;
+        rec.NumN = _numCount - rec.Num;
         PushState st = StateOf(rec.Parent);
         rec.CtxHash = st.Ctx;
         SetBounds(ref rec, in st);
+        if (_ow >= 0)
+        {
+            CommitStaged(idx, false);
+        }
     }
 
     private void FinishPush(int idx)
     {
         ref ItemRecord rec = ref _items[idx];
         rec.ContentHash = _hash;
+        rec.NumN = _numCount - rec.Num;
         PushState parent = StateOf(rec.Parent);
         rec.CtxHash = parent.Ctx;
+        if (_ow >= 0)
+        {
+            rec.State = _owSlot >= 0 ? _items[_owSlot].State : -1;
+            PushState s = ComputePush(idx, parent);
+            if (_owSlot >= 0)
+            {
+                _states[rec.State] = s;
+            }
+
+            CommitStaged(idx, true);
+            return;
+        }
+
         Grow(ref _states, _stateCount + 1);
         rec.State = _stateCount;
         _states[_stateCount++] = ComputePush(idx, parent);
@@ -157,6 +182,12 @@ public sealed partial class DisplayList
 
     private void Pop(ItemKind popKind, ItemKind pushKind)
     {
+        if (_ow >= 0)
+        {
+            PopStaged(popKind, pushKind);
+            return;
+        }
+
         // Tags carry no pixels and nest only for the sake of structure, so closing any other scope first closes the tags opened inside
         // it: a painter that opens a tag lazily, when content needs it, never has to track which scope it is in.
         if (popKind != ItemKind.EndTag)
@@ -196,6 +227,230 @@ public sealed partial class DisplayList
         _count++;
         _top = parent;
         _depth--;
+    }
+
+    // ---------------------------------------------------------------- in-place rewriting
+    //
+    // A painter that knows which part of the list is stale can write the same items again over their old slots: the item sequence
+    // (kinds, ids, nesting) must come out the same, only payloads and hashes may change. New items are built at the tail as usual (so
+    // every Draw/Push method works unchanged) and are then moved into the slot of the item they replace; the damage of each moved
+    // item is collected on the way. Payload tables (numbers, glyphs, text, paths) only grow while rewriting; a full rebuild
+    // (Clear) reclaims the space. A mismatch marks the rewrite failed and the caller paints the whole list again.
+
+    private int _ow = -1;
+    private int _owEnd;
+    private int _owSlot;
+    private bool _owFail;
+    private int _owSavedTop;
+    private int _owSavedDepth;
+    private DamageRegion? _owDamage;
+    private int[] _owRewalk = new int[16];
+    private int _owRewalkCount;
+
+    /// <summary>Payload entries (numbers, glyphs, text, paths, gradients, states) in use; a rewriting caller compares it with the size of the last full build to decide when to rebuild.</summary>
+    internal long PayloadSize => (long)_numCount + _glyphCount + _textCount + _coordCount + _stopCount + _stateCount + _gradientCount + _stringCount;
+
+    /// <summary>Makes room for rewriting to append twice what the list holds, so rewriting does not allocate until a full rebuild is due.</summary>
+    internal void ReserveHeadroom()
+    {
+        Grow(ref _items, _count + 8);
+        Grow(ref _num, (2 * _numCount) + 256);
+        Grow(ref _glyphIds, (2 * _glyphCount) + 256);
+        Grow(ref _glyphX, (2 * _glyphCount) + 256);
+        Grow(ref _glyphY, (2 * _glyphCount) + 256);
+        Grow(ref _glyphClusters, (2 * _glyphCount) + 256);
+        Grow(ref _text, (2 * _textCount) + 256);
+        Grow(ref _verbs, (2 * _verbCount) + 256);
+        Grow(ref _coords, (2 * _coordCount) + 256);
+        Grow(ref _paths, (2 * _pathCount) + 64);
+        Grow(ref _gradients, (2 * _gradientCount) + 8);
+        Grow(ref _stops, (2 * _stopCount) + 64);
+        Grow(ref _strings, (2 * _stringCount) + 16);
+    }
+
+    /// <summary>True while a rewrite is open.</summary>
+    internal bool Rewriting => _ow >= 0;
+
+    /// <summary>Starts rewriting the items <paramref name="start"/> to <paramref name="start"/> + <paramref name="count"/> - 1.</summary>
+    internal void BeginRewrite(int start, int count, DamageRegion damage)
+    {
+        _owSavedTop = _top;
+        _owSavedDepth = _depth;
+        _owFail = start < 0 || count < 0 || start + count > _count;
+        _top = count > 0 && !_owFail ? _items[start].Parent : _top;
+        _ow = start;
+        _owEnd = start + count;
+        _owSlot = -1;
+        _owDamage = damage;
+        _owRewalkCount = 0;
+    }
+
+    /// <summary>Ends a rewrite. True when the items came out in the same kinds, ids and nesting and filled the range exactly.</summary>
+    internal bool EndRewrite()
+    {
+        bool ok = !_owFail && _ow == _owEnd && _count >= 0;
+        _ow = -1;
+        _top = _owSavedTop;
+        _depth = _owSavedDepth;
+        if (ok)
+        {
+            for (int k = 0; k < _owRewalkCount; k++)
+            {
+                RewalkDamage(_owRewalk[k], _owDamage!);
+            }
+        }
+
+        _owRewalkCount = 0;
+        return ok;
+    }
+
+    private void BeginStaged(ItemKind kind, ItemId id, in RectF local, int flags, int numReserve)
+    {
+        Grow(ref _items, _count + 1);
+        Grow(ref _num, _numCount + numReserve);
+        int slot = -1;
+        if (!_owFail && _ow < _owEnd)
+        {
+            ref ItemRecord o = ref _items[_ow];
+            if (o.Id == id.Value && o.Kind == kind && o.Parent == _top)
+            {
+                slot = _ow++;
+            }
+        }
+
+        if (slot < 0)
+        {
+            _owFail = true;
+        }
+
+        _owSlot = slot;
+        _hash = Mix(HashSeed, (ulong)kind);
+        _items[_count] = new ItemRecord
+        {
+            Kind = kind,
+            Flags = flags,
+            Id = id.Value,
+            Local = local,
+            Num = _numCount,
+            Parent = _top,
+            Match = -1,
+            State = -1,
+        };
+        _count++;
+    }
+
+    // Moves the item built at the tail into the slot it replaces and records what changed.
+    private void CommitStaged(int idx, bool push)
+    {
+        int slot = _owSlot;
+        if (slot >= 0 && !_owFail)
+        {
+            ref ItemRecord o = ref _items[slot];
+            ref ItemRecord n = ref _items[idx];
+            bool changed = o.ContentHash != n.ContentHash || o.CtxHash != n.CtxHash || o.Device != n.Device;
+            if (changed)
+            {
+                _owDamage!.Add(o.Device);
+                _owDamage.Add(n.Device);
+                if (push)
+                {
+                    if (_owRewalkCount == _owRewalk.Length)
+                    {
+                        Array.Resize(ref _owRewalk, _owRewalk.Length * 2);
+                    }
+
+                    _owRewalk[_owRewalkCount++] = slot;
+                }
+            }
+
+            n.Match = o.Match;
+            n.State = o.State;
+            ReusePayload(ref o, ref n);
+            o = n;
+            if (push)
+            {
+                _top = slot;
+                _depth++;
+            }
+        }
+
+        _count--;
+    }
+
+    // The new item's payload sits at the tails of the tables. When it has the size of the old item's, it goes over the old payload and
+    // the tails shrink back, so a rewrite that changes values but not sizes does not grow the list.
+    private void ReusePayload(ref ItemRecord o, ref ItemRecord n)
+    {
+        if (n.NumN == o.NumN && n.Num + n.NumN == _numCount)
+        {
+            Array.Copy(_num, n.Num, _num, o.Num, n.NumN);
+            _numCount = n.Num;
+            n.Num = o.Num;
+        }
+
+        if (n.Kind == ItemKind.GlyphRun && n.C == o.C && n.E == o.E && n.B + n.C == _glyphCount && n.D + n.E == _textCount)
+        {
+            Array.Copy(_glyphIds, n.B, _glyphIds, o.B, n.C);
+            Array.Copy(_glyphX, n.B, _glyphX, o.B, n.C);
+            Array.Copy(_glyphY, n.B, _glyphY, o.B, n.C);
+            Array.Copy(_glyphClusters, n.B, _glyphClusters, o.B, n.C);
+            Array.Copy(_text, n.D, _text, o.D, n.E);
+            _glyphCount = n.B;
+            _textCount = n.D;
+            n.B = o.B;
+            n.D = o.D;
+        }
+    }
+
+    private void PopStaged(ItemKind popKind, ItemKind pushKind)
+    {
+        int top = _top;
+        if (_owFail || _ow >= _owEnd || top < 0 || FamilyOf(_items[top].Kind) != FamilyOf(pushKind))
+        {
+            _owFail = true;
+            return;
+        }
+
+        ref ItemRecord o = ref _items[_ow];
+        if (o.Kind != popKind || o.Match != top)
+        {
+            _owFail = true;
+            return;
+        }
+
+        int parent = _items[top].Parent;
+        o.CtxHash = StateOf(parent).Ctx;
+        _ow++;
+        _top = parent;
+        _depth--;
+    }
+
+    // Recomputes the state of a push whose payload changed and everything inside it, adding what moved to the damage.
+    private void RewalkDamage(int push, DamageRegion damage)
+    {
+        int end = _items[push].Match;
+        _states[_items[push].State] = ComputePush(push, StateOf(_items[push].Parent));
+        for (int j = push + 1; j < end; j++)
+        {
+            ref ItemRecord rec = ref _items[j];
+            PushState ps = StateOf(rec.Parent);
+            ulong oldCtx = rec.CtxHash;
+            RectF oldDevice = rec.Device;
+            rec.CtxHash = ps.Ctx;
+            if (IsPush(rec.Kind))
+            {
+                _states[rec.State] = ComputePush(j, ps);
+            }
+            else if (!IsPop(rec.Kind))
+            {
+                SetBounds(ref rec, in ps);
+                if (oldCtx != rec.CtxHash || oldDevice != rec.Device)
+                {
+                    damage.Add(oldDevice);
+                    damage.Add(rec.Device);
+                }
+            }
+        }
     }
 
     // ---------------------------------------------------------------- id table

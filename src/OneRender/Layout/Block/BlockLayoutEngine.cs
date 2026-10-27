@@ -183,6 +183,7 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace, 
         else
         {
             _memoValid = false;
+            Delta.Reset(false);
         }
 
         PrepareFlex(boxes.Count);

@@ -15,6 +15,7 @@ public sealed partial class FragmentTree
     /// <summary>Removes all children of <paramref name="parent"/> from its list and returns the first one (their sibling links stay, so the caller can walk them).</summary>
     internal int DetachChildren(int parent)
     {
+        _copyShifted = true;
         int first = _first[parent];
         _first[parent] = -1;
         _last[parent] = -1;
@@ -24,6 +25,7 @@ public sealed partial class FragmentTree
     /// <summary>Appends an existing fragment (detached, or a fresh piece) as the last child of <paramref name="parent"/>.</summary>
     internal void AppendChild(int parent, int child)
     {
+        _copyShifted = true;
         _parent[child] = parent;
         _next[child] = -1;
         if (_last[parent] >= 0)
@@ -44,6 +46,7 @@ public sealed partial class FragmentTree
     /// </summary>
     internal int NewPiece(int source, int previous, Rect rect)
     {
+        _copyShifted = true;
         if (_count == _kind.Length)
         {
             Grow();
@@ -80,10 +83,15 @@ public sealed partial class FragmentTree
         return i;
     }
 
-    internal void SetFragmentainer(int i, int index) => _fragmentainer[i] = index;
+    internal void SetFragmentainer(int i, int index)
+    {
+        _copyShifted = true;
+        _fragmentainer[i] = index;
+    }
 
     internal void SetRaw(int i, Rect rect, Insets border, Insets padding)
     {
+        _copyShifted = true;
         _x[i] = rect.X;
         _y[i] = rect.Y;
         _w[i] = rect.Width;
@@ -92,7 +100,15 @@ public sealed partial class FragmentTree
         _padding[i] = padding;
     }
 
-    internal void SetOverflowRaw(int i, Rect overflow) => _overflow[i] = overflow;
+    internal void SetOverflowRaw(int i, Rect overflow)
+    {
+        _copyShifted = true;
+        _overflow[i] = overflow;
+    }
 
-    internal void SetKindFlag(int i, FragmentTraits traits) => _traits[i] = (byte)traits;
+    internal void SetKindFlag(int i, FragmentTraits traits)
+    {
+        _copyShifted = true;
+        _traits[i] = (byte)traits;
+    }
 }
