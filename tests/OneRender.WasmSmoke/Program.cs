@@ -94,6 +94,25 @@ if (!ixHit || ixClicks != 1)
 }
 
 
+// Text editing: type into a field, compose through the IME, undo and read the value back.
+InteractivePage ed = InteractivePage.Create(
+    "<body style='margin:0'><input id=t value=hello></body>",
+    new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 300, ViewportHeight = 100 });
+Node edText = ed.Page.Document.GetElementById("t");
+ed.Focus(edText, FocusReason.Script);
+ed.SetSelection(edText, 5, 5);
+ed.HandleKey(new KeyInput { Key = "!", Down = true });
+ed.CompositionStart();
+ed.CompositionUpdate("ab", 1);
+ed.CompositionEnd("ab");
+string edValue = ed.GetValue(edText);
+ed.Undo();
+Console.WriteLine($"editing value={edValue} afterUndo={ed.GetValue(edText)}");
+if (edValue != "hello!ab")
+{
+    throw new InvalidOperationException("editing failed");
+}
+
 // Animations: a keyframe animation and a transition, ticked with the host clock; the events and the animated value must come out.
 InteractivePage mo = InteractivePage.Create(
     "<style>@keyframes f{from{opacity:0;transform:rotate(0deg)}to{opacity:1;transform:rotate(90deg)}}#a{width:20px;height:20px;animation:f 1s linear both}#b{width:10px;height:10px;opacity:0;transition:opacity 1s linear}#b:focus{opacity:1}</style><body style='margin:0'><div id=a></div><div id=b tabindex=0></div></body>",
