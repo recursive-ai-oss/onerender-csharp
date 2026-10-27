@@ -178,7 +178,7 @@ internal static class Targets
         string css = ff < 0 ? string.Empty : text[(ff + 1)..];
         string html = ff < 0 ? text : text[..ff];
         Document doc = Document.Parse("<style>" + css.Replace("</", "<\\/", StringComparison.Ordinal) + "</style>" + html);
-        DocumentStyles styles = DocumentStyles.Create(doc, new StyleContext(), new StyleSourceOptions { IncludeUserAgentSheet = true });
+        DocumentStyles styles = DocumentStyles.Create(doc, new StyleContext(), new StyleSourceOptions { IncludeUserAgentSheet = true, DeclarationValidator = OneRender.Style.StyleValidation.Validator });
         var tree = new StyledTree(null, new TreeLimits { MaxNodes = 1 << 14, MaxDepth = 256, MaxTextLength = 1 << 18 });
         new HtmlFrontEnd(tree).Build(styles);
         var boxes = new BoxTree(tree);
@@ -213,7 +213,7 @@ internal static class Targets
         string css = ff < 0 ? string.Empty : text[(ff + 1)..];
         string html = ff < 0 ? text : text[..ff];
         Document doc = Document.Parse("<style>" + css.Replace("</", "<\\/", StringComparison.Ordinal) + "</style>" + html);
-        DocumentStyles styles = DocumentStyles.Create(doc, new StyleContext(), new StyleSourceOptions { IncludeUserAgentSheet = true });
+        DocumentStyles styles = DocumentStyles.Create(doc, new StyleContext(), new StyleSourceOptions { IncludeUserAgentSheet = true, DeclarationValidator = OneRender.Style.StyleValidation.Validator });
         var tree = new StyledTree(null, new TreeLimits { MaxNodes = 1 << 14, MaxDepth = 256, MaxTextLength = 1 << 18 });
         new HtmlFrontEnd(tree).Build(styles);
         var boxes = new BoxTree(tree);
@@ -257,7 +257,7 @@ internal static class Targets
         string html = ff < 0 ? text : text[..ff];
         Document doc = Document.Parse("<style>" + css.Replace("</", "<\\/", StringComparison.Ordinal) + "</style>" + html);
         var context = new StyleContext { Media = new MediaFeatures { Width = 400, Height = 300 } };
-        DocumentStyles styles = DocumentStyles.Create(doc, context, new StyleSourceOptions { IncludeUserAgentSheet = true });
+        DocumentStyles styles = DocumentStyles.Create(doc, context, new StyleSourceOptions { IncludeUserAgentSheet = true, DeclarationValidator = OneRender.Style.StyleValidation.Validator });
         var tree = new StyledTree(null, new TreeLimits { MaxNodes = 1 << 12, MaxDepth = 256, MaxTextLength = 1 << 16 });
         new HtmlFrontEnd(tree).Build(styles);
         var boxes = new BoxTree(tree);
@@ -330,7 +330,7 @@ internal static class Targets
         string css = ff < 0 ? string.Empty : text[(ff + 1)..];
         string html = ff < 0 ? text : text[..ff];
         Document doc = Document.Parse("<style>" + css.Replace("</", "<\\/", StringComparison.Ordinal) + "</style>" + html);
-        DocumentStyles styles = DocumentStyles.Create(doc, new StyleContext(), new StyleSourceOptions { IncludeUserAgentSheet = true });
+        DocumentStyles styles = DocumentStyles.Create(doc, new StyleContext(), new StyleSourceOptions { IncludeUserAgentSheet = true, DeclarationValidator = OneRender.Style.StyleValidation.Validator });
         var tree = new StyledTree(null, new TreeLimits { MaxNodes = 1 << 12, MaxDepth = 128, MaxTextLength = 1 << 16 });
         new HtmlFrontEnd(tree).Build(styles);
         var boxes = new BoxTree(tree);

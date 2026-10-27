@@ -116,6 +116,7 @@ public sealed class HtmlPage
             IncludeUserAgentSheet = options.UserAgentStyles,
             UserSheets = options.UserAgentStyles ? [Stylesheet.Parse(UserAgentSupplement, null, null, cancellationToken)] : null,
             BaseUrl = options.BaseUrl,
+            DeclarationValidator = StyleValidation.Validator,
             Resolver = bytes is null ? null : url =>
             {
                 byte[]? b = bytes(url);

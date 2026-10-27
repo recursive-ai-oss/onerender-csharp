@@ -27,7 +27,7 @@ internal sealed class Pipeline
     {
         Document doc = Document.Parse(html);
         var context = new StyleContext { Media = new MediaFeatures { Width = viewportWidth, Height = viewportHeight } };
-        DocumentStyles styles = DocumentStyles.Create(doc, context, new StyleSourceOptions { IncludeUserAgentSheet = userAgentSheet });
+        DocumentStyles styles = DocumentStyles.Create(doc, context, new StyleSourceOptions { IncludeUserAgentSheet = userAgentSheet, DeclarationValidator = OneRender.Style.StyleValidation.Validator });
         var table = new OneRender.Style.StyleTable();
         table.SetViewport(viewportWidth, viewportHeight);
         var styled = new StyledTree(table) { Resolver = resolver };
