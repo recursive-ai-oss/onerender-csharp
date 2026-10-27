@@ -833,7 +833,7 @@ public sealed partial class Painter
             _vpEntry = k;
             _patch[k].Range = _vpRange;
         }
-        else if (v.Position == PositionKind.Fixed)
+        else if (v.Position == PositionKind.Fixed && !HasTransformedAncestor(f))
         {
             if (!_vpRange.CanScroll)
             {
@@ -1082,12 +1082,26 @@ public sealed partial class Painter
         return pushed;
     }
 
+    // Transforms 1 §2: inside a transformed box a fixed box is positioned against that box and scrolls with it.
+    private bool HasTransformedAncestor(int f)
+    {
+        for (int a = _tree.ParentOf(f); a >= 0; a = _tree.ParentOf(a))
+        {
+            if ((FragmentKind)_tree.KindOf(a) == FragmentKind.Box && _boxes.Make(_tree.BoxOf(a)).Values.CreatesTransformContext)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private int ContainingBlockOf(int f)
     {
         Box box = _boxes.Make(_tree.BoxOf(f));
         PositionKind p = box.Values.Position;
         int a = _tree.ParentOf(f);
-        if (p == PositionKind.Fixed)
+        if (p == PositionKind.Fixed && !HasTransformedAncestor(f))
         {
             return -1;
         }
@@ -1096,7 +1110,15 @@ public sealed partial class Painter
         {
             if ((FragmentKind)_tree.KindOf(a) == FragmentKind.Box)
             {
-                if (p != PositionKind.Absolute || _boxes.Make(_tree.BoxOf(a)).Values.Position != PositionKind.Static || a == 0)
+                if (p == PositionKind.Fixed)
+                {
+                    if (_boxes.Make(_tree.BoxOf(a)).Values.CreatesTransformContext)
+                    {
+                        return a;
+                    }
+                }
+                else if (p != PositionKind.Absolute || _boxes.Make(_tree.BoxOf(a)).Values.Position != PositionKind.Static
+                    || _boxes.Make(_tree.BoxOf(a)).Values.CreatesTransformContext || a == 0)
                 {
                     return a;
                 }

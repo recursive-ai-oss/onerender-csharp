@@ -64,7 +64,7 @@ public sealed partial class BlockLayoutEngine
         }
 
         Enqueue(in _frames[_sp - 1], box, staticStart, staticEnd, staticTop);
-        if (containingFragment >= 0 && box.Values.Position != PositionKind.Fixed)
+        if (containingFragment >= 0 && (box.Values.Position != PositionKind.Fixed || _abs[_absCount - 1].Cb >= 0))
         {
             _abs[_absCount - 1].Cb = containingFragment;
         }

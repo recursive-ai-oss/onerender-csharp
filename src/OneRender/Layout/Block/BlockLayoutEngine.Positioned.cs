@@ -206,13 +206,14 @@ public sealed partial class BlockLayoutEngine
             Array.Resize(ref _abs, _abs.Length * 2);
         }
 
-        bool fixedBox = c.Values.Position == PositionKind.Fixed;
+        // Transforms 1 §2: a transformed ancestor is the containing block of fixed boxes too, so they scroll with it.
+        bool fixedBox = c.Values.Position == PositionKind.Fixed && f.TfFrag < 0;
         _abs[_absCount++] = new AbsEntry
         {
             Box = c.Index,
             Parent = f.Frag,
             Frag = placeholder.Index,
-            Cb = fixedBox ? -1 : f.CbFrag,
+            Cb = fixedBox ? -1 : (c.Values.Position == PositionKind.Fixed ? f.TfFrag : f.CbFrag),
             Fixed = fixedBox,
             ParentRtl = (f.Flags & FrameFlags.Rtl) != 0,
             StaticStart = staticStart,

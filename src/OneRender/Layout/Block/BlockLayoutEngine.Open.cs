@@ -292,7 +292,9 @@ public sealed partial class BlockLayoutEngine
                 _out.SetBorderBox(rf, new Rect(x + relDx, y + relDy, borderW, bh));
             }
 
-            Attach(pi, x, y, borderW, bh, mb, double.NaN, 0, 0, borderW, bh, false, false, relDx, relDy);
+            double lOvL = 0, lOvT = 0, lOvR = borderW, lOvB = bh;
+            TransformOverflow(in v, borderW, bh, ref lOvL, ref lOvT, ref lOvR, ref lOvB);
+            Attach(pi, x, y, borderW, bh, mb, double.NaN, lOvL, lOvT, lOvR, lOvB, false, false, relDx, relDy);
             RecordTop(pi, rf, mt, mr, mb, ml);
             return;
         }
@@ -403,7 +405,8 @@ public sealed partial class BlockLayoutEngine
             OvT = scrollC ? bt : 0,
             OvR = scrollC ? double.NegativeInfinity : borderW,
             OvB = scrollC ? double.NegativeInfinity : 0,
-            CbFrag = v.Position != PositionKind.Static ? frag.Index : f.CbFrag,
+            CbFrag = v.Position != PositionKind.Static || v.CreatesTransformContext ? frag.Index : f.CbFrag,
+            TfFrag = v.CreatesTransformContext ? frag.Index : f.TfFrag,
             RelDx = relDx,
             RelDy = relDy,
             Settled = settled,
