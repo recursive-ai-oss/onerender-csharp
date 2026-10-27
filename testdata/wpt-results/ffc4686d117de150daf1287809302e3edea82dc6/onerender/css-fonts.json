@@ -8,15 +8,16 @@
   "sampleStride": 1,
   "counts": {
     "total": 551,
-    "pass": 162,
+    "pass": 163,
     "fail": 151,
-    "blank": 25,
-    "skipped": 213
+    "blank": 26,
+    "skipped": 211
   },
-  "rate": "0.4793",
+  "rate": "0.4794",
   "pass": [
     "css/css-fonts/alternates-order.html",
     "css/css-fonts/ascent-descent-override.html",
+    "css/css-fonts/downloadable-font-print.html",
     "css/css-fonts/first-available-font-001.html",
     "css/css-fonts/first-available-font-002.html",
     "css/css-fonts/first-available-font-003.html",
@@ -179,6 +180,7 @@
     "css/css-fonts/variations/variable-gpos-avar2.html"
   ],
   "blank": [
+    "css/css-fonts/downloadable-font-in-iframe-print.html",
     "css/css-fonts/font-palette-10.html",
     "css/css-fonts/font-palette-11.html",
     "css/css-fonts/font-palette-12.html",
@@ -379,8 +381,6 @@
     "css/css-fonts/crash-font-face-invalid-descriptor.html": "testharness.js test",
     "css/css-fonts/crash-large-grapheme-cluster.html": "testharness.js test",
     "css/css-fonts/discrete-no-interpolation.html": "testharness.js test",
-    "css/css-fonts/downloadable-font-in-iframe-print.html": "print reftest (paged output)",
-    "css/css-fonts/downloadable-font-print.html": "print reftest (paged output)",
     "css/css-fonts/downloadable-font-scoped-to-document.html": "reftest-wait (needs script)",
     "css/css-fonts/fallback-remote-to-data-url.html": "testharness.js test",
     "css/css-fonts/fallback-url-to-local.html": "testharness.js test",

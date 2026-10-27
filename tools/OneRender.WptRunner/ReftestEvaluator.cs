@@ -29,6 +29,16 @@ public interface IReftestRenderer
     RgbaImage Render(string wptPath);
 }
 
+/// <summary>A renderer that can also paginate: the pages of a print reftest, one image each, in order.</summary>
+public interface IPagedReftestRenderer : IReftestRenderer
+{
+    /// <summary>
+    /// Renders the document at <paramref name="wptPath"/> as pages of the print-reftest default size (12.7 cm by 7.62 cm, 12.7 mm margins)
+    /// unless the document's own <c>@page</c> rules say otherwise. At least one page. May throw; the caller records it as a failure.
+    /// </summary>
+    IReadOnlyList<RgbaImage> RenderPages(string wptPath);
+}
+
 /// <summary>
 /// Decides tests the way WPT's reftest rules say: a test with several references passes when at least one
 /// <c>match</c> reference matches and every <c>mismatch</c> reference differs; a reference with references of its own
@@ -42,6 +52,7 @@ public sealed class ReftestEvaluator
     private readonly ReftestStore _store;
     private readonly IReftestRenderer _renderer;
     private readonly ConcurrentDictionary<string, RgbaImage> _images = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, IReadOnlyList<RgbaImage>> _pages = new(StringComparer.Ordinal);
 
     /// <summary>Creates an evaluator over <paramref name="store"/> that renders with <paramref name="renderer"/>.</summary>
     public ReftestEvaluator(ReftestStore store, IReftestRenderer renderer)
@@ -59,10 +70,7 @@ public sealed class ReftestEvaluator
             return "file missing";
         }
 
-        // Print reftests: "-print" right before the extension, or a directory named "print" (WPT print-reftests doc).
-        string stem = testPath[(testPath.LastIndexOf('/') + 1)..];
-        int dot = stem.LastIndexOf('.');
-        if ((dot >= 0 && stem[..dot].EndsWith("-print", StringComparison.Ordinal)) || testPath.Contains("/print/", StringComparison.Ordinal))
+        if (IsPrint(testPath) && _renderer is not IPagedReftestRenderer)
         {
             return "print reftest (paged output)";
         }
@@ -108,6 +116,40 @@ public sealed class ReftestEvaluator
         return null;
     }
 
+    /// <summary>
+    /// True for a print reftest, by WPT's file-name rules: the last <c>-</c> segment of the name (before the extension and any
+    /// <c>.tentative</c>-style flags) is <c>print</c>, or a directory is named <c>print</c>. <c>bar-print.html</c> and
+    /// <c>bar-print.tentative.html</c> are print reftests; <c>bar-print-001.html</c> is not.
+    /// </summary>
+    public static bool IsPrint(string testPath)
+    {
+        string[] parts = testPath.Split('/');
+        for (int i = 0; i < parts.Length - 1; i++)
+        {
+            if (parts[i] == "print")
+            {
+                return true;
+            }
+        }
+
+        string name = parts[^1];
+        int dot = name.LastIndexOf('.');
+        if (dot >= 0)
+        {
+            name = name[..dot];
+        }
+
+        int dash = name.LastIndexOf('-');
+        if (dash < 0)
+        {
+            return false;
+        }
+
+        string flag = name[(dash + 1)..];
+        int flagEnd = flag.IndexOf('.', StringComparison.Ordinal);
+        return (flagEnd < 0 ? flag : flag[..flagEnd]) == "print";
+    }
+
     /// <summary>Runs one test.</summary>
     public Verdict Run(string testPath)
     {
@@ -121,23 +163,32 @@ public sealed class ReftestEvaluator
         {
             ReftestFile file = _store.Get(testPath)!;
             string reason = string.Empty;
-            bool ok = Holds(file, new HashSet<string>(StringComparer.Ordinal) { testPath }, 0, ref reason);
+            bool print = IsPrint(testPath);
+            bool ok = Holds(file, new HashSet<string>(StringComparer.Ordinal) { testPath }, 0, print, file, ref reason);
             if (!ok)
             {
                 return new Verdict(Outcome.Fail, reason);
             }
 
-            return ImageComparer.IsBlank(Image(testPath))
+            bool blank = print
+                ? Pages(testPath, file).All(ImageComparer.IsBlank)
+                : ImageComparer.IsBlank(Image(testPath));
+            return blank
                 ? new Verdict(Outcome.Blank, "test rendered nothing")
                 : new Verdict(Outcome.Pass, string.Empty);
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
+            if (Environment.GetEnvironmentVariable("ONERENDER_WPT_TRACE") is not null)
+            {
+                Console.Error.WriteLine(testPath + ": " + ex);
+            }
+
             return new Verdict(Outcome.Fail, "error: " + ex.GetType().Name + ": " + FirstLine(ex.Message));
         }
     }
 
-    private bool Holds(ReftestFile node, HashSet<string> path, int depth, ref string reason)
+    private bool Holds(ReftestFile node, HashSet<string> path, int depth, bool print, ReftestFile root, ref string reason)
     {
         if (depth > MaxChainDepth)
         {
@@ -154,7 +205,7 @@ public sealed class ReftestEvaluator
             }
 
             anyMatch = true;
-            if (RefHolds(node, l, path, depth, ref reason))
+            if (RefHolds(node, l, path, depth, print, root, ref reason))
             {
                 matched = true;
                 break;
@@ -168,7 +219,7 @@ public sealed class ReftestEvaluator
 
         foreach (ReferenceLink l in node.References)
         {
-            if (l.Mismatch && !RefHolds(node, l, path, depth, ref reason))
+            if (l.Mismatch && !RefHolds(node, l, path, depth, print, root, ref reason))
             {
                 return false;
             }
@@ -177,7 +228,7 @@ public sealed class ReftestEvaluator
         return true;
     }
 
-    private bool RefHolds(ReftestFile node, ReferenceLink link, HashSet<string> path, int depth, ref string reason)
+    private bool RefHolds(ReftestFile node, ReferenceLink link, HashSet<string> path, int depth, bool print, ReftestFile root, ref string reason)
     {
         ReftestFile refFile = _store.Get(link.Path)!;
         FuzzySpec? fuzzy = null;
@@ -192,7 +243,17 @@ public sealed class ReftestEvaluator
 
         fuzzy ??= node.Fuzzy.Find(static f => f.Reference is null);
 
-        bool equal = ImageComparer.AreEqual(Image(node.Path), Image(link.Path), fuzzy, out string detail);
+        bool equal;
+        string detail;
+        if (print)
+        {
+            equal = PagesEqual(Pages(node.Path, root), Pages(link.Path, root), fuzzy, out detail);
+        }
+        else
+        {
+            equal = ImageComparer.AreEqual(Image(node.Path), Image(link.Path), fuzzy, out detail);
+        }
+
         if (equal == link.Mismatch)
         {
             string name = link.Path[(link.Path.LastIndexOf('/') + 1)..];
@@ -213,9 +274,48 @@ public sealed class ReftestEvaluator
             return true;
         }
 
-        bool ok = Holds(refFile, path, depth + 1, ref reason);
+        bool ok = Holds(refFile, path, depth + 1, print, root, ref reason);
         path.Remove(link.Path);
         return ok;
+    }
+
+    // Print reftests compare page by page; the fuzzy allowance applies to each page separately (WPT print-reftests doc).
+    // Different page counts never match. A "mismatch" reference therefore holds when any page differs or the counts differ.
+    private static bool PagesEqual(IReadOnlyList<RgbaImage> a, IReadOnlyList<RgbaImage> b, FuzzySpec? fuzzy, out string detail)
+    {
+        if (a.Count != b.Count)
+        {
+            detail = $"{a.Count} pages vs {b.Count}";
+            return false;
+        }
+
+        for (int i = 0; i < a.Count; i++)
+        {
+            if (!ImageComparer.AreEqual(a[i], b[i], fuzzy, out string d))
+            {
+                detail = $"page {i + 1}: {d}";
+                return false;
+            }
+        }
+
+        detail = string.Empty;
+        return true;
+    }
+
+    private IReadOnlyList<RgbaImage> Pages(string path, ReftestFile root)
+    {
+        if (!_pages.TryGetValue(path, out IReadOnlyList<RgbaImage>? all))
+        {
+            all = ((IPagedReftestRenderer)_renderer).RenderPages(path);
+            if (_pages.Count >= 24)
+            {
+                _pages.Clear();
+            }
+
+            _pages[path] = all;
+        }
+
+        return PageRanges.Select(all, root.RangesFor(path));
     }
 
     private RgbaImage Image(string path)

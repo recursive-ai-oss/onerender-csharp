@@ -8,12 +8,12 @@
   "sampleStride": 1,
   "counts": {
     "total": 497,
-    "pass": 101,
+    "pass": 103,
     "fail": 66,
     "blank": 0,
-    "skipped": 330
+    "skipped": 328
   },
-  "rate": "0.6048",
+  "rate": "0.6095",
   "pass": [
     "css/css-values/angle-units-002.html",
     "css/css-values/angle-units-003.html",
@@ -110,7 +110,9 @@
     "css/css-values/vh-support-transform-translate.html",
     "css/css-values/vh-support.html",
     "css/css-values/vh-zero-support.html",
+    "css/css-values/viewport-page-print.html",
     "css/css-values/viewport-unit-011.html",
+    "css/css-values/viewport-units-001-print.html",
     "css/css-values/viewport-units-scrollbars-custom-001.html",
     "css/css-values/viewport-units-scrollbars-scroll-vhw-001.html",
     "css/css-values/viewport-units-scrollbars-scroll-vw-001.html",
@@ -491,9 +493,7 @@
     "css/css-values/using-font-relative-units-in-font-properties.html": "testharness.js test",
     "css/css-values/various-values-important.html": "testharness.js test",
     "css/css-values/vh-update-and-transition-in-subframe.html": "reftest-wait (needs script)",
-    "css/css-values/viewport-page-print.html": "print reftest (paged output)",
     "css/css-values/viewport-relative-lengths-scaled-viewport.html": "testharness.js test",
-    "css/css-values/viewport-units-001-print.html": "print reftest (paged output)",
     "css/css-values/viewport-units-after-font-load.html": "testharness.js test",
     "css/css-values/viewport-units-compute.html": "testharness.js test",
     "css/css-values/viewport-units-css2-001.html": "testharness.js test",

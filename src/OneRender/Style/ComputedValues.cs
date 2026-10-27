@@ -681,6 +681,9 @@ public partial struct ComputedValues
     /// <summary><c>break-after</c>.</summary>
     public BreakKind BreakAfter { get; internal set; }
 
+    /// <summary><c>contain</c> (not inherited, initially none).</summary>
+    public ContainParts Contain { get; internal set; }
+
     /// <summary><c>break-inside</c>.</summary>
     public BreakInsideKind BreakInside { get; internal set; }
 

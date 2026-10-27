@@ -448,6 +448,14 @@ public sealed partial class BlockLayoutEngine
             return;
         }
 
+        if (c.ChildLayout == ChildLayout.Inline && c.FirstChild.Kind == BoxKind.Inline && HasOnlyPhantomLines(c))
+        {
+            // CSS Inline 3 §2.2 (phantom line boxes): a line with no text, no atomic inline and no inline box whose margins, borders or
+            // padding take up inline-axis room is treated as if it were not there, so the container is empty and its margins collapse through.
+            _frames[ni].NextChild = -1;
+            return;
+        }
+
         if (c.ChildLayout == ChildLayout.Inline && c.FirstChild.Kind == BoxKind.Marker && (c.FirstChild.Flags & BoxTraits.OutsideMarker) != 0)
         {
             // The block loop never visits the children of a container with inline content, so the marker is placed here.
@@ -498,6 +506,43 @@ public sealed partial class BlockLayoutEngine
             }
         }
     }
+
+    // True when everything inline in the container is a chain of empty inline boxes with no inline-axis margin, border or padding.
+    private static bool HasOnlyPhantomLines(Box c)
+    {
+        Box cur = c.FirstChild;
+        int visited = 0;
+        while (true)
+        {
+            if (cur.Kind != BoxKind.Inline || (cur.Flags & BoxTraits.OutOfFlow) != 0 || !ZeroInlineAxisEdges(in cur.Values) || ++visited > 256)
+            {
+                return false;
+            }
+
+            Box child = cur.FirstChild;
+            if (!child.IsNull)
+            {
+                cur = child;
+                continue;
+            }
+
+            while (cur.NextSibling.IsNull)
+            {
+                cur = cur.Parent;
+                if (cur.Index == c.Index)
+                {
+                    return true;
+                }
+            }
+
+            cur = cur.NextSibling;
+        }
+    }
+
+    private static bool ZeroInlineAxisEdges(in ComputedValues v) =>
+        v.MarginLeft.Kind == LengthKind.Px && v.MarginLeft.Value == 0 && v.MarginRight.Kind == LengthKind.Px && v.MarginRight.Value == 0
+        && v.PaddingLeft.Kind == LengthKind.Px && v.PaddingLeft.Value == 0 && v.PaddingRight.Kind == LengthKind.Px && v.PaddingRight.Value == 0
+        && v.BorderLeftWidth == 0 && v.BorderRightWidth == 0;
 
     /// <summary>
     /// CSS2 §10.3.3 (block-level, normal flow), §10.3.4 (replaced), §10.3.5 and §10.3.6 (floats, shrink-to-fit): the used border-box

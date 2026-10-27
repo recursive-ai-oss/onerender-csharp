@@ -15,6 +15,9 @@ internal sealed partial class Fragmenter
         public double SrcTop;
         public double XShift;
         public double AccBottom;
+
+        /// <summary>The box's own left offset in its parent (source coordinates), for placing continuations of monolithic overflow.</summary>
+        public double BoxX;
     }
 
     private AFrame[] _af = new AFrame[32];
@@ -292,7 +295,7 @@ internal sealed partial class Fragmenter
         }
 
         box = _boxes.Make(_t.BoxOf(c));
-        return (box.Flags & BoxTraits.OutOfFlow) != 0 || Monolithic(box);
+        return (box.Flags & BoxTraits.OutOfFlow) != 0 || IsMono(c, box);
     }
 
     // The top of the first line box among the in-flow descendants that follow a marker, in the coordinates of the marker's parent
@@ -317,7 +320,7 @@ internal sealed partial class Fragmenter
                 Box b = _boxes.Make(_t.BoxOf(cur));
                 if ((b.Flags & (BoxTraits.OutOfFlow | BoxTraits.OutsideMarker)) == 0)
                 {
-                    if (Monolithic(b))
+                    if (IsMono(cur, b))
                     {
                         return false;
                     }
@@ -390,6 +393,11 @@ internal sealed partial class Fragmenter
             }
 
             Contribute(parentPiece, nr, ov);
+            if (_kind == FragmentationKind.Page && !box.IsNull && box.Kind != BoxKind.Marker && ((box.Flags & BoxTraits.OutOfFlow) == 0 || box.Values.Floating != FloatKind.None) && cBot > cTop + Eps)
+            {
+                ContinueMonolithic(pi, c, in box, r, cBot, k);
+            }
+
             return;
         }
 
@@ -461,7 +469,66 @@ internal sealed partial class Fragmenter
             SrcTop = cTop,
             XShift = 0,
             AccBottom = p.AccBottom + (clone ? border.Bottom + pad.Bottom : 0),
+            BoxX = r.X,
         });
+    }
+
+    // Monolithic overflow (CSS Break 4 §4.1): a box that cannot break and is taller than the page stays whole on the page it starts
+    // on; its background and borders carry on in the pages the overflow reaches, as pieces without content, attached to the nearest
+    // ancestor that has a piece on that page.
+    private void ContinueMonolithic(int pi, int c, in Box box, Rect r, double cBot, int k)
+    {
+        int rootEnd = _af[0].KEnd;
+        int kE = Math.Max(k, FindKEnd(cBot, k, rootEnd));
+        if (kE <= k)
+        {
+            return;
+        }
+
+        int count = kE - k;
+        if (_pieceBudget < count)
+        {
+            _pieceLimitHit = true;
+            return;
+        }
+
+        _pieceBudget -= count;
+        Insets border = _t.BorderOf(c), pad = _t.PaddingOf(c);
+        int prev = c;
+        for (int j = k + 1; j <= kE; j++)
+        {
+            int fi = pi;
+            while (fi > 0 && (j < _af[fi].KStart || j > _af[fi].KEnd))
+            {
+                fi--;
+            }
+
+            double x = r.X + _af[0].XShift * (fi == 0 ? 1 : 0);
+            for (int i = fi + 1; i <= pi; i++)
+            {
+                x += _af[i].BoxX;
+            }
+
+            int parentPiece = _pieces[_af[fi].PiecesBase + (j - _af[fi].KStart)];
+            double top = _pT[_rFk + j];
+            double bottom = j == kE ? cBot - _pYs[_rFk + j] + _pT[_rFk + j] : _pYe[_rFk + j] - _pYs[_rFk + j] + _pT[_rFk + j];
+            var rect = new Rect(x, top - _pcTop[parentPiece], r.Width, Math.Max(0, bottom - top));
+            int piece = _t.NewPiece(c, prev, rect);
+            EnsureFragments(_t.Count + 16);
+            var b2 = new Insets(0, border.Right, j == kE ? border.Bottom : 0, border.Left);
+            var p2 = new Insets(0, pad.Right, j == kE ? pad.Bottom : 0, pad.Left);
+            _t.SetRaw(piece, rect, b2, p2);
+            _t.AppendChild(parentPiece, piece);
+            _t.SetFragmentainer(piece, _rColBase + j);
+            _pcTop[piece] = top;
+            _pcContent[piece] = top;
+            _accL[piece] = 0;
+            _accT[piece] = 0;
+            _accR[piece] = r.Width;
+            _accB[piece] = rect.Height;
+            Contribute(parentPiece, rect, new Rect(0, 0, rect.Width, rect.Height));
+            prev = piece;
+        }
     }
 
     private void Contribute(int parentPiece, Rect rect, Rect overflow)

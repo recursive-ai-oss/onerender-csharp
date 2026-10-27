@@ -11,6 +11,19 @@ From the WPT reftest documentation:
 - A match reference that links references of its own continues a chain, which must also hold. Chains do not continue through a mismatch reference, and a reference already being checked up the chain counts as holding.
 - `<meta name=fuzzy content="[ref:]maxDifference=a[-b];totalPixels=c[-d]">`, names optional. The maximum difference is the largest per-channel (R, G, B) absolute difference; the pixel count is the number of pixels differing in any of those channels. A single number n means exactly n, a range is inclusive, and a `ref:` prefix limits the allowance to that reference. Without fuzzy the images must be identical. Images of different sizes never match.
 
+## Print reftests
+
+A file whose name ends in `-print` right before the extension and any `.tentative`-style flags (`bar-print.html`, `bar-print.tentative.html`; not `bar-print-001.html`), or any file under a directory named `print`, is a print reftest (WPT's file-name rules). Both the test and its references are paginated and compared page by page:
+
+- Page size 12.7 cm by 7.62 cm (480 by 288 CSS px) with 12.7 mm (48 px) margins, unless the document's own `@page` rules say otherwise.
+- The comparison is the ordinary one (`match`/`mismatch`, chains, fuzzy), applied to each page separately; the fuzzy allowance is per page. A `match` needs the same number of pages and every page equal; a `mismatch` holds when the page counts differ or any page differs. Page images of different sizes never match.
+- `<meta name=reftest-pages content="range">` limits the comparison to those pages (1-based, `-2,4,6,7,9-`). As in WPT, a range belongs to the document that declares it: an unprefixed range selects pages of the test itself, `ref.html:range` selects pages of that reference, and a document without an entry is compared on every page.
+- A test is `blank` when every compared page of the test is blank.
+- **onerender:** `PagedDocument.Create` with the print-reftest default page, each page drawn as its page layer (page background and margin boxes) under the page's slice of the content, over white. All pages' content is rasterized in one surface, so a document wider than 16,384 px of side-by-side pages (about 34 pages of this size) fails with an error.
+- **Chrome:** `Page.printToPDF` with the same defaults (`preferCSSPageSize`, backgrounds on), then poppler's `pdftoppm -r 96 -aaVector no` to bitmaps (a PDF rasterizer, not a layout engine; it must be on the PATH). PDF rasterization puts a content edge that falls between device pixels on one side or the other, so Chrome sometimes fails a test whose geometry matches exactly (a 1 px row at a page top); that is the calibration's noise floor for print.
+
+`ONERENDER_WPT_TRACE=1` writes the stack of a rendering error to stderr.
+
 ## Outcomes
 
 | Outcome | Meaning |
@@ -20,7 +33,7 @@ From the WPT reftest documentation:
 | `blank` | The comparison holds but the test image is a single flat colour of nothing: fully transparent or opaque white throughout. A renderer that draws nothing therefore never passes. Some real tests ("passes if nothing red is visible") also land here, for every renderer, Chrome included. |
 | `skipped` | The runner cannot run the test; the reason is recorded. |
 
-Skip reasons: `testharness.js test`, `script-dependent` (script in the test or any reference), `reftest-wait (needs script)`, `print reftest (paged output)` (file name ends `-print` or a directory named `print`; paged comparison arrives with paged media), `reference file missing: <path>`.
+Skip reasons: `testharness.js test`, `script-dependent` (script in the test or any reference), `reftest-wait (needs script)`, `print reftest (paged output)` (only for a renderer that cannot paginate; both renderers here can), `reference file missing: <path>`.
 
 Rate = pass / (total - skipped), or 0 when nothing was runnable.
 

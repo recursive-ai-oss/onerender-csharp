@@ -88,3 +88,26 @@ public enum ColumnSpanKind : byte
     /// <summary><c>all</c>: the box spans every column of its multicol container.</summary>
     All,
 }
+
+/// <summary>The parts of <c>contain</c> (CSS Containment 2 §3) the engine tracks.</summary>
+[Flags]
+public enum ContainParts : byte
+{
+    /// <summary><c>contain: none</c>.</summary>
+    None = 0,
+
+    /// <summary>Size containment (also from <c>strict</c>): the box is sized as if it had no content, and it does not fragment (CSS Break 4 §4.1 treats it as monolithic).</summary>
+    Size = 1,
+
+    /// <summary>Layout containment (also from <c>strict</c> and <c>content</c>).</summary>
+    Layout = 2,
+
+    /// <summary>Paint containment (also from <c>strict</c> and <c>content</c>).</summary>
+    Paint = 4,
+
+    /// <summary>Style containment (also from <c>content</c>).</summary>
+    Style = 8,
+
+    /// <summary>Inline-size containment.</summary>
+    InlineSize = 16,
+}

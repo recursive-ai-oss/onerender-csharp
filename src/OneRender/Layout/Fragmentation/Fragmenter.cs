@@ -124,6 +124,12 @@ internal sealed partial class Fragmenter
             return true;
         }
 
+        // CSS Break 4 §4.1 / Containment 2: a box with size containment is monolithic.
+        if (b.Values.HasSizeContainment)
+        {
+            return true;
+        }
+
         // §4.1: rows of a table row group are block-level siblings for breaking, so a table and its row groups fragment between
         // rows. A row stays whole (its cells are not split), so a row taller than a fragmentainer overflows it.
         // A header or footer group stays whole: a break inside it would leave a table page with half a header, and the group is
@@ -133,7 +139,17 @@ internal sealed partial class Fragmenter
             return true;
         }
 
-        if (b.Context is FormattingContext.Table or FormattingContext.TableRowGroup)
+        // CSS Tables 3 §17: a row taller than the fragmentainer breaks inside its cells, which fragment side by side. The walk offers
+        // the places inside a row only as a last resort (see Walk.RowUp), so rows still move whole when they fit on the next page.
+        if (b.Context is FormattingContext.Table or FormattingContext.TableRowGroup or FormattingContext.TableRow or FormattingContext.TableCell)
+        {
+            return b.Values.IsScrollContainer || b.Values.IsMulticol;
+        }
+
+        // CSS Flexbox 1 §12: a flex container fragments between its flex lines, and the items fragment inside. Items of one line sit
+        // side by side, so the walk only offers a break where no item spans it (see Visit); the strip cut then splits each item that
+        // crosses the break, which is what each item's own fragmentation would do for items that start together.
+        if (b.Context is FormattingContext.Flex or FormattingContext.Grid)
         {
             return b.Values.IsScrollContainer || b.Values.IsMulticol;
         }
@@ -146,6 +162,13 @@ internal sealed partial class Fragmenter
         ref readonly ComputedValues v = ref b.Values;
         return v.IsScrollContainer || v.IsMulticol;
     }
+
+    // A box with size containment and nothing in it is monolithic but its (empty) box can still be cut where it overflows the
+    // fragmentainer ("monolithic overflow", CSS Break 4 §4.1): it is walked like an empty box, with a filler that is only used when
+    // the box is taller than a fragmentainer. Everything else that is monolithic stays whole.
+    private bool IsMono(int frag, Box b) =>
+        Monolithic(b) && !(b.Kind == BoxKind.Container && b.Values.HasSizeContainment && !b.Values.IsScrollContainer && !b.Values.IsMulticol
+            && (b.Context is FormattingContext.Block or FormattingContext.FlowRoot or FormattingContext.Flex or FormattingContext.Grid) && _t.FirstChildOf(frag) < 0);
 
     private static BreakBits Map(BreakKind k) => k switch
     {

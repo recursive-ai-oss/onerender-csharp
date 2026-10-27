@@ -8,12 +8,12 @@
   "sampleStride": 1,
   "counts": {
     "total": 345,
-    "pass": 245,
-    "fail": 69,
+    "pass": 246,
+    "fail": 68,
     "blank": 0,
     "skipped": 31
   },
-  "rate": "0.7803",
+  "rate": "0.7834",
   "pass": [
     "css/CSS2/floats-clear/adjacent-floats-001.xht",
     "css/CSS2/floats-clear/adjoining-float-before-clearance.html",
@@ -255,6 +255,7 @@
     "css/CSS2/floats/new-fc-beside-float-with-margin.html",
     "css/CSS2/floats/new-fc-beside-float-with-min-width.html",
     "css/CSS2/floats/new-fc-relayout.html",
+    "css/CSS2/floats/new-fc-separates-from-float-4.html",
     "css/CSS2/floats/new-fc-separates-from-float.html",
     "css/CSS2/floats/overflow-scroll-float-paint-order.html",
     "css/CSS2/floats/overhanging-float-paint-order.html",
@@ -329,7 +330,6 @@
     "css/CSS2/floats/new-fc-beside-adjoining-float.html": "== ref-filled-green-200px-square.html differs (max 255, 38000 px)",
     "css/CSS2/floats/new-fc-separates-from-float-2.html": "== ref-filled-green-200px-square.html differs (max 255, 20000 px)",
     "css/CSS2/floats/new-fc-separates-from-float-3.html": "== ref-filled-green-100px-square.xht differs (max 255, 14000 px)",
-    "css/CSS2/floats/new-fc-separates-from-float-4.html": "== ref-filled-green-200px-square.html differs (max 255, 40000 px)",
     "css/CSS2/floats/table-sizing-with-adjacent-floats.html": "== table-sizing-with-adjacent-floats-ref.html differs (max 255, 2500 px)",
     "css/CSS2/floats/zero-width-floats-positioning.tentative.html": "== ref-filled-green-100px-square-only.html differs (max 255, 3300 px)"
   },

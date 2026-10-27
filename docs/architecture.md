@@ -438,7 +438,7 @@ is a formatting-context root like a BFC root, so floats stay outside it and marg
   nothing (the zero-byte assertion covers a page of more than a thousand flex items).
 - **Not done:** `visibility: collapse` on items, `list-item` flex containers' outside marker, percentage and `min-content`
   `flex-basis` in column containers (treated as `content`), multi-line column containers size trial layouts from the container
-  width rather than the line width, vertical writing modes, fragmentation of flex containers across pages. Text items take their min-content and
+  width rather than the line width, vertical writing modes. Text items take their min-content and
   max-content from the inline layout's intrinsic sizes and their baselines from its lines.
 
 ## Fragmentation (`Layout/Fragmentation/`)
@@ -460,8 +460,14 @@ fragmentainer. Breaking never feeds back into inline layout, because every fragm
   between the lines of a block container. Class C (between a container's content edge and its content) is used only for the empty
   room below the last child of a box, which behaves like an empty box. Floats are not break points and are never cut. Boxes that
   cannot fragment are *monolithic* (§4.1): replaced boxes, markers, scroll containers (`overflow` other than `visible`/`clip`),
-  flex, grid and table containers (these three are kept whole for now), and nested multi-column containers. Their insides contribute
-  no break points and a forced break inside them has no effect. An empty box with a height has no break points but may be cut
+  boxes with `contain: size`, and nested multi-column containers. Their insides contribute no break points and a forced break
+  inside them has no effect. On pages a monolithic box or float taller than the page stays whole on the page it starts on and its
+  background and borders carry on in the pages the overflow reaches, as pieces without content.
+- **Flex, grid and tables.** A flex container fragments between its flex lines (Flexbox 1 §12) and a grid between its rows; items on
+  one line sit side by side, so a break is offered only where no item spans it, and the strip cut then splits each item that crosses
+  it. Reversed flex containers are walked in block order. Page names are ignored inside flex and grid containers. Table rows break
+  between rows; the places inside a row (its cells' lines, and empty cells) are used only as a last resort, when the row is taller than
+  the fragmentainer, so a row that fits the next page moves whole. An empty box with a height has no break points but may be cut
   anywhere when it is what does not fit (the "break anywhere" last resort of §4.4, applied to boxes that have nothing in them).
 - **Break values** (§3). `break-before` and `break-after` on the first and last in-flow child propagate to the parent chain (§3.1.1),
   and the values at a break point combine. A forced value (`column` in columns, the page values in pages) forces the break and

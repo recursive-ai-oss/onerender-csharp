@@ -430,7 +430,7 @@ public sealed partial class BlockLayoutEngine
         if (!row)
         {
             double inner;
-            bool stretchOk = it.Align == AlignKind.Stretch && double.IsNaN(crossS) && (mask & 12) == 0;
+            bool stretchOk = it.Align == AlignKind.Stretch && double.IsNaN(crossS) && (mask & 12) == 0 && !fx.Wrap;
             if (!double.IsNaN(crossS))
             {
                 inner = Clamp(crossS, it.MinC, it.MaxC);

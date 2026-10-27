@@ -15,6 +15,12 @@ public readonly record struct IntRange(int Min, int Max)
 /// </summary>
 public sealed record FuzzySpec(string? Reference, IntRange MaxDifference, IntRange TotalPixels);
 
+/// <summary>
+/// A <c>&lt;meta name=reftest-pages&gt;</c> range list. <see cref="Reference"/> is the WPT-relative path of the reference it selects pages of,
+/// or null for the test document itself (WPT keys page ranges by document, like fuzzy allowances).
+/// </summary>
+public sealed record PageRangeSpec(string? Reference, string Ranges);
+
 /// <summary>A <c>&lt;link rel=match|mismatch&gt;</c> from a test (or a reference, for chains).</summary>
 public sealed record ReferenceLink(string Path, bool Mismatch);
 
@@ -38,6 +44,26 @@ public sealed class ReftestFile
 
     /// <summary>The file loads testharness.js.</summary>
     public bool TestHarness { get; init; }
+
+    /// <summary>The <c>reftest-pages</c> metas (print reftests); a document without an entry is compared on every page.</summary>
+    public List<PageRangeSpec> PageRanges { get; init; } = [];
+
+    /// <summary>
+    /// The page ranges this test (as the root of a comparison) declares for the document at <paramref name="documentPath"/>: those with that
+    /// reference prefix, or the unprefixed ones when it is the test itself. Null means every page.
+    /// </summary>
+    public string? RangesFor(string documentPath)
+    {
+        foreach (PageRangeSpec r in PageRanges)
+        {
+            if (r.Reference is null ? string.Equals(documentPath, Path, StringComparison.Ordinal) : string.Equals(r.Reference, documentPath, StringComparison.Ordinal))
+            {
+                return r.Ranges;
+            }
+        }
+
+        return null;
+    }
 }
 
 /// <summary>Reads reftest metadata out of WPT test files.</summary>
@@ -64,6 +90,7 @@ public static partial class ReftestParser
         string text = CommentRegex().Replace(source, string.Empty);
         var refs = new List<ReferenceLink>();
         var fuzzy = new List<FuzzySpec>();
+        var pages = new List<PageRangeSpec>();
         foreach (Match m in TagRegex().Matches(text))
         {
             Dictionary<string, string> attrs = Attributes(m.Groups[2].Value);
@@ -80,6 +107,14 @@ public static partial class ReftestParser
                         }
                     }
                 }
+            }
+            else if (attrs.TryGetValue("name", out string? pn)
+                     && pn.Equals("reftest-pages", StringComparison.OrdinalIgnoreCase)
+                     && attrs.TryGetValue("content", out string? pc))
+            {
+                string body = pc.Trim();
+                int colon = body.IndexOf(':', StringComparison.Ordinal);
+                pages.Add(colon > 0 ? new PageRangeSpec(Resolve(path, body[..colon].Trim()), body[(colon + 1)..].Trim()) : new PageRangeSpec(null, body));
             }
             else if (attrs.TryGetValue("name", out string? name)
                      && name.Equals("fuzzy", StringComparison.OrdinalIgnoreCase)
@@ -120,6 +155,7 @@ public static partial class ReftestParser
             ReftestWait = wait,
             HasScript = script,
             TestHarness = harness,
+            PageRanges = pages,
         };
     }
 

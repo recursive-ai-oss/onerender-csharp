@@ -682,7 +682,7 @@
     "css/css-grid/alignment/grid-item-mixed-baseline-001.html": "== grid-item-mixed-baseline-001-ref.html differs (max 255, 206812 px)",
     "css/css-grid/alignment/grid-item-mixed-baseline-002.html": "== grid-item-mixed-baseline-002-ref.html differs (max 255, 201991 px)",
     "css/css-grid/alignment/grid-item-mixed-baseline-003.html": "== grid-item-mixed-baseline-003-ref.html differs (max 255, 201991 px)",
-    "css/css-grid/alignment/grid-item-mixed-baseline-004.html": "== grid-item-mixed-baseline-004-ref.html differs (max 255, 24744 px)",
+    "css/css-grid/alignment/grid-item-mixed-baseline-004.html": "== grid-item-mixed-baseline-004-ref.html differs (max 255, 64 px)",
     "css/css-grid/alignment/grid-item-no-aspect-ratio-stretch-1.html": "== grid-item-no-aspect-ratio-stretch-1-ref.html differs (max 128, 8750 px)",
     "css/css-grid/alignment/grid-item-self-baseline-001.html": "== grid-item-self-baseline-001-ref.html differs (max 255, 90555 px)",
     "css/css-grid/alignment/grid-justify-baseline-001.html": "== grid-justify-baseline-001-ref.html differs (max 255, 6120 px)",

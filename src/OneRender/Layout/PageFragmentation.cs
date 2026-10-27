@@ -106,6 +106,13 @@ public static class PageFragmentation
             fragmenter.Apply(tree, 0, cancellationToken);
         }
 
+        if (pages == 0)
+        {
+            // Nothing to place (a frameset, say): one empty page, with its per-page arrays to match the count.
+            names = [null];
+            blank = [false];
+        }
+
         return new PaginationResult(Math.Max(1, pages), blank, names, truncated);
     }
 
