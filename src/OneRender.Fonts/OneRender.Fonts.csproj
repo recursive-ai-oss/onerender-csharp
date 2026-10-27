@@ -1,8 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>Default fonts for OneRender: metric-compatible Liberation, Carlito and Caladea families.</Description>
+    <Description>Default fonts for OneRender: metric-compatible Liberation, Carlito and Caladea families, embedded byte-for-byte.</Description>
     <PackageLicenseExpression>(MIT OR Apache-2.0) AND OFL-1.1</PackageLicenseExpression>
   </PropertyGroup>
+
+  <!-- The font files and licences are embedded unmodified; the logical names are fixed so lookup never depends on the build host. -->
+  <ItemGroup>
+    <EmbeddedResource Include="fonts/Liberation/*" LogicalName="fonts/Liberation/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="fonts/Carlito/*" LogicalName="fonts/Carlito/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="fonts/Caladea/*" LogicalName="fonts/Caladea/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="fonts/MANIFEST.tsv" LogicalName="fonts/MANIFEST.tsv" />
+  </ItemGroup>
+
+  <!-- The licence texts also travel as plain files in the package, next to the notices. -->
+  <ItemGroup>
+    <None Include="fonts/*/OFL.txt" Pack="true" PackagePath="licenses/%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
 
 </Project>
