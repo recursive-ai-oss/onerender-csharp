@@ -130,6 +130,9 @@ public sealed class StyleDeclaration
                 _origin[(int)id] = ValueOrigin.Inherit;
                 break;
             case CssWideKeyword.Unset:
+            case CssWideKeyword.Revert:
+            case CssWideKeyword.RevertLayer:
+                // A builder tree has no earlier origin or layer to revert to, so these behave as unset (CSS Cascade 5 §7.3.2).
                 _origin[(int)id] = ValueOrigin.Unset;
                 break;
             default:

@@ -17,7 +17,7 @@ internal static class ShorthandFallbacks
     public static bool Expand(string name, ComponentValueList value, List<(PropertyId Id, ComponentValueList Value)> output)
     {
         CssWideKeyword wide = CssWideKeywords.Detect(value);
-        if (wide is CssWideKeyword.Initial or CssWideKeyword.Inherit or CssWideKeyword.Unset)
+        if (wide is CssWideKeyword.Initial or CssWideKeyword.Inherit or CssWideKeyword.Unset or CssWideKeyword.Revert or CssWideKeyword.RevertLayer)
         {
             foreach (PropertyId id in Longhands(name))
             {

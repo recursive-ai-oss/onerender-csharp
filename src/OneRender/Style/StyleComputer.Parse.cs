@@ -645,9 +645,20 @@ internal sealed partial class StyleComputer
         }
 
         double px = fs.ResolvePx(in _parentCtx);
-        if (double.IsNaN(px) || px < 0)
+        if (double.IsNaN(px))
         {
             return false;
+        }
+
+        if (px < 0)
+        {
+            // A negative literal is invalid, but a math function that resolves below zero is clamped (CSS Values 4 §10.1 range clamping).
+            if (!(SinglePart(v, out ComponentValue only) && only.Raw.Contains('(')))
+            {
+                return false;
+            }
+
+            px = 0;
         }
 
         _r.FontSize = px;
