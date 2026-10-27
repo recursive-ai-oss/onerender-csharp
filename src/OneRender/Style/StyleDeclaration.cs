@@ -244,15 +244,25 @@ internal sealed class OneHtmlSource : DeclarationSource
         }
 
         if (id is PropertyId.LineHeight or PropertyId.LetterSpacing or PropertyId.WordSpacing or PropertyId.TextIndent or PropertyId.TabSize
+                or PropertyId.FontSize or PropertyId.FontWeight
             && _style is not null && !_style.IsDeclared(Properties.NameOf(id)))
         {
             // The cascade hands a descendant the ancestor's specified text. Values with relative lengths (em, a line-height percentage)
             // inherit as the ancestor's computed value (CSS Values 4 §7.1), not as text to resolve against the descendant's own font.
+            // The same holds for font-size (em, %, larger, smaller) and font-weight (bolder, lighter), which are relative to the parent.
             return ValueOrigin.Unset;
         }
 
         if (sv.IsInitial || sv.Tokens.IsEmpty)
         {
+            if (_style is not null && Properties.IsInherited(id) && !_style.IsDeclared(Properties.NameOf(id)))
+            {
+                // Nothing in the cascade declared this inherited property for the element or an ancestor, but an ancestor may have set it
+                // through a shorthand that was expanded here (white-space, for one): CSS Cascade 4 §7.3 gives such an element its
+                // parent's computed value, not the initial one.
+                return ValueOrigin.Unset;
+            }
+
             return ValueOrigin.Initial;
         }
 

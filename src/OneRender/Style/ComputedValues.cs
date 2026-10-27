@@ -268,6 +268,13 @@ public partial struct ComputedValues
     /// <summary><c>font-size</c> in px.</summary>
     public double FontSize { get; internal set; }
 
+    /// <summary>
+    /// The absolute-size keyword the font size came from, 1 (<c>xx-small</c>) to 8 (<c>xxx-large</c>), or 0 when it did not come from
+    /// one. It inherits, and decides whether an element that switches into or out of a bare <c>monospace</c> family list takes a
+    /// different size (<see cref="StyleComputer.MonospaceScale"/>).
+    /// </summary>
+    internal byte FontSizeKeyword { get; set; }
+
     /// <summary><c>font-weight</c> as a number from 1 to 1000.</summary>
     public double FontWeight { get; internal set; }
 
@@ -342,6 +349,9 @@ public partial struct ComputedValues
 
     /// <summary><c>list-style-position</c>.</summary>
     public ListStylePositionKind ListStylePosition { get; internal set; }
+
+    /// <summary><c>text-transform</c>; inherited.</summary>
+    public TextTransformKind TextTransform { get; internal set; }
 
     /// <summary><c>word-break</c>.</summary>
     public WordBreakKind WordBreak { get; internal set; }
@@ -486,6 +496,7 @@ public partial struct ComputedValues
         v.ZIndexAuto = true;
         v.FontFamily = FontFamilyList.Default;
         v.FontSize = 16;
+        v.FontSizeKeyword = StyleComputer.MediumKeyword;
         v.FontWeight = 400;
         v.ObliqueAngle = 14;
         v.FontStretch = 100;

@@ -585,8 +585,12 @@ internal sealed partial class InlineWorker
                 case PK.Br:
                 {
                     ref Elem el = ref _el[p.Elem];
-                    ref BM ob = ref _bm[p.Owner];
-                    _out.AddBox(curFrag, _boxes.Make(el.Box), new Rect(p.X - ox, ob.Base - ob.A - oy, 0, ob.A + ob.D));
+                    if ((el.Flags & EF.Br) != 0)
+                    {
+                        ref BM ob = ref _bm[p.Owner];
+                        _out.AddBox(curFrag, _boxes.Make(el.Box), new Rect(p.X - ox, ob.Base - ob.A - oy, 0, ob.A + ob.D));
+                    }
+
                     break;
                 }
 

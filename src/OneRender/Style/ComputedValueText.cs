@@ -8,6 +8,7 @@ internal static class ComputedValueText
     private static readonly string[] ClipMarginBoxes = ["padding-box", "content-box", "border-box"];
     private static readonly string[] VerticalAligns = ["baseline", "sub", "super", "text-top", "text-bottom", "middle", "top", "bottom"];
     private static readonly string[] Collapses = ["collapse", "preserve", "preserve-breaks", "preserve-spaces", "break-spaces"];
+    private static readonly string[] TextTransforms = ["none", "capitalize", "uppercase", "lowercase"];
     private static readonly string[] WordBreaks = ["normal", "break-all", "keep-all", "break-word"];
     private static readonly string[] OverflowWraps = ["normal", "break-word", "anywhere"];
     private static readonly string[] LineBreaks = ["auto", "loose", "normal", "strict", "anywhere"];
@@ -104,6 +105,7 @@ internal static class ComputedValueText
             case PropertyId.ListStyleType:
                 return v.ListStyleTypeIsString ? "\"" + v.ListStyleType.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal) + "\"" : v.ListStyleType;
             case PropertyId.ListStylePosition: return v.ListStylePosition == ListStylePositionKind.Inside ? "inside" : "outside";
+            case PropertyId.TextTransform: return TextTransforms[(int)v.TextTransform];
             case PropertyId.WordBreak: return WordBreaks[(int)v.WordBreak];
             case PropertyId.OverflowWrap: return OverflowWraps[(int)v.OverflowWrap];
             case PropertyId.LineBreak: return LineBreaks[(int)v.LineBreak];
