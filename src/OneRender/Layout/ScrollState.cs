@@ -154,6 +154,35 @@ public sealed class ScrollState
         _gen[node] = box.Tree.Styled.GenerationOf(node) + 1;
     }
 
+    // After the styled tree was built again (a restyle that changes which nodes exist), node indices are new: the container positions
+    // move to the nodes made from the same source elements. Containers whose source element is gone are forgotten.
+    internal void Remap(StyledTree before, StyledTree after)
+    {
+        double[] x = new double[Math.Max(16, after.Capacity)];
+        double[] y = new double[x.Length];
+        int[] gen = new int[x.Length];
+        for (int i = 0; i < _gen.Length; i++)
+        {
+            if (_gen[i] == 0 || (_x[i] == 0 && _y[i] == 0) || i >= before.Capacity || before.IsFreeSlot(i) || before.GenerationOf(i) + 1 != _gen[i])
+            {
+                continue;
+            }
+
+            int source = before.SourceIndexOf(i);
+            StyledNode moved = source < 0 ? default : after.FindBySource(source);
+            if (!moved.IsNull)
+            {
+                x[moved.Index] = _x[i];
+                y[moved.Index] = _y[i];
+                gen[moved.Index] = after.GenerationOf(moved.Index) + 1;
+            }
+        }
+
+        _x = x;
+        _y = y;
+        _gen = gen;
+    }
+
     /// <summary>Forgets every position, including the viewport's.</summary>
     public void Clear()
     {

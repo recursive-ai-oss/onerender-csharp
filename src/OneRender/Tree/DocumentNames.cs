@@ -21,10 +21,10 @@ internal static class DocumentNames
             return default;
         }
 
-        Node byId = document.GetElementById(name);
+        Node byId = DocumentSnapshots.Of(document).GetElementById(name);
         if (!byId.IsNull)
         {
-            return byId;
+            return DocumentSnapshots.Original(byId, document);
         }
 
         for (Node n = document.Root.NextInDocumentOrder(default); !n.IsNull; n = n.NextInDocumentOrder(default))

@@ -236,7 +236,7 @@ public sealed partial class Painter
         StyledNode node = b.Node;
         Document? doc = node.Tree?.SourceDocument;
         int src = node.SourceIndex;
-        return doc is null || src < 0 ? default : doc.GetNode(src);
+        return doc is null || src < 0 ? default : DocumentSnapshots.Current(doc.GetNode(src));
     }
 
     // Fills _want* with the structure for a box and its ancestors; returns the number of entries.

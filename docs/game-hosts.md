@@ -13,9 +13,10 @@ There is no GPU code in the engine, and nothing here needs a clock, a thread or 
 5. [Damage](#damage)
 6. [Host scopes](#host-scopes)
 7. [Harness support](#harness-support)
-8. [Determinism and limits](#determinism-and-limits)
-9. [What the list already carries](#what-the-list-already-carries)
-10. [The cost of an animated layout property](#the-cost-of-an-animated-layout-property)
+8. [Changing text, classes and attributes after creation](#changing-text-classes-and-attributes-after-creation)
+9. [Determinism and limits](#determinism-and-limits)
+10. [What the list already carries](#what-the-list-already-carries)
+11. [The cost of an animated layout property](#the-cost-of-an-animated-layout-property)
 
 ## Two front ends, one list
 
@@ -156,6 +157,43 @@ page.Click(go, nowMs);
 ```
 
 A builder tree has no DOM, so it has no events to dispatch: the host that drives a builder UI dispatches its own input to the nodes it finds by name.
+
+## Changing text, classes and attributes after creation
+
+An `InteractivePage` is made from a OneHtml document, which is a read-only snapshot. These calls change what the page shows without making a new page object for you to hold; the result equals a page created from the equivalent HTML, and focus, hover, the active element, scroll positions, form state, editing sessions and listeners stay as they were.
+
+| Call | Does |
+|---|---|
+| `SetTextContent(element, text)` | Replaces the text of an element that holds exactly one text node (a label, a value readout). |
+| `SetClassName(element, value)`, `AddClass`, `RemoveClass`, `ToggleClass(element, token, force)` | Change the `class` attribute (`className`, `classList`); tokens are ordered, de-duplicated and single-space separated after a `classList` call. |
+| `SetAttribute(element, name, value)`, `RemoveAttribute(element, name)` | Any attribute of an HTML element (`disabled`, `hidden`, `style`, `checked`, `value`, `href`, `tabindex`, `name`, ...). `class` takes the class path. |
+| `GetTextContent(element)`, `GetClassName(element)`, `GetAttribute(element, name)` | Read the current values. A `Node` handle you hold still reads what the page was created with, because the document it points into never changes. |
+
+Each returns an `InputOutcome` (`Relaid` when something changed, `None` for a no-op) and takes a `CancellationToken`. Handles stay valid: nothing is re-parented or renumbered.
+
+**What it costs.**
+
+- *Text* does not touch the cascade. The characters are kept beside the document (a rebuild reads them from there), the one styled text node is rewritten, and only the affected text is laid out and painted again. Once warm it allocates **0 B** (measured on the 1,000-node HUD page) when the new text fits the room the old text had. A stylesheet with a `:empty` selector is the one case where the cascade reads text; then the change goes through the class path below.
+- *Classes and attributes* need the cascade for the edited document. OneHtml's document editor makes a new snapshot of the same shape (it re-parses the document source) and the cascade restyles from what the edit reaches. On the HUD page (69 KB of source, 1,800 nodes) one change allocates about 0.8 MB (measured: 835 KB for `title`, nearly all of it the new snapshot, about 14 KB of it the restyle). The page is then updated in place with no further allocation for `class`, `disabled`, `style`, `hidden`, `title`, `tabindex`, `inert`, `href`, `role` and `lang`. Every other attribute (anything a control or an image reads when its boxes are made: `value`, `checked`, `type`, `src`, `name`, `placeholder`, `min`, `max` ...) builds the page again from the edited document, which on the HUD page costs about 7 MB per change. The same rebuild happens for any change that makes boxes come or go (`display`), or when the stylesheet has `::before`, `::after`, `::marker`, `counter` or `content` rules.
+- **Advice:** text costs nothing, class and attribute changes cost about one document re-parse. Per-frame changes should use text, `transform` and `opacity` (which patch the list at 0 B), a hover rule, or the builder path; change a class or an attribute when something happens (a state change, a click), not every frame.
+
+**Limits.** `SetTextContent` refuses elements without exactly one text child, `style`, `script`, `textarea`, `title`, `option`, `template` and non-HTML elements (`InvalidOperationException`), and empty text (`ArgumentException`; a single space shows nothing). After a relayout under a stationary pointer the hover target is re-evaluated, as after a scroll.
+
+**Attributes: what follows, what needs care, what is refused.** The result equals a page created from the equivalent HTML, with the same focus and pointer.
+
+- *Follows:* `disabled` on a control, or on a `fieldset` for the controls in it (not in its first `legend`): focusability, tab order (a radio group's stop moves to an enabled radio), `click()` and pointer activation, `:disabled` and `:enabled` styling and the painted look. `hidden`, `style`, `href`, `tabindex`, `inert` and `contenteditable` change focusability and tab order the same way. `src`, `value`, `placeholder`, `min`, `max`, `step`, `size`, `multiple`, `selected`, `readonly`, `maxlength`, `open`, `id` and the other markup the engine reads follow from the edited document.
+- *Focus fixup:* a focused element that stops being focusable (disabled, hidden, inert, no longer rendered) loses focus (HTML focus fixup), with the usual `blur` events.
+- *Care, `checked`, `value`, `selected`:* these are the control's *default* state. A control the user, `SetChecked`, `SetValue` or a selection has changed keeps that state, as in a browser, so the attribute shows only while nothing changed it. A text field the user has not changed follows its `value` attribute; one that was changed keeps its text. The caret and selection of a focused text field are not markup: after its `value` attribute changes the caret is at the start.
+- *Care, `type`:* an `input` becomes another kind of control; what the user changed in it is dropped. Refused (`InvalidOperationException`) while the control has focus.
+- *Care, `id`, `name`, `form`, `for`:* they move controls between forms, radio groups and labels, which the tab order, arrow keys, `FindElement` and label activation follow.
+- *Refused (`InvalidOperationException`):* elements that are not HTML elements (inline SVG), and `link`, `style`, `script`, `base`, `meta`, `template` and `head` elements, whose attributes load or change style sheets and base addresses. A malformed attribute name (empty, over 128 characters, or with anything but letters, digits, `-`, `_`, `:` and `.`) is an `ArgumentException`. Names are lower-cased.
+- *Not carried by the edit:* the PDF tag text and accessibility facts read the current attributes (`alt`, `href`, `lang`, `role`), but anything a host cached from the original document does not change.
+
+```csharp
+Node label = page.FindElement("volumeValue");
+page.SetTextContent(label, "7");
+page.ToggleClass(page.FindElement("mute"), "active", force: muted);
+```
 
 ## Determinism and limits
 

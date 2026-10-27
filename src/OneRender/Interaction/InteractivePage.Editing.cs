@@ -83,7 +83,10 @@ public sealed partial class InteractivePage
 
         public override void Sync()
         {
-            if (!page._page.ApplyTextEdit(page._editElement, page._edit!, page._editToken))
+            // The control being written is the focused one while the user edits it, but SetValue also writes controls that were never
+            // focused: their session is the one the form state holds.
+            if (!page._page.Form.TryGetText(page._editElement, out TextEditSession? session)
+                || !page._page.ApplyTextEdit(page._editElement, session, page._editToken))
             {
                 page.Rebuild(page._editToken);
             }
@@ -138,6 +141,7 @@ public sealed partial class InteractivePage
         ControlKind kind = HtmlFrontEnd.Classify(element);
         s = new TextEditSession(kind);
         s.Editor.SetValue(HtmlFrontEnd.InitialValue(element, kind));
+        s.Initial = s.Editor.Text.ToString();
         s.Editor.Select(0, 0);
         s.Placeholder = HtmlFrontEnd.PlaceholderOf(element, kind);
         s.RebuildDisplay();
@@ -148,11 +152,11 @@ public sealed partial class InteractivePage
     // Attributes that decide what the control accepts, read when editing starts and again for each session use.
     private void ReadControlAttributes(Node element, TextEditSession s)
     {
-        s.ReadOnly = element.HasAttribute("readonly");
+        s.ReadOnly = FocusRules.HasAttribute(element, "readonly");
         s.Disabled = IsDisabledControl(element);
-        string? type = element.GetAttribute("type");
+        string? type = DocumentSnapshots.Attr(element, "type");
         s.Numeric = type is not null && type.Equals("number", StringComparison.OrdinalIgnoreCase);
-        string? max = element.GetAttribute("maxlength");
+        string? max = DocumentSnapshots.Attr(element, "maxlength");
         s.Editor.MaxLength = !s.Numeric && max is not null && int.TryParse(max, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out int m) ? m : -1;
         TextEditView v = s.View;
         v.SourceElement = element.Index;

@@ -9,7 +9,7 @@ internal static class FocusRules
 {
     public static bool HasAttribute(Node n, string name)
     {
-        foreach (Attr a in n.Attributes)
+        foreach (Attr a in DocumentSnapshots.Current(n).Attributes)
         {
             if (a.LocalName.Equals(name, StringComparison.Ordinal))
             {
@@ -22,7 +22,7 @@ internal static class FocusRules
 
     public static bool TryGetAttribute(Node n, string name, out ReadOnlySpan<char> value)
     {
-        foreach (Attr a in n.Attributes)
+        foreach (Attr a in DocumentSnapshots.Current(n).Attributes)
         {
             if (a.LocalName.Equals(name, StringComparison.Ordinal))
             {

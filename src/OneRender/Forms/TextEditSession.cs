@@ -75,6 +75,9 @@ internal sealed class TextEditSession
     /// <summary>The placeholder shown while the value is empty (no line breaks in a single-line field), or empty.</summary>
     public string Placeholder { get; set; } = string.Empty;
 
+    /// <summary>The value the session started with; the session is untouched while the text still equals it.</summary>
+    public string Initial { get; set; } = string.Empty;
+
     public bool ReadOnly { get; set; }
 
     public bool Disabled { get; set; }

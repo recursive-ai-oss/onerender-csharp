@@ -95,6 +95,9 @@ public sealed partial class HtmlPage
     // What the user changed in the form controls; carried to every page built for the same document.
     internal Forms.FormState Form { get; private set; } = new();
 
+    // Text set after creation (InteractivePage.SetTextContent), by the index of the text node in the document; read when the tree is built.
+    internal Dictionary<int, string>? TextOverrides { get; set; }
+
     /// <summary>The styled-node tree.</summary>
     public StyledTree Styled { get; }
 
@@ -251,14 +254,14 @@ public sealed partial class HtmlPage
     }
 
     private static HtmlPage Build(Document document, DocumentStyles styles, HtmlPageOptions options, ScrollState? scroll, ReferenceTable? references, CancellationToken cancellationToken,
-        bool incremental = false, Animation.AnimationController? motion = null, StyledTree? previous = null, double now = 0, double sampleAt = double.NaN, Forms.FormState? form = null)
+        bool incremental = false, Animation.AnimationController? motion = null, StyledTree? previous = null, double now = 0, double sampleAt = double.NaN, Forms.FormState? form = null, Dictionary<int, string>? textOverrides = null)
     {
         var table = new StyleTable();
         table.SetViewport(options.ViewportWidth, options.ViewportHeight);
         table.Fonts = options.Fonts;
         var styled = new StyledTree(table) { Resolver = options.Replaced };
-        var front = new HtmlFrontEnd(styled) { References = references, Form = form ??= new Forms.FormState() };
-        front.Build(styles, cancellationToken);
+        var front = new HtmlFrontEnd(styled) { References = references, Form = form ??= new Forms.FormState(), TextOverrides = textOverrides };
+        front.BuildFor(styles, document, cancellationToken);
 
         // Transitions and animations are applied to the styled tree before boxes are made from it, so the box tree, layout and paint all see
         // the animated values for this time.
@@ -275,7 +278,7 @@ public sealed partial class HtmlPage
         BlockLayoutEngine? reusing = incremental && options.Layout is null ? new BlockLayoutEngine() : null;
         ILayoutEngine engine = options.Layout ?? reusing ?? new BlockLayoutEngine();
         engine.Layout(boxes, new LayoutInput(options.ViewportWidth, options.ViewportHeight, options.Fonts) { Reuse = reusing is not null }, fragments, cancellationToken);
-        var page = new HtmlPage(document, styled, boxes, fragments, options) { Motion = motion, UsedPageReferences = front.UsedPageReferences, Form = form };
+        var page = new HtmlPage(document, styled, boxes, fragments, options) { Motion = motion, UsedPageReferences = front.UsedPageReferences, Form = form, TextOverrides = textOverrides };
         if (reusing is not null)
         {
             boxes.ClearDirty();
