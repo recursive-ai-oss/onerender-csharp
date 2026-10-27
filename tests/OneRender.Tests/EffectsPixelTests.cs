@@ -226,6 +226,23 @@ public class EffectsPixelTests
     }
 
     [Fact]
+    public void GoldenEffectsScene()
+    {
+        const string scene = "<svg width='0' height='0' style='position:absolute'><clipPath id='c'><circle cx='20' cy='20' r='18'/></clipPath></svg>"
+            + "<div style='position:absolute;left:8px;top:8px;width:40px;height:40px;background:linear-gradient(#e33,#33e);transform:rotate(15deg) scale(.9)'></div>"
+            + "<div style='position:absolute;left:68px;top:8px;width:40px;height:40px;background:#2a2;filter:blur(2px) drop-shadow(4px 4px 2px #000)'></div>"
+            + "<div style='position:absolute;left:128px;top:8px;width:40px;height:40px;background:#e80;clip-path:url(#c)'></div>"
+            + "<div style='position:absolute;left:8px;top:68px;width:40px;height:40px;background:#e33;mask-image:linear-gradient(to right,transparent,#000)'></div>"
+            + "<div style='position:absolute;left:68px;top:68px;width:50px;height:30px;background:#06c'></div><div style='position:absolute;left:78px;top:78px;width:50px;height:30px;background:#fc0;mix-blend-mode:multiply'></div>"
+            + "<div style='position:absolute;left:136px;top:68px;width:40px;height:40px;perspective:80px'><div style='width:40px;height:40px;background:#808;transform:rotateY(50deg)'></div></div>"
+            + "<svg style='position:absolute;left:8px;top:128px' width='60' height='40' viewBox='0 0 60 40'><rect width='60' height='40' rx='8' fill='#0a8'/><circle cx='30' cy='20' r='12' fill='#fff'/></svg>"
+            + "<div style='position:absolute;left:88px;top:128px;width:40px;height:40px;background:#e33;filter:grayscale(1) contrast(1.5);opacity:.8'></div>";
+        RgbaImage img = Render(scene, 184, 176);
+        Golden.Check("effects-scene", img);
+        Near((255, 255, 255), img, 2, 170);
+    }
+
+    [Fact]
     public void MaskImageGradientFadesTheBox()
     {
         RgbaImage img = Render("<div style='width:40px;height:10px;background:#f00;mask-image:linear-gradient(to right,transparent,#000)'></div>");

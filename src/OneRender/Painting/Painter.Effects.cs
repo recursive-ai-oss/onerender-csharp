@@ -54,6 +54,14 @@ public sealed partial class Painter
                 has = true;
             }
 
+            if (has && !(m.M14 != 0f || m.M24 != 0f) && !(m.M44 > 0f))
+            {
+                // Without perspective the plane maps with a constant w; a w at or below zero puts it behind the viewer, so nothing is drawn.
+                _list.PushClipRect(Id2(f, PartHidden, 0), RectF.Empty);
+                _scopes++;
+                return FxHidden;
+            }
+
             if (has && _scopes < MaxScopes - 1)
             {
                 if (m.M14 != 0f || m.M24 != 0f)

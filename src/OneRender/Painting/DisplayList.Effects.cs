@@ -338,7 +338,7 @@ public sealed partial class DisplayList
 
     /// <summary>Replaces the matrix of a <see cref="ItemKind.PushTransform3D"/> in place. Allocates nothing.</summary>
     /// <param name="id">The id of the 3D transform item.</param>
-    /// <param name="matrix">The new matrix; <c>M44</c> must be finite and positive.</param>
+    /// <param name="matrix">The new matrix; every entry must be finite and within the coordinate range.</param>
     /// <param name="damage">Receives the damaged areas; may be null.</param>
     public void PatchTransform3D(ItemId id, in Matrix4x4 matrix, DamageRegion? damage = null)
     {
@@ -386,10 +386,7 @@ public sealed partial class DisplayList
             Coord(f);
         }
 
-        if (!(m.M44 > 0f))
-        {
-            throw new ArgumentException("The matrix needs a positive M44.", nameof(m));
-        }
+        // M44 is the w of the page origin, which can be negative while the box itself is in front of the viewer; w is checked per point.
     }
 
     private void PushTransform3DCore(ItemId id, in Matrix4x4 matrix)

@@ -753,13 +753,13 @@ public sealed partial class DisplayList
     public void PushTransform3D(ItemId id, in Matrix4x4 matrix)
     {
         float w = matrix.M44;
-        if (!float.IsFinite(w) || w <= 0f)
-        {
-            throw new ArgumentException("The matrix has no finite, positive M44.", nameof(matrix));
-        }
-
         if ((matrix.M14 == 0f && matrix.M24 == 0f) || InsideProjection())
         {
+            if (!float.IsFinite(w) || w <= 0f)
+            {
+                throw new ArgumentException("A matrix without perspective needs a finite, positive M44.", nameof(matrix));
+            }
+
             PushTransform(id, new Matrix3x2(matrix.M11 / w, matrix.M12 / w, matrix.M21 / w, matrix.M22 / w, matrix.M41 / w, matrix.M42 / w));
             return;
         }
