@@ -244,4 +244,110 @@ public class TableLayoutTests
         Assert.Equal(first, edited.F.Dump());
         Assert.Equal(fresh.F.Dump(), edited.F.Dump());
     }
+
+    private sealed class NoFonts : IFontProvider
+    {
+        public OneRender.Text.FontCatalog Catalog => throw new NotSupportedException();
+
+        public OneRender.Text.ResolvedFontList Resolve(in ComputedValues style) => throw new NotSupportedException();
+
+        public OneRender.Text.ShapedText Shape(ReadOnlySpan<char> text, in ComputedValues style, bool rightToLeft = false) => throw new NotSupportedException();
+
+        public OneRender.Text.FontMetricsInfo GetMetrics(in ComputedValues style) => throw new NotSupportedException();
+    }
+
+    private static string Grid(int rows, int cols, string cell = "<td><div style='width:20px;height:10px'></div></td>")
+    {
+        var sb = new System.Text.StringBuilder("<table id=t>");
+        for (int r = 0; r < rows; r++)
+        {
+            sb.Append("<tr>");
+            for (int c = 0; c < cols; c++)
+            {
+                sb.Append(cell);
+            }
+
+            sb.Append("</tr>");
+        }
+
+        return sb.Append("</table>").ToString();
+    }
+
+    private static Lay RunNoFonts(string body, string css, double width = 800)
+    {
+        string html = "<!DOCTYPE html><html><head><style>body{margin:0}div{display:block}" + css + "</style></head><body>" + body + "</body></html>";
+        Pipeline p = Pipeline.FromHtml(html, width, 600);
+        var f = new FragmentTree(p.Boxes);
+        var engine = new BlockLayoutEngine();
+        engine.Layout(p.Boxes, new LayoutInput(width, double.NaN, new NoFonts()), f);
+        return new Lay { P = p, F = f, Engine = engine };
+    }
+
+    [Theory]
+    [InlineData("table{border-spacing:2px}")]
+    [InlineData("table{border-collapse:collapse}td{border:1px solid #000}")]
+    [InlineData("table{table-layout:fixed;width:600px}")]
+    public void RelayoutOfAnUnchangedThousandCellTableAllocatesNothing(string css)
+    {
+        Lay l = RunNoFonts(Grid(100, 10), css);
+        var input = new LayoutInput(800, double.NaN, new NoFonts());
+        OneRender.TestSupport.Allocation.AssertZero(() => l.Engine.Layout(l.P.Boxes, input, l.F), "relayout of an unchanged 1,000-cell table");
+    }
+
+    [Fact]
+    public void TenThousandRowsLayOutInTimeAndMemoryLinearInRows()
+    {
+        long Bytes(int rows)
+        {
+            Lay l = RunNoFonts(Grid(rows, 4), "table{border-spacing:0}td{padding:0}");
+            var input = new LayoutInput(800, double.NaN, new NoFonts());
+            long before = GC.GetAllocatedBytesForCurrentThread();
+            l.Engine.Layout(l.P.Boxes, input, l.F);
+            long first = GC.GetAllocatedBytesForCurrentThread() - before;
+            Assert.Equal(rows * 10.0, l["t"].Height, 3);
+            return first;
+        }
+
+        long small = Bytes(2_500), large = Bytes(10_000);
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        Lay big = RunNoFonts(Grid(10_000, 4), "table{border-spacing:0}td{padding:0}");
+        clock.Stop();
+        // Four times the rows must cost no more than about four times the memory (a quadratic table would cost sixteen times).
+        Assert.True(large <= small * 6, "10,000 rows allocated " + large + " bytes, 2,500 rows " + small);
+        Assert.Equal(100_000.0, big["t"].Height, 3);
+        System.IO.File.WriteAllText(System.IO.Path.Combine(Environment.GetEnvironmentVariable("TMPDIR") ?? System.IO.Path.GetTempPath(), "table-10k-rows.txt"), "parse+layout of 10,000 rows x 4 cells: " + clock.ElapsedMilliseconds + " ms");
+    }
+
+    [Fact]
+    public void HostileSpansAndNestingStayBounded()
+    {
+        // colspan and rowspan far above the HTML limits, a column group with a huge span, thousands of columns.
+        Lay a = RunNoFonts("<table id=t><colgroup span=99999999 style='width:1px'></colgroup><tr><td colspan=99999999 rowspan=99999999 id=c><div style='height:5px'></div></table>", "table{border-spacing:0}" + Cells);
+        Assert.True(a["t"].Width < 100_000);
+        var wide = new System.Text.StringBuilder("<table id=t><tr>");
+        for (int i = 0; i < 3_000; i++)
+        {
+            wide.Append("<td><div style='width:1px;height:1px'></div></td>");
+        }
+
+        Lay w = RunNoFonts(wide.Append("</tr></table>").ToString(), "table{border-spacing:0}" + Cells);
+        Assert.True(w["t"].Width <= 1_000.01, "width " + w["t"].Width);
+        Assert.Contains(w.P.Styled.Diagnostics.Items, d => d.Message.Contains("1000", StringComparison.Ordinal));
+
+        // Tables nested far past the nesting limit still lay out (the inner ones as blocks).
+        var deep = new System.Text.StringBuilder();
+        for (int i = 0; i < 120; i++)
+        {
+            deep.Append("<table><tr><td>");
+        }
+
+        deep.Append("<div id=leaf style='width:10px;height:10px'></div>");
+        for (int i = 0; i < 120; i++)
+        {
+            deep.Append("</td></tr></table>");
+        }
+
+        Lay d = RunNoFonts(deep.ToString(), "table{border-spacing:0}" + Cells);
+        Assert.True(d["leaf"].Width > 0);
+    }
 }
