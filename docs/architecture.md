@@ -544,3 +544,37 @@ CSS Grid 2 as a formatting context of the block engine. `OpenChild` calls `GridO
 - **Limits.** 10,000 tracks per axis (a 1,000,000-track `repeat()` is clamped, line numbers clamp to the same bound as §5.4 allows), 1,048,576 items per container, 50 million cell visits in placement (then the remaining items stack one per row), 100 million units of sizing work, 32 levels of shared subgrid tracks (deeper ones become independent grids). All checks run before the work they guard; nothing recurses on tree depth.
 - **Known deviations.** Inline-axis `baseline` falls back to start; last-baseline container baselines are not produced; `justify-items: legacy` computes to `normal`; masonry (`grid-lanes`), fragmentation across pages and non-horizontal writing modes are not implemented.
 - **Checked by.** `GridLayoutTests` (placement, auto-repeat, sizing, alignment, baselines, subgrid, abspos, 0 B relayout of a 1,000-item grid with subgrids, hostile limits), the `grid` fuzz target, `testdata/grid-lab/` against Chrome (`results/grid/summary.md`) and WPT `css-grid`.
+
+## Paint (`Painting/Painter*.cs`)
+
+The painter walks the fragment tree in CSS 2 Appendix E order and writes the display list (`display-list.md`). The second paint area added the pieces below; each is computed from typed values in `Style/PaintTypes.cs` and painted by one method.
+
+- **Backgrounds** (Backgrounds 3 §3). One painted layer per `background-image` entry; the other lists cycle (§3.1). Layers paint last to first under `background-color`, which fills the clip box of the final layer. Origin, clip (`border-box`, `padding-box`, `content-box`; rounded by the box's radii) and size (`auto` with the natural ratio, `cover`, `contain`, lengths) follow §3.4 to §3.9. Repeat follows §3.5: `repeat`, `no-repeat`, `space` (the whole number of tiles that fit, spread with equal gaps; a single tile is placed at the start) and `round` (the tile is rescaled to fit a whole number, at least one). `background-position-x/-y` are the longhands (OneHtml 1.0 expands the shorthand into them). A `url()` layer that repeats is one tiled image item. A gradient layer is one rectangle per tile on snapped edges, so no seam shows. `fixed` attachment is relative to the viewport: the layer sits inside a translation that `PatchScroll` updates in place, the same entry the fixed-position patch uses. The canvas takes the root's (or the body's) background (§2.11.2). `background-clip: text` and `border-area` are not painted and record a diagnostic.
+- **Gradients** (Images 3 §3). Linear, radial and conic, plain and repeating. Stops get the fixup of §3.4.1 (missing positions spread evenly, positions raised to the largest one before, transition hints expanded to a few intermediate stops). Interpolation is premultiplied sRGB, which is what the display list defines and what Chrome does for legacy colors; the `in <colorspace>` syntax is not parsed yet.
+- **Borders.** Widths floor to whole device pixels (minimum one). `border-image` (§6) slices the source into nine parts, paints the corners, repeats, rounds, stretches or spaces the edges, and draws a gradient source through a transform and clip; `fill` paints the middle. Radius clipping of backgrounds is by clip box (§5.3).
+- **Shadows** (§7). Box shadows paint last to first, outer before the box, inset after the background and before the border, with spread and blur.
+- **Outlines** (UI 4 §4). Drawn after the content of the paint unit that owns them, outside the border edge, offset by `outline-offset`, with the border-style look. `outline-style: auto` is a 2 px ring in the outline color with a 1 px white ring inside it, a fixed deterministic look; it follows the border radius.
+- **Text paint.** `text-shadow` paints each shadow as a blurred copy of the glyph run before the text, the first shadow on top. Decorations (Text Decoration 4) are drawn by the box that declares them across its inline text: underline and overline under the text, line-through over it. Thickness is the font's `post` underline thickness (minimum one device pixel) and the line's edges snap like any rectangle. The underline's center sits half the font's descent below the baseline, which is what Chrome 156 does with the packaged fonts rather than what the `post` table's underline position says: probing 10 to 48 px Liberation Sans, the rule puts the underline on the same rows as Chrome at 10 of 13 sizes and one row off at 18, 24 and 40 px (`UNDERLINE=1` mode of `tools/snap/probe.py`); other families are not probed. The strike-through comes from the `OS/2` strikeout metrics; `text-underline-offset` and `-position: under` override; `solid`, `double`, `dotted`, `dashed` and a zigzag `wavy`. Skip-ink is off. Markers: `disc`, `circle` and `square` are shapes beside the first line; `decimal`, alpha, roman and greek markers are text built from the item's index among its list siblings; `list-style-image` draws the image. `start`, `reversed` and `value` are not read, and `list-style-position: inside` markers are not painted.
+- **Replaced content.** `img` paints through `object-fit`, `object-position` and `image-rendering` (Images 3 §5); the natural size comes from the host's `IImageSource`. A missing image paints nothing and records a diagnostic; alt text and the broken-image icon are not drawn.
+- **Pixel snapping.** Every edge of a background, border, outline, clip and decoration rectangle is placed at `round(x · dpr) / dpr` (half up), and the far edge is snapped on its own. Evidence (Chrome for Testing 156.0.8078.47, headless, `tools/snap/probe.py`; columns shown as `.` white, `R` red, `B` blue):
+
+  | Case | Chrome result |
+  |---|---|
+  | left 10.4, width 10.4 | red on columns 10 to 20 (edges 10 and 21) |
+  | left 10.5, width 10 | columns 11 to 20 (10.5 rounds up to 11, 20.5 to 21) |
+  | left 10.6, width 10 | columns 11 to 20 |
+  | boxes at 0 and 10.5, both 10.5 wide | red 0 to 10, blue 11 to 20, no blended column |
+  | boxes at 0 and 10.3, both 10.3 wide | red 0 to 9, blue 10 to 20 |
+  | scale 2, left 10.25, width 10 | 20 device pixels from device column 21 (20.5 rounds up) |
+  | scale 2, left 10.2, width 10 | 20 device pixels from column 20 |
+  | scale 1.5, left 10.2, width 10 | 15 device pixels from column 15 |
+  | top 10.5, height 10 | rows 11 to 20 |
+  | border 0.4, 0.9, 1.0, 1.6 px at scale 1 | 1 px |
+  | border 2.5, 2.99 px at scale 1 | 2 px |
+  | border 0.4, 0.6, 1.3, 1.6 px at scale 2 | 1, 1, 2, 3 device pixels |
+
+  Known difference: a box narrower than half a device pixel whose edges snap to the same pixel is painted one pixel wide by Chrome and not at all by us.
+- **Resources.** The painter never loads anything: images come from `PaintOptions.Images`, fonts from `PaintOptions.Fonts`. `.Image` supplies `ImageStore`, which decodes through oneimage from the host's `Resources` lookup and answers all of layout (`IResourceResolver`), painting (`IImageSource`) and rasterizing (`IImageResolver`).
+- **Ids.** Items of this area take ids from a second id space (`Id2`, keyed by the owner, a part number and an index) with a free-id search on collision, so ids stay stable across unchanged frames.
+- **Allocation.** Repainting an unchanged page with layered backgrounds, border-image, shadows, outlines, decorations, text-shadow, markers and images, and patching fixed backgrounds on scroll, allocate 0 bytes once warm (`PaintAllocationTests`).
+- **Checked by.** `PaintStyleTests` (parsing and computed values), `PaintPixelTests` (analytic pixels plus two golden scenes), `PaintAllocationTests`.

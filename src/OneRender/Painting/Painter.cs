@@ -30,6 +30,17 @@ public readonly struct PaintOptions
     /// stay put in the viewport. Null paints everything at scroll position zero with no such items.
     /// </summary>
     public ScrollState? Scroll { get; init; }
+
+    /// <summary>Resolves <c>url()</c> images and <c>img</c> sources to display-list handles. Null means every image is missing (a diagnostic each).</summary>
+    public IImageSource? Images { get; init; }
+
+    /// <summary>Shapes the text of list markers (<c>1.</c>, <c>a.</c>). Null draws only the marker shapes (disc, circle, square).</summary>
+    public IFontProvider? Fonts { get; init; }
+
+    /// <summary>
+    /// Device pixels per CSS px, used only to snap box edges to whole device pixels (CSS px when 1). Default 1. The list itself stays in CSS px.
+    /// </summary>
+    public double DevicePixelRatio { get; init; } = 1;
 }
 
 /// <summary>
@@ -48,7 +59,7 @@ public readonly struct PaintOptions
 /// of clips and opacity groups beyond 240 levels is not applied, since the list allows 256 open scopes.
 /// </para>
 /// </remarks>
-public sealed class Painter
+public sealed partial class Painter
 {
     // Phases of one stacking context (or one atomic unit), in paint order. CSS2 Appendix E §E.2 steps 3 to 10.
     private const int PhaseNegative = 0; // step 3: child stacking contexts with negative z-index
@@ -78,6 +89,11 @@ public sealed class Painter
     private int[] _head = new int[64 * PhaseCount];
     private int[] _tail = new int[64 * PhaseCount];
     private int[] _nextEntry = new int[64];
+    private int[] _outlineHead = new int[64];
+    private int[] _outlineTail = new int[64];
+    private int[] _nextOutline = new int[64];
+    private int[] _listIndex = new int[64];
+    private int[] _listCount = new int[64];
     private int[] _ordinal = new int[64];
     private int[] _boxOrdinal = new int[64];
     private double[] _absX = new double[64];
@@ -208,6 +224,8 @@ public sealed class Painter
         EnsureCapacity(n);
         Array.Fill(_head, -1, 0, n * PhaseCount);
         Array.Fill(_tail, -1, 0, n * PhaseCount);
+        Array.Fill(_outlineHead, -1, 0, n);
+        Array.Fill(_outlineTail, -1, 0, n);
         int boxCount = _boxes.Count;
         if (_boxOrdinal.Length < boxCount)
         {
@@ -219,6 +237,10 @@ public sealed class Painter
         _skipBackground = -1;
         _scopes = 0;
         _scroll = options.Scroll;
+        _images = options.Images;
+        _fonts = options.Fonts;
+        _dpr = options.DevicePixelRatio > 0 && double.IsFinite(options.DevicePixelRatio) ? options.DevicePixelRatio : 1;
+        Diagnostics.Clear();
         _vw = options.ViewportWidth;
         _vh = options.ViewportHeight;
         _patchCount = 0;
@@ -246,6 +268,11 @@ public sealed class Painter
         _head = new int[size * PhaseCount];
         _tail = new int[size * PhaseCount];
         _nextEntry = new int[size];
+        _outlineHead = new int[size];
+        _outlineTail = new int[size];
+        _nextOutline = new int[size];
+        _listIndex = new int[size];
+        _listCount = new int[size];
         _ordinal = new int[size];
         _absX = new double[size];
         _absY = new double[size];
@@ -293,6 +320,43 @@ public sealed class Painter
 
     private void Visit(int i)
     {
+        VisitCore(i);
+        if ((FragmentKind)_tree.KindOf(i) != FragmentKind.Box)
+        {
+            return;
+        }
+
+        Box b = _boxes.Make(_tree.BoxOf(i));
+        ref readonly ComputedValues v = ref b.Values;
+        if (v.OutlineWidth > 0 && (v.OutlineStyle != BorderStyleKind.None || v.OutlineAuto) && v.Visibility == VisibilityKind.Visible)
+        {
+            // CSS2 Appendix E step 10: outlines are painted over everything else of their paint unit, in tree order.
+            int owner = _ownerFor[i];
+            int t = _outlineTail[owner];
+            if (t < 0)
+            {
+                _outlineHead[owner] = i;
+            }
+            else
+            {
+                _nextOutline[t] = i;
+            }
+
+            _outlineTail[owner] = i;
+        }
+
+        if (b.Level == BoxLevel.Block && v.Display.IsListItem && _ordinal[i] == 0)
+        {
+            int p = _tree.ParentOf(i);
+            if (p >= 0)
+            {
+                _listIndex[i] = ++_listCount[p];
+            }
+        }
+    }
+
+    private void VisitCore(int i)
+    {
         int parent = _tree.ParentOf(i);
         Rect bb = _tree.BorderBoxOf(i);
         if (parent < 0)
@@ -308,6 +372,9 @@ public sealed class Painter
 
         _flags[i] = 0;
         _nextEntry[i] = -1;
+        _nextOutline[i] = -1;
+        _listIndex[i] = 0;
+        _listCount[i] = 0;
         FragmentKind kind = (FragmentKind)_tree.KindOf(i);
         int owner = parent < 0 ? i : _ownerFor[parent];
         int context = parent < 0 ? i : _contextFor[parent];
@@ -497,8 +564,9 @@ public sealed class Painter
 
         ref readonly ComputedValues rv = ref rootBox.Values;
         ColorValue bg = rv.BackgroundColor;
+        ComputedValues bgValues = rv;
         // Backgrounds 3 §2.11.2: a transparent HTML root takes the background of its body child.
-        if (bg.A <= 0f && string.Equals(rootBox.Node.TagName, "html", StringComparison.Ordinal))
+        if (bg.A <= 0f && !rv.Background.HasImages && string.Equals(rootBox.Node.TagName, "html", StringComparison.Ordinal))
         {
             for (int c = _tree.FirstChildOf(root); c >= 0; c = _tree.NextSiblingOf(c))
             {
@@ -510,6 +578,7 @@ public sealed class Painter
                 Box b = _boxes.Make(_tree.BoxOf(c));
                 if (!b.IsAnonymous && b.Kind == BoxKind.Container && string.Equals(b.Node.TagName, "body", StringComparison.Ordinal))
                 {
+                    bgValues = b.Values;
                     bg = b.Values.BackgroundColor.Resolve(b.Values.Color);
                     _skipBackground = c;
                     break;
@@ -517,7 +586,8 @@ public sealed class Painter
             }
         }
 
-        if (bg.A <= 0f)
+        bool hasImages = bgValues.Background.HasImages;
+        if (bg.A <= 0f && !hasImages)
         {
             return;
         }
@@ -528,7 +598,18 @@ public sealed class Painter
         double bottom = Math.Max(Math.Max(rb.Bottom, ov.Bottom), options.ViewportHeight);
         double left = Math.Min(Math.Min(rb.X, ov.X), 0);
         double top = Math.Min(Math.Min(rb.Y, ov.Y), 0);
-        _list.FillRect(ItemId.Of(0, 5, 0), new RectF(C(left), C(top), C(right - left), C(bottom - top)), ToColor(bg, rv.Color));
+        var canvas = new RectF(C(left), C(top), C(right - left), C(bottom - top));
+        if (bg.A > 0f)
+        {
+            _list.FillRect(ItemId.Of(0, 5, 0), canvas, ToColor(bg, rv.Color));
+        }
+
+        if (hasImages)
+        {
+            // The layers are positioned against the root element's boxes and cover the whole canvas.
+            BoxGeometry g = GeometryOf(root, in rv);
+            PaintBackground(root, in bgValues, in g, new PaintColor(bgValues.Color.R, bgValues.Color.G, bgValues.Color.B, bgValues.Color.A), true, in canvas);
+        }
     }
 
     // ------------------------------------------------------------------ execution
@@ -641,6 +722,8 @@ public sealed class Painter
 
     private void Exit(int top)
     {
+        int frag = _stack[top].Fragment;
+        PaintOutlines(frag, false);
         if (_stack[top].Scroll)
         {
             _list.PopTransform();
@@ -653,6 +736,7 @@ public sealed class Painter
             _scopes--;
         }
 
+        PaintOutlines(frag, true);
         if (_stack[top].Group)
         {
             _list.PopGroup();
@@ -1071,7 +1155,7 @@ public sealed class Painter
             h = 2e6;
         }
 
-        var rect = new RectF(C(x), C(y), C(w), C(h));
+        RectF rect = SnapRect(x, y, w, h);
         CornerRadii outer = ResolveRadii(in v, bb.Width, bb.Height, 0);
         if (outer.IsZero || marginApplies)
         {
@@ -1094,106 +1178,6 @@ public sealed class Painter
     private static float Shrink(float radius, double border) => (float)Math.Max(0, radius - border);
 
     // ------------------------------------------------------------------ box decoration: background-color and borders
-
-    private void PaintBoxDecoration(int f)
-    {
-        Box box = _boxes.Make(_tree.BoxOf(f));
-        ref readonly ComputedValues v = ref box.Values;
-        if (v.Visibility != VisibilityKind.Visible)
-        {
-            return;
-        }
-
-        Rect bb = _tree.BorderBoxOf(f);
-        if (!(bb.Width > 0) || !(bb.Height > 0))
-        {
-            return;
-        }
-
-        FragmentTraits traits = (FragmentTraits)_tree.TraitsOf(f);
-        bool sliceStart = (traits & FragmentTraits.ContinuesBefore) != 0;
-        bool sliceEnd = (traits & FragmentTraits.ContinuesAfter) != 0;
-        var rect = new RectF(C(_absX[f]), C(_absY[f]), C(bb.Width), C(bb.Height));
-        CornerRadii radii = ResolveRadii(in v, bb.Width, bb.Height, (sliceStart ? 1 : 0) | (sliceEnd ? 2 : 0));
-
-        if (f != _skipBackground && f != 0 && v.BackgroundColor.A > 0f)
-        {
-            PaintColor c = ToColor(v.BackgroundColor, v.Color);
-            if (radii.IsZero)
-            {
-                _list.FillRect(Id(f, 0), rect, c);
-            }
-            else
-            {
-                _list.FillRoundedRect(Id(f, 0), rect, radii, c);
-            }
-        }
-
-        Insets border = _tree.BorderOf(f);
-        double top = SideWidth(border.Top, v.BorderTopStyle);
-        double right = sliceEnd ? 0 : SideWidth(border.Right, v.BorderRightStyle);
-        double bottom = SideWidth(border.Bottom, v.BorderBottomStyle);
-        double left = sliceStart ? 0 : SideWidth(border.Left, v.BorderLeftStyle);
-        if (top > 0 || right > 0 || bottom > 0 || left > 0)
-        {
-            PaintColor cur = ToColor(v.Color, v.Color);
-            _list.DrawBorder(
-                Id(f, 1),
-                rect,
-                radii,
-                new BorderSide(C(top), MapStyle(v.BorderTopStyle), ToColor(v.BorderTopColor, cur)),
-                new BorderSide(C(right), MapStyle(v.BorderRightStyle), ToColor(v.BorderRightColor, cur)),
-                new BorderSide(C(bottom), MapStyle(v.BorderBottomStyle), ToColor(v.BorderBottomColor, cur)),
-                new BorderSide(C(left), MapStyle(v.BorderLeftStyle), ToColor(v.BorderLeftColor, cur)));
-        }
-
-        if (v.IsMulticol && v.ColumnRuleWidth > 0)
-        {
-            PaintColumnRules(f, in v);
-        }
-    }
-
-    // Multicol 1 §4: a rule is drawn in the middle of the gap between two adjacent columns of a row, as high as the columns, above the
-    // container's background and border and below its content. Rules separate columns that exist, so a row with fewer filled
-    // columns than the count has fewer rules, and a spanning box ends the run (§4.1).
-    private void PaintColumnRules(int f, in ComputedValues v)
-    {
-        if (v.ColumnRuleStyle is BorderStyleKind.None or BorderStyleKind.Hidden)
-        {
-            return;
-        }
-
-        PaintColor cur = ToColor(v.Color, v.Color);
-        PaintColor color = ToColor(v.ColumnRuleColor, cur);
-        float w = C(v.ColumnRuleWidth);
-        BorderStyle style = MapStyle(v.ColumnRuleStyle);
-        int prev = -1;
-        for (int c = _tree.FirstChildOf(f); c >= 0; c = _tree.NextSiblingOf(c))
-        {
-            if ((FragmentKind)_tree.KindOf(c) != FragmentKind.Column)
-            {
-                prev = -1;
-                continue;
-            }
-
-            if (prev >= 0)
-            {
-                Rect a = _tree.BorderBoxOf(prev), b = _tree.BorderBoxOf(c);
-                if (Math.Abs(a.Y - b.Y) < 0.01)
-                {
-                    double gapStart = b.X >= a.X ? a.Right : b.Right;
-                    double gapEnd = b.X >= a.X ? b.X : a.X;
-                    double x = ((gapStart + gapEnd) / 2) - (w / 2);
-                    var rect = new RectF(C(_absX[prev] - a.X + x), C(_absY[prev]), w, C(a.Height));
-                    ItemId id = ItemId.Of((uint)(_tree.BoxOf(f) + 1), (ushort)(10 | ((_ordinal[f] >> 16) << 4)), (ushort)_tree.FragmentainerOf(c));
-                    var none = new BorderSide(0f, BorderStyle.None, color);
-                    _list.DrawBorder(id, rect, default, none, none, none, new BorderSide(w, style, color));
-                }
-            }
-
-            prev = c;
-        }
-    }
 
     // CSS2 §8.5.3: a side whose style is none or hidden has a used width of zero.
     private static double SideWidth(double width, BorderStyleKind style) =>
@@ -1252,62 +1236,6 @@ public sealed class Painter
 
     private static PaintColor ToColor(ColorValue c, PaintColor current) =>
         c.IsCurrentColor ? current : new PaintColor(c.R, c.G, c.B, c.A);
-
-    // ------------------------------------------------------------------ text
-
-    private void PaintText(int f)
-    {
-        Box box = _boxes.Make(_tree.BoxOf(f));
-        ref readonly ComputedValues v = ref box.Values;
-        if (v.Visibility != VisibilityKind.Visible)
-        {
-            return;
-        }
-
-        GlyphRun run = _tree.GetGlyphRun(_tree.GlyphRunOf(f));
-        int count = run.GlyphCount;
-        if (count == 0)
-        {
-            return;
-        }
-
-        if (_gx.Length < count)
-        {
-            int size = Math.Max(count, _gx.Length * 2);
-            _gx = new float[size];
-            _gy = new float[size];
-            _gc = new int[size];
-        }
-
-        ReadOnlySpan<double> xs = _tree.GlyphX(in run);
-        ReadOnlySpan<double> ys = _tree.GlyphY(in run);
-        ReadOnlySpan<int> clusters = _tree.GlyphClusters(in run);
-        ReadOnlySpan<char> all = box.Text;
-        int start = Math.Clamp(_tree.TextStartOf(f), 0, all.Length);
-        int length = Math.Clamp(_tree.TextLengthOf(f), 0, all.Length - start);
-        ReadOnlySpan<char> text = all.Slice(start, length);
-        for (int k = 0; k < count; k++)
-        {
-            _gx[k] = C(xs[k]);
-            _gy[k] = C(ys[k]);
-            // Clusters are offsets into the box's text; the list wants them relative to the run's text.
-            _gc[k] = Math.Clamp(clusters[k] - start, 0, length);
-        }
-
-        _list.DrawGlyphRun(
-            Id(f, 2),
-            run.Face,
-            (float)run.FontSize,
-            C(_absX[f]),
-            C(_baseY[f]),
-            new PaintColor(v.Color.R, v.Color.G, v.Color.B, v.Color.A),
-            _tree.GlyphIds(in run),
-            _gx.AsSpan(0, count),
-            _gy.AsSpan(0, count),
-            _gc.AsSpan(0, count),
-            text,
-            run.RightToLeft);
-    }
 
     // ------------------------------------------------------------------ ids
 

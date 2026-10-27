@@ -481,6 +481,63 @@ public partial struct ComputedValues
     /// <summary><c>column-gap</c>.</summary>
     public Length ColumnGap { get; internal set; }
 
+    /// <summary>The layered <c>background-*</c> longhands other than the color.</summary>
+    public BackgroundSpec Background { get; internal set; }
+
+    /// <summary>The <c>border-image-*</c> longhands.</summary>
+    public BorderImageSpec BorderImage { get; internal set; }
+
+    /// <summary><c>box-shadow</c>.</summary>
+    public ShadowList BoxShadow { get; internal set; }
+
+    /// <summary><c>text-shadow</c> (inherited).</summary>
+    public ShadowList TextShadow { get; internal set; }
+
+    /// <summary><c>outline-width</c> in px; 0 when the style is <c>none</c> (CSS UI 4 §4.1).</summary>
+    public double OutlineWidth { get; internal set; }
+
+    /// <summary><c>outline-style</c> other than <c>auto</c>; see <see cref="OutlineAuto"/>.</summary>
+    public BorderStyleKind OutlineStyle { get; internal set; }
+
+    /// <summary>True for <c>outline-style: auto</c> (a focus-ring look).</summary>
+    public bool OutlineAuto { get; internal set; }
+
+    /// <summary><c>outline-color</c>; <c>invert</c> computes to <c>currentcolor</c>.</summary>
+    public ColorValue OutlineColor { get; internal set; }
+
+    /// <summary><c>outline-offset</c> in px.</summary>
+    public double OutlineOffset { get; internal set; }
+
+    /// <summary><c>text-decoration-line</c>. Not inherited, but it decorates descendant text (Text Decoration 4 §2.1).</summary>
+    public TextDecorationLines TextDecorationLine { get; internal set; }
+
+    /// <summary><c>text-decoration-style</c>.</summary>
+    public TextDecorationStyleKind TextDecorationStyle { get; internal set; }
+
+    /// <summary><c>text-decoration-color</c>.</summary>
+    public ColorValue TextDecorationColor { get; internal set; }
+
+    /// <summary><c>text-decoration-thickness</c>: <see cref="Length.Auto"/>, <see cref="Length.Normal"/> for <c>from-font</c>, or a length or percentage of 1em.</summary>
+    public Length TextDecorationThickness { get; internal set; }
+
+    /// <summary><c>text-underline-offset</c>: <see cref="Length.Auto"/> or a length or percentage of 1em.</summary>
+    public Length TextUnderlineOffset { get; internal set; }
+
+    /// <summary><c>text-underline-position</c>.</summary>
+    public TextUnderlinePositionKind TextUnderlinePosition { get; internal set; }
+
+    /// <summary><c>object-fit</c>.</summary>
+    public ObjectFitKind ObjectFit { get; internal set; }
+
+    /// <summary><c>object-position</c>.</summary>
+    public PositionSpec ObjectPosition { get; internal set; }
+
+    /// <summary><c>image-rendering</c> (inherited).</summary>
+    public ImageRenderingKind ImageRendering { get; internal set; }
+
+    /// <summary><c>list-style-image</c> (inherited).</summary>
+    public ImageSpec ListStyleImage { get; internal set; }
+
     /// <summary><c>break-before</c>.</summary>
     public BreakKind BreakBefore { get; internal set; }
 
@@ -553,6 +610,7 @@ public partial struct ComputedValues
         InitFlex(ref v);
         InitFragmentation(ref v);
         InitGrid(ref v);
+        InitPaint(ref v);
         return v;
     }
 }

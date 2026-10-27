@@ -216,6 +216,11 @@ internal sealed class ImageSamplerBrush : Brush
     private readonly double _fx, _fy, _fw, _fh;
     private readonly bool _smooth;
 
+    // Tiling (format 1.1): device -> local space map, the first tile in local space and the repeat period.
+    private readonly bool _tiled;
+    private readonly double _la, _lb, _lc, _ld, _le, _lf;
+    private readonly double _tx, _ty, _tw, _th, _px, _py, _kx, _ky;
+
     public ImageSamplerBrush(RgbaImage image, in RectF source, in Matrix3x2 sourceToDevice, bool smooth)
     {
         _image = image;
@@ -257,6 +262,32 @@ internal sealed class ImageSamplerBrush : Brush
         _fh = _sh;
     }
 
+    /// <summary>A tiled image: <paramref name="tile"/> is one copy in local space, repeated with the given gaps; <paramref name="localToDevice"/> maps local space to the device.</summary>
+    public ImageSamplerBrush(RgbaImage image, in RectF source, in RectF tile, float gapX, float gapY, in Matrix3x2 localToDevice, bool smooth)
+        : this(image, source, Matrix3x2.Identity * localToDevice, smooth)
+    {
+        _tiled = true;
+        if (!Matrix3x2.Invert(localToDevice, out Matrix3x2 inv))
+        {
+            throw new ArgumentException("The transform is not invertible.", nameof(localToDevice));
+        }
+
+        _la = inv.M11;
+        _lb = inv.M12;
+        _lc = inv.M21;
+        _ld = inv.M22;
+        _le = inv.M31;
+        _lf = inv.M32;
+        _tx = tile.X;
+        _ty = tile.Y;
+        _tw = tile.Width;
+        _th = tile.Height;
+        _px = tile.Width + gapX;
+        _py = tile.Height + gapY;
+        _kx = tile.Width / _fw;
+        _ky = tile.Height / _fh;
+    }
+
     public override void FillRow(int x, int y, Span<float> rgba)
     {
         int count = rgba.Length / 4;
@@ -267,6 +298,22 @@ internal sealed class ImageSamplerBrush : Brush
             double u = (px * _ia) + (py * _ic) + _ie;
             double v = (px * _ib) + (py * _id) + _if;
             Span<float> o = rgba.Slice(i * 4, 4);
+            if (_tiled)
+            {
+                double lx = (px * _la) + (py * _lc) + _le - _tx;
+                double ly = (px * _lb) + (py * _ld) + _lf - _ty;
+                lx -= Math.Floor(lx / _px) * _px;
+                ly -= Math.Floor(ly / _py) * _py;
+                if (lx >= _tw || ly >= _th)
+                {
+                    o[0] = o[1] = o[2] = o[3] = 0f;
+                    continue;
+                }
+
+                u = _fx + (lx / _kx);
+                v = _fy + (ly / _ky);
+            }
+
             if (_smooth)
             {
                 Bilinear(u, v, o);

@@ -19,8 +19,8 @@ public sealed class HtmlRenderOptions
     public string? BaseUrl { get; init; }
 
     /// <summary>
-    /// Supplies the bytes of a style sheet by absolute address, or null when the host does not have it. The renderer never fetches
-    /// anything. Default none.
+    /// Supplies the bytes of a style sheet, a font file or an image by absolute address, or null when the host does not have it. The
+    /// renderer never fetches anything. Default none.
     /// </summary>
     public Func<string, byte[]?>? Resources { get; init; }
 
@@ -59,8 +59,12 @@ public static class HtmlRender
         ArgumentOutOfRangeException.ThrowIfLessThan(options.Height, 1);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(options.Height, 16384);
 
+        var images = options.Resources is null ? null : new ImageStore(options.Resources, options.BaseUrl);
         var pageOptions = new HtmlPageOptions(options.Fonts ?? FontProviders.ForCurrentThread())
         {
+            Images = images,
+            Replaced = images,
+            DevicePixelRatio = options.DevicePixelRatio,
             ViewportWidth = options.Width,
             ViewportHeight = options.Height,
             BaseUrl = options.BaseUrl,
@@ -72,6 +76,6 @@ public static class HtmlRender
         page.Paint(list, null, cancellationToken);
         int w = (int)Math.Ceiling(options.Width * options.DevicePixelRatio);
         int h = (int)Math.Ceiling(options.Height * options.DevicePixelRatio);
-        return DisplayListRasterizer.Render(list, w, h, new RasterOptions { DevicePixelRatio = options.DevicePixelRatio, Background = options.PageColor }, cancellationToken);
+        return DisplayListRasterizer.Render(list, w, h, new RasterOptions { DevicePixelRatio = options.DevicePixelRatio, Background = options.PageColor, Images = images }, cancellationToken);
     }
 }

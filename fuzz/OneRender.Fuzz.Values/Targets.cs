@@ -26,6 +26,7 @@ internal static class Targets
         ["fragmentation"] = FragmentationTarget.Run,
         ["positioning"] = Positioning,
         ["inline"] = Inline,
+        ["paint"] = Paint,
     };
 
     private static readonly string[] PropertyNames =
@@ -377,6 +378,59 @@ internal static class Targets
         if (!(min <= max + 1e-6) || double.IsNaN(min) || double.IsNaN(max))
         {
             throw new InvalidOperationException("min-content " + min + " is wider than max-content " + max);
+        }
+    }
+
+    private sealed class FuzzImages : OneRender.Painting.IImageSource
+    {
+        public bool TryGetImage(string address, out OneRender.Painting.ImageInfo image)
+        {
+            image = new OneRender.Painting.ImageInfo(new OneRender.Painting.ImageHandle(address.Length & 3), 1 + (address.Length * 7 % 90), 1 + (address.Length * 13 % 60));
+            return (address.Length & 7) != 0;
+        }
+    }
+
+    /// <summary>
+    /// As <c>inline</c> through the whole pipeline to a display list (every paint property reaches the painter), painted twice into
+    /// the same list kind and rasterized small: the two paints must agree, the list must be closed and the rasterizer may only throw
+    /// its typed exception.
+    /// </summary>
+    private static void Paint(ReadOnlySpan<byte> data)
+    {
+        if (data.Length < 2)
+        {
+            return;
+        }
+
+        string text = Decode(data);
+        int ff = text.IndexOf('\f', StringComparison.Ordinal);
+        string css = ff < 0 ? string.Empty : text[(ff + 1)..];
+        string html = ff < 0 ? text : text[..ff];
+        var images = new FuzzImages();
+        var options = new HtmlPageOptions(OneRender.Image.FontProviders.ForCurrentThread())
+        {
+            ViewportWidth = 20 + ((data[0] >> 1) * 3),
+            ViewportHeight = 64,
+            Images = images,
+        };
+        HtmlPage page = HtmlPage.Create("<style>" + css.Replace("</", "<\\/", StringComparison.Ordinal) + "</style>" + html, options);
+        var painter = new OneRender.Painting.Painter();
+        var a = new OneRender.Painting.DisplayList();
+        var b = new OneRender.Painting.DisplayList();
+        var popts = new OneRender.Painting.PaintOptions(options.ViewportWidth, 64) { Images = images, Scroll = page.Scroll };
+        painter.Paint(page.Fragments, a, popts);
+        painter.Paint(page.Fragments, b, popts);
+        if (a.Count != b.Count)
+        {
+            throw new InvalidOperationException("painting twice gave " + a.Count + " and " + b.Count + " items");
+        }
+
+        try
+        {
+            OneRender.Image.DisplayListRasterizer.Render(a, 48, 48, new OneRender.Image.RasterOptions());
+        }
+        catch (OneRender.Image.RasterizationException)
+        {
         }
     }
 

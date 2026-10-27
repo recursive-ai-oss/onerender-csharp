@@ -18,6 +18,7 @@ public sealed partial class StyledTree
 
     private readonly StyleDeclaration.Source _builderSource = new();
     private readonly Dictionary<string, int> _tagIds = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, string> _sources = new(StringComparer.Ordinal);
     private readonly List<string> _tags = ["" ];
     private byte[] _kind;
     private int[] _parent;
@@ -33,6 +34,7 @@ public sealed partial class StyledTree
     private byte[] _replaced;
     private double[] _naturalW;
     private double[] _naturalH;
+    private string?[] _src;
     private char[] _text;
     private int[] _sourceToNode = [];
     private int _count;
@@ -62,6 +64,7 @@ public sealed partial class StyledTree
         _replaced = new byte[64];
         _naturalW = new double[64];
         _naturalH = new double[64];
+        _src = new string?[64];
         _text = new char[256];
         _tagIds[""] = 0;
     }
@@ -166,6 +169,19 @@ public sealed partial class StyledTree
         _naturalH[node.Index] = height < 0 ? double.NaN : height;
     }
 
+    /// <summary>Sets the address of replaced content of a builder element; the display list refers to it through the host's <see cref="Painting.IImageSource"/>.</summary>
+    /// <param name="node">A replaced element of this tree.</param>
+    /// <param name="source">The address the host's image source understands; null for none.</param>
+    public void SetReplacedSource(StyledNode node, string? source)
+    {
+        if (node.IsNull || !ReferenceEquals(node.Tree, this))
+        {
+            throw new ArgumentException("The node does not belong to this tree.", nameof(node));
+        }
+
+        _src[node.Index] = source;
+    }
+
     private void CheckParent(StyledNode parent)
     {
         if (!ReferenceEquals(parent.Tree, this))
@@ -248,6 +264,32 @@ public sealed partial class StyledTree
 
     internal ReplacedKind ReplacedOf(int i) => (ReplacedKind)_replaced[i];
 
+    internal string? ReplacedSourceOf(int i) => _src[i];
+
+    // Source addresses repeat from build to build; the same string object is reused so a rebuild allocates nothing once warm.
+    internal void SetReplacedSource(int i, ReadOnlySpan<char> source)
+    {
+        if (source.IsEmpty)
+        {
+            _src[i] = null;
+            return;
+        }
+
+        Dictionary<string, string>.AlternateLookup<ReadOnlySpan<char>> lookup = _sources.GetAlternateLookup<ReadOnlySpan<char>>();
+        if (!lookup.TryGetValue(source, out string? s))
+        {
+            s = source.ToString();
+            if (_sources.Count < 1 << 14)
+            {
+                _sources[s] = s;
+            }
+        }
+
+        _src[i] = s;
+    }
+
+    internal void SetReplacedSource(int i, string? source) => _src[i] = source;
+
     internal double NaturalWidthOf(int i) => _naturalW[i];
 
     internal double NaturalHeightOf(int i) => _naturalH[i];
@@ -307,6 +349,7 @@ public sealed partial class StyledTree
         _replaced[i] = 0;
         _naturalW[i] = double.NaN;
         _naturalH[i] = double.NaN;
+        _src[i] = null;
         if (parent >= 0)
         {
             if (_last[parent] >= 0)
@@ -467,5 +510,6 @@ public sealed partial class StyledTree
         Array.Resize(ref _replaced, n);
         Array.Resize(ref _naturalW, n);
         Array.Resize(ref _naturalH, n);
+        Array.Resize(ref _src, n);
     }
 }

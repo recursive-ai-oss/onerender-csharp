@@ -97,6 +97,9 @@ public readonly struct StyledNode : IEquatable<StyledNode>
     /// <summary>The text of a <see cref="StyledNodeKind.Text"/>, <see cref="StyledNodeKind.Before"/> or <see cref="StyledNodeKind.After"/> node; empty otherwise. Valid until the tree is cleared or grows.</summary>
     public ReadOnlySpan<char> Text => Tree!.TextOf(Index);
 
+    /// <summary>The address of replaced content (<c>src</c> of an image, <c>data</c> of an object) as written, or null when there is none.</summary>
+    public string? ReplacedSource => Tree!.ReplacedSourceOf(Index);
+
     /// <summary>The kind of replaced content an element carries, or <see cref="ReplacedKind.None"/>.</summary>
     public ReplacedKind Replaced => Tree!.ReplacedOf(Index);
 
