@@ -188,17 +188,6 @@ internal static class Targets
         _ = boxes.Dump();
     }
 
-    private sealed class NoFonts : IFontProvider
-    {
-        public FontCatalog Catalog => throw new NotSupportedException();
-
-        public ResolvedFontList Resolve(in ComputedValues style) => throw new NotSupportedException();
-
-        public ShapedText Shape(ReadOnlySpan<char> text, in ComputedValues style, bool rightToLeft = false) => throw new NotSupportedException();
-
-        public FontMetricsInfo GetMetrics(in ComputedValues style) => throw new NotSupportedException();
-    }
-
     /// <summary>
     /// As <c>html</c>, then block layout with floats and clearance at a width taken from the first byte. A second, fresh engine and
     /// fragment tree must give the same fragments as the retained ones laid out again.
@@ -221,7 +210,7 @@ internal static class Targets
         var boxes = new BoxTree(tree);
         boxes.Build();
         double width = 40 + ((data[0] >> 1) * 7);
-        var input = new LayoutInput(width, double.NaN, new NoFonts());
+        var input = new LayoutInput(width, double.NaN, OneRender.Image.FontProviders.ForCurrentThread());
         var engine = new BlockLayoutEngine();
         var fragments = new FragmentTree(boxes);
         engine.Layout(boxes, input, fragments);
@@ -267,7 +256,7 @@ internal static class Targets
 
         var engine = new BlockLayoutEngine();
         var frags = new FragmentTree(boxes);
-        var input = new LayoutInput(400, 300, new NoFonts());
+        var input = new LayoutInput(400, 300, OneRender.Image.FontProviders.ForCurrentThread());
         engine.Layout(boxes, input, frags);
         string first = frags.Dump();
         for (Fragment f = frags.Root; !f.IsNull; f = Next(f))

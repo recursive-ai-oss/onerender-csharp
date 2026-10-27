@@ -154,12 +154,23 @@ internal sealed partial class PageEmitter
         sub.PushTransform(ItemId.Of(uint.MaxValue, ushort.MaxValue, ushort.MaxValue), Matrix3x2.CreateTranslation(-b.X, -b.Y));
         DisplayListCopier.Copy(_list, from, to, sub);
         sub.PopTransform();
-        RgbaImage pixels = DisplayListRasterizer.Render(
-            sub,
-            pw,
-            ph,
-            new RasterOptions { DevicePixelRatio = (float)scale, Background = PaintColor.Transparent, Images = _s.Images, Diagnostics = _s.Diagnostics },
-            _token);
+        RgbaImage pixels;
+        try
+        {
+            pixels = DisplayListRasterizer.Render(
+                sub,
+                pw,
+                ph,
+                new RasterOptions { DevicePixelRatio = (float)scale, Background = PaintColor.Transparent, Images = _s.Images, Diagnostics = _s.Diagnostics },
+                _token);
+        }
+        catch (RasterizationException e)
+        {
+            // Hostile geometry (coordinates beyond what the rasterizer accepts) leaves a hole and a diagnostic, never an exception from the writer.
+            _s.Diagnostics.Add(DiagnosticKind.Unsupported, what + " (item " + _list[from].Id.Value + ") is not drawn: it could not be rasterized (" + e.Message + ")");
+            return;
+        }
+
         PdfCreatedImage image = _s.Embed(pixels);
         if (report)
         {
