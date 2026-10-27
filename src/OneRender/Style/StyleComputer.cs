@@ -250,6 +250,7 @@ internal sealed partial class StyleComputer
             case PropertyId.Content: d.Content = s.Content; d.ContentText = s.ContentText; break;
             case PropertyId.ListStyleType: d.ListStyleType = s.ListStyleType; d.ListStyleTypeIsString = s.ListStyleTypeIsString; break;
             case PropertyId.ListStylePosition: d.ListStylePosition = s.ListStylePosition; break;
+            case PropertyId.OverflowClipMargin: d.OverflowClipMarginPx = s.OverflowClipMarginPx; d.OverflowClipMarginBox = s.OverflowClipMarginBox; break;
         }
     }
 

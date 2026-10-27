@@ -123,8 +123,7 @@ fragmentation are separate implementations behind this one entry.
 §9.4.1, widths (§10.3.3, replaced §10.3.2/§10.3.4 with the constraint table of §10.4), heights (§10.5 percentages that
 behave as `auto`, §10.6.3, min/max §10.7), `box-sizing`, `aspect-ratio` (Sizing 4 §5), margin collapsing (§8.3.1) and
 intrinsic sizes (Sizing 3 §5). Flex, grid and table containers are laid out as plain block containers until their own
-layout exists; floats, positioned boxes and `clear` are not handled yet (floats and absolutely positioned boxes get no
-fragment).
+layout exists; floats and `clear` are not handled yet (floats get no fragment). Positioned boxes are handled, see below.
 
 - **No recursion.** One explicit stack of frames (a struct array kept between runs) walks the box tree; a frame is a box
   whose children are being placed. Depth is capped at 262,144 levels (a diagnostic, and the deeper boxes get no fragment).
@@ -150,7 +149,7 @@ fragment).
   uses it for inline-block and other atomic boxes (`shrinkToFit` selects CSS2 §10.3.5 widths).
 - **List items.** An outside `::marker` box gets a fragment one `font-size` wide and one line high just outside the item's
   start edge, at the content top. This is a placeholder until real markers.
-- **Not yet:** the `overflow` propagation from `body` to the viewport, `clear`, floats, and the block-axis `fit-content`.
+- **Not yet:** `clear`, floats, and the block-axis `fit-content`.
 
 ### The inline seam (`IInlineLayout`)
 
@@ -171,3 +170,82 @@ void Measure(Box container, IFontProvider fonts, out double minContent, out doub
 - `PlaceholderInlineLayout` is the stand-in used until inline layout lands: a container with any non-blank text, replaced or
   atomic inline child gets one empty line box as tall as `line-height` (`normal` is 1.2 × font size) and the intrinsic
   inline sizes are 0.
+
+## Positioning (`BlockLayoutEngine.Positioned.cs`)
+
+- **Containing blocks** (CSS2 §10.1, Position 3 §2). Each block frame carries `CbFrag`, the fragment of its nearest positioned
+  ancestor (`position` other than `static`), or -1 for the initial containing block. Nested layouts started through
+  `LayoutIndependent` inherit it from the frame that started them. An inline box is never a containing block yet: a positioned
+  `span` does not contain absolute boxes, the nearest block-level positioned ancestor does. That is the one approximation, and it
+  sits behind `CbFrag`, so an inline layout that produces fragments for inline boxes only has to set it for them.
+- **Relative** (§9.4.3). The shift is applied when a box closes, to the fragment rectangle only: the flow position that siblings
+  and the parent's height see is unchanged. A shifted box adds its shifted rectangle to the parent's scrollable overflow.
+  `left` wins over `right` in a left-to-right containing block, `top` over `bottom` always; percentage `top`/`bottom` against a
+  height that depends on content are `auto`.
+- **Absolute and fixed** (§10.3.7, §10.6.4; replaced §10.3.8, §10.6.5). While placing the in-flow children of a block, an
+  absolute child is not laid out. It gets a placeholder fragment, appended as the next child of its *parent's* fragment so
+  fragment order is document order (paint order needs that), and a queue entry holding its static position in the parent's
+  border-box coordinates. The static top is the cursor plus the pending margin run (0 when the parent's own top margin is still
+  pending). After the whole tree is done the queue is resolved in discovery order, so a box is resolved after the box that contains
+  it:
+  1. document-space origins of all fragments are computed in one pass (parents precede children), so a containing block's padding
+     box and a parent's offset cost O(1) however deep they are;
+  2. `SolveAbsoluteAxis` solves one axis (`start + margins + size + end + padding/border = containing size`) with `auto` as NaN:
+     every case of §10.3.7, and §10.6.4 with the vertical differences (static top, equal margins even when negative, bottom
+     ignored when over-constrained); the containing block's direction picks the ignored inset. Min/max apply as §10.4 says, by
+     solving again with the violated size. An `auto` width is shrink-to-fit from the intrinsic sizes; an `auto` height is the
+     content height (laid out once with the solved width forced into the box) or follows from `top`/`bottom` or `aspect-ratio`;
+  3. the box is laid out through the same entry as every independent block (`LayoutIndependent`) with the solved sizes forced, into
+     the placeholder, then moved to its place. Percentages of the box itself resolve against the containing block's padding box.
+  Fixed boxes use the viewport (`LayoutInput`, at scroll position 0) as their containing block; painting counters the viewport
+  scroll, so layout needs no scroll input. The root element can itself be `absolute`/`fixed`; it is then placed in the initial
+  containing block.
+- **Absolute boxes inside inline content** have the start of the container's content box as their static position until the inline
+  layout reports where the hypothetical box would be. `QueueInlineAbsolutes` is the seam: an inline layout calls the same queue
+  with its own position.
+- **Sticky** (Position 3 §3.4) takes no part in layout (it is in flow like `relative` with no offset). The shift is computed at
+  paint time, see below.
+- **Bounds.** The queue is capped at 4M boxes, nothing recurses, the resolution pass is linear in fragments plus queue entries, and
+  the token is checked every 64 boxes. A 3,000-deep nest of positioned boxes with an absolute child at each level lays out in
+  milliseconds (test).
+
+## Overflow and scrolling
+
+- **Overflow values** (Overflow 3 §3.1) are already computed with the visible/clip → auto/hidden rule when the other axis scrolls.
+  A *scroll container* is a box with `overflow` other than `visible`/`clip` on an axis; `overflow: clip` clips like `hidden` but
+  is not scrollable. `overflow-clip-margin` (Overflow 4 §3.2: `<visual-box> || <length>`, padding-box and 0 by default) outsets
+  the clip edge on `clip` axes only.
+- **Viewport propagation** (Overflow 3 §3.3). `ViewportOverflow.Resolve` picks the root's `overflow` or, when the root is `html`
+  with `visible` and has a `body` child with something else, the body's; `visible` becomes `auto` and `clip` becomes `hidden` for the
+  viewport. The element it came from neither clips, nor is a scroll container, nor establishes a block formatting context for that
+  reason. Layout and the painter both ask the same function.
+- **Scrollable overflow** (Overflow 3 §2.2) is recorded on every box fragment (`Fragment.ScrollableOverflow`, in the fragment's
+  border-box coordinates). It starts from the border box and takes in-flow children's overflow (shifted by relative offsets). A
+  box that clips an axis contributes only its border box on that axis. A scroll container's own area starts at its padding box,
+  and content that reaches past the end of the content box also brings the end padding in. Absolute boxes add their overflow to
+  the fragment of their containing block, not their parent, and from there to every ancestor that does not clip; fixed boxes add
+  nothing. This is one pass over the fragments in reverse order after the queue is resolved.
+- **Scroll positions** are host input in a `ScrollState`: one viewport offset and one offset per scroll container (keyed by box
+  index, so call `Clear()` after rebuilding the box tree). They are stored as requested and clamped when used to what
+  `ScrollState.GetRange` (a container) or `GetViewportRange` (the root's scrollable overflow beyond the viewport) allows:
+  `0..scrollable overflow − padding box`, and for `direction: rtl` containers `overflow start − padding start .. 0`.
+  `HtmlPage.Scroll` is the page's state. Layout never reads it.
+- **Painting scrolls.** `PaintOptions.Scroll` turns it on. A scroll container that can scroll emits `PushClipRect` (fixed) and, inside
+  it, a `PushTransform` that translates its content by the negative offset; the viewport gets one around everything but the
+  canvas; fixed boxes get a counter-translation by the viewport offset; sticky boxes get a translation of their own. A box painted
+  outside its containing block's scope (an absolute or relative box deferred to its stacking context) gets a copy of the scroll
+  transform of each scroll container on its containing-block chain, so it scrolls with the container but not with ancestors it
+  escapes. Items are only emitted when the container can scroll, which depends on layout, never on the offset. Their ids use parts 6 (scroll container), 7 (sticky), 8 (fixed counter-scroll) and 9 (copy of a scroll transform pushed for a deferred box), and `ItemId.Of(0, 6, 0)` for the viewport.
+- **Changing a position never repaints.** `Painter.PatchScroll(retained)` recomputes the translation of every scroll, viewport,
+  fixed and sticky item the last paint emitted and calls `PatchTransform` on those that changed; the damage is the old and new
+  bounds of what moved, clipped by the container, and nothing allocates. The patched list equals a fresh paint (tested by comparing
+  ids, bounds and both hashes). The sequence for a host is: `page.Scroll.SetOffset(box, x, y)`, `painter.PatchScroll(retained)`,
+  draw the damage.
+- **Sticky shifts** are `StickyPositioning.Offset(borderBox, margins, containingBlock, scrollport, scroll, insets)`, a pure
+  function: on each axis the box is moved inward of the scrollport edge by its inset (the scrollport shifted by the scroll offset,
+  in unscrolled coordinates) and then limited so its margin box stays in its containing block (the parent's content box); with
+  both insets on an axis, the start inset wins. The painter records the geometry in document space when it paints, so a scroll
+  change is arithmetic on a table. A sticky box inside another sticky box is shifted relative to the outer one's final position.
+  The scrollport of a sticky box is its nearest scroll container's padding box, or the viewport.
+- **Not done:** scrollbars (no gutter, nothing is drawn), scroll snapping, scroll events, `scroll-behavior`, `overscroll`, `contain`, and
+  scrollable overflow of inline content (line and text fragments add none until inline layout lands).

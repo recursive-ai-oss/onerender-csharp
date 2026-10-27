@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using OneFont;
+using OneRender.Layout;
+using OneRender.Painting;
 using OneRender.Style;
 using OneRender.Tree;
 using RecursiveAI.OneHtml;
@@ -17,6 +20,7 @@ internal static class Targets
         ["values"] = Values,
         ["tree"] = Tree,
         ["html"] = Html,
+        ["layout"] = Layout,
     };
 
     private static readonly string[] PropertyNames =
@@ -173,6 +177,131 @@ internal static class Targets
         var boxes = new BoxTree(tree);
         boxes.Build();
         _ = boxes.Dump();
+    }
+
+    private sealed class NoFonts : IFontProvider
+    {
+        public FontFallbackChain GetFallbackChain(in ComputedValues style) => throw new NotSupportedException("the layout target uses no text");
+    }
+
+    /// <summary>
+    /// The bytes are an HTML document and style sheet as for <c>html</c>; the block layout, positioning and overflow run on it, the
+    /// result is painted with scroll positions taken from the input, and the scroll patch must equal a fresh paint. Finite geometry
+    /// and a repeatable layout are the invariants.
+    /// </summary>
+    private static void Layout(ReadOnlySpan<byte> data)
+    {
+        if (data.Length < 2)
+        {
+            return;
+        }
+
+        byte salt = data[^1];
+        string text = Decode(data[..^1]);
+        int ff = text.IndexOf('\f', StringComparison.Ordinal);
+        string css = ff < 0 ? string.Empty : text[(ff + 1)..];
+        string html = ff < 0 ? text : text[..ff];
+        Document doc = Document.Parse("<style>" + css.Replace("</", "<\\/", StringComparison.Ordinal) + "</style>" + html);
+        var context = new StyleContext { Media = new MediaFeatures { Width = 400, Height = 300 } };
+        DocumentStyles styles = DocumentStyles.Create(doc, context, new StyleSourceOptions { IncludeUserAgentSheet = true });
+        var tree = new StyledTree(null, new TreeLimits { MaxNodes = 1 << 12, MaxDepth = 256, MaxTextLength = 1 << 16 });
+        new HtmlFrontEnd(tree).Build(styles);
+        var boxes = new BoxTree(tree);
+        boxes.Build();
+
+        var engine = new BlockLayoutEngine();
+        var frags = new FragmentTree(boxes);
+        var input = new LayoutInput(400, 300, new NoFonts());
+        engine.Layout(boxes, input, frags);
+        string first = frags.Dump();
+        for (Fragment f = frags.Root; !f.IsNull; f = Next(f))
+        {
+            Rect r = f.BorderBox;
+            Rect o = f.ScrollableOverflow;
+            if (!double.IsFinite(r.X + r.Y + r.Width + r.Height) || double.IsNaN(o.X + o.Y + o.Width + o.Height))
+            {
+                throw new InvalidOperationException("non-finite geometry in " + f);
+            }
+        }
+
+        engine.Layout(boxes, input, frags);
+        if (!string.Equals(first, frags.Dump(), StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("a second layout of the same tree differs");
+        }
+
+        var scroll = new ScrollState();
+        var options = new PaintOptions(400, 300) { Scroll = scroll };
+        var painter = new Painter();
+        var retained = new RetainedDisplayList();
+        painter.Paint(frags, retained, options);
+        for (int k = 0; k < 3 && boxes.Count > 0; k++)
+        {
+            double a = ((salt * (k + 3)) % 200) * 7 - 100;
+            scroll.SetViewportOffset(a, a * 3);
+            scroll.SetOffset(NthBox(boxes, ((salt * 31) + k) % boxes.Count), a, a * 2);
+            painter.PatchScroll(retained);
+            var fresh = new DisplayList();
+            new Painter().Paint(frags, fresh, options);
+            DisplayList patched = retained.Current;
+            if (fresh.Count != patched.Count)
+            {
+                throw new InvalidOperationException("a scroll patch changed the number of items");
+            }
+
+            for (int i = 0; i < fresh.Count; i++)
+            {
+                if (fresh[i].ContentHash != patched[i].ContentHash || fresh[i].ContextHash != patched[i].ContextHash)
+                {
+                    throw new InvalidOperationException("a scroll patch differs from a fresh paint at item " + i);
+                }
+            }
+        }
+    }
+
+    // Document order without recursion: down first, then next sibling, then up.
+    private static Fragment Next(Fragment f)
+    {
+        if (!f.FirstChild.IsNull)
+        {
+            return f.FirstChild;
+        }
+
+        for (Fragment p = f; !p.IsNull; p = p.Parent)
+        {
+            if (!p.NextSibling.IsNull)
+            {
+                return p.NextSibling;
+            }
+        }
+
+        return default;
+    }
+
+    private static Box NthBox(BoxTree boxes, int n)
+    {
+        Box b = boxes.Root;
+        for (int i = 0; i < n && !b.IsNull; i++)
+        {
+            if (!b.FirstChild.IsNull)
+            {
+                b = b.FirstChild;
+                continue;
+            }
+
+            Box p = b;
+            b = default;
+            for (; !p.IsNull; p = p.Parent)
+            {
+                if (!p.NextSibling.IsNull)
+                {
+                    b = p.NextSibling;
+                    break;
+                }
+            }
+        }
+
+        return b.IsNull ? boxes.Root : b;
     }
 
     private static string Decode(ReadOnlySpan<byte> data)

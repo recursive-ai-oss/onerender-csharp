@@ -15,12 +15,11 @@ public class PaintTests
 {
     private const string Reset = "<!DOCTYPE html><html><body style='margin:0'>";
 
-    // Paint-order tests that need positioned boxes or floats lay out with the test layout, since the engine's default layout does not
-    // place them yet; everything else runs the default.
+    // Everything runs the engine's own layout except the float test, which needs the test layout until floats are laid out.
     private static RgbaImage Render(string body, int size = 64) =>
         HtmlRender.ToImage(Reset + body, new HtmlRenderOptions { Width = size, Height = size });
 
-    private static RgbaImage RenderStacked(string body, int size = 64) =>
+    private static RgbaImage RenderFloat(string body, int size = 64) =>
         HtmlRender.ToImage(Reset + body, new HtmlRenderOptions { Width = size, Height = size, Layout = new StackingLayout() });
 
     private static (byte R, byte G, byte B) Px(RgbaImage img, int x, int y)
@@ -42,7 +41,7 @@ public class PaintTests
     public void NegativeZIndexPaintsOverTheContextBackgroundButUnderInFlowBlocks()
     {
         // E.2 step 1 (context background), 3 (negative z-index children), 4 (in-flow block backgrounds).
-        RgbaImage img = RenderStacked(Box(
+        RgbaImage img = Render(Box(
             "position:relative;z-index:0;width:60px;height:60px;background:blue",
             Box("position:absolute;z-index:-1;left:20px;top:20px;width:30px;height:30px;background:red")
             + Box("width:30px;height:30px;background:green")));
@@ -56,7 +55,7 @@ public class PaintTests
     {
         // The negative-z box belongs to the root stacking context; the body's background is propagated to the canvas, so the
         // box is above it, but a block with its own background paints over the box.
-        RgbaImage img = RenderStacked(Box("position:absolute;z-index:-1;left:0;top:0;width:30px;height:30px;background:red")
+        RgbaImage img = Render(Box("position:absolute;z-index:-1;left:0;top:0;width:30px;height:30px;background:red")
             + Box("width:20px;height:20px;background:green"));
         Assert.Equal(Green, Px(img, 10, 10));
         Assert.Equal(Red, Px(img, 25, 25));
@@ -66,7 +65,7 @@ public class PaintTests
     public void PositionedBoxesPaintOverInFlowContentWhateverTheTreeOrder()
     {
         // Step 8 comes after steps 4 and 7, so an earlier positioned box is still above a later in-flow one.
-        RgbaImage img = RenderStacked(
+        RgbaImage img = Render(
             Box("position:absolute;left:10px;top:10px;width:30px;height:30px;background:red")
             + Box("width:30px;height:30px;background:green"));
         Assert.Equal(Red, Px(img, 20, 20));
@@ -76,7 +75,7 @@ public class PaintTests
     [Fact]
     public void FloatsPaintOverBlockBackgroundsAndUnderPositionedBoxes()
     {
-        RgbaImage img = RenderStacked(
+        RgbaImage img = RenderFloat(
             Box("float:left;width:30px;height:30px;background:blue")
             + Box("width:50px;height:50px;background:green")
             + Box("position:relative;left:0;top:-80px;width:10px;height:10px;background:red"));
@@ -90,17 +89,17 @@ public class PaintTests
     {
         string a = "position:absolute;left:0;top:0;width:30px;height:30px;background:red;z-index:";
         string b = "position:absolute;left:10px;top:10px;width:30px;height:30px;background:blue;z-index:";
-        Assert.Equal(Blue, Px(RenderStacked(Box(a + "1") + Box(b + "1")), 20, 20)); // tie: later in tree order is on top
-        Assert.Equal(Red, Px(RenderStacked(Box(a + "2") + Box(b + "1")), 20, 20)); // higher z-index is on top
-        Assert.Equal(Red, Px(RenderStacked(Box(a + "1") + Box(b + "auto")), 20, 20)); // auto paints at z 0, below z 1
-        Assert.Equal(Blue, Px(RenderStacked(Box(a + "0") + Box(b + "auto")), 20, 20)); // auto and 0 tie, tree order decides
+        Assert.Equal(Blue, Px(Render(Box(a + "1") + Box(b + "1")), 20, 20)); // tie: later in tree order is on top
+        Assert.Equal(Red, Px(Render(Box(a + "2") + Box(b + "1")), 20, 20)); // higher z-index is on top
+        Assert.Equal(Red, Px(Render(Box(a + "1") + Box(b + "auto")), 20, 20)); // auto paints at z 0, below z 1
+        Assert.Equal(Blue, Px(Render(Box(a + "0") + Box(b + "auto")), 20, 20)); // auto and 0 tie, tree order decides
     }
 
     [Fact]
     public void ANestedStackingContextKeepsItsChildrenTogether()
     {
         // The inner z-index:100 is confined to its parent context (z-index:1), which is below the sibling context (z-index:2).
-        RgbaImage img = RenderStacked(
+        RgbaImage img = Render(
             Box("position:absolute;z-index:1;left:0;top:0;width:40px;height:40px;background:red",
                 Box("position:absolute;z-index:100;left:10px;top:10px;width:40px;height:40px;background:green"))
             + Box("position:absolute;z-index:2;left:20px;top:20px;width:30px;height:30px;background:blue"));
@@ -112,7 +111,7 @@ public class PaintTests
     public void OpacityMakesAGroupThatIsCompositedOnce()
     {
         // Compositing 1 section 3: the whole subtree is drawn opaque, then blended. Overlapping children do not show through each other.
-        RgbaImage img = RenderStacked(Box(
+        RgbaImage img = Render(Box(
             "opacity:0.5;width:40px;height:40px",
             Box("width:30px;height:30px;background:red")
             + Box("position:absolute;left:10px;top:10px;width:20px;height:20px;background:blue")));
@@ -198,7 +197,7 @@ public class PaintTests
     [Fact]
     public void OverflowClipDoesNotClipAnAbsoluteBoxWhoseContainingBlockIsOutside()
     {
-        RgbaImage img = RenderStacked(Box(
+        RgbaImage img = Render(Box(
             "position:relative;width:60px;height:60px",
             Box("overflow:hidden;width:10px;height:10px", Box("position:absolute;left:30px;top:30px;width:10px;height:10px;background:red"))));
         Assert.Equal(Red, Px(img, 35, 35));

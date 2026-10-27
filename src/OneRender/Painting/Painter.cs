@@ -1,3 +1,4 @@
+using System.Numerics;
 using OneRender.Layout;
 using OneRender.Style;
 using OneRender.Tree;
@@ -22,6 +23,13 @@ public readonly struct PaintOptions
 
     /// <summary>Viewport height in CSS px; 0 or less means unknown.</summary>
     public double ViewportHeight { get; }
+
+    /// <summary>
+    /// The host's scroll positions. When set, scroll containers that can scroll and the viewport get a translation item that
+    /// <see cref="Painter.PatchScroll(RetainedDisplayList)"/> updates in place, sticky positioned boxes get theirs, and fixed boxes
+    /// stay put in the viewport. Null paints everything at scroll position zero with no such items.
+    /// </summary>
+    public ScrollState? Scroll { get; init; }
 }
 
 /// <summary>
@@ -90,6 +98,53 @@ public sealed class Painter
     private int _skipBackground = -1;
     private int _scopes;
 
+    // Scrolling and sticky positioning: the items that move with the host's scroll positions, patched in place.
+    private const byte FlagScroller = 16;
+    private const byte FlagScrollable = 32;
+    private const byte FlagSticky = 64;
+    private ScrollState? _scroll;
+    private double _vw;
+    private double _vh;
+    private int _vpSource = -1;
+    private ScrollRange _vpRange;
+    private int _vpEntry;
+    private int[] _scrollerFor = new int[64];
+    private int[] _stickyAbove = new int[64];
+    private int[] _scrollEntryOf = new int[64];
+    private int[] _stickyEntryOf = new int[64];
+    private PatchEntry[] _patch = new PatchEntry[16];
+    private int _patchCount;
+
+    private const byte PatchScrollKind = 0;
+    private const byte PatchStickyKind = 1;
+    private const byte PatchFixedKind = 2;
+    private const byte PatchViewportKind = 3;
+
+    private struct PatchEntry
+    {
+        public byte Kind;
+        public int Box;
+        public ulong Id;
+        public float LastX;
+        public float LastY;
+        public ScrollRange Range;
+        public int ParentEntry;
+        public int ScrollerEntry;
+        public Rect BorderBox;
+        public Rect Cb;
+        public Rect Port;
+        public double MarginTop;
+        public double MarginRight;
+        public double MarginBottom;
+        public double MarginLeft;
+        public double Top;
+        public double Right;
+        public double Bottom;
+        public double Left;
+        public double TotalX;
+        public double TotalY;
+    }
+
     private struct Frame
     {
         public int Fragment;
@@ -98,6 +153,9 @@ public sealed class Painter
         public int PreClips;
         public bool Group;
         public bool Clip;
+        public bool Outer;
+        public bool Scroll;
+        public ulong PreMask;
     }
 
     /// <summary>Paints <paramref name="fragments"/> into <paramref name="list"/>, which is cleared first.</summary>
@@ -160,6 +218,13 @@ public sealed class Painter
         _sortCount = 0;
         _skipBackground = -1;
         _scopes = 0;
+        _scroll = options.Scroll;
+        _vw = options.ViewportWidth;
+        _vh = options.ViewportHeight;
+        _patchCount = 0;
+        _vpEntry = -1;
+        ViewportOverflow.Resolve(_boxes, out _, out _, out _vpSource);
+        _vpRange = _scroll is null ? default : ScrollState.GetViewportRange(_tree, _vw, _vh);
 
         Prepass(n, ct);
         PaintCanvas(options);
@@ -185,6 +250,10 @@ public sealed class Painter
         _absX = new double[size];
         _absY = new double[size];
         _baseY = new double[size];
+        _scrollerFor = new int[size];
+        _stickyAbove = new int[size];
+        _scrollEntryOf = new int[size];
+        _stickyEntryOf = new int[size];
     }
 
     // ------------------------------------------------------------------ classification
@@ -245,6 +314,12 @@ public sealed class Painter
         _ownerFor[i] = owner;
         _contextFor[i] = context;
         _baseY[i] = parent < 0 ? _absY[i] : _baseY[parent];
+        _scrollEntryOf[i] = -1;
+        _stickyEntryOf[i] = -1;
+        _scrollerFor[i] = parent < 0 ? -1 : ((_flags[parent] & FlagScroller) != 0 ? parent : _scrollerFor[parent]);
+        _stickyAbove[i] = parent < 0 || (_flags[parent] & FlagScroller) != 0
+            ? -1
+            : ((_flags[parent] & FlagSticky) != 0 ? parent : _stickyAbove[parent]);
 
         if (kind == FragmentKind.Line)
         {
@@ -268,10 +343,26 @@ public sealed class Painter
 
         Box box = _boxes.Make(boxIndex);
         ref readonly ComputedValues v = ref box.Values;
-        bool clips = v.OverflowX != OverflowKind.Visible || v.OverflowY != OverflowKind.Visible;
+        // CSS Overflow 3 §3.3: the box whose overflow went to the viewport neither clips nor scrolls.
+        bool propagated = boxIndex == _vpSource;
+        bool clips = !propagated && (v.OverflowX != OverflowKind.Visible || v.OverflowY != OverflowKind.Visible);
         if (clips)
         {
             _flags[i] |= FlagClips;
+        }
+
+        if (v.Position == PositionKind.Sticky)
+        {
+            _flags[i] |= FlagSticky;
+        }
+
+        if (!propagated && v.IsScrollContainer)
+        {
+            _flags[i] |= FlagScroller;
+            if (_scroll is not null && ScrollRange.Of(_tree, i, in v).CanScroll)
+            {
+                _flags[i] |= FlagScrollable;
+            }
         }
 
         if (parent < 0)
@@ -481,8 +572,10 @@ public sealed class Painter
             {
                 // Stacking-context children come from further up the tree than their parent, so the clips of the
                 // containing blocks between are applied around them.
-                int clips = phaseNow is PhaseNegative or PhaseZero or PhasePositive ? PushDeferredClips(entry, _stack[top].Fragment) : 0;
+                ulong mask = 0;
+                int clips = phaseNow is PhaseNegative or PhaseZero or PhasePositive ? PushDeferredClips(entry, _stack[top].Fragment, out mask) : 0;
                 PushFrame(ref sp, entry, clips);
+                _stack[sp - 1].PreMask = mask;
             }
             else if ((_flags[entry] & FlagIsText) != 0)
             {
@@ -510,6 +603,11 @@ public sealed class Painter
         int f = _stack[top].Fragment;
         Box box = _boxes.Make(_tree.BoxOf(f));
         ref readonly ComputedValues v = ref box.Values;
+        if (_scroll is not null && PushOuterTransform(f, in v))
+        {
+            _stack[top].Outer = true;
+        }
+
         if (v.Opacity < 1.0 && (_flags[f] & FlagStackingContext) != 0 && _scopes < MaxScopes)
         {
             _list.PushGroup(Id(f, 4), (float)Math.Clamp(v.Opacity, 0.0, 1.0));
@@ -517,21 +615,31 @@ public sealed class Painter
             _stack[top].Group = true;
         }
 
-        if (f != 0)
-        {
-            PaintBoxDecoration(f);
-        }
+        // The root's background went to the canvas (Backgrounds 3 §2.11.2); its border is its own.
+        PaintBoxDecoration(f);
 
         if ((_flags[f] & FlagClips) != 0 && _scopes < MaxScopes)
         {
             PushOverflowClip(f, in v, Id(f, 5));
             _scopes++;
             _stack[top].Clip = true;
+            if ((_flags[f] & FlagScrollable) != 0 && _scopes < MaxScopes)
+            {
+                // The content scrolls inside the clip, which stays put.
+                PushScrollTransform(f, Id(f, 6), in v);
+                _stack[top].Scroll = true;
+            }
         }
     }
 
     private void Exit(int top)
     {
+        if (_stack[top].Scroll)
+        {
+            _list.PopTransform();
+            _scopes--;
+        }
+
         if (_stack[top].Clip)
         {
             _list.PopClip();
@@ -544,17 +652,286 @@ public sealed class Painter
             _scopes--;
         }
 
+        if (_stack[top].Outer)
+        {
+            _list.PopTransform();
+            _scopes--;
+        }
+
+        ulong mask = _stack[top].PreMask;
         for (int k = _stack[top].PreClips; k > 0; k--)
         {
+            if ((mask & (1UL << (k - 1))) != 0)
+            {
+                _list.PopTransform();
+                _scopes--;
+            }
+
             _list.PopClip();
             _scopes--;
         }
     }
 
+    // ------------------------------------------------------------------ scroll and sticky patch items
+
+    private int AddEntry(byte kind, int box, ulong id)
+    {
+        if (_patchCount == _patch.Length)
+        {
+            Array.Resize(ref _patch, _patch.Length * 2);
+        }
+
+        _patch[_patchCount] = new PatchEntry { Kind = kind, Box = box, Id = id, ParentEntry = -1, ScrollerEntry = -1 };
+        return _patchCount++;
+    }
+
+    private void PushScrollTransform(int f, ItemId id, in ComputedValues v)
+    {
+        int k = AddEntry(PatchScrollKind, _tree.BoxOf(f), id.Value);
+        _patch[k].Range = ScrollRange.Of(_tree, f, in v);
+        if (_scrollEntryOf[f] < 0)
+        {
+            _scrollEntryOf[f] = k;
+        }
+
+        ComputeEntry(k, out float tx, out float ty);
+        _patch[k].LastX = tx;
+        _patch[k].LastY = ty;
+        _list.PushTransform(id, Matrix3x2.CreateTranslation(tx, ty));
+        _scopes++;
+    }
+
+    // The viewport's scroll (around everything), the counter-scroll of fixed boxes, and the shift of sticky boxes.
+    private bool PushOuterTransform(int f, in ComputedValues v)
+    {
+        if (_scopes >= MaxScopes)
+        {
+            return false;
+        }
+
+        int k;
+        ItemId id;
+        if (f == 0)
+        {
+            if (!_vpRange.CanScroll)
+            {
+                return false;
+            }
+
+            id = ItemId.Of(0, 6, 0);
+            k = AddEntry(PatchViewportKind, -1, id.Value);
+            _vpEntry = k;
+            _patch[k].Range = _vpRange;
+        }
+        else if (v.Position == PositionKind.Fixed)
+        {
+            if (!_vpRange.CanScroll)
+            {
+                return false;
+            }
+
+            id = Id(f, 8);
+            k = AddEntry(PatchFixedKind, _tree.BoxOf(f), id.Value);
+            _patch[k].Range = _vpRange;
+        }
+        else if (v.Position == PositionKind.Sticky)
+        {
+            k = AddSticky(f, in v, out id);
+            if (k < 0)
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
+
+        ComputeEntry(k, out float tx, out float ty);
+        _patch[k].LastX = tx;
+        _patch[k].LastY = ty;
+        _list.PushTransform(id, Matrix3x2.CreateTranslation(tx, ty));
+        _scopes++;
+        return true;
+    }
+
+    // CSS Position 3 §3.4: everything the shift needs is recorded in document space now, so a scroll change is arithmetic only.
+    private int AddSticky(int f, in ComputedValues v, out ItemId id)
+    {
+        id = default;
+        int p = _tree.ParentOf(f);
+        if (p < 0 || (FragmentKind)_tree.KindOf(p) != FragmentKind.Box)
+        {
+            return -1;
+        }
+
+        int s = _scrollerFor[f];
+        Rect port;
+        if (s < 0)
+        {
+            if (!(_vw > 0) || !(_vh > 0))
+            {
+                return -1;
+            }
+
+            port = new Rect(0, 0, _vw, _vh);
+        }
+        else
+        {
+            Rect sb = _tree.BorderBoxOf(s);
+            Insets si = _tree.BorderOf(s);
+            port = new Rect(_absX[s] + si.Left, _absY[s] + si.Top, Math.Max(0, sb.Width - si.Horizontal), Math.Max(0, sb.Height - si.Vertical));
+        }
+
+        double top = InsetOf(v.Top, port.Height), bottom = InsetOf(v.Bottom, port.Height);
+        double left = InsetOf(v.Left, port.Width), right = InsetOf(v.Right, port.Width);
+        if (double.IsNaN(top) && double.IsNaN(bottom) && double.IsNaN(left) && double.IsNaN(right))
+        {
+            return -1;
+        }
+
+        Rect pb = _tree.BorderBoxOf(p);
+        Insets pBorder = _tree.BorderOf(p);
+        Insets pPad = _tree.PaddingOf(p);
+        double cbW = Math.Max(0, pb.Width - pBorder.Horizontal - pPad.Horizontal);
+        var cb = new Rect(
+            _absX[p] + pBorder.Left + pPad.Left,
+            _absY[p] + pBorder.Top + pPad.Top,
+            cbW,
+            Math.Max(0, pb.Height - pBorder.Vertical - pPad.Vertical));
+        Rect bb = _tree.BorderBoxOf(f);
+
+        id = Id(f, 7);
+        int k = AddEntry(PatchStickyKind, _tree.BoxOf(f), id.Value);
+        ref PatchEntry e = ref _patch[k];
+        e.BorderBox = new Rect(_absX[f], _absY[f], bb.Width, bb.Height);
+        e.Cb = cb;
+        e.Port = port;
+        e.MarginTop = MarginOf(v.MarginTop, cbW);
+        e.MarginRight = MarginOf(v.MarginRight, cbW);
+        e.MarginBottom = MarginOf(v.MarginBottom, cbW);
+        e.MarginLeft = MarginOf(v.MarginLeft, cbW);
+        e.Top = top;
+        e.Right = right;
+        e.Bottom = bottom;
+        e.Left = left;
+        e.ScrollerEntry = s < 0 ? _vpEntry : _scrollEntryOf[s];
+        int above = _stickyAbove[f];
+        e.ParentEntry = above >= 0 ? _stickyEntryOf[above] : -1;
+        _stickyEntryOf[f] = k;
+        return k;
+    }
+
+    private static double InsetOf(Length l, double basis) =>
+        l.Kind is LengthKind.Px or LengthKind.Percent or LengthKind.Calc ? l.Resolve(basis) : double.NaN;
+
+    private static double MarginOf(Length l, double basis)
+    {
+        double m = l.Kind is LengthKind.Px or LengthKind.Percent or LengthKind.Calc ? l.Resolve(basis) : 0;
+        return double.IsNaN(m) ? 0 : m;
+    }
+
+    private void OffsetOf(int entry, out double x, out double y)
+    {
+        x = y = 0;
+        if (entry < 0 || _scroll is null)
+        {
+            return;
+        }
+
+        ref PatchEntry e = ref _patch[entry];
+        if (e.Kind == PatchViewportKind)
+        {
+            x = e.Range.ClampX(_scroll.ViewportX);
+            y = e.Range.ClampY(_scroll.ViewportY);
+        }
+        else
+        {
+            x = e.Range.ClampX(_scroll.RequestedX(e.Box));
+            y = e.Range.ClampY(_scroll.RequestedY(e.Box));
+        }
+    }
+
+    // The translation an entry's transform item should have for the host's current scroll positions.
+    private void ComputeEntry(int k, out float tx, out float ty)
+    {
+        ref PatchEntry e = ref _patch[k];
+        double x, y;
+        switch (e.Kind)
+        {
+            case PatchStickyKind:
+                double bx = 0, by = 0;
+                if (e.ParentEntry >= 0)
+                {
+                    bx = _patch[e.ParentEntry].TotalX;
+                    by = _patch[e.ParentEntry].TotalY;
+                }
+
+                OffsetOf(e.ScrollerEntry, out double sx, out double sy);
+                StickyPositioning.Offset(
+                    e.BorderBox.Translate(bx, by), e.MarginTop, e.MarginRight, e.MarginBottom, e.MarginLeft,
+                    e.Cb.Translate(bx, by), e.Port, sx, sy, e.Top, e.Right, e.Bottom, e.Left, out x, out y);
+                e.TotalX = bx + x;
+                e.TotalY = by + y;
+                break;
+            case PatchFixedKind:
+                x = e.Range.ClampX(_scroll!.ViewportX);
+                y = e.Range.ClampY(_scroll.ViewportY);
+                break;
+            default:
+                OffsetOf(k, out x, out y);
+                x = 0.0 - x;
+                y = 0.0 - y;
+                break;
+        }
+
+        tx = (float)Math.Clamp(x, -5e8, 5e8);
+        ty = (float)Math.Clamp(y, -5e8, 5e8);
+    }
+
+    /// <summary>
+    /// Brings the scroll and sticky items of the last paint up to date with the host's scroll positions, in place: no relayout, no
+    /// repaint, no allocation. Only the items whose translation changed are patched, so the damage covers just the scrolled areas.
+    /// Call it after changing a position on the <see cref="ScrollState"/> the last paint used, with the list that paint produced.
+    /// </summary>
+    /// <param name="retained">The retained list holding the last painted frame.</param>
+    /// <returns>The number of items that changed.</returns>
+    public int PatchScroll(RetainedDisplayList retained)
+    {
+        ArgumentNullException.ThrowIfNull(retained);
+        return PatchScroll(retained.Current, retained.Damage);
+    }
+
+    /// <summary>The same as <see cref="PatchScroll(RetainedDisplayList)"/> for a plain list.</summary>
+    /// <param name="list">The list the last paint produced.</param>
+    /// <param name="damage">Receives the changed areas; may be null.</param>
+    /// <returns>The number of items that changed.</returns>
+    public int PatchScroll(DisplayList list, DamageRegion? damage = null)
+    {
+        ArgumentNullException.ThrowIfNull(list);
+        int changed = 0;
+        for (int k = 0; k < _patchCount; k++)
+        {
+            ComputeEntry(k, out float tx, out float ty);
+            if (tx == _patch[k].LastX && ty == _patch[k].LastY)
+            {
+                continue;
+            }
+
+            list.PatchTransform(new ItemId(_patch[k].Id), Matrix3x2.CreateTranslation(tx, ty), damage);
+            _patch[k].LastX = tx;
+            _patch[k].LastY = ty;
+            changed++;
+        }
+
+        return changed;
+    }
+
     // The containing-block chain of a positioned (or opacity) fragment up to its stacking context: every ancestor on it that clips
     // its overflow clips this fragment too (CSS Overflow 3 §3; CSS2 §11.1.1).
-    private int PushDeferredClips(int entry, int context)
+    private int PushDeferredClips(int entry, int context, out ulong mask)
     {
+        mask = 0;
         int count = 0;
         int cur = entry;
         for (int steps = 0; steps < MaxClipSteps && count < MaxDeferredClips; steps++)
@@ -582,7 +959,14 @@ public sealed class Painter
             ItemId id = ItemId.Of((uint)(_tree.BoxOf(entry) + 1), (ushort)(3 | (k << 4)), (ushort)_ordinal[entry]);
             PushOverflowClip(a, in av, id);
             _scopes++;
-            pushed++;
+            int slot = pushed++;
+            if ((_flags[a] & FlagScrollable) != 0 && _scopes < MaxScopes)
+            {
+                // The containing block scrolls, and so does this box with it, although it is painted outside that block's own scope.
+                ItemId sid = ItemId.Of((uint)(_tree.BoxOf(entry) + 1), (ushort)(9 | (slot << 4)), (ushort)_ordinal[entry]);
+                PushScrollTransform(a, sid, in av);
+                mask |= 1UL << slot;
+            }
         }
 
         return pushed;
@@ -622,6 +1006,51 @@ public sealed class Painter
         double y = _absY[f] + border.Top;
         double w = Math.Max(0, bb.Width - border.Horizontal);
         double h = Math.Max(0, bb.Height - border.Vertical);
+
+        // Overflow 4 §3.2: on an axis with overflow: clip the clip edge can sit at another box edge and be pushed outward.
+        bool clipX = v.OverflowX == OverflowKind.Clip, clipY = v.OverflowY == OverflowKind.Clip;
+        bool marginApplies = (clipX || clipY) && (v.OverflowClipMarginPx > 0 || v.OverflowClipMarginBox != ClipMarginBoxKind.PaddingBox);
+        if (marginApplies)
+        {
+            Insets pad = _tree.PaddingOf(f);
+            double m = v.OverflowClipMarginPx;
+            if (clipX)
+            {
+                switch (v.OverflowClipMarginBox)
+                {
+                    case ClipMarginBoxKind.BorderBox:
+                        x = _absX[f];
+                        w = bb.Width;
+                        break;
+                    case ClipMarginBoxKind.ContentBox:
+                        x += pad.Left;
+                        w = Math.Max(0, w - pad.Horizontal);
+                        break;
+                }
+
+                x -= m;
+                w += 2 * m;
+            }
+
+            if (clipY)
+            {
+                switch (v.OverflowClipMarginBox)
+                {
+                    case ClipMarginBoxKind.BorderBox:
+                        y = _absY[f];
+                        h = bb.Height;
+                        break;
+                    case ClipMarginBoxKind.ContentBox:
+                        y += pad.Top;
+                        h = Math.Max(0, h - pad.Vertical);
+                        break;
+                }
+
+                y -= m;
+                h += 2 * m;
+            }
+        }
+
         // Only the axes that clip are bounded; a visible axis stays open (Overflow 3 §3.1, overflow: clip with a visible other axis).
         if (v.OverflowX == OverflowKind.Visible)
         {
@@ -637,7 +1066,7 @@ public sealed class Painter
 
         var rect = new RectF(C(x), C(y), C(w), C(h));
         CornerRadii outer = ResolveRadii(in v, bb.Width, bb.Height, 0);
-        if (outer.IsZero)
+        if (outer.IsZero || marginApplies)
         {
             _list.PushClipRect(id, rect);
             return;
@@ -680,7 +1109,7 @@ public sealed class Painter
         var rect = new RectF(C(_absX[f]), C(_absY[f]), C(bb.Width), C(bb.Height));
         CornerRadii radii = ResolveRadii(in v, bb.Width, bb.Height, (sliceStart ? 1 : 0) | (sliceEnd ? 2 : 0));
 
-        if (f != _skipBackground && v.BackgroundColor.A > 0f)
+        if (f != _skipBackground && f != 0 && v.BackgroundColor.A > 0f)
         {
             PaintColor c = ToColor(v.BackgroundColor, v.Color);
             if (radii.IsZero)

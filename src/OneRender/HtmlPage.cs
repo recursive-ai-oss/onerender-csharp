@@ -78,6 +78,12 @@ public sealed class HtmlPage
     /// <summary>The options the page was created with.</summary>
     public HtmlPageOptions Options { get; }
 
+    /// <summary>
+    /// The scroll positions of the viewport and of scroll containers. <see cref="Paint"/> applies them; change them and call
+    /// <see cref="Painter.PatchScroll(RetainedDisplayList)"/> to update a painted list without relayout.
+    /// </summary>
+    public ScrollState Scroll { get; } = new();
+
     /// <summary>Parses <paramref name="html"/>, cascades, builds the box tree and lays it out.</summary>
     /// <param name="html">The document source, decoded to text.</param>
     /// <param name="options">Viewport, fonts, resource hooks and layout.</param>
@@ -128,7 +134,7 @@ public sealed class HtmlPage
     public void Paint(DisplayList list, Painter? painter = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(list);
-        (painter ?? new Painter()).Paint(Fragments, list, new PaintOptions(Options.ViewportWidth, Options.ViewportHeight), cancellationToken);
+        (painter ?? new Painter()).Paint(Fragments, list, new PaintOptions(Options.ViewportWidth, Options.ViewportHeight) { Scroll = Scroll }, cancellationToken);
     }
 
     /// <summary>
