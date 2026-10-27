@@ -111,6 +111,25 @@ internal sealed partial class StyleComputer
         return _r;
     }
 
+    /// <summary>
+    /// Whether <paramref name="value"/> parses for <paramref name="id"/>. Validity never depends on the element, so this runs against
+    /// initial values with no parent. It reuses this instance's scratch state and is not thread-safe.
+    /// </summary>
+    public bool IsValid(PropertyId id, ComponentValueList value)
+    {
+        _env = new ComputeEnvironment(800, 600, 16);
+        _hasParent = false;
+        _parent = ComputedValues.Initial;
+        _r = ComputedValues.Initial;
+        _floatLogical = 0;
+        _clearLogical = 0;
+        _rawBorderWidth[0] = _rawBorderWidth[1] = _rawBorderWidth[2] = _rawBorderWidth[3] = 3;
+        _rawColumnRuleWidth = 3;
+        _parentCtx = LengthContext.Default;
+        _ctx = _parentCtx;
+        return Apply(id, value);
+    }
+
     /// <summary>Applies one property's declared value (or its absence) to the result under construction.</summary>
     private void Step(PropertyId id, bool hasParent)
     {
@@ -147,8 +166,9 @@ internal sealed partial class StyleComputer
             default:
                 if (!Apply(id, value))
                 {
-                    // Invalid at computed-value time: behaves as `unset` (CSS Variables 1 §3.2 for the invalid-at-computed-value case; the cascade here
-                    // cannot fall back to an earlier declaration).
+                    // Invalid at computed-value time: behaves as `unset` (CSS Variables 1 §3.2). Plain values the engine parses are dropped
+                    // earlier, in the cascade, by StyleValidation; what gets here is a var() substitution, a property OneHtml types itself,
+                    // or a value from a cascade created without the validator.
                     InvalidCount++;
                     FirstInvalid ??= Properties.NameOf(id);
                     if (Properties.IsInherited(id) && hasParent)

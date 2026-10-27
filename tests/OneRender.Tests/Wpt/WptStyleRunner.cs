@@ -179,7 +179,7 @@ internal static class WptStyleRunner
         }
 
         var context = new StyleContext { Media = new MediaFeatures { Width = ViewportWidth, Height = ViewportHeight } };
-        DocumentStyles styles = DocumentStyles.Create(doc, context, new StyleSourceOptions { IncludeUserAgentSheet = true });
+        DocumentStyles styles = DocumentStyles.Create(doc, context, new StyleSourceOptions { IncludeUserAgentSheet = true, DeclarationValidator = OneRender.Style.StyleValidation.Validator });
         var table = new StyleTable();
         table.SetViewport(ViewportWidth, ViewportHeight);
         var tree = new StyledTree(table);

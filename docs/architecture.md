@@ -22,7 +22,7 @@ C# builder (StyleDeclaration) ────────────────�
 - **Limits.** `TreeLimits` bounds node count (2M), depth (1,048,576) and text length (32M UTF-16 units); the box tree
   allows twice the node limit. A limit is checked before anything is stored; the over-limit node is dropped and a
   `LimitExceeded` entry goes to `StyledTree.Diagnostics` (capped at 256 entries, the rest counted in `Dropped`).
-  Invalid declarations raise `InvalidValue` diagnostics.
+  Declarations that survive the cascade but do not parse raise `InvalidValue` diagnostics.
 - **Determinism.** Ordinal comparisons only, no culture-sensitive APIs, no clock, no file or network access. The host
   supplies natural sizes of replaced content through `IResourceResolver` and fonts through `IFontProvider`.
 
@@ -43,8 +43,20 @@ C# builder (StyleDeclaration) ────────────────�
   time). Keywords (`auto`, `min-content`, `max-content`, `fit-content`, `normal`, `none`) are `LengthKind` values.
 - `inherit`, `initial` and `unset` are resolved when the style is computed. `revert` and `revert-layer` act as `unset` in
   builder trees, which have no earlier origin.
-- A value that does not parse for its property behaves as `unset` and raises `InvalidValue`; OneHtml's cascade does
-  not validate longhands, so it cannot fall back to an earlier declaration.
+- **Invalid declarations are dropped in the cascade.** `StyleValidation.Validator` is the engine's grammar offered to
+  OneHtml as `StyleSourceOptions.DeclarationValidator` (`HtmlPage` sets it; a host that builds its own `DocumentStyles`
+  should too). OneHtml asks it once per declaration, when a rule's declarations are first collected, for author and user
+  declarations of properties OneHtml does not type itself. A rejected declaration neither wins nor counts as
+  `!important`, so an earlier valid one stands (CSS Syntax 3 section 5.4.6, CSS Cascade 4 section 4.3). For a
+  longhand the validator runs the same parser that computes the value, against initial values, so the two cannot
+  disagree; for `white-space`, `border-radius`, `overflow`, `flex`, `grid` and the other shorthands OneHtml passes
+  through whole, it expands them with `ShorthandFallbacks` and checks every longhand. The check parses the value text
+  again (OneHtml's token range cannot be turned back into a value list), which costs one small allocation per
+  declaration per stylesheet and nothing per restyle. It holds one lock around a shared scratch computer.
+- What still reaches the style computer as invalid behaves as `unset` and raises `InvalidValue` (CSS Variables 1
+  section 3.2 for `var()`): values with `var()`, which are only known at computed-value time; properties OneHtml
+  types itself (`display`, `position`, the offsets, `overflow-x/y`, `visibility`, `font-size`, `font-weight`,
+  `font-style`, `font-family`), where OneHtml's own grammar decides; and builder trees, which have no cascade.
 - What is deliberately lossy is listed, with the reason, in `tests/OneRender.Tests/testdata/wpt-style/expected-failures.tsv`
   (colors are stored as sRGB, `content` with counters is kept as raw text, and so on).
 

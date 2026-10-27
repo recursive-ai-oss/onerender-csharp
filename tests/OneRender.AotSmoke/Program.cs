@@ -21,7 +21,7 @@ bool pageOk = page.Pixels[((5 * 32) + 5) * 4] == 255 && page.Pixels[((5 * 32) + 
 
 // Build a box tree from a small HTML string: parse, cascade, styled tree, box tree.
 Document doc = Document.Parse("<!DOCTYPE html><body><p style=\"width:50%;margin:1em auto\">Hello <b>world</b></p><div style=\"display:flex\"><span>a</span></div><img src=x.png>");
-DocumentStyles styles = DocumentStyles.Create(doc, new StyleContext(), new StyleSourceOptions { IncludeUserAgentSheet = true });
+DocumentStyles styles = DocumentStyles.Create(doc, new StyleContext(), new StyleSourceOptions { IncludeUserAgentSheet = true, DeclarationValidator = OneRender.Style.StyleValidation.Validator });
 var styled = new StyledTree();
 new HtmlFrontEnd(styled).Build(styles);
 var boxTree = new BoxTree(styled);
