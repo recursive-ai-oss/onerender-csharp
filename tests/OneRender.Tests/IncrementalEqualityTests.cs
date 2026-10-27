@@ -11,14 +11,14 @@ namespace OneRender.Tests;
 /// </summary>
 public class IncrementalEqualityTests
 {
-    private static string Run(int firstSeed, int sessions, int steps, int size, bool calm = false)
+    private static string Run(int firstSeed, int sessions, int steps, int size, bool calm = false, bool churn = false)
     {
         long nothing = 0, paint = 0, patched = 0, rebuilt = 0, reused = 0, repainted = 0;
         var fonts = FontProviders.CreateDefault();
         for (int s = 0; s < sessions; s++)
         {
             int seed = firstSeed + s;
-            var session = new EditSession(fonts, new Chooser(seed), size, calm);
+            var session = new EditSession(fonts, new Chooser(seed), size, calm, churn);
             session.CheckAgainstFresh();
             try
             {
@@ -63,6 +63,22 @@ public class IncrementalEqualityTests
     {
         string stats = Run(9000, 30, 200, 60, calm: true);
         Console.WriteLine("STATS calm " + stats);
+        Assert.DoesNotContain("reused subtrees 0", stats);
+    }
+
+    // Slots of removed nodes are reused by the nodes inserted after them; none of that may show in the result.
+    [Fact]
+    public void HeavyInsertAndRemoveChurnEqualsAFreshBuild()
+    {
+        string stats = Run(20000, 40, 120, 30, churn: true);
+        Console.WriteLine("STATS churn " + stats);
+    }
+
+    [Fact]
+    public void ChurnOnCalmPagesEqualsAFreshBuild()
+    {
+        string stats = Run(21000, 20, 150, 80, calm: true, churn: true);
+        Console.WriteLine("STATS calm churn " + stats);
         Assert.DoesNotContain("reused subtrees 0", stats);
     }
 

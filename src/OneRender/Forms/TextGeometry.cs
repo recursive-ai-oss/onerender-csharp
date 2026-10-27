@@ -25,7 +25,7 @@ internal readonly struct TextGeometry
         _multiline = multiline;
     }
 
-    public bool IsValid => _tree is not null && !_control.IsNull;
+    public bool IsValid => _tree is not null && _control.IsValid;
 
     /// <summary>The content box of the control in document space, or false when it has no fragment.</summary>
     public bool TryContentRect(out Rect content)

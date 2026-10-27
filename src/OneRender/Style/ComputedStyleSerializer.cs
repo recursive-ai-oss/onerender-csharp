@@ -11,12 +11,12 @@ public static class ComputedStyleSerializer
     /// <summary>The serialization of one property of a node's computed style.</summary>
     /// <param name="node">A node of a styled tree.</param>
     /// <param name="property">A longhand property name in lower case, such as <c>background-color</c>.</param>
-    /// <returns>The value as text, or null when the engine does not compute that property or the node is null.</returns>
+    /// <returns>The value as text, or null when the engine does not compute that property or the node is null or was removed.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="property"/> is null.</exception>
     public static string? Get(StyledNode node, string property)
     {
         ArgumentNullException.ThrowIfNull(property);
-        return node.IsNull ? null : ComputedValueText.Get(property, in node.Values);
+        return !node.IsValid ? null : ComputedValueText.Get(property, in node.Values);
     }
 
     /// <summary>
@@ -30,12 +30,12 @@ public static class ComputedStyleSerializer
     /// <param name="node">A node of a styled tree.</param>
     /// <param name="property">A longhand property name in lower case.</param>
     /// <param name="fragment">The first fragment of the node's box, or the null fragment.</param>
-    /// <returns>The value as text, or null when the engine does not compute that property or the node is null.</returns>
+    /// <returns>The value as text, or null when the engine does not compute that property or the node is null or was removed.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="property"/> is null.</exception>
     public static string? Get(StyledNode node, string property, Fragment fragment)
     {
         ArgumentNullException.ThrowIfNull(property);
-        if (node.IsNull)
+        if (!node.IsValid)
         {
             return null;
         }

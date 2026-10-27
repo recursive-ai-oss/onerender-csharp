@@ -22,6 +22,11 @@ internal static class TextControls
     /// <summary>Writes <paramref name="display"/> into the value node and shows the placeholder only while it is empty.</summary>
     public static void Sync(StyledTree tree, StyledNode control, ReadOnlySpan<char> display, string placeholder)
     {
+        if (!control.IsValid)
+        {
+            return; // the control was removed from the tree while it was being edited
+        }
+
         StyledNode value = ValueNode(control);
         if (value.IsNull)
         {
