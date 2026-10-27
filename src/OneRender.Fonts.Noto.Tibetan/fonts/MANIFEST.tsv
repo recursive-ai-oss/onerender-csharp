@@ -1,0 +1,8 @@
+# Upstream provenance of every shipped file. Columns are tab-separated.
+# archive<TAB>url<TAB>sha256   a download that holds several files
+# file<TAB>path<TAB>url<TAB>member<TAB>sha256   path is relative to this folder; member is the name inside the archive, or - for a direct download
+# Tools: tools/fonts/optional_fonts.py verify
+archive	https://github.com/notofonts/tibetan/releases/download/NotoSerifTibetan-v2.103/NotoSerifTibetan-v2.103.zip	4fba4a43cd61e68bc5b3a496f708ebce2c1937df02f2c8e81c4272b2b060a896
+file	NotoSerifTibetan-Bold.ttf	https://github.com/notofonts/tibetan/releases/download/NotoSerifTibetan-v2.103/NotoSerifTibetan-v2.103.zip	NotoSerifTibetan/unhinted/ttf/NotoSerifTibetan-Bold.ttf	afd580d654e316759a2366c5f19f14a34dfa0b46015a03fc1c42a7782b79d7f0
+file	NotoSerifTibetan-Regular.ttf	https://github.com/notofonts/tibetan/releases/download/NotoSerifTibetan-v2.103/NotoSerifTibetan-v2.103.zip	NotoSerifTibetan/unhinted/ttf/NotoSerifTibetan-Regular.ttf	7292b2c76cf5c9b81e5362d88e0cb0a16b9d92827f86f945203014b049fd2fc5
+file	OFL.txt	https://github.com/notofonts/tibetan/releases/download/NotoSerifTibetan-v2.103/NotoSerifTibetan-v2.103.zip	../OFL.txt	0077789fc3cb20f358278ba4c6437eb14ade97d4d3e3281eaa42853efcd9dc8b

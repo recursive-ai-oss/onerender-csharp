@@ -1,0 +1,7 @@
+# Upstream provenance of every shipped file. Columns are tab-separated.
+# archive<TAB>url<TAB>sha256   a download that holds several files
+# file<TAB>path<TAB>url<TAB>member<TAB>sha256   path is relative to this folder; member is the name inside the archive, or - for a direct download
+# Tools: tools/fonts/optional_fonts.py verify
+archive	https://github.com/notofonts/syriac/releases/download/NotoSansSyriac-v3.000/NotoSansSyriac-v3.000.zip	1d31ac6f3f221332005e10d74af6e0e9bb2fb4ed67c306788d12acba33616538
+file	NotoSansSyriac-Regular.ttf	https://github.com/notofonts/syriac/releases/download/NotoSansSyriac-v3.000/NotoSansSyriac-v3.000.zip	NotoSansSyriac/unhinted/ttf/NotoSansSyriac-Regular.ttf	1ec0391c549b5e63e4f8d810b4485a64c5551445bfb2bdbf309ce8368bef9d4c
+file	OFL.txt	https://github.com/notofonts/syriac/releases/download/NotoSansSyriac-v3.000/NotoSansSyriac-v3.000.zip	../OFL.txt	6442860dad2700aabece2ac7252680b1a5bfc0987cec1ca0c3d605ab8f0b7975

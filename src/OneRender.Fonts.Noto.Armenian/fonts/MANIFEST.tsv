@@ -1,0 +1,8 @@
+# Upstream provenance of every shipped file. Columns are tab-separated.
+# archive<TAB>url<TAB>sha256   a download that holds several files
+# file<TAB>path<TAB>url<TAB>member<TAB>sha256   path is relative to this folder; member is the name inside the archive, or - for a direct download
+# Tools: tools/fonts/optional_fonts.py verify
+archive	https://github.com/notofonts/armenian/releases/download/NotoSansArmenian-v2.008/NotoSansArmenian-v2.008.zip	eab89b99e134177ca6a3f9f0412a7cb812aafceb13175d686b4c45cb237f64ac
+file	NotoSansArmenian-Bold.ttf	https://github.com/notofonts/armenian/releases/download/NotoSansArmenian-v2.008/NotoSansArmenian-v2.008.zip	NotoSansArmenian/unhinted/ttf/NotoSansArmenian-Bold.ttf	1dd206046cd3f41efddec93359a8d6590e5e2d5fcb036b9025725b560cefe6c6
+file	NotoSansArmenian-Regular.ttf	https://github.com/notofonts/armenian/releases/download/NotoSansArmenian-v2.008/NotoSansArmenian-v2.008.zip	NotoSansArmenian/unhinted/ttf/NotoSansArmenian-Regular.ttf	73bde9f3c63aa5ed39236e8a2837224605210a98b54d65724676c0119fcaa24c
+file	OFL.txt	https://github.com/notofonts/armenian/releases/download/NotoSansArmenian-v2.008/NotoSansArmenian-v2.008.zip	OFL.txt	0468358b316f69f405b55cadf8a8314e16e3610b8feaad96772bd5d968112d02

@@ -1,0 +1,8 @@
+# Upstream provenance of every shipped file. Columns are tab-separated.
+# archive<TAB>url<TAB>sha256   a download that holds several files
+# file<TAB>path<TAB>url<TAB>member<TAB>sha256   path is relative to this folder; member is the name inside the archive, or - for a direct download
+# Tools: tools/fonts/optional_fonts.py verify
+archive	https://github.com/notofonts/gurmukhi/releases/download/NotoSansGurmukhi-v2.004/NotoSansGurmukhi-v2.004.zip	a55ee5ee831ce3a4bb73bdc46bd0a02db6eb9445c370a0afbc529379ed8cea52
+file	NotoSansGurmukhi-Bold.ttf	https://github.com/notofonts/gurmukhi/releases/download/NotoSansGurmukhi-v2.004/NotoSansGurmukhi-v2.004.zip	NotoSansGurmukhi/unhinted/ttf/NotoSansGurmukhi-Bold.ttf	d16804da302ecb2a7defe0502e65136870445fd88f9fddaef60b68d5f1ee7386
+file	NotoSansGurmukhi-Regular.ttf	https://github.com/notofonts/gurmukhi/releases/download/NotoSansGurmukhi-v2.004/NotoSansGurmukhi-v2.004.zip	NotoSansGurmukhi/unhinted/ttf/NotoSansGurmukhi-Regular.ttf	2454c944fda799d2861f11c03e492c453e33083dd1e8d99bd6baac8de71ad0f0
+file	OFL.txt	https://github.com/notofonts/gurmukhi/releases/download/NotoSansGurmukhi-v2.004/NotoSansGurmukhi-v2.004.zip	../OFL.txt	3f7451b7e2c8381be0c5712f7b0dd5c2d75fe787ae16a99f18b7fa45627a0fde

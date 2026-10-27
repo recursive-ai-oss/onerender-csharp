@@ -1,0 +1,8 @@
+# Upstream provenance of every shipped file. Columns are tab-separated.
+# archive<TAB>url<TAB>sha256   a download that holds several files
+# file<TAB>path<TAB>url<TAB>member<TAB>sha256   path is relative to this folder; member is the name inside the archive, or - for a direct download
+# Tools: tools/fonts/optional_fonts.py verify
+archive	https://github.com/notofonts/arabic/releases/download/NotoSansArabic-v2.013/NotoSansArabic-v2.013.zip	1301aceaea84c501cf2e6dcfb3182e2328c8eae5725817fcb239672bda7154f1
+file	NotoSansArabic-Bold.ttf	https://github.com/notofonts/arabic/releases/download/NotoSansArabic-v2.013/NotoSansArabic-v2.013.zip	NotoSansArabic/unhinted/ttf/NotoSansArabic-Bold.ttf	f4cb79f842a07d1bcf597879574358fb7010f73761396d1d0f2445dfedb4d2ca
+file	NotoSansArabic-Regular.ttf	https://github.com/notofonts/arabic/releases/download/NotoSansArabic-v2.013/NotoSansArabic-v2.013.zip	NotoSansArabic/unhinted/ttf/NotoSansArabic-Regular.ttf	bd86ca02f087d7f3c3788ba458fb6b73744c7639ed276b8d870dba6def6c40d0
+file	OFL.txt	https://github.com/notofonts/arabic/releases/download/NotoSansArabic-v2.013/NotoSansArabic-v2.013.zip	OFL.txt	a7a5a25eb188bf1cd96982030d53e23c33485c69b1044a562254226857ee13af

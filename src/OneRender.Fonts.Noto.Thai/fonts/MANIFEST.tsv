@@ -1,0 +1,8 @@
+# Upstream provenance of every shipped file. Columns are tab-separated.
+# archive<TAB>url<TAB>sha256   a download that holds several files
+# file<TAB>path<TAB>url<TAB>member<TAB>sha256   path is relative to this folder; member is the name inside the archive, or - for a direct download
+# Tools: tools/fonts/optional_fonts.py verify
+archive	https://github.com/notofonts/thai/releases/download/NotoSansThai-v2.002/NotoSansThai-v2.002.zip	af889cc673fc714060ce5e4e088fbad32aa4c0571a19958efeaff128a22da485
+file	NotoSansThai-Bold.ttf	https://github.com/notofonts/thai/releases/download/NotoSansThai-v2.002/NotoSansThai-v2.002.zip	NotoSansThai/unhinted/ttf/NotoSansThai-Bold.ttf	5227602d7f9108252cfb7d75d6f7b2a26bdb2fc2fa89a702f9063758fb2f86c7
+file	NotoSansThai-Regular.ttf	https://github.com/notofonts/thai/releases/download/NotoSansThai-v2.002/NotoSansThai-v2.002.zip	NotoSansThai/unhinted/ttf/NotoSansThai-Regular.ttf	d4303fe9c63ebb72759ca8b6d2040c8ae81689f7d08d7b91c656154382b49313
+file	OFL.txt	https://github.com/notofonts/thai/releases/download/NotoSansThai-v2.002/NotoSansThai-v2.002.zip	OFL.txt	2e98fd23a52d253db8612cd5942c8f2ff4111b21d2367050fdca91d8ccc374a0

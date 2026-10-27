@@ -1,0 +1,8 @@
+# Upstream provenance of every shipped file. Columns are tab-separated.
+# archive<TAB>url<TAB>sha256   a download that holds several files
+# file<TAB>path<TAB>url<TAB>member<TAB>sha256   path is relative to this folder; member is the name inside the archive, or - for a direct download
+# Tools: tools/fonts/optional_fonts.py verify
+archive	https://github.com/notofonts/oriya/releases/download/NotoSansOriya-v2.007/NotoSansOriya-v2.007.zip	025b637e2d391f422ae12f4eb365876ce3b195283025ababb74ecf6baae35442
+file	NotoSansOriya-Bold.ttf	https://github.com/notofonts/oriya/releases/download/NotoSansOriya-v2.007/NotoSansOriya-v2.007.zip	NotoSansOriya/unhinted/ttf/NotoSansOriya-Bold.ttf	1c575e8aba40d6baf200e8abac534e9517f431d38cc8131715643037eec149da
+file	NotoSansOriya-Regular.ttf	https://github.com/notofonts/oriya/releases/download/NotoSansOriya-v2.007/NotoSansOriya-v2.007.zip	NotoSansOriya/unhinted/ttf/NotoSansOriya-Regular.ttf	a16645d056017927406546aa78e4ce15e782fd8783467267b75450453d007415
+file	OFL.txt	https://github.com/notofonts/oriya/releases/download/NotoSansOriya-v2.007/NotoSansOriya-v2.007.zip	OFL.txt	c90ff15ade263a49148e35af34e9c177c6d56881e81260b29f10123e9e227eca
