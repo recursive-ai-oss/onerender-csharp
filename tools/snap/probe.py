@@ -91,3 +91,13 @@ for name, html, dpr in CASES + BORDERS:
 for name, html, dpr in VERT:
     rows = shot(html, 12, 30, dpr)
     print("%-44s %s" % (name, line([rows[y][4] for y in range(24)])))
+
+
+if os.environ.get("UNDERLINE"):
+    # Where Chrome puts a red underline under 16px and 32px Liberation Sans text: the rows holding a run of at least 20 red pixels.
+    for size in (10, 12, 13, 14, 15, 16, 18, 20, 24, 28, 32, 40, 48, 64):
+        html = "<p style='margin:10px 0;font:%dpx Liberation Sans;color:#000;text-decoration:underline #f00'>Hello world</p>" % size
+        rows = shot(html, 300, 140, 1)
+        hit = [y for y, r in enumerate(rows) if sum(1 for p in r if p[0] > 200 and p[1] < 60 and p[2] < 60) >= 20]
+        ink = [y for y, r in enumerate(rows) if any(p[0] < 100 and p[1] < 100 for p in r)]
+        print("underline %dpx: red rows %s, black ink rows %d..%d" % (size, hit, ink[0], ink[-1]))

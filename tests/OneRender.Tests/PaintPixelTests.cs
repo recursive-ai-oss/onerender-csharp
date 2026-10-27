@@ -327,6 +327,34 @@ public class PaintPixelTests
         Assert.True(LongestRun(without, IsRed) < 3);
     }
 
+    [Theory]
+    [InlineData(16, new[] { 25 })]
+    [InlineData(20, new[] { 29, 30 })]
+    [InlineData(32, new[] { 41, 42, 43 })]
+    [InlineData(48, new[] { 57, 58, 59, 60 })]
+    public void UnderlineRowsMatchChrome(int size, int[] rows)
+    {
+        // Rows measured in headless Chrome 156 with the same font: tools/snap/probe.py in UNDERLINE mode.
+        RgbaImage img = Render("<p style='margin:10px 0;font:" + size + "px Liberation Sans;color:#000;text-decoration:underline #f00'>Hello world</p>", 300, 140);
+        var found = new List<int>();
+        for (int y = 0; y < img.Height; y++)
+        {
+            int n = 0;
+            for (int x = 0; x < img.Width; x++)
+            {
+                (byte r, byte g, byte b) = Px(img, x, y);
+                n += IsRed(r, g, b) ? 1 : 0;
+            }
+
+            if (n >= 20)
+            {
+                found.Add(y);
+            }
+        }
+
+        Assert.Equal(rows, found.ToArray());
+    }
+
     [Fact]
     public void DecorationStylesAndThickness()
     {

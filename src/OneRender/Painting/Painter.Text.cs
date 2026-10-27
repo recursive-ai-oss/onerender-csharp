@@ -164,7 +164,7 @@ public sealed partial class Painter
             if (!(thick > 0))
             {
                 // auto and from-font: the font's own thickness, at least a device pixel (Text Decoration 4 §2.3).
-                thick = Math.Max(Math.Round(ulThick * scale * _dpr, MidpointRounding.AwayFromZero) / _dpr, 1.0 / _dpr);
+                thick = Math.Max(ulThick * scale, 1.0 / _dpr);
             }
 
             if (under && (lines & TextDecorationLines.Underline) != 0)
@@ -208,15 +208,13 @@ public sealed partial class Painter
         OneFont.FontMetrics m = run.Face.Metrics;
         upem = Math.Max(1, m.UnitsPerEm);
         ascent = m.Ascender;
-        // The post table gives the underline's center as a negative number below the baseline; the OS/2 table gives the top of the strike.
-        ulPos = m.UnderlinePosition;
+        // Measured against Chrome 156 with the packaged fonts (tools/snap/probe.py, sizes 10 to 48 px): the underline's center sits half
+        // the descent below the baseline (a negative number here), not where the post table's underlinePosition says. The OS/2 table
+        // gives the top of the strike.
+        ulPos = m.Descender != 0 ? -Math.Abs(m.Descender) / 2.0 : -upem * 0.1;
         ulThick = m.UnderlineThickness > 0 ? m.UnderlineThickness : upem / 14;
         stPos = m.StrikeoutPosition > 0 ? m.StrikeoutPosition - (m.StrikeoutSize / 2.0) : upem * 0.3;
         stThick = m.StrikeoutSize > 0 ? m.StrikeoutSize : ulThick;
-        if (m.UnderlinePosition == 0)
-        {
-            ulPos = -upem * 0.1;
-        }
     }
 
     private void DrawDecorationLine(int f, int index, double x, double top, double w, double thick, TextDecorationStyleKind style, PaintColor color)
