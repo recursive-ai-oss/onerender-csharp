@@ -164,6 +164,21 @@ public sealed partial class Painter
         ushort part = (ushort)(PartTag + (_wantVirtual[k] ? 1 : 0));
         ItemId id = ItemId.Of((uint)box, part, (ushort)seq);
         string? alt = null, link = null, lang = null;
+        int colSpan = 1, rowSpan = 1;
+        if (!_wantVirtual[k] && role is TagRole.TableDataCell or TagRole.TableHeaderCell)
+        {
+            StyledNode cell = _boxes.Make(box).Node;
+            if (!cell.IsNull && cell.Tree is { } tree)
+            {
+                colSpan = tree.ColumnSpanOf(cell.Index);
+                rowSpan = tree.RowSpanOf(cell.Index);
+                if (rowSpan == 0)
+                {
+                    rowSpan = RowsFrom(_boxes.ParentOf(box));
+                }
+            }
+        }
+
         if (!_wantVirtual[k] && role != TagRole.ListLabel)
         {
             Box b = _boxes.Make(box);
@@ -193,7 +208,27 @@ public sealed partial class Painter
             }
         }
 
-        _list.BeginTag(id, role, alt, link, lang);
+        _list.BeginTag(id, role, alt, link, lang, colSpan, rowSpan);
+    }
+
+    // HTML Standard 4.9.11: a rowspan of 0 reaches the end of the row group, so it covers this row and the rows after it in the group.
+    private int RowsFrom(int row)
+    {
+        int n = 1;
+        if (row < 0 || RoleOf(row) != TagRole.TableRow)
+        {
+            return n;
+        }
+
+        for (int next = _boxes.NextSiblingOf(row); next >= 0 && n < 65534; next = _boxes.NextSiblingOf(next))
+        {
+            if (RoleOf(next) == TagRole.TableRow)
+            {
+                n++;
+            }
+        }
+
+        return n;
     }
 
     private static Node DomNodeOf(Box b)

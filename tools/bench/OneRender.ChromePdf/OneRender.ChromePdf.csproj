@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Prints documents to PDF with a headless Chrome for Testing build (a black box, over the DevTools Protocol) and measures it: the time of
+       the first print after a cold start, the time of repeated prints in the same browser, and the peak memory of the whole process tree. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <Description>Chrome print-to-PDF timing and memory for the document benchmark.</Description>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The DevTools client and the launcher the geometry differential already uses. -->
+    <Compile Include="../../geomdiff/Cdp.cs" Link="Cdp.cs" />
+  </ItemGroup>
+
+</Project>

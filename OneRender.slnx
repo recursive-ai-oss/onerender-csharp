@@ -25,6 +25,8 @@
     <Project Path="tools/OneRender.WptRunner.Chrome/OneRender.WptRunner.Chrome.csproj" />
     <Project Path="tools/geomdiff/OneRender.GeomDiff.csproj" />
     <Project Path="tools/pdf/OneRender.PdfRun/OneRender.PdfRun.csproj" />
+    <Project Path="tools/bench/OneRender.ChromePdf/OneRender.ChromePdf.csproj" />
+    <Project Path="tools/bench/OneRender.PdfCli/OneRender.PdfCli.csproj" />
   </Folder>
   <Folder Name="/fuzz/">
     <Project Path="fuzz/OneRender.Fuzz.Values/OneRender.Fuzz.Values.csproj" />
@@ -33,5 +35,6 @@
   <Folder Name="/bench/">
     <Project Path="bench/OneRender.Benchmarks/OneRender.Benchmarks.csproj" />
     <Project Path="bench/OneRender.Benchmarks.OneGameUi/OneRender.Benchmarks.OneGameUi.csproj" />
+    <Project Path="bench/OneRender.Benchmarks.Documents/OneRender.Benchmarks.Documents.csproj" />
   </Folder>
 </Solution>

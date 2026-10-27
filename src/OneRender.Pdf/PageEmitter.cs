@@ -370,7 +370,7 @@ internal sealed partial class PageEmitter
                 Array.Resize(ref _chain, _chainN * 2);
             }
 
-            _chain[_chainN++] = new TagRef(it.Id.Value >> 16, it.Role, it.AltText, it.LinkTarget, it.Language);
+            _chain[_chainN++] = new TagRef(it.Id.Value >> 16, it.Role, it.AltText, it.LinkTarget, it.Language, it.ColumnSpan, it.RowSpan);
         }
     }
 
