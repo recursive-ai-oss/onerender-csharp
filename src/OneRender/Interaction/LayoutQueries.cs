@@ -6,8 +6,8 @@ using RecursiveAI.OneHtml;
 namespace OneRender.Interaction;
 
 /// <summary>
-/// The geometry queries of CSSOM View for the elements of a laid-out page, answered from the fragment tree as it is now (layout has
-/// already run, so there is nothing to flush). Lengths in CSS px; the integer members round the way the specification says
+/// The geometry queries of CSSOM View for the elements of a laid-out page, answered from the fragment tree. A query over a <see cref="LivePage"/> first
+/// flushes the page's pending edits (a forced layout, as in a browser); an <see cref="HtmlPage"/> applies its changes as they happen. Lengths in CSS px; the integer members round the way the specification says
 /// (CSSOM View §6: the value is rounded to the nearest integer, halves away from zero).
 /// </summary>
 /// <remarks>
@@ -17,7 +17,12 @@ namespace OneRender.Interaction;
 /// </remarks>
 public sealed class LayoutQueries
 {
-    private readonly HtmlPage _page;
+    private readonly HtmlPage? _html;
+    private readonly LivePage? _live;
+    private readonly StyledTree _styled;
+    private readonly BoxTree _boxes;
+    private readonly FragmentTree _fragments;
+    private readonly ScrollState _scroll;
     private readonly HitTester _hits;
 
     /// <summary>Creates the queries for a page.</summary>
@@ -34,18 +39,64 @@ public sealed class LayoutQueries
             throw new ArgumentException("The hit tester is for another page.", nameof(hits));
         }
 
-        _page = page;
+        _html = page;
+        _styled = page.Styled;
+        _boxes = page.Boxes;
+        _fragments = page.Fragments;
+        _scroll = page.Scroll;
         _hits = hits;
     }
 
-    private StyledNode StyledOf(Node element) =>
-        element.IsNull || !ReferenceEquals(element.Document, _page.Document) ? default : _page.Styled.FindBySource(element.Index);
+    /// <summary>Creates the queries for a page built from a styled-node tree; every query first flushes the page's pending edits.</summary>
+    /// <param name="page">The live page.</param>
+    /// <param name="hits">A hit tester for the page's fragment tree, used for the scroll and transform mapping.</param>
+    /// <remarks>Only the members that take a <see cref="StyledNode"/> answer for such a page; the <see cref="Node"/> members return their "no box" answers because there is no document.</remarks>
+    /// <exception cref="ArgumentNullException">An argument is null.</exception>
+    /// <exception cref="ArgumentException">The hit tester is for another fragment tree.</exception>
+    public LayoutQueries(LivePage page, HitTester hits)
+    {
+        ArgumentNullException.ThrowIfNull(page);
+        ArgumentNullException.ThrowIfNull(hits);
+        if (!ReferenceEquals(page.Fragments, hits.Tree))
+        {
+            throw new ArgumentException("The hit tester is for another page.", nameof(hits));
+        }
 
-    private Box BoxOf(StyledNode s) => s.IsNull ? default : _page.Boxes.PrincipalBox(s);
+        _live = page;
+        _styled = page.Styled;
+        _boxes = page.Boxes;
+        _fragments = page.Fragments;
+        _scroll = page.Scroll;
+        _hits = hits;
+    }
 
-    private Fragment FirstFragment(StyledNode s) => _page.Fragments.FragmentOf(BoxOf(s));
+    // CSSOM View: a geometry query sees the effect of every edit made before it. The edits are applied here, and only what they
+    // touched is laid out again.
+    private void Sync()
+    {
+        if (_live is { NeedsFlush: true } live)
+        {
+            live.Flush();
+        }
 
-    private bool IsRoot(StyledNode s) => s.Equals(_page.Styled.Root);
+        _hits.EnsureBuilt();
+    }
+
+    private double ViewportWidth => _html?.Options.ViewportWidth ?? _live!.ViewportWidth;
+
+    private double ViewportHeight => _html?.Options.ViewportHeight ?? _live!.ViewportHeight;
+
+    private StyledNode StyledOf(Node element)
+    {
+        Sync();
+        return _html is null || element.IsNull || !ReferenceEquals(element.Document, _html.Document) ? default : _styled.FindBySource(element.Index);
+    }
+
+    private Box BoxOf(StyledNode s) => s.IsNull ? default : _boxes.PrincipalBox(s);
+
+    private Fragment FirstFragment(StyledNode s) => _fragments.FragmentOf(BoxOf(s));
+
+    private bool IsRoot(StyledNode s) => s.Equals(_styled.Root);
 
     private static int Round(double v) => double.IsNaN(v) ? 0 : (int)Math.Clamp(Math.Round(v, MidpointRounding.AwayFromZero), int.MinValue, int.MaxValue);
 
@@ -63,8 +114,9 @@ public sealed class LayoutQueries
     /// <returns>The number written.</returns>
     public int GetClientRects(StyledNode element, Span<Rect> rects)
     {
+        Sync();
         int n = 0;
-        FragmentTree tree = _page.Fragments;
+        FragmentTree tree = _fragments;
         for (Box box = BoxOf(element); !box.IsNull && n < rects.Length; box = box.NextPiece)
         {
             for (Fragment f = tree.FragmentOf(box); !f.IsNull && n < rects.Length; f = f.NextOfBox)
@@ -89,9 +141,10 @@ public sealed class LayoutQueries
     /// <returns>The rectangle.</returns>
     public Rect GetBoundingClientRect(StyledNode element)
     {
+        Sync();
         bool any = false, anyNonEmpty = false;
         Rect all = default, nonEmpty = default;
-        FragmentTree tree = _page.Fragments;
+        FragmentTree tree = _fragments;
         for (Box box = BoxOf(element); !box.IsNull; box = box.NextPiece)
         {
             for (Fragment f = tree.FragmentOf(box); !f.IsNull; f = f.NextOfBox)
@@ -119,7 +172,7 @@ public sealed class LayoutQueries
     {
         union = default;
         bool any = false;
-        FragmentTree tree = _page.Fragments;
+        FragmentTree tree = _fragments;
         for (Box box = BoxOf(s); !box.IsNull; box = box.NextPiece)
         {
             for (Fragment f = tree.FragmentOf(box); !f.IsNull; f = f.NextOfBox)
@@ -136,6 +189,48 @@ public sealed class LayoutQueries
     /// <summary><c>offsetWidth</c>: the width of the border box in px, rounded; 0 without a box.</summary>
     /// <param name="element">The element.</param>
     public int OffsetWidth(Node element) => LayoutBox(StyledOf(element), out Rect r) ? Round(r.Width) : 0;
+
+    /// <summary><see cref="OffsetWidth(Node)"/> for a styled node.</summary>
+    /// <param name="element">The styled element.</param>
+    public int OffsetWidth(StyledNode element)
+    {
+        Sync();
+        return LayoutBox(element, out Rect r) ? Round(r.Width) : 0;
+    }
+
+    /// <summary><see cref="OffsetHeight(Node)"/> for a styled node.</summary>
+    /// <param name="element">The styled element.</param>
+    public int OffsetHeight(StyledNode element)
+    {
+        Sync();
+        return LayoutBox(element, out Rect r) ? Round(r.Height) : 0;
+    }
+
+    /// <summary><see cref="ClientWidth(Node)"/> for a styled node (the viewport width for the root).</summary>
+    /// <param name="element">The styled element.</param>
+    public int ClientWidth(StyledNode element)
+    {
+        Sync();
+        if (!element.IsNull && IsRoot(element))
+        {
+            return Round(ViewportWidth);
+        }
+
+        return HasClientBox(element, out Fragment f) ? Round(Math.Max(0, f.BorderBox.Width - f.Border.Horizontal)) : 0;
+    }
+
+    /// <summary><see cref="ClientHeight(Node)"/> for a styled node (the viewport height for the root).</summary>
+    /// <param name="element">The styled element.</param>
+    public int ClientHeight(StyledNode element)
+    {
+        Sync();
+        if (!element.IsNull && IsRoot(element))
+        {
+            return Round(ViewportHeight);
+        }
+
+        return HasClientBox(element, out Fragment f) ? Round(Math.Max(0, f.BorderBox.Height - f.Border.Vertical)) : 0;
+    }
 
     /// <summary><c>offsetHeight</c>: the height of the border box in px, rounded; 0 without a box.</summary>
     /// <param name="element">The element.</param>
@@ -236,7 +331,7 @@ public sealed class LayoutQueries
         StyledNode s = StyledOf(element);
         if (IsViewportElement(element, s))
         {
-            return Round(_page.Options.ViewportWidth);
+            return Round(ViewportWidth);
         }
 
         return HasClientBox(s, out Fragment f) ? Round(Math.Max(0, f.BorderBox.Width - f.Border.Horizontal)) : 0;
@@ -249,14 +344,14 @@ public sealed class LayoutQueries
         StyledNode s = StyledOf(element);
         if (IsViewportElement(element, s))
         {
-            return Round(_page.Options.ViewportHeight);
+            return Round(ViewportHeight);
         }
 
         return HasClientBox(s, out Fragment f) ? Round(Math.Max(0, f.BorderBox.Height - f.Border.Vertical)) : 0;
     }
 
     private bool IsViewportElement(Node element, StyledNode s) =>
-        !s.IsNull && (IsRoot(s) || (_page.Document.Mode == QuirksMode.Quirks && FocusRules.IsHtml(element, "body")));
+        !s.IsNull && (IsRoot(s) || (_html is not null && _html.Document.Mode == QuirksMode.Quirks && FocusRules.IsHtml(element, "body")));
 
     // ------------------------------------------------------------------ scroll*
 
@@ -277,7 +372,7 @@ public sealed class LayoutQueries
         int client = ClientWidth(element);
         if (IsRoot(s))
         {
-            return Math.Max(client, Round(_page.Fragments.OverflowOf(0).Right));
+            return Math.Max(client, Round(_fragments.OverflowOf(0).Right));
         }
 
         // The overflow rect always includes the border box; only content past it extends the padding-edge-based scroll area.
@@ -298,7 +393,7 @@ public sealed class LayoutQueries
         int client = ClientHeight(element);
         if (IsRoot(s))
         {
-            return Math.Max(client, Round(_page.Fragments.OverflowOf(0).Bottom));
+            return Math.Max(client, Round(_fragments.OverflowOf(0).Bottom));
         }
 
         return f.ScrollableOverflow.Bottom > f.BorderBox.Height ? Math.Max(client, Round(f.ScrollableOverflow.Bottom - f.Border.Top)) : client;
@@ -323,7 +418,7 @@ public sealed class LayoutQueries
         if (IsRoot(s))
         {
             ScrollRange r = _hits.ViewportRange;
-            return (r.ClampX(_page.Scroll.ViewportX), r.ClampY(_page.Scroll.ViewportY));
+            return (r.ClampX(_scroll.ViewportX), r.ClampY(_scroll.ViewportY));
         }
 
         Box box = BoxOf(s);
@@ -334,6 +429,6 @@ public sealed class LayoutQueries
         }
 
         _hits.EnsureBuilt();
-        return _hits.IsScrollContainer(f.Index) ? _page.Scroll.GetOffset(_page.Fragments, box) : default;
+        return _hits.IsScrollContainer(f.Index) ? _scroll.GetOffset(_fragments, box) : default;
     }
 }

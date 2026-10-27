@@ -32,6 +32,13 @@ public sealed class HtmlRenderOptions
 
     /// <summary>The page color behind everything, painted where the document paints no background. Default opaque white.</summary>
     public PaintColor PageColor { get; init; } = PaintColor.White;
+
+    /// <summary>
+    /// The time in milliseconds on the host's clock at which CSS transitions and animations are shown. Null (the default) renders the
+    /// cascaded styles with no animation applied. A value starts every animation of the document at 0 and shows the frame at that
+    /// time, so an animation with a negative delay, or one sampled at a given time, renders as a browser's screenshot at that time would.
+    /// </summary>
+    public double? AnimationTime { get; init; }
 }
 
 /// <summary>
@@ -70,6 +77,7 @@ public static class HtmlRender
             BaseUrl = options.BaseUrl,
             StylesheetBytes = options.Resources,
             Layout = options.Layout,
+            AnimationTime = options.AnimationTime,
         };
         HtmlPage page = HtmlPage.Create(html, pageOptions, cancellationToken);
         var list = new DisplayList();

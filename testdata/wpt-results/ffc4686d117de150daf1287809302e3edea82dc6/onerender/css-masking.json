@@ -122,7 +122,7 @@
   ],
   "fail": {
     "css/css-masking/animations/clip-path-interpolation-shape-arc-direction-agnostic-radius.html": "== clip-path-interpolation-shape-arc-direction-agnostic-radius-ref.html differs (max 255, 32916 px)",
-    "css/css-masking/clip-path/animations/clip-path-path-interpolation-with-zoom.html": "== clip-path-path-interpolation-with-zoom-ref.html differs (max 255, 43175 px)",
+    "css/css-masking/clip-path/animations/clip-path-path-interpolation-with-zoom.html": "== clip-path-path-interpolation-with-zoom-ref.html differs (max 255, 37775 px)",
     "css/css-masking/clip-path/animations/clip-path-shape-interpolation-with-zoom.html": "== clip-path-path-interpolation-with-zoom-ref.html differs (max 255, 43175 px)",
     "css/css-masking/clip-path/clip-path-borderBox-1b.html": "== clip-path-geometryBox-1-ref.html differs (max 255, 2372 px)",
     "css/css-masking/clip-path/clip-path-circle-closest-corner.html": "== clip-path-circle-4-ref.html differs (max 255, 75056 px)",

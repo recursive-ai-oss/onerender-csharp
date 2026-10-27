@@ -28,5 +28,6 @@
   </Folder>
   <Folder Name="/bench/">
     <Project Path="bench/OneRender.Benchmarks/OneRender.Benchmarks.csproj" />
+    <Project Path="bench/OneRender.Benchmarks.OneGameUi/OneRender.Benchmarks.OneGameUi.csproj" />
   </Folder>
 </Solution>

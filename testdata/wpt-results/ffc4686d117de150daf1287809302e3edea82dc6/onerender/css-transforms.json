@@ -8,12 +8,12 @@
   "sampleStride": 1,
   "counts": {
     "total": 904,
-    "pass": 548,
-    "fail": 142,
+    "pass": 550,
+    "fail": 140,
     "blank": 21,
     "skipped": 193
   },
-  "rate": "0.7707",
+  "rate": "0.7736",
   "pass": [
     "css/css-transforms/2d-rotate-001.html",
     "css/css-transforms/2d-rotate-notref.html",
@@ -27,6 +27,7 @@
     "css/css-transforms/3dtransform-and-filter-no-perspective-001.html",
     "css/css-transforms/3dtransform-and-position-sticky-001.html",
     "css/css-transforms/3dtransform-and-position-sticky-002.html",
+    "css/css-transforms/animation/rotate-animation-with-will-change-transform-001.html",
     "css/css-transforms/backface-visibility-001.html",
     "css/css-transforms/backface-visibility-hidden-001.html",
     "css/css-transforms/backface-visibility-hidden-002.html",
@@ -122,6 +123,7 @@
     "css/css-transforms/group/svg-transform-nested-028.html",
     "css/css-transforms/group/svg-transform-nested-029.html",
     "css/css-transforms/huge-length-tiny-scale.html",
+    "css/css-transforms/individual-transform/animation/individual-transform-combine.html",
     "css/css-transforms/individual-transform/animation/individual-transform-ordering.html",
     "css/css-transforms/individual-transform/individual-transform-1.html",
     "css/css-transforms/individual-transform/individual-transform-2a.html",
@@ -588,7 +590,6 @@
     "css/css-transforms/transform-singular-001.html"
   ],
   "fail": {
-    "css/css-transforms/animation/rotate-animation-with-will-change-transform-001.html": "== rotate-animation-with-will-change-transform-001-ref.html differs (max 255, 2900 px)",
     "css/css-transforms/backface-visibility-hidden-003.html": "== backface-visibility-hidden-003-ref.html differs (max 255, 10000 px)",
     "css/css-transforms/backface-visibility-hidden-004.html": "== backface-visibility-hidden-003-ref.html differs (max 255, 10000 px)",
     "css/css-transforms/backface-visibility-with-sibling-001.html": "== blank.html differs (max 255, 5000 px)",
@@ -606,7 +607,6 @@
     "css/css-transforms/external-styles/svg-external-styles-003.html": "== svg-external-styles-ref.html differs (max 255, 10000 px)",
     "css/css-transforms/external-styles/svg-external-styles-004.html": "== svg-external-styles-ref.html differs (max 255, 10000 px)",
     "css/css-transforms/external-styles/svg-external-styles-014.html": "== svg-external-styles-ref.html differs (max 255, 10000 px)",
-    "css/css-transforms/individual-transform/animation/individual-transform-combine.html": "== individual-transform-combine-ref.html differs (max 255, 31300 px)",
     "css/css-transforms/individual-transform/individual-transform-3.html": "== ref-filled-green-200px-square.html differs (max 255, 4000 px)",
     "css/css-transforms/individual-transform/translate-fill-box.html": "== greensquare200x200.html differs (max 255, 18125 px)",
     "css/css-transforms/individual-transform/translate-view-box.html": "== greensquare200x200.html differs (max 255, 30000 px)",

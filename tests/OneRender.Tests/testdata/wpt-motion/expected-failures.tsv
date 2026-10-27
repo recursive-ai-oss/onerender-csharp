@@ -1,0 +1,46 @@
+# file	kind	property	value	reason
+css/css-animations/parsing/animation-range-shorthand-end-zero-offset.html	valid	animation-range	normal cover 0%	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand-end-zero-offset.html	valid	animation-range	entry 0% exit 0%	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand-end-zero-offset.html	valid	animation-range	cover 50% exit 0%	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand-end-zero-offset.html	valid	animation-range	normal cover 100%	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand-end-zero-offset.html	valid	animation-range	entry 0% exit 100%	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand-end-zero-offset.html	valid	animation-range	normal exit 50%	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	normal	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	normal normal	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	cover	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	contain	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	entry	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	entry-crossing	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	exit	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	exit-crossing	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	entry, exit	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	0% 100%	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	entry 0% entry 100%	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	entry-crossing 0% entry-crossing 100%	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	exit 0% exit 100%	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	exit-crossing 0% exit-crossing 100%	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	cover 0% cover 100%	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	contain 0% contain 100%	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	entry calc(10% - 10%) entry calc(50% + 50%)	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	cover 50%	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	contain 50%	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	entry 50%	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	entry-crossing 50%	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	exit 50%	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	exit-crossing 50%	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	entry 50px exit 100px	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	exit calc(10% + 50px)	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	entry 50% exit 50%	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	cover 50% entry 50%, contain 50% exit 50%	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	50% exit 50%	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	normal 100px	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	100px	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	100px normal	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	10% normal	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	entry normal	animation-range belongs to scroll-driven animations, deferred past the first release
+css/css-transitions/parsing/transition-invalid.html	invalid	transition	initial 1s	OneHtml's shorthand expansion accepts a CSS-wide keyword next to other values
+css/css-transitions/parsing/transition-timing-function-computed.html	computed	transition-timing-function	steps(calc(2 * sibling-index()), jump-none)	steps() with sibling-index() or a sign() that needs a layout context is not evaluated
+css/css-transitions/parsing/transition-timing-function-computed.html	computed	transition-timing-function	steps(sibling-index(), jump-none)	steps() with sibling-index() or a sign() that needs a layout context is not evaluated
+css/css-transitions/parsing/transition-timing-function-computed.html	computed	transition-timing-function	steps(calc(2 * sign(1em - 1000px)), jump-none)	steps() with sibling-index() or a sign() that needs a layout context is not evaluated
+css/css-transitions/parsing/transition-timing-function-computed.html	computed	transition-timing-function	steps(calc(2 * sign(1em - 1000px)), start)	steps() with sibling-index() or a sign() that needs a layout context is not evaluated
+css/css-transitions/parsing/transition-timing-function-valid.html	valid	transition-timing-function	steps(sibling-index(), jump-none)	steps() with sibling-index() or a sign() that needs a layout context is not evaluated

@@ -105,6 +105,10 @@ public sealed partial class StyledTree
         _limitReported = false;
         _textLimitReported = false;
         _document = null;
+        _tracking = false;
+        _chgCount = 0;
+        _chgOverflow = false;
+        _structureEpoch++;
         ClipPaths.Clear();
         Styles.Diagnostics.Clear();
     }
@@ -231,6 +235,7 @@ public sealed partial class StyledTree
             return default;
         }
 
+        _decl[idx] = declaration;
         int tagId = InternTag(tag);
         _tag[idx] = tagId;
         ReplacedKind rk = ReplacedKindOf(tag);
@@ -402,6 +407,25 @@ public sealed partial class StyledTree
         _naturalRatio[i] = 0;
         _span[i] = DefaultSpan;
         _src[i] = null;
+        _decl[i] = null;
+        if (_focusDecl is not null)
+        {
+            _focusDecl[i] = null;
+        }
+
+        if (_hoverDecl is not null)
+        {
+            _hoverDecl[i] = null;
+        }
+
+        if (_activeDecl is not null)
+        {
+            _activeDecl[i] = null;
+        }
+
+        _states[i] = 0;
+        _textCap[i] = 0;
+        _chg[i] = 0;
         if (parent >= 0)
         {
             if (_last[parent] >= 0)
@@ -419,6 +443,17 @@ public sealed partial class StyledTree
         if (sourceIndex >= 0 && sourceIndex < _sourceToNode.Length)
         {
             _sourceToNode[sourceIndex] = i;
+        }
+
+        if (_tracking)
+        {
+            Note(i, (byte)NodeChanges.Added);
+            if (parent >= 0)
+            {
+                Note(parent, (byte)NodeChanges.Children);
+            }
+
+            _structureEpoch++;
         }
 
         return i;
@@ -457,6 +492,7 @@ public sealed partial class StyledTree
         text.CopyTo(_text.AsSpan(_textCount));
         _textStart[idx] = _textCount;
         _textLength[idx] = text.Length;
+        _textCap[idx] = text.Length;
         _textCount += text.Length;
     }
 
@@ -565,5 +601,24 @@ public sealed partial class StyledTree
         Array.Resize(ref _naturalH, n);
         Array.Resize(ref _naturalRatio, n);
         Array.Resize(ref _src, n);
+        Array.Resize(ref _decl, n);
+        Array.Resize(ref _states, n);
+        Array.Resize(ref _textCap, n);
+        Array.Resize(ref _oldStyle, n);
+        Array.Resize(ref _chg, n);
+        if (_focusDecl is not null)
+        {
+            Array.Resize(ref _focusDecl, n);
+        }
+
+        if (_hoverDecl is not null)
+        {
+            Array.Resize(ref _hoverDecl, n);
+        }
+
+        if (_activeDecl is not null)
+        {
+            Array.Resize(ref _activeDecl, n);
+        }
     }
 }

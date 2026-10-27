@@ -10,7 +10,7 @@ namespace OneRender.Tree;
 /// pseudo-element styles ask for them. Subtrees of <c>display: none</c> elements and of replaced elements are left out.
 /// </summary>
 /// <remarks>The front end keeps its work stack between builds, so repeated builds allocate nothing once warm. Not thread-safe.</remarks>
-public sealed class HtmlFrontEnd
+public sealed partial class HtmlFrontEnd
 {
     private readonly StyledTree _tree;
     private readonly OneHtmlSource _source = new();
@@ -73,6 +73,8 @@ public sealed class HtmlFrontEnd
         }
 
         _tree.SetDocument(doc, doc.NodeCount);
+        _current = styles;
+        _tree.Styler = this;
         Node rootElement = doc.DocumentElement;
         if (rootElement.IsNull)
         {

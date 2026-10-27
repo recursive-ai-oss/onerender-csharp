@@ -157,7 +157,7 @@ internal static partial class ComputedValueText
             case PropertyId.TableLayout: return v.TableLayout == TableLayoutKind.Fixed ? "fixed" : "auto";
             case PropertyId.Page: return v.PageName ?? "auto";
             case PropertyId.PointerEvents: return v.PointerEvents == PointerEventsKind.None ? "none" : "auto";
-            default: return PaintText(id, in v) ?? string.Empty;
+            default: return (id > PropertyId.PointerEvents ? MotionText(id, in v) : PaintText(id, in v)) ?? string.Empty;
         }
     }
 

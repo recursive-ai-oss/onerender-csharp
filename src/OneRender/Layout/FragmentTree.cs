@@ -67,12 +67,18 @@ public sealed partial class FragmentTree
     /// <summary>The number of glyph runs.</summary>
     public int GlyphRunCount => _runCount;
 
+    private int _version;
+
+    // Counts the times the contents were replaced; an index built over the tree is stale when this moved, even if the count did not.
+    internal int Version => _version;
+
     /// <summary>The root fragment (the fragment of the root box), or the null handle when empty.</summary>
     public Fragment Root => _count == 0 ? default : new Fragment(this, 0);
 
     /// <summary>Removes every fragment and glyph run; keeps the storage. A layout calls this first.</summary>
     public void Clear()
     {
+        _version++;
         _count = 0;
         _runCount = 0;
         _glyphCount = 0;

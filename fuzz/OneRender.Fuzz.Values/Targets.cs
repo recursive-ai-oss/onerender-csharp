@@ -27,6 +27,7 @@ internal static class Targets
         ["positioning"] = Positioning,
         ["inline"] = Inline,
         ["paint"] = Paint,
+        ["motion"] = MotionTarget.Run,
     };
 
     private static readonly string[] PropertyNames =

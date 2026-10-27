@@ -84,8 +84,10 @@ internal sealed class GeneratedContent
     /// <summary>Whether the author sheets mention a feature that needs work on every element (counters, string-set, targets).</summary>
     public static bool Mentions(DocumentStyles styles)
     {
-        foreach (StyleSheetInfo info in styles.Sheets)
+        IReadOnlyList<StyleSheetInfo> sheets = styles.Sheets;
+        for (int i = 0; i < sheets.Count; i++)
         {
+            StyleSheetInfo info = sheets[i];
             if (info.Origin == StyleOrigin.Author)
             {
                 string text = info.Sheet.Text;
@@ -105,8 +107,10 @@ internal sealed class GeneratedContent
     public void Configure(DocumentStyles styles, ReferenceTable refs)
     {
         bool counters = false, strings = false, targets = false;
-        foreach (StyleSheetInfo info in styles.Sheets)
+        IReadOnlyList<StyleSheetInfo> sheets = styles.Sheets;
+        for (int i = 0; i < sheets.Count; i++)
         {
+            StyleSheetInfo info = sheets[i];
             if (info.Origin != StyleOrigin.Author)
             {
                 continue;

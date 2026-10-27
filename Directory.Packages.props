@@ -10,6 +10,10 @@
     <PackageVersion Include="RecursiveAI.OneImage" Version="1.10.2" />
     <PackageVersion Include="RecursiveAI.OneImage.Svg" Version="1.10.2" />
   </ItemGroup>
+  <ItemGroup Label="Benchmarks only: the public library the interactive comparison measures">
+    <PackageVersion Include="RecursiveAI.OneGame.UI" Version="1.5.0" />
+    <PackageVersion Include="RecursiveAI.OneGame.Text" Version="1.5.0" />
+  </ItemGroup>
   <ItemGroup Label="Tests and benchmarks only">
     <PackageVersion Include="xunit.v3" Version="4.0.2" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />

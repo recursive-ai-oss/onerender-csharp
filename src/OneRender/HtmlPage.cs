@@ -55,6 +55,19 @@ public sealed class HtmlPageOptions
 
     /// <summary>Whether media queries see the <c>print</c> media type instead of <c>screen</c> (CSS Media Queries 5 §2.3). Default false.</summary>
     public bool PrintMedia { get; init; }
+
+    /// <summary>
+    /// The value of the <c>prefers-reduced-motion</c> media feature: true for <c>reduce</c>, false (the default) for <c>no-preference</c>.
+    /// The engine does not switch animations off by itself; a style sheet that wants less motion says so in a media query.
+    /// </summary>
+    public bool PrefersReducedMotion { get; init; }
+
+    /// <summary>
+    /// For a page rendered once (image or PDF): the time, in milliseconds on the animation clock, at which CSS animations and transitions
+    /// are sampled. Animations start at time 0, so this is how far into them the picture is. Null (the default) renders the page without
+    /// animations, as the cascade gives it. An <see cref="Interaction.InteractivePage"/> always runs animations and takes its time from the host.
+    /// </summary>
+    public double? AnimationTime { get; init; }
 }
 
 /// <summary>
@@ -64,6 +77,9 @@ public sealed class HtmlPageOptions
 /// </summary>
 public sealed partial class HtmlPage
 {
+    private HtmlFrontEnd? _front;
+    private PipelineUpdater? _updater;
+
     private HtmlPage(Document document, StyledTree styled, BoxTree boxes, FragmentTree fragments, HtmlPageOptions options)
     {
         Document = document;
@@ -90,6 +106,8 @@ public sealed partial class HtmlPage
 
     // Whether generated content read page numbers, so a second build with known pages can change the text.
     internal bool UsedPageReferences { get; private init; }
+    // The transitions and animations of this page; null for a page rendered without a clock.
+    internal Animation.AnimationController? Motion { get; private set; }
 
     /// <summary>
     /// The scroll positions of the viewport and of scroll containers. <see cref="Paint"/> applies them; change them and call
@@ -119,7 +137,7 @@ public sealed partial class HtmlPage
         CreateWithStyles(html, options, out _, cancellationToken);
 
     // Create, also handing back the cascade so an interactive page can restyle it for a new hover, focus or active element.
-    internal static HtmlPage CreateWithStyles(string html, HtmlPageOptions options, out DocumentStyles styles, CancellationToken cancellationToken)
+    internal static HtmlPage CreateWithStyles(string html, HtmlPageOptions options, out DocumentStyles styles, CancellationToken cancellationToken, bool incremental = false, bool animate = false, double startTime = 0)
     {
         ArgumentNullException.ThrowIfNull(html);
         ArgumentNullException.ThrowIfNull(options);
@@ -127,7 +145,7 @@ public sealed partial class HtmlPage
         ArgumentOutOfRangeException.ThrowIfLessThan(options.ViewportHeight, 1);
         cancellationToken.ThrowIfCancellationRequested();
 
-        return CreateWithStyles(Document.Parse(html, null, cancellationToken), options, out styles, cancellationToken);
+        return CreateWithStyles(Document.Parse(html, null, cancellationToken), options, out styles, cancellationToken, incremental, animate, startTime);
     }
 
     /// <summary>Cascades, builds the box tree and lays out a document the host has already parsed.</summary>
@@ -141,10 +159,10 @@ public sealed partial class HtmlPage
     public static HtmlPage Create(Document document, HtmlPageOptions options, CancellationToken cancellationToken = default) =>
         CreateWithStyles(document, options, out _, cancellationToken);
 
-    internal static HtmlPage CreateWithStyles(Document document, HtmlPageOptions options, out DocumentStyles styles, CancellationToken cancellationToken)
+    internal static HtmlPage CreateWithStyles(Document document, HtmlPageOptions options, out DocumentStyles styles, CancellationToken cancellationToken, bool incremental = false, bool animate = false, double startTime = 0)
     {
         styles = CreateStyles(document, options, cancellationToken);
-        return BuildFromStyles(document, styles, options, null, cancellationToken);
+        return BuildFromStyles(document, styles, options, null, cancellationToken, incremental, animate, startTime);
     }
 
     // The cascade of a document for the given viewport and media; @property initial values are fed back as a user sheet.
@@ -155,7 +173,7 @@ public sealed partial class HtmlPage
         ArgumentOutOfRangeException.ThrowIfLessThan(options.ViewportWidth, 1);
         ArgumentOutOfRangeException.ThrowIfLessThan(options.ViewportHeight, 1);
         cancellationToken.ThrowIfCancellationRequested();
-        var context = new StyleContext { Media = new MediaFeatures { Width = options.ViewportWidth, Height = options.ViewportHeight, Type = options.PrintMedia ? MediaType.Print : MediaType.Screen } };
+        var context = new StyleContext { Media = new MediaFeatures { Width = options.ViewportWidth, Height = options.ViewportHeight, Type = options.PrintMedia ? MediaType.Print : MediaType.Screen, ReducedMotion = options.PrefersReducedMotion ? PrefersReduced.Reduce : PrefersReduced.NoPreference } };
         Func<string, byte[]?>? bytes = options.StylesheetBytes;
         StyleSourceOptions MakeOptions(string? registered)
         {
@@ -197,7 +215,7 @@ public sealed partial class HtmlPage
     }
 
     // Builds the trees of a cascaded document; the references carry targets between the passes of a paged document.
-    internal static HtmlPage BuildFromStyles(Document document, DocumentStyles styles, HtmlPageOptions options, ReferenceTable? references, CancellationToken cancellationToken)
+    internal static HtmlPage BuildFromStyles(Document document, DocumentStyles styles, HtmlPageOptions options, ReferenceTable? references, CancellationToken cancellationToken, bool incremental = false, bool animate = false, double startTime = 0)
     {
         Func<string, byte[]?>? bytes = options.StylesheetBytes;
         var media = styles.Context.Media;
@@ -214,7 +232,14 @@ public sealed partial class HtmlPage
         try
         {
             AddFontFaces(styles, catalog, media, cancellationToken);
-            return Build(document, styles, options, null, references, cancellationToken);
+            Animation.AnimationController? motion = null;
+            if (animate || options.AnimationTime.HasValue)
+            {
+                motion = new Animation.AnimationController(Animation.KeyframesRegistry.Collect(styles, media, cancellationToken));
+            }
+
+            // Animations and transitions begin at the clock's start; a page rendered once at a later time is that far into them.
+            return Build(document, styles, options, null, references, cancellationToken, incremental, motion, null, startTime, options.AnimationTime ?? startTime);
         }
         finally
         {
@@ -222,20 +247,40 @@ public sealed partial class HtmlPage
         }
     }
 
-    private static HtmlPage Build(Document document, DocumentStyles styles, HtmlPageOptions options, ScrollState? scroll, ReferenceTable? references, CancellationToken cancellationToken)
+    private static HtmlPage Build(Document document, DocumentStyles styles, HtmlPageOptions options, ScrollState? scroll, ReferenceTable? references, CancellationToken cancellationToken,
+        bool incremental = false, Animation.AnimationController? motion = null, StyledTree? previous = null, double now = 0, double sampleAt = double.NaN)
     {
         var table = new StyleTable();
         table.SetViewport(options.ViewportWidth, options.ViewportHeight);
         table.Fonts = options.Fonts;
         var styled = new StyledTree(table) { Resolver = options.Replaced };
-        var frontEnd = new HtmlFrontEnd(styled) { References = references };
-        frontEnd.Build(styles, cancellationToken);
+        var front = new HtmlFrontEnd(styled) { References = references };
+        front.Build(styles, cancellationToken);
+
+        // Transitions and animations are applied to the styled tree before boxes are made from it, so the box tree, layout and paint all see
+        // the animated values for this time.
+        motion?.Recalc(styled, previous, now, styles);
+        if (motion is not null && sampleAt > now)
+        {
+            motion.Tick(sampleAt);
+        }
+
         var boxes = new BoxTree(styled);
         boxes.Build(cancellationToken);
         var fragments = new FragmentTree(boxes);
-        ILayoutEngine engine = options.Layout ?? new BlockLayoutEngine();
-        engine.Layout(boxes, new LayoutInput(options.ViewportWidth, options.ViewportHeight, options.Fonts), fragments, cancellationToken);
-        var page = new HtmlPage(document, styled, boxes, fragments, options) { UsedPageReferences = frontEnd.UsedPageReferences };
+        // An interactive page keeps what it needs to restyle and lay out only what a state change reaches.
+        BlockLayoutEngine? reusing = incremental && options.Layout is null ? new BlockLayoutEngine() : null;
+        ILayoutEngine engine = options.Layout ?? reusing ?? new BlockLayoutEngine();
+        engine.Layout(boxes, new LayoutInput(options.ViewportWidth, options.ViewportHeight, options.Fonts) { Reuse = reusing is not null }, fragments, cancellationToken);
+        var page = new HtmlPage(document, styled, boxes, fragments, options) { Motion = motion, UsedPageReferences = front.UsedPageReferences };
+        if (reusing is not null)
+        {
+            boxes.ClearDirty();
+            styled.Tracking = true;
+            page._front = front;
+            page._updater = new PipelineUpdater(styled, boxes, fragments, reusing, options.Fonts, options.ViewportWidth, options.ViewportHeight);
+        }
+
         if (scroll is not null)
         {
             page.Scroll = scroll;

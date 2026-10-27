@@ -42,6 +42,9 @@ public sealed class StyleTable
     /// <summary>The most distinct styles one table holds. Further requests reuse the parent's row and raise a diagnostic.</summary>
     public const int MaxStyles = 1 << 16;
 
+    /// <summary>Counts the resets of any table; caches keyed by style row drop their entries when it changes.</summary>
+    internal static int ResetGeneration { get; private set; }
+
     private readonly StyleComputer _computer = new();
     private readonly Dictionary<StyleKey, int> _intern = new(256);
     private readonly Dictionary<long, int> _anonymous = new(16);
@@ -96,6 +99,7 @@ public sealed class StyleTable
     /// <summary>Drops every cached style. Handles obtained before the call must not be used afterwards.</summary>
     public void Reset()
     {
+        ResetGeneration++;
         _intern.Clear();
         _anonymous.Clear();
         _byHash.Clear();
@@ -112,6 +116,12 @@ public sealed class StyleTable
     }
 
     /// <summary>Records which style is the root's, so <c>rem</c> units in later styles resolve against its font size.</summary>
+    /// <summary>The font size that <c>rem</c> units currently resolve against.</summary>
+    internal double RootFontSizeValue => _rootFontSize;
+
+    /// <summary>The root font facts that <c>rem</c>, <c>rex</c>, <c>rcap</c>, <c>rch</c> and <c>ric</c> resolve against; it changes with the root's font size, family, weight or style.</summary>
+    internal ComputeEnvironment RootEnvironment => _rootEnv;
+
     internal void NoteRoot(StyleId root)
     {
         _rootFontSize = _rows[root.Index].FontSize;
@@ -120,7 +130,7 @@ public sealed class StyleTable
 
     internal bool TryGetCached(object source, int version, StyleId parent, out StyleId id)
     {
-        if (_intern.TryGetValue(new StyleKey(source, version, parent.Index, _rootFontSize, _rootEnv.RootExRatio), out int row))
+        if (_intern.TryGetValue(new StyleKey(source, version, parent.Index, _rootEnv), out int row))
         {
             id = new StyleId(row);
             return true;
@@ -157,7 +167,7 @@ public sealed class StyleTable
             return hasParent ? parent : default;
         }
 
-        _intern[new StyleKey(key, version, parent.Index, _rootFontSize, _rootEnv.RootExRatio)] = id.Index;
+        _intern[new StyleKey(key, version, parent.Index, _rootEnv)] = id.Index;
         return id;
     }
 
@@ -184,6 +194,76 @@ public sealed class StyleTable
 
         _anonymous[key] = id.Index;
         return id;
+    }
+
+    // ---- rows owned by one node (animation) -------------------------------------------------------------------------------------
+
+    private int[] _freePrivate = new int[8];
+    private int _freePrivateCount;
+
+    /// <summary>
+    /// Makes a row that belongs to one node and is changed in place by <see cref="MutableRow"/> (an animated element's current style).
+    /// It is not shared and never found by value; release it with <see cref="ReleasePrivate"/>. Counts toward <see cref="MaxStyles"/>.
+    /// </summary>
+    /// <returns>False when the table is full.</returns>
+    internal bool TryAllocatePrivate(in ComputedValues values, out StyleId id)
+    {
+        if (_freePrivateCount > 0)
+        {
+            int reused = _freePrivate[--_freePrivateCount];
+            _rows[reused] = values;
+            id = new StyleId(reused);
+            return true;
+        }
+
+        if (_count >= MaxStyles)
+        {
+            id = default;
+            return false;
+        }
+
+        if (_count == _rows.Length)
+        {
+            Array.Resize(ref _rows, _rows.Length * 2);
+            Array.Resize(ref _sameHash, _rows.Length);
+        }
+
+        _rows[_count] = values;
+        _sameHash[_count] = 0;
+        id = new StyleId(_count++);
+        return true;
+    }
+
+    /// <summary>Gives a row from <see cref="TryAllocatePrivate"/> back for reuse. The caller must not use the id afterwards.</summary>
+    internal void ReleasePrivate(StyleId id)
+    {
+        if (id.Index <= 0)
+        {
+            return;
+        }
+
+        if (_freePrivateCount == _freePrivate.Length)
+        {
+            Array.Resize(ref _freePrivate, _freePrivate.Length * 2);
+        }
+
+        _freePrivate[_freePrivateCount++] = id.Index;
+    }
+
+    /// <summary>The row of a private style, for in-place change. Only valid for ids from <see cref="TryAllocatePrivate"/>.</summary>
+    internal ref ComputedValues MutableRow(StyleId id) => ref _rows[id.Index];
+
+    /// <summary>Copies one property from <paramref name="source"/> into <paramref name="target"/>, all the fields that make it up.</summary>
+    internal void CopyProperty(PropertyId id, ref ComputedValues target, in ComputedValues source) => _computer.CopyProperty(id, ref target, in source, false);
+
+    /// <summary>
+    /// Computes a style from declarations without storing it: the values a declaration block would give an element whose parent has
+    /// <paramref name="parent"/>. Used for keyframe values, which are never nodes' styles.
+    /// </summary>
+    internal ComputedValues ComputeDetached(DeclarationSource declarations, StyleId parent, bool hasParent)
+    {
+        var env = new ComputeEnvironment(_viewportWidth, _viewportHeight, _rootFontSize);
+        return _computer.Compute(declarations, in _rows[hasParent ? parent.Index : 0], hasParent, in env, false);
     }
 
     /// <summary>Adds a row, or returns the existing row with exactly these values, so equal styles share one row however they were reached.</summary>
@@ -221,5 +301,5 @@ public sealed class StyleTable
         return true;
     }
 
-    private readonly record struct StyleKey(object Source, int Version, int Parent, double RootFontSize, double RootExRatio);
+    private readonly record struct StyleKey(object Source, int Version, int Parent, ComputeEnvironment Root);
 }

@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="OneRender.Tests" />
+    <InternalsVisibleTo Include="OneRender.Fuzz.Values" />
   </ItemGroup>
 
   <ItemGroup>

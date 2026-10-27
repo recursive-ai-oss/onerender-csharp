@@ -181,7 +181,7 @@ public readonly struct ColorValue : IEquatable<ColorValue>
         return A >= 1 ? "rgb(" + rgb + ")" : "rgba(" + rgb + ", " + CssText.Number(Math.Round(A, 2)) + ")";
     }
 
-    private static string Channel(float v) => ((int)Math.Round(Math.Clamp(v, 0f, 1f) * 255)).ToString(System.Globalization.CultureInfo.InvariantCulture);
+    private static string Channel(float v) => ((int)Math.Round(Math.Clamp(v, 0f, 1f) * 255, MidpointRounding.AwayFromZero)).ToString(System.Globalization.CultureInfo.InvariantCulture);
 
     /// <inheritdoc />
     public bool Equals(ColorValue other) => R.Equals(other.R) && G.Equals(other.G) && B.Equals(other.B) && A.Equals(other.A) && IsCurrentColor == other.IsCurrentColor;
