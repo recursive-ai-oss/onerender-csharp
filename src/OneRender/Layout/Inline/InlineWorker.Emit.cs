@@ -559,8 +559,10 @@ internal sealed partial class InlineWorker
                         Fragment af = _out.Make(el.Frag);
                         Rect bb = af.BorderBox;
                         _out.Reparent(af, curFrag);
-                        _out.SetBorderBox(af, new Rect(p.X + el.Ml - ox, p.Base - el.Base + el.Mt - oy, bb.Width, bb.Height));
-                        AddOverflow(p.X + el.Ml, p.Base - el.Base + el.Mt, bb.Width, bb.Height);
+                        // CSS2 §9.4.3: an inline-block or replaced box that is relatively positioned is drawn shifted; the line keeps its place.
+                        BlockLayoutEngine.RelativeOffset(in _boxes.Make(el.Box).Values, _availW, double.NaN, _container.Values.Direction == DirectionKind.Rtl, out double adx, out double ady);
+                        _out.SetBorderBox(af, new Rect(p.X + el.Ml - ox + adx, p.Base - el.Base + el.Mt - oy + ady, bb.Width, bb.Height));
+                        AddOverflow(p.X + el.Ml + adx, p.Base - el.Base + el.Mt + ady, bb.Width, bb.Height);
                     }
 
                     break;

@@ -151,9 +151,9 @@ public sealed partial class BlockLayoutEngine
         else
         {
             ResolveHeights(in v, basisH, padV, mt, mb, it.W, Math.Max(0, it.W - padH), out double specH, out double minH, out double maxH, out _);
-            bool heightAuto = v.Height.Kind is LengthKind.Auto or LengthKind.Stretch;
+            bool heightAuto = v.Height.Kind is LengthKind.Auto or LengthKind.Stretch || v.HeightIsIntrinsic;
             bool stretch = heightAuto && !mtAuto && !mbAuto && (it.Replaced ? a == AlignKind.Stretch : a is AlignKind.Normal or AlignKind.Stretch);
-            if (!it.Replaced && !double.IsNaN(specH))
+            if (!it.Replaced && !double.IsNaN(specH) && !v.HeightIsIntrinsic)
             {
                 h = Math.Max(minH, Math.Min(maxH, specH)) + padV;
             }

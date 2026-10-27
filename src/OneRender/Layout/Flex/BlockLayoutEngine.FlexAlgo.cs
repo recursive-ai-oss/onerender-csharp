@@ -321,7 +321,7 @@ public sealed partial class BlockLayoutEngine
         double hMin = HeightLen(iv.MinHeight, fx.SpecH, pv, borderBox);
         double hMax = HeightLen(iv.MaxHeight, fx.SpecH, pv, borderBox);
         double mainS = row ? wS : hS;
-        double crossS = row ? hS : iv.WidthIsIntrinsic ? double.NaN : wS;
+        double crossS = row ? (iv.HeightIsIntrinsic ? double.NaN : hS) : iv.WidthIsIntrinsic ? double.NaN : wS;
         double minMain = row ? wMin : hMin, maxMain = row ? wMax : hMax;
         double minCross = row ? hMin : wMin, maxCross = row ? hMax : wMax;
         bool minAuto = row ? iv.MinWidth.Kind == LengthKind.Auto : iv.MinHeight.Kind == LengthKind.Auto;

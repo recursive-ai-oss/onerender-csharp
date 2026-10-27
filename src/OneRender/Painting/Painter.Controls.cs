@@ -88,7 +88,14 @@ public sealed partial class Painter
             return Rgb(209, 209, 209);
         }
 
-        return v.AccentColorAuto || v.AccentColor.IsCurrentColor ? Rgb(0, 117, 255) : new PaintColor(v.AccentColor.R, v.AccentColor.G, v.AccentColor.B, v.AccentColor.A);
+        if (v.AccentColorAuto)
+        {
+            return Rgb(0, 117, 255);
+        }
+
+        // CSS UI 4: accent-color takes currentcolor like any color, resolved against this element's own color.
+        ColorValue a = v.AccentColor.Resolve(v.Color);
+        return new PaintColor(a.R, a.G, a.B, a.A);
     }
 
     // Probe: the mark on an accent-colored box is white, and black when the accent color is light.
@@ -378,7 +385,9 @@ public sealed partial class Painter
     {
         for (int c = _tree.FirstChildOf(fieldset); c >= 0; c = _tree.NextSiblingOf(c))
         {
-            if (_boxes.Make(_tree.BoxOf(c)).Values.Control == ControlKind.Legend)
+            // Fragments of fragmentation (columns, pages) carry no box.
+            int bx = _tree.BoxOf(c);
+            if (bx >= 0 && _boxes.Make(bx).Values.Control == ControlKind.Legend)
             {
                 Rect bb = _tree.BorderBoxOf(c);
                 legend = new Rect(_absX[c], _absY[c], bb.Width, bb.Height);

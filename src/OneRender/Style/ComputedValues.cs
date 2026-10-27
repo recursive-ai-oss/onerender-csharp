@@ -367,6 +367,12 @@ public partial struct ComputedValues
     /// </summary>
     internal bool WidthIsIntrinsic { get; set; }
 
+    /// <summary>True when <see cref="Height"/> is the control's widget height filled in for <c>auto</c>, so that stretching and both-inset positioning still apply.</summary>
+    internal bool HeightIsIntrinsic { get; set; }
+
+    /// <summary>True when the extra height of a control was already moved into its top padding to center its text, so layout need not center it again.</summary>
+    internal bool ContentCenteredByPadding { get; set; }
+
     /// <summary>
     /// For the rendered legend of a fieldset: the fieldset's top padding, which follows the legend as space that does not collapse with
     /// the margin of the box after it. 0 for every other box. Set by the HTML front end.

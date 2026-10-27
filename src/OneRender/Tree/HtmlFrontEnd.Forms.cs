@@ -139,7 +139,7 @@ public sealed partial class HtmlFrontEnd
 
                 double line = FormMetrics.UsedLineHeight(fonts, in v);
                 SetContentWidth(ref v, FormMetrics.TextFieldWidth(fonts, in v, size), borderBox);
-                if (v.MinHeight.IsAuto)
+                if (v.MinHeight.IsAuto && v.Height.IsAuto)
                 {
                     v.MinHeight = Length.FromPx(line + (borderBox ? FormMetrics.Extra(in v, false) : 0));
                 }
@@ -175,7 +175,10 @@ public sealed partial class HtmlFrontEnd
                 if (native)
                 {
                     SetContentWidth(ref v, 129, borderBox);
+                    bool autoHeight = v.Height.IsAuto;
                     SetContentHeight(ref v, 16, borderBox);
+                    // Probe (Chrome 156, grid and flex stretch of a range): a slider fills the stretched area and centers its track in it.
+                    v.HeightIsIntrinsic = autoHeight;
                     v.BaselineAtBorderEdge = true;
                 }
 
@@ -356,7 +359,8 @@ public sealed partial class HtmlFrontEnd
 
         StyleTable table = _tree.Styles;
         ComputedValues v = table[style];
-        if (v.Display.IsNone || v.Display.Inside is not (InnerDisplay.Flex or InnerDisplay.Grid))
+        // A subgrid fieldset keeps its own grid: the parent grid's tracks reach its items only through the fieldset itself (Grid 2 §9).
+        if (v.Display.IsNone || v.Display.Inside is not (InnerDisplay.Flex or InnerDisplay.Grid) || v.GridTemplateRows.IsSubgrid || v.GridTemplateColumns.IsSubgrid)
         {
             _fieldsetOrig.Remove(idx);
             return style;
@@ -570,6 +574,7 @@ public sealed partial class HtmlFrontEnd
             return;
         }
 
+        v.ContentCenteredByPadding = true;
         v.PaddingTop = Length.FromPx(FormMetrics.Px(v.PaddingTop) + off);
         if (!borderBox)
         {
@@ -599,6 +604,12 @@ public sealed partial class HtmlFrontEnd
         if (v.Height.IsAuto)
         {
             v.Height = Length.FromPx(content + (borderBox ? FormMetrics.Extra(in v, false) : 0));
+        }
+        else if (v.Height.IsPercentage && v.MinHeight.IsAuto)
+        {
+            // CSS Sizing 3 §5.2.1: a percentage height that can't resolve behaves as auto, which for a control means its intrinsic
+            // height. A minimum keeps that floor when the percentage is indefinite and is harmless when it resolves.
+            v.MinHeight = Length.FromPx(content + (borderBox ? FormMetrics.Extra(in v, false) : 0));
         }
     }
 

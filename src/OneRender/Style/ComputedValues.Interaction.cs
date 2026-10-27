@@ -31,6 +31,8 @@ public partial struct ComputedValues
         v.InnerBaseline = double.NaN;
         v.ControlWidth = double.NaN;
         v.WidthIsIntrinsic = false;
+        v.HeightIsIntrinsic = false;
+        v.ContentCenteredByPadding = false;
         v.LegendGap = 0;
         v.ControlInnerPadding = 0;
         v.Appearance = AppearanceKind.Auto;
@@ -40,7 +42,7 @@ public partial struct ComputedValues
 
     internal static bool InteractionEquals(in ComputedValues a, in ComputedValues b) =>
         a.PointerEvents == b.PointerEvents && a.Control == b.Control && a.ControlState == b.ControlState && a.ControlFraction.Equals(b.ControlFraction) && a.DisplayWasInlineLevel == b.DisplayWasInlineLevel
-        && a.BaselineAtBorderEdge == b.BaselineAtBorderEdge && a.InnerBaseline.Equals(b.InnerBaseline) && a.ControlWidth.Equals(b.ControlWidth) && a.WidthIsIntrinsic == b.WidthIsIntrinsic && a.LegendGap.Equals(b.LegendGap) && a.ControlInnerPadding.Equals(b.ControlInnerPadding) && a.Appearance == b.Appearance && a.AccentColorAuto == b.AccentColorAuto && a.AccentColor.Equals(b.AccentColor);
+        && a.BaselineAtBorderEdge == b.BaselineAtBorderEdge && a.InnerBaseline.Equals(b.InnerBaseline) && a.ControlWidth.Equals(b.ControlWidth) && a.WidthIsIntrinsic == b.WidthIsIntrinsic && a.HeightIsIntrinsic == b.HeightIsIntrinsic && a.ContentCenteredByPadding == b.ContentCenteredByPadding && a.LegendGap.Equals(b.LegendGap) && a.ControlInnerPadding.Equals(b.ControlInnerPadding) && a.Appearance == b.Appearance && a.AccentColorAuto == b.AccentColorAuto && a.AccentColor.Equals(b.AccentColor);
 
     internal static void InteractionHash(ref HashCode h, in ComputedValues v)
     {
@@ -53,6 +55,8 @@ public partial struct ComputedValues
         h.Add(v.InnerBaseline);
         h.Add(v.ControlWidth);
         h.Add(v.WidthIsIntrinsic);
+        h.Add(v.HeightIsIntrinsic);
+        h.Add(v.ContentCenteredByPadding);
         h.Add(v.LegendGap);
         h.Add(v.ControlInnerPadding);
         h.Add(v.Appearance);

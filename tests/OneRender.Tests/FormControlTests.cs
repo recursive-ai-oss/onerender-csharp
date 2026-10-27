@@ -20,6 +20,64 @@ public class FormControlTests
     // ------------------------------------------------------------------ sizes (Chrome 156, Liberation Sans as Arial; docs/forms.md)
 
     [Fact]
+    public void StretchedControlsFillTheirAreaAndCenterTheirContent()
+    {
+        InteractivePage p = Page(
+            "<div style='display:grid;grid-template-columns:200px 200px;grid-auto-rows:100px'><button id=b style='margin:0'>x</button><input id=r type=range style='margin:0'></div>"
+            + "<div style='position:relative;width:300px;height:80px'><input id=t style='position:absolute;left:3px;right:3px;top:3px;bottom:3px;box-sizing:border-box'></div>");
+        Layout.Rect b = Box(p, "b"), r = Box(p, "r"), t = Box(p, "t");
+        Assert.Equal(100, b.Height, 0.01);
+        Assert.Equal(100, r.Height, 0.01);
+        Assert.Equal(294, t.Width, 0.01);
+        Assert.Equal(74, t.Height, 0.01);
+        DisplayList list = Paint(p);
+        float y = -1;
+        for (int i = 0; i < list.Count; i++)
+        {
+            if (list[i].Kind == ItemKind.GlyphRun)
+            {
+                y = list[i].RootBounds.Y;
+                break;
+            }
+        }
+
+        Assert.True(y > 35, y.ToString());
+    }
+
+    [Fact]
+    public void AccentColorTakesCurrentColorFromTheControl()
+    {
+        DisplayList list = Paint(Page("<input type=checkbox checked style='color:rgb(255,0,0);accent-color:currentColor'>"));
+        Assert.True(HasFill(list, c => c.R > 0.9f && c.G < 0.1f && c.B < 0.1f));
+    }
+
+    [Fact]
+    public void APercentageHeightThatCannotResolveLeavesAControlItsOwnHeight()
+    {
+        InteractivePage p = Page("<div><input id=c type=checkbox style='height:100%'></div>");
+        Assert.Equal(13, Box(p, "c").Height, 0.01);
+    }
+
+    [Fact]
+    public void AFieldsetCanBeAColumnSpanner()
+    {
+        InteractivePage p = Page("<article id=m style='column-count:3;column-rule:6px solid;width:400px'><div>a</div><fieldset id=f style='column-span:all;margin:0;padding:0;border:0'>fieldset</fieldset><div>b</div></article>");
+        Assert.True(Box(p, "f").Width > 100);
+        Assert.True(Paint(p).Count > 0);
+    }
+
+    [Fact]
+    public void RelativePositioningShiftsInlineBlocksAndControlsButNotTheLine()
+    {
+        InteractivePage p = Page("<input id=a><input id=b style='position:relative;left:-10px;top:5px'><div id=d style='display:inline-block;width:20px;position:relative;left:7px'>x</div><input id=c>", "", 900);
+        Layout.Rect a = Box(p, "a"), b = Box(p, "b"), d = Box(p, "d"), c = Box(p, "c");
+        Assert.Equal(a.X + a.Width - 10, b.X, 0.5);
+        Assert.Equal(a.Y + 5, b.Y, 0.5);
+        Assert.Equal(a.X + a.Width + b.Width + 7, d.X, 0.5);
+        Assert.Equal(a.X + a.Width + b.Width + 20, c.X, 0.5);
+    }
+
+    [Fact]
     public void TextFieldsHaveTheDefaultSizeOfTwentyCharacters()
     {
         InteractivePage p = Page("<input id=a><input id=b size=5><input id=c type=password><input id=d type=search style='font-size:20px'>");
