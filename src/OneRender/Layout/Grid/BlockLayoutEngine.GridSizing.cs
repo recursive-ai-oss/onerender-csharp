@@ -1008,6 +1008,8 @@ public sealed partial class BlockLayoutEngine
         }
 
         _out.Truncate(mark);
+        MemoTruncate(mark.Count);
+        _frag.DropPlansFrom(mark.Count);
         _absCount = savedAbs;
         it.Measured = true;
     }

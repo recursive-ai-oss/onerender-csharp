@@ -37,6 +37,9 @@ public sealed partial class InteractivePage
     private int _generation;
     private IStateChangeHandler? _handler;
 
+    // Tests set it to compare the in-place restyle with building the page again.
+    internal bool DisableInPlaceRestyle { get; set; }
+
     private InteractivePage(HtmlPage page, DocumentStyles styles, HtmlPageOptions options, InteractionOptions io)
     {
         _page = page;
@@ -61,7 +64,7 @@ public sealed partial class InteractivePage
     /// <exception cref="OperationCanceledException">Cancelled.</exception>
     public static InteractivePage Create(string html, HtmlPageOptions options, InteractionOptions? interaction = null, CancellationToken cancellationToken = default)
     {
-        HtmlPage page = HtmlPage.CreateWithStyles(html, options, out DocumentStyles styles, cancellationToken);
+        HtmlPage page = HtmlPage.CreateWithStyles(html, options, out DocumentStyles styles, cancellationToken, incremental: true);
         return new InteractivePage(page, styles, options, interaction ?? new InteractionOptions());
     }
 
@@ -267,9 +270,18 @@ public sealed partial class InteractivePage
         _viewDepth = rebase ? 1 : _viewDepth + 1;
         if (differs)
         {
-            _page = _page.Rebuild(styles, ct);
-            _hits = NewHitTester(_page);
-            _queries = new LayoutQueries(_page, _hits);
+            if (!DisableInPlaceRestyle && _page.CanRestyleInPlace && _page.TryRestyle(styles, rebase, ct))
+            {
+                // The page object stays; its trees were updated in place, so the hit tester reads the new fragments.
+                _hits.Rebuild();
+            }
+            else
+            {
+                _page = _page.Rebuild(styles, ct);
+                _hits = NewHitTester(_page);
+                _queries = new LayoutQueries(_page, _hits);
+            }
+
             _generation++;
             outcome |= InputOutcome.Relaid;
         }
