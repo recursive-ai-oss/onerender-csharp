@@ -343,6 +343,26 @@ public partial struct ComputedValues
     /// <summary><c>list-style-position</c>.</summary>
     public ListStylePositionKind ListStylePosition { get; internal set; }
 
+    /// <summary><c>word-break</c>.</summary>
+    public WordBreakKind WordBreak { get; internal set; }
+
+    /// <summary><c>overflow-wrap</c> (and its alias <c>word-wrap</c>).</summary>
+    public OverflowWrapKind OverflowWrap { get; internal set; }
+
+    /// <summary><c>line-break</c>.</summary>
+    public LineBreakKind LineBreak { get; internal set; }
+
+    /// <summary><c>hyphens</c>.</summary>
+    public HyphensKind Hyphens { get; internal set; }
+
+    /// <summary><c>tab-size</c>: a <see cref="LengthKind.Number"/> of space widths or an absolute <see cref="LengthKind.Px"/> length.</summary>
+    public Length TabSize { get; internal set; }
+
+    /// <summary><c>text-align-last</c>.</summary>
+    public TextAlignLastKind TextAlignLast { get; internal set; }
+
+    /// <summary><c>text-justify</c>.</summary>
+    public TextJustifyKind TextJustify { get; internal set; }
     /// <summary><c>grid-template-columns</c>.</summary>
     public GridTrackList GridTemplateColumns { get; internal set; }
 
@@ -536,6 +556,7 @@ public partial struct ComputedValues
         v.BackgroundColor = ColorValue.Transparent;
         v.ContentText = string.Empty;
         v.ListStyleType = "disc";
+        v.TabSize = new Length(LengthKind.Number, 8);
         InitFlex(ref v);
         InitGrid(ref v);
         InitPaint(ref v);

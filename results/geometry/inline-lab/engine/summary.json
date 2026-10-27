@@ -1,0 +1,116 @@
+{
+  "format": "onerender-geometry-summary/1",
+  "set": "inline-lab",
+  "label": "engine",
+  "ours": "engine",
+  "tolerancePx": 1,
+  "tolerancePercent": 0.5,
+  "gateRate": 0.99,
+  "browser": "Chrome/156.0.8078.47",
+  "fontSet": "8768bf2774f6c8e8 (20 files)",
+  "viewports": [
+    {
+      "viewport": "1280x800",
+      "pages": 7,
+      "elements": 155,
+      "matched": 154,
+      "rate": 0.9935483870967742,
+      "classes": {
+        "positionOnly": 0,
+        "sizeOnly": 0,
+        "positionAndSize": 0,
+        "textRun": 1,
+        "missingOurs": 0,
+        "missingChrome": 0
+      },
+      "rootCauses": {
+        "positionOnly": 0,
+        "sizeOnly": 0,
+        "positionAndSize": 0,
+        "textRun": 1,
+        "missingOurs": 0,
+        "missingChrome": 0
+      },
+      "tagConflicts": 0,
+      "pagesAtGate": 6,
+      "medianPageRate": 1,
+      "minPageRate": 0.96,
+      "worstTags": [
+        {
+          "tag": "span",
+          "mismatches": 1,
+          "elements": 49
+        }
+      ]
+    },
+    {
+      "viewport": "390x844",
+      "pages": 7,
+      "elements": 155,
+      "matched": 154,
+      "rate": 0.9935483870967742,
+      "classes": {
+        "positionOnly": 0,
+        "sizeOnly": 0,
+        "positionAndSize": 0,
+        "textRun": 1,
+        "missingOurs": 0,
+        "missingChrome": 0
+      },
+      "rootCauses": {
+        "positionOnly": 0,
+        "sizeOnly": 0,
+        "positionAndSize": 0,
+        "textRun": 1,
+        "missingOurs": 0,
+        "missingChrome": 0
+      },
+      "tagConflicts": 0,
+      "pagesAtGate": 6,
+      "medianPageRate": 1,
+      "minPageRate": 0.96,
+      "worstTags": [
+        {
+          "tag": "span",
+          "mismatches": 1,
+          "elements": 49
+        }
+      ]
+    }
+  ],
+  "total": {
+    "viewport": "all",
+    "pages": 14,
+    "elements": 310,
+    "matched": 308,
+    "rate": 0.9935483870967742,
+    "classes": {
+      "positionOnly": 0,
+      "sizeOnly": 0,
+      "positionAndSize": 0,
+      "textRun": 2,
+      "missingOurs": 0,
+      "missingChrome": 0
+    },
+    "rootCauses": {
+      "positionOnly": 0,
+      "sizeOnly": 0,
+      "positionAndSize": 0,
+      "textRun": 2,
+      "missingOurs": 0,
+      "missingChrome": 0
+    },
+    "tagConflicts": 0,
+    "pagesAtGate": 12,
+    "medianPageRate": 1,
+    "minPageRate": 0.96,
+    "worstTags": [
+      {
+        "tag": "span",
+        "mismatches": 2,
+        "elements": 98
+      }
+    ]
+  },
+  "gateMet": true
+}

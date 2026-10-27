@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>space</title><style>body{margin:8px;font:16px Arial,sans-serif}p{margin:8px 0}.w{width:300px;border:1px solid #888}pre,.p{margin:6px 0;border:1px solid #888;width:300px}.p{font-family:monospace}</style></head><body>
+<pre>pre   keeps   spaces
+  and newlines
+	tab stop
+   x	y	z</pre>
+<div class=p style="white-space:pre-wrap">pre-wrap keeps   spaces and wraps when the line is much too long for it.   
+  Second line   with trailing spaces         </div>
+<div class=p style="white-space:pre-line">pre-line    collapses   spaces
+   but keeps
+newlines and wraps long lines when needed to fit the box.</div>
+<div class=p style="white-space:nowrap">nowrap never wraps even if the line is much longer than the box allows</div>
+<div class=p style="white-space:break-spaces">break-spaces      keeps      and      wraps      on      spaces</div>
+<div class=p style="white-space:pre;tab-size:4">tab	size	four
+		x</div>
+<div class=p style="white-space:pre;tab-size:20px">tab	size	20px
+		x</div>
+<div class=p>normal <span style="white-space:pre">  pre  span  </span> back to normal <span style="white-space:nowrap">nowrap span that is long enough to overflow</span> end.</div>
+</body></html>

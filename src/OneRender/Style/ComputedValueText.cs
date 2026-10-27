@@ -8,6 +8,12 @@ internal static partial class ComputedValueText
     private static readonly string[] ClipMarginBoxes = ["padding-box", "content-box", "border-box"];
     private static readonly string[] VerticalAligns = ["baseline", "sub", "super", "text-top", "text-bottom", "middle", "top", "bottom"];
     private static readonly string[] Collapses = ["collapse", "preserve", "preserve-breaks", "preserve-spaces", "break-spaces"];
+    private static readonly string[] WordBreaks = ["normal", "break-all", "keep-all", "break-word"];
+    private static readonly string[] OverflowWraps = ["normal", "break-word", "anywhere"];
+    private static readonly string[] LineBreaks = ["auto", "loose", "normal", "strict", "anywhere"];
+    private static readonly string[] HyphenWords = ["manual", "none", "auto"];
+    private static readonly string[] AlignLasts = ["auto", "start", "end", "left", "right", "center", "justify", "match-parent"];
+    private static readonly string[] Justifies = ["auto", "none", "inter-word", "inter-character"];
     private static readonly string[] Aligns = ["start", "end", "left", "right", "center", "justify", "match-parent", "justify-all"];
     private static readonly string[] Bidis = ["normal", "embed", "isolate", "bidi-override", "isolate-override", "plaintext"];
 
@@ -98,6 +104,13 @@ internal static partial class ComputedValueText
             case PropertyId.ListStyleType:
                 return v.ListStyleTypeIsString ? "\"" + v.ListStyleType.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal) + "\"" : v.ListStyleType;
             case PropertyId.ListStylePosition: return v.ListStylePosition == ListStylePositionKind.Inside ? "inside" : "outside";
+            case PropertyId.WordBreak: return WordBreaks[(int)v.WordBreak];
+            case PropertyId.OverflowWrap: return OverflowWraps[(int)v.OverflowWrap];
+            case PropertyId.LineBreak: return LineBreaks[(int)v.LineBreak];
+            case PropertyId.Hyphens: return HyphenWords[(int)v.Hyphens];
+            case PropertyId.TabSize: return v.TabSize.ToCss();
+            case PropertyId.TextAlignLast: return AlignLasts[(int)v.TextAlignLast];
+            case PropertyId.TextJustify: return Justifies[(int)v.TextJustify];
             case PropertyId.FlexDirection: return v.FlexDirection switch { FlexDirectionKind.RowReverse => "row-reverse", FlexDirectionKind.Column => "column", FlexDirectionKind.ColumnReverse => "column-reverse", _ => "row" };
             case PropertyId.FlexWrap: return v.FlexWrap switch { FlexWrapKind.Wrap => "wrap", FlexWrapKind.WrapReverse => "wrap-reverse", _ => "nowrap" };
             case PropertyId.FlexGrow: return CssText.Number(v.FlexGrow);

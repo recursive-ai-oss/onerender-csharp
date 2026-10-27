@@ -68,6 +68,13 @@ internal enum PropertyId : byte
     Content,
     ListStyleType,
     ListStylePosition,
+    WordBreak,
+    OverflowWrap,
+    LineBreak,
+    Hyphens,
+    TabSize,
+    TextAlignLast,
+    TextJustify,
     OverflowClipMargin,
     FlexDirection,
     FlexWrap,
@@ -142,7 +149,8 @@ internal static class Properties
         "overflow-x", "overflow-y", "z-index", "visibility",
         "font-family", "font-weight", "font-style", "font-stretch", "line-height", "vertical-align",
         "white-space-collapse", "text-wrap-mode", "text-align", "text-indent", "letter-spacing", "word-spacing",
-        "direction", "unicode-bidi", "color", "opacity", "background-color", "content", "list-style-type", "list-style-position", "overflow-clip-margin",
+        "direction", "unicode-bidi", "color", "opacity", "background-color", "content", "list-style-type", "list-style-position",
+        "word-break", "overflow-wrap", "line-break", "hyphens", "tab-size", "text-align-last", "text-justify", "overflow-clip-margin",
         "flex-direction", "flex-wrap", "flex-grow", "flex-shrink", "flex-basis", "order",
         "justify-content", "align-content", "align-items", "align-self", "row-gap", "column-gap",
         "grid-template-columns", "grid-template-rows", "grid-template-areas", "grid-auto-columns", "grid-auto-rows", "grid-auto-flow",
@@ -166,7 +174,9 @@ internal static class Properties
             or PropertyId.TextAlign or PropertyId.TextIndent or PropertyId.LetterSpacing or PropertyId.WordSpacing
             or PropertyId.Direction or PropertyId.Color or PropertyId.ListStyleType or PropertyId.ListStylePosition
             or PropertyId.TextShadow or PropertyId.ImageRendering or PropertyId.ListStyleImage
-            or PropertyId.TextUnderlineOffset or PropertyId.TextUnderlinePosition => true,
+            or PropertyId.TextUnderlineOffset or PropertyId.TextUnderlinePosition
+            or PropertyId.WordBreak or PropertyId.OverflowWrap or PropertyId.LineBreak or PropertyId.Hyphens or PropertyId.TabSize
+            or PropertyId.TextAlignLast or PropertyId.TextJustify => true,
         _ => false,
     };
 
@@ -177,6 +187,9 @@ internal static class Properties
         {
             map[Names[i]] = (PropertyId)i;
         }
+
+        // CSS Text 3 §5.5: word-wrap is a legacy alias of overflow-wrap.
+        map["word-wrap"] = PropertyId.OverflowWrap;
 
         return map;
     }

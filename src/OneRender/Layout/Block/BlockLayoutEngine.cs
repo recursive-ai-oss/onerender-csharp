@@ -19,7 +19,7 @@ namespace OneRender.Layout;
 /// instance is not thread-safe; use one per thread.
 /// </para>
 /// </remarks>
-public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace
+public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace, IAtomicInlineHost
 {
     private const int MaxDepth = 1 << 18;
     private const int MaxReentrancy = 32;
@@ -38,9 +38,9 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace
     private bool _depthReported;
     private bool _shrinkNext;
 
-    /// <summary>Creates a block layout that uses <see cref="PlaceholderInlineLayout"/> for inline content.</summary>
+    /// <summary>Creates a block layout that uses <see cref="InlineLayoutEngine"/> for inline content.</summary>
     public BlockLayoutEngine()
-        : this(new PlaceholderInlineLayout())
+        : this(new InlineLayoutEngine())
     {
     }
 
@@ -50,6 +50,10 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace
     {
         ArgumentNullException.ThrowIfNull(inlineLayout);
         _inline = inlineLayout;
+        if (inlineLayout is IAtomicInlineHostAware aware)
+        {
+            aware.SetHost(this);
+        }
     }
 
     [Flags]

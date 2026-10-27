@@ -29,6 +29,12 @@ internal sealed partial class StyleComputer
     private static readonly string[] CollapseWords = ["collapse", "preserve", "preserve-breaks", "preserve-spaces", "break-spaces"];
     private static readonly string[] WrapModeWords = ["wrap", "nowrap"];
     private static readonly string[] TextAlignWords = ["start", "end", "left", "right", "center", "justify", "match-parent", "justify-all"];
+    private static readonly string[] WordBreakWords = ["normal", "break-all", "keep-all", "break-word"];
+    private static readonly string[] OverflowWrapWords = ["normal", "break-word", "anywhere"];
+    private static readonly string[] LineBreakWords = ["auto", "loose", "normal", "strict", "anywhere"];
+    private static readonly string[] HyphensWords = ["manual", "none", "auto"];
+    private static readonly string[] AlignLastWords = ["auto", "start", "end", "left", "right", "center", "justify", "match-parent"];
+    private static readonly string[] JustifyWords = ["auto", "none", "inter-word", "inter-character"];
     private static readonly string[] DirectionWords = ["ltr", "rtl"];
     private static readonly string[] BidiWords = ["normal", "embed", "isolate", "bidi-override", "isolate-override", "plaintext"];
     private static readonly string[] ListPositionWords = ["outside", "inside"];
@@ -228,6 +234,50 @@ internal sealed partial class StyleComputer
                 return true;
             }
 
+            case PropertyId.WordBreak:
+            {
+                if (!Word(v, WordBreakWords, out int k)) { return false; }
+                _r.WordBreak = (WordBreakKind)k;
+                return true;
+            }
+
+            case PropertyId.OverflowWrap:
+            {
+                if (!Word(v, OverflowWrapWords, out int k)) { return false; }
+                _r.OverflowWrap = (OverflowWrapKind)k;
+                return true;
+            }
+
+            case PropertyId.LineBreak:
+            {
+                if (!Word(v, LineBreakWords, out int k)) { return false; }
+                _r.LineBreak = (LineBreakKind)k;
+                return true;
+            }
+
+            case PropertyId.Hyphens:
+            {
+                if (!Word(v, HyphensWords, out int k)) { return false; }
+                _r.Hyphens = (HyphensKind)k;
+                return true;
+            }
+
+            case PropertyId.TextAlignLast:
+            {
+                if (!Word(v, AlignLastWords, out int k)) { return false; }
+                _r.TextAlignLast = (TextAlignLastKind)k;
+                return true;
+            }
+
+            case PropertyId.TextJustify:
+            {
+                if (!Word(v, JustifyWords, out int k)) { return false; }
+                _r.TextJustify = (TextJustifyKind)k;
+                return true;
+            }
+
+            case PropertyId.TabSize:
+                return Len(v, LengthAllow.Number | LengthAllow.NonNegative, out Length tab) && Assign(ref _r, id, tab);
             case PropertyId.TextIndent: return ParseTextIndent(v);
             case PropertyId.LetterSpacing:
                 return Len(v, LengthAllow.Normal, out Length ls) && Assign(ref _r, id, ls);
@@ -568,6 +618,7 @@ internal sealed partial class StyleComputer
             case PropertyId.PaddingLeft: r.PaddingLeft = l; break;
             case PropertyId.LetterSpacing: r.LetterSpacing = l; break;
             case PropertyId.WordSpacing: r.WordSpacing = l; break;
+            case PropertyId.TabSize: r.TabSize = l; break;
             default: return false;
         }
 

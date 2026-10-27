@@ -57,7 +57,7 @@ public class BlockLayoutTests
         string html = "<!DOCTYPE html><html><head><style>body{margin:0}" + css + "</style></head><body>" + body + "</body></html>";
         Pipeline p = Pipeline.FromHtml(html, width, double.IsNaN(height) ? 600 : height, resolver: images);
         var f = new FragmentTree(p.Boxes);
-        var engine = new BlockLayoutEngine();
+        var engine = new BlockLayoutEngine(new PlaceholderInlineLayout());
         engine.Layout(p.Boxes, new LayoutInput(width, height, new NoFonts()), f);
         return new Lay { P = p, F = f, Engine = engine };
     }
@@ -439,7 +439,7 @@ public class BlockLayoutTests
         styled.AddElement(n, "div", new StyleDeclaration().Set("display", "block").Set("height", "10px"));
         boxes.Build();
         var f = new FragmentTree(boxes);
-        new BlockLayoutEngine().Layout(boxes, new LayoutInput(1_000_000, double.NaN, new NoFonts()), f);
+        new BlockLayoutEngine(new PlaceholderInlineLayout()).Layout(boxes, new LayoutInput(1_000_000, double.NaN, new NoFonts()), f);
         Assert.Equal(Depth + 1, f.Count);
         Assert.Equal(10, f.Root.BorderBox.Height);
         Assert.Equal(1_000_000, f.Root.BorderBox.Width);
@@ -459,7 +459,7 @@ public class BlockLayoutTests
 
         boxes.Build();
         var f = new FragmentTree(boxes);
-        new BlockLayoutEngine().Layout(boxes, new LayoutInput(100, double.NaN, new NoFonts()), f);
+        new BlockLayoutEngine(new PlaceholderInlineLayout()).Layout(boxes, new LayoutInput(100, double.NaN, new NoFonts()), f);
         Assert.Equal(200_001, f.Root.BorderBox.Height); // the root keeps its first and last child margins inside
         Assert.Equal(200_000, f.Root.LastChild.BorderBox.Bottom);
     }
@@ -471,7 +471,7 @@ public class BlockLayoutTests
         string html = System.IO.File.ReadAllText(System.IO.Path.Combine(AppContext.BaseDirectory, "testdata", "wpt-block", "css", "CSS2", "normal-flow", file));
         Pipeline p = Pipeline.FromHtml(html, 800, 600);
         var f = new FragmentTree(p.Boxes);
-        new BlockLayoutEngine().Layout(p.Boxes, new LayoutInput(800, 600, new NoFonts()), f);
+        new BlockLayoutEngine(new PlaceholderInlineLayout()).Layout(p.Boxes, new LayoutInput(800, 600, new NoFonts()), f);
         var rects = new System.Collections.Generic.List<Rect>();
         foreach (RecursiveAI.OneHtml.Node n in p.Document.Root.GetElementsByTagName(tag))
         {
