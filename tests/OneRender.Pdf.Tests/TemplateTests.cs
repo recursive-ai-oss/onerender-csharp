@@ -13,7 +13,7 @@ public class TemplateTests
             Support.Template(name),
             new HtmlPdfOptions
             {
-                Page = PdfPageSetup.A4,
+                Page = name == "certificate" ? new PdfPageSetup(1122.5196850, 793.7007874, 24, 24, 24, 24) : PdfPageSetup.A4,
                 BaseUrl = "https://templates.invalid/" + name + "/index.html",
                 Resources = Support.TemplateResources(name),
                 Output = new PdfOutputOptions { Profile = profile },

@@ -294,6 +294,12 @@ internal sealed partial class Fragmenter
             return;
         }
 
+        if (box.Context is FormattingContext.TableColumn or FormattingContext.TableColumnGroup)
+        {
+            // Column boxes span the whole table height and are not part of the row flow.
+            return;
+        }
+
         if (box.Kind == BoxKind.Marker)
         {
             if (isRoot)
@@ -382,7 +388,7 @@ internal sealed partial class Fragmenter
         }
 
         Box b = _boxes.Make(_t.BoxOf(g));
-        return (b.Flags & BoxTraits.OutOfFlow) == 0 && b.Kind != BoxKind.Marker;
+        return (b.Flags & BoxTraits.OutOfFlow) == 0 && b.Kind != BoxKind.Marker && b.Context is not (FormattingContext.TableColumn or FormattingContext.TableColumnGroup);
     }
 
     // §3.1.1: a break-before on the first in-flow child counts for its parent, a break-after on the last for its parent, all the way up.
