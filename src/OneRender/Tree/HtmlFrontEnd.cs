@@ -117,6 +117,10 @@ public sealed class HtmlFrontEnd
             _ => ReplacedKind.None,
         };
         _tree.SetElementInfo(idx, tag, replaced);
+        if (element.Namespace == ElementNamespace.Html && tag.Length is 2 or 3 or 8 && IsSpanTag(tag))
+        {
+            ApplySpanAttributes(element, idx, tag);
+        }
         if (replaced != ReplacedKind.None)
         {
             _tree.SetDefaultNaturalSize(idx, replaced, SourceAttribute(element, replaced));
@@ -209,6 +213,64 @@ public sealed class HtmlFrontEnd
         }
 
         return default;
+    }
+
+    private static bool IsSpanTag(string tag) =>
+        tag.Equals("td", StringComparison.Ordinal) || tag.Equals("th", StringComparison.Ordinal)
+        || tag.Equals("col", StringComparison.Ordinal) || tag.Equals("colgroup", StringComparison.Ordinal);
+
+    // HTML Standard §4.9.11 (processing model of tables): colspan and rowspan are non-negative integers; colspan is clamped to 1..1000,
+    // rowspan to 0..65534. A column's or column group's span attribute follows the same rules as colspan.
+    private void ApplySpanAttributes(Node element, int idx, string tag)
+    {
+        bool cell = tag.Length == 2 && tag[0] == 't';
+        int cols = 1, rows = 1;
+        foreach (Attr a in element.Attributes)
+        {
+            ReadOnlySpan<char> name = a.LocalName;
+            if (cell && name.Equals("colspan", StringComparison.Ordinal))
+            {
+                cols = ParseNonNegative(a.Value, 1);
+            }
+            else if (cell && name.Equals("rowspan", StringComparison.Ordinal))
+            {
+                rows = ParseNonNegative(a.Value, 1);
+            }
+            else if (!cell && name.Equals("span", StringComparison.Ordinal))
+            {
+                cols = ParseNonNegative(a.Value, 1);
+            }
+        }
+
+        _tree.SetSpans(idx, cols == 0 ? 1 : cols, rows);
+    }
+
+    // HTML Standard §2.3.4.1 rules for parsing non-negative integers, saturating at a large value.
+    private static int ParseNonNegative(ReadOnlySpan<char> text, int fallback)
+    {
+        int i = 0;
+        while (i < text.Length && text[i] is ' ' or '\t' or '\n' or '\f' or '\r')
+        {
+            i++;
+        }
+
+        if (i < text.Length && text[i] == '+')
+        {
+            i++;
+        }
+
+        if (i >= text.Length || !char.IsAsciiDigit(text[i]))
+        {
+            return fallback;
+        }
+
+        long v = 0;
+        for (; i < text.Length && char.IsAsciiDigit(text[i]); i++)
+        {
+            v = Math.Min(1_000_000, (v * 10) + (text[i] - '0'));
+        }
+
+        return (int)v;
     }
 
     // HTML Standard §15.4.2 / §4.12.5: a canvas's size is its width and height attributes (default 300 by 150).

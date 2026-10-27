@@ -113,12 +113,17 @@ internal enum PropertyId : byte
     GridColumnEnd,
     JustifyItems,
     JustifySelf,
+    BorderCollapse,
+    BorderSpacing,
+    EmptyCells,
+    CaptionSide,
+    TableLayout,
 }
 
 /// <summary>Names and inheritance of <see cref="PropertyId"/> values.</summary>
 internal static class Properties
 {
-    public const int Count = (int)PropertyId.JustifySelf + 1;
+    public const int Count = (int)PropertyId.TableLayout + 1;
 
     private static readonly string[] Names =
     [
@@ -141,6 +146,7 @@ internal static class Properties
         "column-count", "column-width", "column-fill", "column-span", "column-rule-width", "column-rule-style", "column-rule-color",
         "grid-template-columns", "grid-template-rows", "grid-template-areas", "grid-auto-columns", "grid-auto-rows", "grid-auto-flow",
         "grid-row-start", "grid-row-end", "grid-column-start", "grid-column-end", "justify-items", "justify-self",
+        "border-collapse", "border-spacing", "empty-cells", "caption-side", "table-layout",
     ];
 
     private static readonly Dictionary<string, PropertyId> ByName = BuildByName();
@@ -159,7 +165,8 @@ internal static class Properties
             or PropertyId.TextAlign or PropertyId.TextIndent or PropertyId.LetterSpacing or PropertyId.WordSpacing
             or PropertyId.Direction or PropertyId.Color or PropertyId.ListStyleType or PropertyId.ListStylePosition or PropertyId.Orphans or PropertyId.Widows
             or PropertyId.WordBreak or PropertyId.OverflowWrap or PropertyId.LineBreak or PropertyId.Hyphens or PropertyId.TabSize
-            or PropertyId.TextAlignLast or PropertyId.TextJustify => true,
+            or PropertyId.TextAlignLast or PropertyId.TextJustify
+            or PropertyId.BorderCollapse or PropertyId.BorderSpacing or PropertyId.EmptyCells or PropertyId.CaptionSide => true,
         _ => false,
     };
 

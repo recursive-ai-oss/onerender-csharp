@@ -148,6 +148,11 @@ internal static class ComputedValueText
             case PropertyId.GridColumnEnd: return v.GridColumnEnd.ToCss();
             case PropertyId.JustifyItems: return AlignText(v.JustifyItems, v.JustifyItemsOverflow);
             case PropertyId.JustifySelf: return AlignText(v.JustifySelf, v.JustifySelfOverflow);
+            case PropertyId.BorderCollapse: return v.BorderCollapse == BorderCollapseKind.Collapse ? "collapse" : "separate";
+            case PropertyId.BorderSpacing: return CssText.Px(v.BorderSpacingH) + " " + CssText.Px(v.BorderSpacingV);
+            case PropertyId.EmptyCells: return v.EmptyCells == EmptyCellsKind.Hide ? "hide" : "show";
+            case PropertyId.CaptionSide: return v.CaptionSide == CaptionSideKind.Bottom ? "bottom" : "top";
+            case PropertyId.TableLayout: return v.TableLayout == TableLayoutKind.Fixed ? "fixed" : "auto";
             default: return string.Empty;
         }
     }

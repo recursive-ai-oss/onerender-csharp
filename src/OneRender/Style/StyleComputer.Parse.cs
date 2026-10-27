@@ -330,7 +330,7 @@ internal sealed partial class StyleComputer
             }
 
             default:
-                return id >= PropertyId.GridTemplateColumns ? ApplyGrid(id, v) : ApplyFlex(id, v);
+                return id >= PropertyId.BorderCollapse ? ApplyTable(id, v) : id >= PropertyId.GridTemplateColumns ? ApplyGrid(id, v) : ApplyFlex(id, v);
         }
     }
 
