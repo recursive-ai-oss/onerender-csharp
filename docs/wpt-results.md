@@ -1,6 +1,6 @@
 # WPT reftest runner and results
 
-`tools/OneRender.WptRunner` runs the [web-platform-tests](https://github.com/web-platform-tests/wpt) reftests of the modules listed in `tools/wpt/modules.json` and records per-module pass rates. Layout and paint work is gated on those rates. The runner talks to the engine through one seam, `OneRender.Image.HtmlRenderSeam.Render(html, uri, width, height, resources)`, which returns an RGBA image. Today the seam paints a white page.
+`tools/OneRender.WptRunner` runs the [web-platform-tests](https://github.com/web-platform-tests/wpt) reftests of the modules listed in `tools/wpt/modules.json` and records per-module pass rates. Layout and paint work is gated on those rates. The runner talks to the engine through one seam, `OneRender.Image.HtmlRenderSeam.Render(html, uri, width, height, resources)`, which returns an RGBA image. The seam runs the whole pipeline: parse, cascade, box tree, layout, paint, rasterize.
 
 ## Reftest rules implemented
 
@@ -48,11 +48,11 @@ dotnet build tools/OneRender.WptRunner -c Release
 R=<artifacts>/bin/OneRender.WptRunner/release/OneRender.WptRunner.dll
 W=~/onerender/cache/wpt/$(cat tools/wpt/WPT_COMMIT)
 
-dotnet $R run --wpt $W --renderer stub --out testdata/wpt-results                       # whole module list, engine seam (seconds)
+dotnet $R run --wpt $W --renderer onerender --out testdata/wpt-results                       # whole module list, engine seam (seconds)
 dotnet $R run --wpt $W --renderer chrome --sample 400 --parallel 6 --out testdata/wpt-results   # Chrome calibration sample
-dotnet $R run --wpt $W --renderer stub --module css-flexbox                             # one module, console only
-dotnet $R run --wpt $W --renderer stub --module css-flexbox --filter /abspos/           # a subset by path
-dotnet $R run --wpt $W --renderer stub --test css/css-flexbox/abspos/abspos-autopos-htb-ltr.html --dump dumps   # one test, PNGs of every image
+dotnet $R run --wpt $W --renderer onerender --module css-flexbox                             # one module, console only
+dotnet $R run --wpt $W --renderer onerender --module css-flexbox --filter /abspos/           # a subset by path
+dotnet $R run --wpt $W --renderer onerender --test css/css-flexbox/abspos/abspos-autopos-htb-ltr.html --dump dumps   # one test, PNGs of every image
 ```
 
 Run from the repository root (the default module file is `tools/wpt/modules.json`; `--modules` overrides). Without `--out` nothing is written. `--sample n` takes every Nth test in path order so a module has at most about n tests; the stride is recorded in the results.
@@ -67,7 +67,7 @@ testdata/wpt-results/<wpt-commit>/<renderer>/summary.json     table of all modul
 testdata/wpt-results/<wpt-commit>/<renderer>/summary.md       the same as a table, plus the most common failure and skip reasons
 ```
 
-`<renderer>` is `stub` (the engine through the seam; later the engine) or `chrome`. Re-running a subset into the same directory rewrites those module files and regenerates the summaries from all files present. Module files list tests in ordinal path order so runs diff cleanly.
+`<renderer>` is `onerender` (the engine through the seam) or `chrome`. The directory `stub` holds the zero baseline from before the engine could draw. Re-running a subset into the same directory rewrites those module files and regenerates the summaries from all files present. Module files list tests in ordinal path order so runs diff cleanly.
 
 Module file, `formatVersion` 1:
 
@@ -75,7 +75,7 @@ Module file, `formatVersion` 1:
 {
   "formatVersion": 1,
   "wptCommit": "<40 hex>",
-  "renderer": "stub|chrome",
+  "renderer": "onerender|chrome",
   "rendererVersion": "Chrome/156.0.8078.47",
   "module": "css-flexbox",
   "discovered": 1398,
@@ -94,7 +94,7 @@ Module file, `formatVersion` 1:
 - Failure reasons: `== <ref> differs (max <largest channel difference>, <n> px)`, `!= <ref> identical`, `error: <exception>: <message>`.
 - `rate` is a string with four decimals.
 
-Floors are set against `<module>.json` of the `stub` renderer (later, the engine): a floor is a minimum `pass` count or `rate`. Changing `formatVersion` means a new number, never a silent change.
+Floors are set against `<module>.json` of the `onerender` renderer: a floor is a minimum `pass` count or `rate`. Changing `formatVersion` means a new number, never a silent change.
 
 ## Calibration against Chrome
 

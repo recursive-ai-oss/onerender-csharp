@@ -39,5 +39,5 @@ rm -rf "$cap/perturbed"
 "$G" perturb --in "$cap/a" --out "$cap/perturbed" --expect-out "$cap/expect.json" --seed 1
 "$G" compare --chrome-dir "$cap/a" --ours-dir "$cap/perturbed" --set "$set_name" --label perturbed --out "$out/perturbed" --expect "$cap/expect.json" $page_table > /dev/null
 cp "$cap/expect.json" "$out/perturbed/expected-classes.json"
-"$G" compare --chrome-dir "$cap/a" --engine --snapshots "$snaps" --set "$set_name" --label stub-engine --out "$out/stub-engine" --detail "$det/stub-engine" $page_table > /dev/null
-for l in chrome-vs-chrome perturbed stub-engine; do echo "== $set_name / $l"; sed -n '5,12p' "$out/$l/summary.md"; done
+"$G" compare --chrome-dir "$cap/a" --engine --snapshots "$snaps" --set "$set_name" --label engine --out "$out/engine" --detail "$det/engine" $page_table > /dev/null
+for l in chrome-vs-chrome perturbed engine; do echo "== $set_name / $l"; sed -n '5,12p' "$out/$l/summary.md"; done

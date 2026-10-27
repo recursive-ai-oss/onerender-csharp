@@ -11,8 +11,10 @@ using RecursiveAI.OneHtml.Css;
 
 string[] names = [EngineInfo.Name, ImageBackendInfo.Name, PdfBackendInfo.Name];
 Console.WriteLine(string.Join(' ', names));
-// The provisional geometry entry point must survive trimming and AOT as well.
-int boxes = GeometryProbe.LayOut("<p>x</p>", null, null, 800, 600).Count;
+// The geometry entry point and the HTML-to-pixels path must survive trimming and AOT as well.
+int boxes = GeometryProbe.LayOut("<p>x</p>", null, null, 800, 600, new DefaultFontProvider()).Count;
+RgbaImage page = HtmlRender.ToImage("<body style='margin:0'><div style='width:20px;height:10px;background:#f00'></div></body>", new HtmlRenderOptions { Width = 32, Height = 32 });
+bool pageOk = page.Pixels[((5 * 32) + 5) * 4] == 255 && page.Pixels[((5 * 32) + 5) * 4 + 1] == 0 && page.Pixels[((20 * 32) + 5) * 4 + 1] == 255;
 
 // Build a box tree from a small HTML string: parse, cascade, styled tree, box tree.
 Document doc = Document.Parse("<!DOCTYPE html><body><p style=\"width:50%;margin:1em auto\">Hello <b>world</b></p><div style=\"display:flex\"><span>a</span></div><img src=x.png>");
@@ -52,4 +54,4 @@ list.DrawGlyphRun(ItemId.Of(4), font, 12f, 4f, 14f, new PaintColor(0f, 0f, 0f, 1
 RgbaImage image = DisplayListRasterizer.Render(list, 32, 32);
 bool painted = image.Pixels[((16 * 32) + 16) * 4 + 3] == 255 && image.Pixels[(((5 * 32) + 10) * 4) + 1] < 50;
 Console.WriteLine($"rasterized {image.Width}x{image.Height} painted={painted}");
-return names.Length == 3 && sfnt && painted && boxes == 0 ? 0 : 1;
+return names.Length == 3 && sfnt && painted && pageOk && boxes >= 3 ? 0 : 1;
