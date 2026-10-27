@@ -54,6 +54,7 @@ public partial struct ComputedValues
         a.Visibility == b.Visibility &&
         a.FontFamily.Equals(b.FontFamily) &&
         a.FontSize.Equals(b.FontSize) &&
+        a.FontSizeKeyword == b.FontSizeKeyword &&
         a.FontWeight.Equals(b.FontWeight) &&
         a.FontStyle == b.FontStyle &&
         a.ObliqueAngle.Equals(b.ObliqueAngle) &&
@@ -80,6 +81,7 @@ public partial struct ComputedValues
         a.ListStyleTypeIsString.Equals(b.ListStyleTypeIsString) &&
         a.ListStylePosition == b.ListStylePosition &&
         a.WordBreak == b.WordBreak &&
+        a.TextTransform == b.TextTransform &&
         a.OverflowWrap == b.OverflowWrap &&
         a.LineBreak == b.LineBreak &&
         a.Hyphens == b.Hyphens &&
@@ -87,6 +89,7 @@ public partial struct ComputedValues
         a.TextAlignLast == b.TextAlignLast &&
         a.TextJustify == b.TextJustify &&
         FlexEquals(in a, in b) &&
+        FragmentationEquals(in a, in b) &&
         GridEquals(in a, in b) &&
         PaintEquals(in a, in b);
 
@@ -144,6 +147,7 @@ public partial struct ComputedValues
         h.Add(v.Visibility);
         h.Add(v.FontFamily);
         h.Add(v.FontSize);
+        h.Add(v.FontSizeKeyword);
         h.Add(v.FontWeight);
         h.Add(v.FontStyle);
         h.Add(v.ObliqueAngle);
@@ -170,6 +174,7 @@ public partial struct ComputedValues
         h.Add(v.ListStyleTypeIsString);
         h.Add(v.ListStylePosition);
         h.Add(v.WordBreak);
+        h.Add(v.TextTransform);
         h.Add(v.OverflowWrap);
         h.Add(v.LineBreak);
         h.Add(v.Hyphens);
@@ -177,6 +182,7 @@ public partial struct ComputedValues
         h.Add(v.TextAlignLast);
         h.Add(v.TextJustify);
         FlexHash(ref h, in v);
+        FragmentationHash(ref h, in v);
         GridHash(ref h, in v);
         PaintHash(ref h, in v);
         return h.ToHashCode();

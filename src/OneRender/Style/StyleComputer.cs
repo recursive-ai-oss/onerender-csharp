@@ -48,6 +48,7 @@ internal sealed partial class StyleComputer
     private ComputedValues _r;
     private ComputedValues _parent;
     private bool _hasParent;
+    private DeclarationSource _source = null!;
     private LengthContext _ctx = LengthContext.Default;
     private LengthContext _parentCtx = LengthContext.Default;
     private ComputeEnvironment _env;
@@ -72,11 +73,13 @@ internal sealed partial class StyleComputer
         FirstInvalid = null;
         _env = env;
         _hasParent = hasParent;
+        _source = source;
         _parent = hasParent ? parent : ComputedValues.Initial;
         _r = hasParent ? InheritedFrom(in parent) : ComputedValues.Initial;
         _floatLogical = 0;
         _clearLogical = 0;
         _rawBorderWidth[0] = _rawBorderWidth[1] = _rawBorderWidth[2] = _rawBorderWidth[3] = 3;
+        _rawColumnRuleWidth = 3;
         _parentCtx = LengthContext.Default with
         {
             FontSize = _parent.FontSize,
@@ -85,40 +88,17 @@ internal sealed partial class StyleComputer
             ViewportHeight = env.ViewportHeight,
         };
         _ctx = _parentCtx;
+        // font-family is resolved first because the size of a generic `monospace` list depends on it (see MonospaceScale).
+        Step(PropertyId.FontFamily, hasParent);
         for (int i = 0; i < Properties.Count; i++)
         {
             var id = (PropertyId)i;
-            ValueOrigin origin = source.Get(id, out ComponentValueList value);
-            switch (origin)
+            if (id == PropertyId.FontFamily)
             {
-                case ValueOrigin.Unset:
-                    break;
-                case ValueOrigin.Initial:
-                    SetFromInitial(id);
-                    break;
-                case ValueOrigin.Inherit:
-                    CopyFromParent(id);
-                    break;
-                default:
-                    if (!Apply(id, value))
-                    {
-                        // Invalid at computed-value time: behaves as `unset` (CSS Variables 1 §3.2 for the invalid-at-computed-value case; the cascade here
-                        // cannot fall back to an earlier declaration).
-                        InvalidCount++;
-                        FirstInvalid ??= Properties.NameOf(id);
-                        if (Properties.IsInherited(id) && hasParent)
-                        {
-                            CopyFromParent(id);
-                        }
-                        else
-                        {
-                            SetFromInitial(id);
-                        }
-                    }
-
-                    break;
+                continue;
             }
 
+            Step(id, hasParent);
             if (id == PropertyId.FontSize)
             {
                 // Everything after font-size resolves em against the element's own size (CSS Values 4 §6.1.1).
@@ -130,6 +110,109 @@ internal sealed partial class StyleComputer
         Finalize(isRoot);
         return _r;
     }
+
+    /// <summary>
+    /// Whether <paramref name="value"/> parses for <paramref name="id"/>. Validity never depends on the element, so this runs against
+    /// initial values with no parent. It reuses this instance's scratch state and is not thread-safe.
+    /// </summary>
+    public bool IsValid(PropertyId id, ComponentValueList value)
+    {
+        _env = new ComputeEnvironment(800, 600, 16);
+        _hasParent = false;
+        _parent = ComputedValues.Initial;
+        _r = ComputedValues.Initial;
+        _floatLogical = 0;
+        _clearLogical = 0;
+        _rawBorderWidth[0] = _rawBorderWidth[1] = _rawBorderWidth[2] = _rawBorderWidth[3] = 3;
+        _rawColumnRuleWidth = 3;
+        _parentCtx = LengthContext.Default;
+        _ctx = _parentCtx;
+        return Apply(id, value);
+    }
+
+    /// <summary>Applies one property's declared value (or its absence) to the result under construction.</summary>
+    private void Step(PropertyId id, bool hasParent)
+    {
+        ValueOrigin origin = _source.Get(id, out ComponentValueList value);
+        switch (origin)
+        {
+            case ValueOrigin.Unset:
+                if (id == PropertyId.FontSize && hasParent)
+                {
+                    InheritFontSize();
+                }
+
+                break;
+            case ValueOrigin.Initial:
+                SetFromInitial(id);
+                if (id == PropertyId.FontSize)
+                {
+                    _r.FontSizeKeyword = MediumKeyword;
+                    if (IsMonospaceOnly(_r.FontFamily))
+                    {
+                        _r.FontSize *= MonospaceScale;
+                    }
+                }
+
+                break;
+            case ValueOrigin.Inherit:
+                CopyFromParent(id);
+                if (id == PropertyId.FontSize)
+                {
+                    InheritFontSize();
+                }
+
+                break;
+            default:
+                if (!Apply(id, value))
+                {
+                    // Invalid at computed-value time: behaves as `unset` (CSS Variables 1 §3.2). Plain values the engine parses are dropped
+                    // earlier, in the cascade, by StyleValidation; what gets here is a var() substitution, a property OneHtml types itself,
+                    // or a value from a cascade created without the validator.
+                    InvalidCount++;
+                    FirstInvalid ??= Properties.NameOf(id);
+                    if (Properties.IsInherited(id) && hasParent)
+                    {
+                        CopyFromParent(id);
+                    }
+                    else
+                    {
+                        SetFromInitial(id);
+                    }
+                }
+
+                break;
+        }
+    }
+
+    /// <summary>Absolute-size keyword sizes for a 16px medium (CSS Fonts 4 §2.5 leaves the table to the user agent), indexed by keyword 1 to 8.</summary>
+    private static readonly double[] KeywordPx = [0, 9, 10, 13, 16, 18, 24, 32, 48];
+
+    /// <summary>The keyword number of <c>medium</c>.</summary>
+    internal const byte MediumKeyword = 4;
+
+    /// <summary>
+    /// An inherited font size. When it came from an absolute-size keyword, it is that keyword's size in the element's own family: a
+    /// bare <c>monospace</c> list scales it by <see cref="MonospaceScale"/>. A size that was given as a length is inherited as is.
+    /// </summary>
+    private void InheritFontSize()
+    {
+        byte kw = _parent.FontSizeKeyword;
+        _r.FontSizeKeyword = kw;
+        if (kw != 0)
+        {
+            _r.FontSize = KeywordPx[kw] * (IsMonospaceOnly(_r.FontFamily) ? MonospaceScale : 1);
+        }
+    }
+
+    /// <summary>
+    /// Browsers size a family list that is exactly the generic <c>monospace</c> from a smaller default (13px where <c>medium</c> is 16px)
+    /// and keep that ratio for sizes that came from a keyword, including the default <c>medium</c>. CSS Fonts 4 §2.5 leaves the
+    /// keyword table to the user agent; the ratio is what Chrome's black-box output shows (<c>docs/layout-conventions.md</c>).
+    /// </summary>
+    internal const double MonospaceScale = 13.0 / 16.0;
+
+    private static bool IsMonospaceOnly(FontFamilyList f) => f.Count == 1 && f.IsGeneric(0) && string.Equals(f[0], "monospace", StringComparison.Ordinal);
 
     /// <summary>
     /// The style of an anonymous box: the inherited properties of <paramref name="parent"/>, every other property initial,
@@ -153,6 +236,7 @@ internal sealed partial class StyleComputer
         v.Visibility = p.Visibility;
         v.FontFamily = p.FontFamily;
         v.FontSize = p.FontSize;
+        v.FontSizeKeyword = p.FontSizeKeyword;
         v.FontWeight = p.FontWeight;
         v.FontStyle = p.FontStyle;
         v.ObliqueAngle = p.ObliqueAngle;
@@ -176,7 +260,10 @@ internal sealed partial class StyleComputer
         v.TextUnderlineOffset = p.TextUnderlineOffset;
         v.TextUnderlinePosition = p.TextUnderlinePosition;
         v.ListStyleImage = p.ListStyleImage;
+        v.Orphans = p.Orphans;
+        v.Widows = p.Widows;
         v.WordBreak = p.WordBreak;
+        v.TextTransform = p.TextTransform;
         v.OverflowWrap = p.OverflowWrap;
         v.LineBreak = p.LineBreak;
         v.Hyphens = p.Hyphens;
@@ -263,6 +350,7 @@ internal sealed partial class StyleComputer
             case PropertyId.ListStyleType: d.ListStyleType = s.ListStyleType; d.ListStyleTypeIsString = s.ListStyleTypeIsString; break;
             case PropertyId.ListStylePosition: d.ListStylePosition = s.ListStylePosition; break;
             case PropertyId.WordBreak: d.WordBreak = s.WordBreak; break;
+            case PropertyId.TextTransform: d.TextTransform = s.TextTransform; break;
             case PropertyId.OverflowWrap: d.OverflowWrap = s.OverflowWrap; break;
             case PropertyId.LineBreak: d.LineBreak = s.LineBreak; break;
             case PropertyId.Hyphens: d.Hyphens = s.Hyphens; break;
@@ -270,7 +358,7 @@ internal sealed partial class StyleComputer
             case PropertyId.TextAlignLast: d.TextAlignLast = s.TextAlignLast; break;
             case PropertyId.TextJustify: d.TextJustify = s.TextJustify; break;
             case PropertyId.OverflowClipMargin: d.OverflowClipMarginPx = s.OverflowClipMarginPx; d.OverflowClipMarginBox = s.OverflowClipMarginBox; break;
-            default: CopyFlexProperty(id, ref d, in s); CopyGridProperty(id, ref d, in s); CopyPaintProperty(id, ref d, in s); break;
+            default: CopyFlexProperty(id, ref d, in s, fromParent); CopyGridProperty(id, ref d, in s); CopyPaintProperty(id, ref d, in s); break;
         }
     }
 
@@ -279,6 +367,7 @@ internal sealed partial class StyleComputer
     private void Finalize(bool isRoot)
     {
         // CSS Backgrounds 3 §4.1: a border whose style is none or hidden has a computed width of 0.
+        _r.ColumnRuleWidth = VisibleBorder(_r.ColumnRuleStyle) ? _rawColumnRuleWidth : 0;
         _r.BorderTopWidth = VisibleBorder(_r.BorderTopStyle) ? _rawBorderWidth[0] : 0;
         _r.BorderRightWidth = VisibleBorder(_r.BorderRightStyle) ? _rawBorderWidth[1] : 0;
         _r.BorderBottomWidth = VisibleBorder(_r.BorderBottomStyle) ? _rawBorderWidth[2] : 0;

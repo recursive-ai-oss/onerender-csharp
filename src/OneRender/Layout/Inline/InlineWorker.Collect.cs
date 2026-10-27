@@ -466,10 +466,69 @@ internal sealed partial class InlineWorker
                 continue;
             }
 
-            Put(c, i, c == '\u00A0' ? CfWordSep : (byte)0);
+            byte flags = c == '\u00A0' ? CfWordSep : (byte)0;
+            if (v.TextTransform == TextTransformKind.None)
+            {
+                Put(c, i, flags);
+            }
+            else
+            {
+                PutTransformed(c, i, flags, v.TextTransform);
+            }
         }
 
         FlushRun(tb, owner, ref runStart);
+    }
+
+    /// <summary>
+    /// CSS Text 3 §2.1: <c>text-transform</c> by simple (one-to-one) case mapping, plus the one-to-many mapping of the German sharp s
+    /// to <c>SS</c> for <c>uppercase</c>. Every output character keeps the source index of the character it came from. Mapping is
+    /// per UTF-16 unit with the invariant culture, so it does not depend on the host's locale. <c>capitalize</c> puts the first
+    /// letter of each word in upper case, where a word continues over letters, digits and an apostrophe between them.
+    /// </summary>
+    private void PutTransformed(char c, int src, byte flags, TextTransformKind kind)
+    {
+        switch (kind)
+        {
+            case TextTransformKind.Uppercase:
+                if (c == '\u00DF')
+                {
+                    Put('S', src, flags);
+                    Put('S', src, flags);
+                }
+                else
+                {
+                    Put(char.ToUpperInvariant(c), src, flags);
+                }
+
+                break;
+            case TextTransformKind.Lowercase:
+                Put(char.ToLowerInvariant(c), src, flags);
+                break;
+            case TextTransformKind.Capitalize:
+                Put(char.IsLetter(c) && !InWord() ? char.ToUpperInvariant(c) : c, src, flags);
+                break;
+            default:
+                Put(c, src, flags);
+                break;
+        }
+    }
+
+    /// <summary>Whether the paragraph text so far ends inside a word: a letter or digit, or an apostrophe that follows one.</summary>
+    private bool InWord()
+    {
+        if (_n == 0)
+        {
+            return false;
+        }
+
+        char last = _t[_n - 1];
+        if (char.IsLetterOrDigit(last))
+        {
+            return true;
+        }
+
+        return last is '\'' or '\u2019' && _n > 1 && char.IsLetterOrDigit(_t[_n - 2]);
     }
 
     private void FlushRun(Box tb, int owner, ref int runStart)

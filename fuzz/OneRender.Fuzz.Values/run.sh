@@ -1,7 +1,7 @@
 #!/bin/bash
 # Runs one fuzz target under SharpFuzz with the libFuzzer driver. Usage:
 #   fuzz/OneRender.Fuzz.Values/run.sh <target> <seconds> <seed-dir> <out-dir>
-# Targets: values, tree, html, layout, flex (noop for a driver check). Run setup.sh once first.
+# Targets: values, tree, html, layout, flex, fragmentation (noop for a driver check). Run setup.sh once first.
 # The seed directory is only read; libFuzzer works on a copy in <out-dir>/corpus. Crashes, timeouts and out-of-memory
 # inputs land in <out-dir>/crashes; the log and headline numbers (executions, coverage features, crash count) in
 # <out-dir>/fuzz.log and <out-dir>/result.txt. One process only; at most 3600 s per call (reuse <out-dir>/corpus to continue).

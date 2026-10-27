@@ -136,6 +136,11 @@ public sealed partial class Painter
                 new BorderSide(SnapWidth(left), MapStyle(v.BorderLeftStyle), ToColor(v.BorderLeftColor, cur)));
         }
 
+        if (v.IsMulticol && v.ColumnRuleWidth > 0)
+        {
+            PaintColumnRules(f, in v);
+        }
+
         if (box.Kind == BoxKind.Replaced)
         {
             PaintReplaced(f, box, in v, in g);
@@ -143,6 +148,48 @@ public sealed partial class Painter
         else if (box.Kind == BoxKind.Marker)
         {
             PaintMarker(f, box, in v, in g);
+        }
+    }
+
+    // Multicol 1 §4: a rule is drawn in the middle of the gap between two adjacent columns of a row, as high as the columns, above the
+    // container's background and border and below its content. Rules separate columns that exist, so a row with fewer filled
+    // columns than the count has fewer rules, and a spanning box ends the run (§4.1).
+    private void PaintColumnRules(int f, in ComputedValues v)
+    {
+        if (v.ColumnRuleStyle is BorderStyleKind.None or BorderStyleKind.Hidden)
+        {
+            return;
+        }
+
+        PaintColor cur = ToColor(v.Color, v.Color);
+        PaintColor color = ToColor(v.ColumnRuleColor, cur);
+        float w = C(v.ColumnRuleWidth);
+        BorderStyle style = MapStyle(v.ColumnRuleStyle);
+        int prev = -1;
+        for (int c = _tree.FirstChildOf(f); c >= 0; c = _tree.NextSiblingOf(c))
+        {
+            if ((FragmentKind)_tree.KindOf(c) != FragmentKind.Column)
+            {
+                prev = -1;
+                continue;
+            }
+
+            if (prev >= 0)
+            {
+                Rect a = _tree.BorderBoxOf(prev), b = _tree.BorderBoxOf(c);
+                if (Math.Abs(a.Y - b.Y) < 0.01)
+                {
+                    double gapStart = b.X >= a.X ? a.Right : b.Right;
+                    double gapEnd = b.X >= a.X ? b.X : a.X;
+                    double x = ((gapStart + gapEnd) / 2) - (w / 2);
+                    var rect = new RectF(C(_absX[prev] - a.X + x), C(_absY[prev]), w, C(a.Height));
+                    ItemId id = ItemId.Of((uint)(_tree.BoxOf(f) + 1), (ushort)(10 | ((_ordinal[f] >> 16) << 4)), (ushort)_tree.FragmentainerOf(c));
+                    var none = new BorderSide(0f, BorderStyle.None, color);
+                    _list.DrawBorder(id, rect, default, none, none, none, new BorderSide(w, style, color));
+                }
+            }
+
+            prev = c;
         }
     }
 

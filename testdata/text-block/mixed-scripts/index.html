@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Writing systems at a glance</title>
+<style>
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 16px; line-height: 1.6; margin: 0 auto; max-width: 720px; padding: 24px 20px; color: #222; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 28px 0 8px; }
+  .sample { border: 1px solid #ddd; padding: 10px 14px; margin: 10px 0; background: #fcfcfc; }
+  .rtl { direction: rtl; text-align: right; }
+  .label { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: #777; margin: 0 0 4px; }
+  .mixed { unicode-bidi: plaintext; }
+  .small { font-size: 13px; color: #555; }
+  ul.rtl { padding-right: 24px; padding-left: 0; }
+  blockquote { margin: 12px 0; padding: 4px 16px; border-inline-start: 3px solid #99a; }
+  .num { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<h1>Writing systems at a glance</h1>
+<p>A page can hold many scripts at once. This one mixes left-to-right Latin text with Hebrew and Arabic running the other way, and a few lines of Chinese, Japanese and Korean, to see how lines break and how directions nest inside one another.</p>
+
+<h2>Hebrew</h2>
+<div class="sample rtl" lang="he">
+  <p class="label" dir="ltr">Hebrew, right to left</p>
+  <p>שלום עולם, זהו משפט קצר בעברית שנועד לבדוק כיצד השורות נשברות כאשר הטקסט ארוך מספיק כדי לעבור לשורה הבאה בעמוד.</p>
+  <p>שמות כמו Alice ו־Bob משולבים בתוך המשפט, וגם מספרים כגון 2025 ו־3.14 שנשארים משמאל לימין.</p>
+</div>
+
+<h2>Arabic</h2>
+<div class="sample rtl" lang="ar">
+  <p class="label" dir="ltr">Arabic, right to left</p>
+  <p>مرحبا بالعالم، هذه فقرة قصيرة باللغة العربية لاختبار كسر الأسطر عندما يكون النص طويلا بما يكفي لينتقل إلى السطر التالي.</p>
+  <ul class="rtl">
+    <li>العنصر الأول</li>
+    <li>العنصر الثاني مع كلمة English في الوسط</li>
+    <li>العنصر الثالث</li>
+  </ul>
+</div>
+
+<h2>Mixed directions in one paragraph</h2>
+<div class="sample">
+  <p class="label">Left-to-right paragraph with embedded runs</p>
+  <p>The Hebrew word for peace is <span lang="he" dir="rtl">שלום</span>, and the Arabic one is <span lang="ar" dir="rtl">سلام</span>; both appear here inside an English sentence that carries on for long enough to wrap onto a second and a third line.</p>
+  <p class="mixed">אני אוהב לקרוא books on the train, ובדרך כלל I finish one per week.</p>
+</div>
+<div class="sample rtl">
+  <p class="label" dir="ltr">Right-to-left paragraph with embedded runs</p>
+  <p lang="he">הספר <span dir="ltr">The Quiet Garden</span> יצא בשנת <span dir="ltr">1998</span> וזכה לשבחים רבים מצד המבקרים ומצד הקוראים כאחד, ונמכר במהדורות רבות.</p>
+</div>
+
+<h2>Chinese, Japanese, Korean</h2>
+<div class="sample" lang="zh">
+  <p class="label">Han text breaks between characters</p>
+  <p>这是一段用来测试换行的中文文字。中文没有空格分隔单词，所以浏览器可以在大多数字符之间断行，只要不违反标点符号的禁则规定。</p>
+</div>
+<div class="sample" lang="ja">
+  <p class="label">Japanese with kana and kanji</p>
+  <p>これは改行を確かめるための日本語の短い文章です。ひらがな、カタカナ、漢字が混ざっており、句読点の位置にも注意が必要です。</p>
+</div>
+<div class="sample" lang="ko">
+  <p class="label">Korean uses spaces between words</p>
+  <p>이것은 줄 바꿈을 확인하기 위한 짧은 한국어 문장입니다. 단어 사이에 공백이 있어서 공백에서 줄이 바뀝니다.</p>
+</div>
+
+<h2>Greek and Cyrillic</h2>
+<div class="sample">
+  <p lang="el">Η γρήγορη καφέ αλεπού πηδά πάνω από το τεμπέλικο σκυλί και συνεχίζει στον δρόμο της προς το χωριό.</p>
+  <p lang="ru">Быстрая коричневая лиса прыгает через ленивую собаку и продолжает свой путь к деревне вдоль реки.</p>
+</div>
+<p class="small">Fonts that lack a script are replaced by whichever installed font covers it; where none does, the page shows empty boxes, and the line geometry follows from that.</p>
+</body>
+</html>

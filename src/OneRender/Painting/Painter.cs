@@ -394,6 +394,13 @@ public sealed partial class Painter
             return;
         }
 
+        if (kind == FragmentKind.Column)
+        {
+            // A column holds no box: its content is painted by the multi-column container's stacking context in tree order.
+            _ordinal[i] = 0;
+            return;
+        }
+
         int boxIndex = _tree.BoxOf(i);
         _ordinal[i] = boxIndex >= 0 ? _boxOrdinal[boxIndex]++ : 0;
 

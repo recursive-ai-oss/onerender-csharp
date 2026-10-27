@@ -8,6 +8,7 @@ internal static partial class ComputedValueText
     private static readonly string[] ClipMarginBoxes = ["padding-box", "content-box", "border-box"];
     private static readonly string[] VerticalAligns = ["baseline", "sub", "super", "text-top", "text-bottom", "middle", "top", "bottom"];
     private static readonly string[] Collapses = ["collapse", "preserve", "preserve-breaks", "preserve-spaces", "break-spaces"];
+    private static readonly string[] TextTransforms = ["none", "capitalize", "uppercase", "lowercase"];
     private static readonly string[] WordBreaks = ["normal", "break-all", "keep-all", "break-word"];
     private static readonly string[] OverflowWraps = ["normal", "break-word", "anywhere"];
     private static readonly string[] LineBreaks = ["auto", "loose", "normal", "strict", "anywhere"];
@@ -104,6 +105,7 @@ internal static partial class ComputedValueText
             case PropertyId.ListStyleType:
                 return v.ListStyleTypeIsString ? "\"" + v.ListStyleType.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal) + "\"" : v.ListStyleType;
             case PropertyId.ListStylePosition: return v.ListStylePosition == ListStylePositionKind.Inside ? "inside" : "outside";
+            case PropertyId.TextTransform: return TextTransforms[(int)v.TextTransform];
             case PropertyId.WordBreak: return WordBreaks[(int)v.WordBreak];
             case PropertyId.OverflowWrap: return OverflowWraps[(int)v.OverflowWrap];
             case PropertyId.LineBreak: return LineBreaks[(int)v.LineBreak];
@@ -123,6 +125,19 @@ internal static partial class ComputedValueText
             case PropertyId.AlignSelf: return AlignText(v.AlignSelf, v.AlignSelfOverflow);
             case PropertyId.RowGap: return v.RowGap.ToCss();
             case PropertyId.ColumnGap: return v.ColumnGap.ToCss();
+            case PropertyId.BreakBefore: return BreakText(v.BreakBefore);
+            case PropertyId.BreakAfter: return BreakText(v.BreakAfter);
+            case PropertyId.BreakInside: return v.BreakInside switch { BreakInsideKind.Avoid => "avoid", BreakInsideKind.AvoidPage => "avoid-page", BreakInsideKind.AvoidColumn => "avoid-column", BreakInsideKind.AvoidRegion => "avoid-region", _ => "auto" };
+            case PropertyId.Orphans: return v.Orphans.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            case PropertyId.Widows: return v.Widows.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            case PropertyId.BoxDecorationBreak: return v.BoxDecorationBreak == BoxDecorationBreakKind.Clone ? "clone" : "slice";
+            case PropertyId.ColumnCount: return v.ColumnCount == 0 ? "auto" : v.ColumnCount.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            case PropertyId.ColumnWidth: return v.ColumnWidth.ToCss();
+            case PropertyId.ColumnFill: return v.ColumnFill == ColumnFillKind.Auto ? "auto" : "balance";
+            case PropertyId.ColumnSpan: return v.ColumnSpan == ColumnSpanKind.All ? "all" : "none";
+            case PropertyId.ColumnRuleWidth: return CssText.Px(v.ColumnRuleWidth);
+            case PropertyId.ColumnRuleStyle: return BorderStyles[(int)v.ColumnRuleStyle];
+            case PropertyId.ColumnRuleColor: return v.ColumnRuleColor.ToCss();
             case PropertyId.GridTemplateColumns: return v.GridTemplateColumns.ToString();
             case PropertyId.GridTemplateRows: return v.GridTemplateRows.ToString();
             case PropertyId.GridTemplateAreas: return v.GridTemplateAreas.Text;
@@ -138,6 +153,13 @@ internal static partial class ComputedValueText
             default: return PaintText(id, in v) ?? string.Empty;
         }
     }
+
+    private static string BreakText(BreakKind k) => k switch
+    {
+        BreakKind.Avoid => "avoid", BreakKind.AvoidPage => "avoid-page", BreakKind.AvoidColumn => "avoid-column", BreakKind.AvoidRegion => "avoid-region",
+        BreakKind.Page => "page", BreakKind.Left => "left", BreakKind.Right => "right", BreakKind.Recto => "recto", BreakKind.Verso => "verso",
+        BreakKind.Column => "column", BreakKind.Region => "region", _ => "auto",
+    };
 
     private static string AlignText(AlignKind k, AlignOverflowKind o)
     {

@@ -75,6 +75,7 @@ internal enum PropertyId : byte
     TabSize,
     TextAlignLast,
     TextJustify,
+    TextTransform,
     OverflowClipMargin,
     FlexDirection,
     FlexWrap,
@@ -88,6 +89,19 @@ internal enum PropertyId : byte
     AlignSelf,
     RowGap,
     ColumnGap,
+    BreakBefore,
+    BreakAfter,
+    BreakInside,
+    Orphans,
+    Widows,
+    BoxDecorationBreak,
+    ColumnCount,
+    ColumnWidth,
+    ColumnFill,
+    ColumnSpan,
+    ColumnRuleWidth,
+    ColumnRuleStyle,
+    ColumnRuleColor,
     GridTemplateColumns,
     GridTemplateRows,
     GridTemplateAreas,
@@ -150,9 +164,11 @@ internal static class Properties
         "font-family", "font-weight", "font-style", "font-stretch", "line-height", "vertical-align",
         "white-space-collapse", "text-wrap-mode", "text-align", "text-indent", "letter-spacing", "word-spacing",
         "direction", "unicode-bidi", "color", "opacity", "background-color", "content", "list-style-type", "list-style-position",
-        "word-break", "overflow-wrap", "line-break", "hyphens", "tab-size", "text-align-last", "text-justify", "overflow-clip-margin",
+        "word-break", "overflow-wrap", "line-break", "hyphens", "tab-size", "text-align-last", "text-justify", "text-transform", "overflow-clip-margin",
         "flex-direction", "flex-wrap", "flex-grow", "flex-shrink", "flex-basis", "order",
         "justify-content", "align-content", "align-items", "align-self", "row-gap", "column-gap",
+        "break-before", "break-after", "break-inside", "orphans", "widows", "box-decoration-break",
+        "column-count", "column-width", "column-fill", "column-span", "column-rule-width", "column-rule-style", "column-rule-color",
         "grid-template-columns", "grid-template-rows", "grid-template-areas", "grid-auto-columns", "grid-auto-rows", "grid-auto-flow",
         "grid-row-start", "grid-row-end", "grid-column-start", "grid-column-end", "justify-items", "justify-self",
         "background-image", "background-repeat", "background-position-x", "background-position-y", "background-size", "background-origin", "background-clip", "background-attachment", "border-image-source", "border-image-slice", "border-image-width", "border-image-outset", "border-image-repeat", "box-shadow", "outline-width", "outline-style", "outline-color", "outline-offset", "text-decoration-line", "text-decoration-style", "text-decoration-color", "text-decoration-thickness", "text-underline-offset", "text-underline-position", "text-shadow", "object-fit", "object-position", "image-rendering", "list-style-image",
@@ -172,11 +188,11 @@ internal static class Properties
         PropertyId.Visibility or PropertyId.FontSize or PropertyId.FontFamily or PropertyId.FontWeight or PropertyId.FontStyle
             or PropertyId.FontStretch or PropertyId.LineHeight or PropertyId.WhiteSpaceCollapse or PropertyId.TextWrapMode
             or PropertyId.TextAlign or PropertyId.TextIndent or PropertyId.LetterSpacing or PropertyId.WordSpacing
-            or PropertyId.Direction or PropertyId.Color or PropertyId.ListStyleType or PropertyId.ListStylePosition
+            or PropertyId.Direction or PropertyId.Color or PropertyId.ListStyleType or PropertyId.ListStylePosition or PropertyId.Orphans or PropertyId.Widows
             or PropertyId.TextShadow or PropertyId.ImageRendering or PropertyId.ListStyleImage
             or PropertyId.TextUnderlineOffset or PropertyId.TextUnderlinePosition
             or PropertyId.WordBreak or PropertyId.OverflowWrap or PropertyId.LineBreak or PropertyId.Hyphens or PropertyId.TabSize
-            or PropertyId.TextAlignLast or PropertyId.TextJustify => true,
+            or PropertyId.TextAlignLast or PropertyId.TextJustify or PropertyId.TextTransform => true,
         _ => false,
     };
 

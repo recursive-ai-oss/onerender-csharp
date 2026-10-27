@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Typography specimen</title>
+<style>
+  body { font-family: "Times New Roman", serif; max-width: 46em; margin: 0 auto; padding: 1em; }
+  .sans { font-family: Arial, Helvetica, sans-serif; }
+  .tight { line-height: 1; }
+  .loose { line-height: 2; }
+  .abs-lh { line-height: 30px; }
+  .pct-lh { line-height: 150%; }
+  .indent { text-indent: 2em; }
+  .hang { padding-left: 3em; text-indent: -3em; }
+  .spaced { letter-spacing: .15em; word-spacing: .5em; }
+  .center { text-align: center; }
+  .right { text-align: right; }
+  .just { text-align: justify; }
+  .ib { display: inline-block; width: 120px; padding: 4px; margin: 2px; border: 1px solid #888; vertical-align: top; }
+  .ib.tall { height: 60px; vertical-align: bottom; }
+  .va-super { vertical-align: super; }
+  .va-sub { vertical-align: sub; }
+  .va-len { vertical-align: 6px; }
+  .va-pct { vertical-align: 50%; }
+  .big { font-size: 2.5em; }
+  .small { font-size: .7em; }
+  .u { text-decoration: underline; }
+  .box { border: 3px solid #666; padding: 6px 10px; margin: 8px 0; }
+  ul.flush { padding-left: 1em; }
+  ul.none { list-style: none; padding: 0; }
+  ol.start { counter-reset: none; }
+  address { font-style: italic; }
+  hr.thick { height: 6px; border: 0; background: #999; }
+  h1, h2, h3, h4, h5, h6 { font-family: Arial, Helvetica, sans-serif; }
+  .nested blockquote { border-left: 2px solid #aaa; }
+  dl.inline dt { float: left; clear: left; width: 6em; font-weight: bold; }
+  dl.inline dd { margin-left: 7em; }
+</style>
+</head>
+<body>
+<h1>Typography specimen</h1>
+<h2>Second-level heading</h2>
+<h3>Third-level heading</h3>
+<h4>Fourth-level heading</h4>
+<h5>Fifth-level heading</h5>
+<h6>Sixth-level heading</h6>
+
+<h2>Line heights</h2>
+<p class="tight">Tight lines with a line height of one. The quick brown fox jumps over the lazy dog, and then does it again to fill a second and a third line of text on a typical desktop width.</p>
+<p class="loose">Loose lines with a line height of two. The quick brown fox jumps over the lazy dog, and then does it again to fill a second and a third line of text on a typical desktop width.</p>
+<p class="abs-lh">An absolute thirty pixel line height. The quick brown fox jumps over the lazy dog, and then does it again to fill a second and a third line of text.</p>
+<p class="pct-lh sans">A percentage line height of 150 percent in a sans-serif face. The quick brown fox jumps over the lazy dog, and then does it again to fill more lines.</p>
+<p>Normal line height with a <span class="big">big</span> word and a <span class="small">small</span> one and some <span style="line-height:3">tall-line</span> content in the middle.</p>
+
+<h2>Alignment and indentation</h2>
+<p class="indent">An indented first line. Subsequent lines are not indented, which is the classic paragraph style of printed books. This text goes on long enough to wrap.</p>
+<p class="hang">A hanging indent: the first line starts at the left and the rest are pushed in by three ems, as in a bibliography entry. This text goes on long enough to wrap onto several lines.</p>
+<p class="center">Centred text, short.</p>
+<p class="right">Right-aligned text, short.</p>
+<p class="just">Justified text spreads the words out so that each line, except the last, fills the measure exactly. This paragraph is long enough that several lines are justified and the last one is left alone, as it should be.</p>
+<p class="spaced">Spaced letters and words, a little.</p>
+
+<h2>Vertical alignment</h2>
+<p>Water is H<sub>2</sub>O and area is measured in m<sup>2</sup>; a <span class="va-super">raised</span> word, a <span class="va-sub">lowered</span> word, one <span class="va-len">six pixels up</span>, and one <span class="va-pct">half a line up</span> inside a line.</p>
+<p>Inline blocks: <span class="ib">first box with a little text</span><span class="ib tall">second, taller box</span><span class="ib">third box with more text than the first one has</span> end of line.</p>
+
+<h2>Boxes, borders and lists</h2>
+<div class="box">A bordered box with padding. <span class="u">Underlined</span> text inside it.
+  <div class="box">A nested box inside the first.</div>
+</div>
+<ul>
+  <li>Outside marker, the default.</li>
+  <li>Another item with enough text that it wraps onto a second line when the column is narrow enough.</li>
+</ul>
+<ul class="flush">
+  <li>Flush list: no extra indentation.</li>
+  <li>Another item with enough text that it wraps onto a second line when the column is narrow enough.</li>
+</ul>
+<ul class="none"><li>No marker at all</li><li>Second plain item</li></ul>
+<ol start="5" reversed><li>Counting down from five</li><li>Four</li><li>Three</li></ol>
+<ol type="a"><li>Alphabetic</li><li>Second</li></ol>
+
+<h2>Other elements</h2>
+<address>Written by the Typography Desk, 1 Letter Lane.</address>
+<hr>
+<hr class="thick">
+<div class="nested">
+  <blockquote>Outer quotation, long enough to wrap onto more than one line when the column is narrow.
+    <blockquote>Inner quotation, also long enough to wrap onto more than one line when the column is narrow, indented again.</blockquote>
+  </blockquote>
+</div>
+<dl class="inline">
+  <dt>Term</dt><dd>Definition with floated term beside it.</dd>
+  <dt>Longer term</dt><dd>A second definition that is long enough to wrap onto a second line beside the floated term.</dd>
+</dl>
+<p style="clear:both"><b>Bold</b>, <i>italic</i>, <b><i>both</i></b>, <code>code</code>, <kbd>kbd</kbd>, <samp>samp</samp>, <var>var</var>, <cite>cite</cite>, <dfn>dfn</dfn>, <mark>mark</mark>, <s>strike</s>, <del>del</del>, <ins>ins</ins>, <small>small</small>, <big>big</big>, <tt>tt</tt> and <abbr title="x">abbr</abbr> all in one paragraph that wraps across lines.</p>
+</body>
+</html>

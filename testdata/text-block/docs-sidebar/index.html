@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Widget library &mdash; Guide</title>
+<style>
+  body { margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.55; color: #222; }
+  .top { background: #14213d; color: #fff; padding: 12px 24px; overflow: hidden; }
+  .top .brand { float: left; font-size: 18px; font-weight: bold; }
+  .top nav { float: right; }
+  .top nav a { color: #cfd8ff; text-decoration: none; margin-left: 18px; font-size: 14px; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+  .side { float: left; width: 220px; margin: 24px 0; padding: 0 20px 0 0; border-right: 1px solid #ddd; }
+  .side h4 { margin: 18px 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: #667; }
+  .side ul { list-style: none; margin: 0; padding: 0; }
+  .side li { margin: 0; }
+  .side a { display: block; padding: 3px 8px; color: #1d3a8a; text-decoration: none; border-radius: 3px; }
+  .side a.current { background: #e3e9ff; font-weight: bold; }
+  .main { margin-left: 260px; padding: 24px 0 48px; }
+  .main h1 { font-size: 30px; margin: 0 0 8px; }
+  .main h2 { font-size: 22px; margin: 32px 0 8px; padding-bottom: 4px; border-bottom: 1px solid #e2e2e2; }
+  .main h3 { font-size: 17px; margin: 22px 0 6px; }
+  .crumbs { font-size: 13px; color: #667; margin-bottom: 12px; }
+  .note { margin: 16px 0; padding: 10px 14px; background: #fff7e0; border-left: 4px solid #e6a700; }
+  .note p { margin: 0; }
+  pre { background: #f5f6f8; border: 1px solid #e0e2e6; padding: 10px 14px; overflow: auto; font-size: 13px; line-height: 1.45; }
+  code { font-family: "Courier New", monospace; font-size: .92em; background: #f0f1f4; padding: 1px 4px; border-radius: 3px; }
+  pre code { background: none; padding: 0; }
+  figure { margin: 18px 0; }
+  figure.right { float: right; margin: 6px 0 12px 22px; width: 260px; }
+  figure img { display: block; width: 100%; height: 150px; background: #dfe4f5; }
+  figcaption { font-size: 12.5px; color: #556; margin-top: 4px; }
+  table-less { display: block; }
+  .opts { margin: 12px 0; }
+  .opts dt { font-family: "Courier New", monospace; font-weight: bold; margin-top: 10px; }
+  .opts dd { margin: 2px 0 0 24px; }
+  .pager { clear: both; overflow: hidden; margin-top: 36px; padding-top: 12px; border-top: 1px solid #e2e2e2; }
+  .pager a { color: #1d3a8a; text-decoration: none; }
+  .pager .prev { float: left; }
+  .pager .next { float: right; }
+  .foot { clear: both; background: #f2f2f4; color: #667; font-size: 13px; padding: 16px 24px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="top">
+  <span class="brand">Widgetry</span>
+  <nav><a href="#">Guide</a><a href="#">Reference</a><a href="#">Changelog</a><a href="#">Community</a></nav>
+</div>
+<div class="wrap">
+  <div class="side">
+    <h4>Getting started</h4>
+    <ul>
+      <li><a href="#">Introduction</a></li>
+      <li><a href="#">Installation</a></li>
+      <li><a href="#" class="current">Configuration</a></li>
+    </ul>
+    <h4>Concepts</h4>
+    <ul>
+      <li><a href="#">Components</a></li>
+      <li><a href="#">Themes</a></li>
+      <li><a href="#">Events</a></li>
+      <li><a href="#">Lifecycle</a></li>
+    </ul>
+    <h4>Recipes</h4>
+    <ul>
+      <li><a href="#">Custom layouts</a></li>
+      <li><a href="#">Accessibility</a></li>
+      <li><a href="#">Testing</a></li>
+    </ul>
+  </div>
+  <div class="main">
+    <div class="crumbs">Guide &rsaquo; Getting started &rsaquo; Configuration</div>
+    <h1>Configuration</h1>
+    <p>Widgetry reads its settings from a single object passed when the library starts. Every option has a default, so an empty object is a valid configuration, and you add keys only where you want something different.</p>
+
+    <figure class="right">
+      <img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='150'%3E%3Crect width='260' height='150' fill='%23dfe4f5'/%3E%3C/svg%3E" width="260" height="150" alt="Diagram of the configuration layers">
+      <figcaption>Figure 1. Settings are merged from defaults, file and code, in that order.</figcaption>
+    </figure>
+
+    <h2>Where settings come from</h2>
+    <p>Three layers are merged each time the library starts. The built-in defaults come first; then a file named <code>widgetry.json</code> in the working directory, if there is one; and finally the object you pass in code. A later layer wins for any key it sets and leaves the rest untouched.</p>
+    <p>Merging is shallow for scalar options and recursive for the <code>theme</code> and <code>events</code> sections, so overriding one colour does not discard the others. Arrays are replaced whole, never concatenated.</p>
+
+    <div class="note"><p><strong>Note.</strong> The configuration file is read once, at startup. Changing it later has no effect until the library restarts.</p></div>
+
+    <h2>A minimal example</h2>
+<pre><code>var app = Widgetry.Start(new Options
+{
+    Theme = "dark",
+    Locale = "en-GB",
+    MaxItems = 200,
+});</code></pre>
+    <p>This starts the library with the dark theme and British English formatting, and limits lists to two hundred items. Everything else keeps its default.</p>
+
+    <h2>Options</h2>
+    <dl class="opts">
+      <dt>Theme</dt>
+      <dd>Name of a registered theme. Defaults to <code>"light"</code>. An unknown name is an error at startup, not a silent fallback.</dd>
+      <dt>Locale</dt>
+      <dd>A language tag used for number and date formatting. Defaults to the host's current setting.</dd>
+      <dt>MaxItems</dt>
+      <dd>The largest number of items any list will hold. Values below 1 are treated as 1. The default is <code>1000</code>.</dd>
+      <dt>Timeout</dt>
+      <dd>Seconds to wait for a slow component before giving up. Zero means wait forever, which is rarely what you want.</dd>
+    </dl>
+
+    <h3>Environment overrides</h3>
+    <p>Any option can be set from the environment by prefixing its name with <code>WIDGETRY_</code> and writing it in upper case. Environment values sit between the file and the code in precedence, which makes them convenient for deployments.</p>
+    <figure>
+      <img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='120'%3E%3Crect width='600' height='120' fill='%23e8ebf4'/%3E%3C/svg%3E" width="600" height="120" alt="Precedence chart" style="height:120px;max-width:100%;">
+      <figcaption>Figure 2. Precedence from lowest to highest: defaults, file, environment, code.</figcaption>
+    </figure>
+
+    <div class="pager">
+      <a class="prev" href="#">&larr; Installation</a>
+      <a class="next" href="#">Components &rarr;</a>
+    </div>
+  </div>
+</div>
+<div class="foot">Widgetry is documentation for an imaginary library. &copy; nobody.</div>
+</body>
+</html>

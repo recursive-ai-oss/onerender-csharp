@@ -32,6 +32,7 @@ public sealed partial class BlockLayoutEngine
         parentIsRoot
         || c.Context != FormattingContext.Block
         || v.Floating != FloatKind.None
+        || (v.IsMulticol && c.Context is FormattingContext.Block or FormattingContext.FlowRoot)
         || v.Position is PositionKind.Absolute or PositionKind.Fixed
         || (v.IsScrollContainer && c.Index != _vpSource);
 
@@ -107,13 +108,17 @@ public sealed partial class BlockLayoutEngine
         int pi = ti - 1;
         ref Frame t = ref _frames[ti];
         FrameFlags fl = t.Flags;
+        bool emptyClearing = (fl & (FrameFlags.Cleared | FrameFlags.ClearsFloats)) != 0 && (fl & FrameFlags.Bfc) == 0
+            && (double.IsNaN(t.SpecH) || (t.SpecH == 0 && (fl & FrameFlags.AnyChild) == 0))
+            && t.BottomEdge == 0 && t.MinH == 0 && double.IsNaN(t.RatioH);
 
         if ((fl & FrameFlags.TopPending) != 0)
         {
             // CSS2 §8.3.1: a box with no height, padding, border or in-flow content has its top and bottom margins adjoining
             // ("collapsing through"), so they join the margin run and the box sits where a zero-height box with a bottom border would.
+            // Not when the box has a `clear` that names floats of its formatting context: see the empty-clearing-box rule after Attach below.
             bool eligible = (double.IsNaN(t.SpecH) || (t.SpecH == 0 && (fl & FrameFlags.AnyChild) == 0))
-                && (fl & FrameFlags.Cleared) == 0 && t.BottomEdge == 0 && t.MinH == 0 && double.IsNaN(t.RatioH);
+                && (fl & (FrameFlags.Cleared | FrameFlags.ClearsFloats)) == 0 && t.BottomEdge == 0 && t.MinH == 0 && double.IsNaN(t.RatioH);
             if (eligible)
             {
                 ref Frame pp = ref _frames[pi];
@@ -144,7 +149,12 @@ public sealed partial class BlockLayoutEngine
         double contentH;
         double cursor = t.Cursor;
         bool scroll = (fl & FrameFlags.ScrollContainer) != 0;
-        if (!double.IsNaN(t.SpecH))
+        if ((fl & FrameFlags.Multicol) != 0)
+        {
+            contentH = MulticolClose(ti);
+            t = ref _frames[ti];
+        }
+        else if (!double.IsNaN(t.SpecH))
         {
             contentH = t.SpecH;
             _pos = _neg = 0;
@@ -180,7 +190,7 @@ public sealed partial class BlockLayoutEngine
         {
             // Float border boxes are scrollable overflow of the box that contains them; they are tracked per formatting context.
             ref BfcState s = ref _bfcs[_bsp - 1];
-            if (s.OvR >= s.OvL)
+            if (s.OvR >= s.OvL && (fl & FrameFlags.Multicol) == 0)
             {
                 t.OvL = Math.Min(t.OvL, s.OvL + t.ContentLeft);
                 t.OvT = Math.Min(t.OvT, s.OvT + t.ContentTop);
@@ -238,8 +248,22 @@ public sealed partial class BlockLayoutEngine
             return;
         }
 
+        double marginTop = t.MarginTop;
         RecordTop(pi, frag, t.MarginTop, t.MarginRight, t.MarginBottom, t.MarginLeft);
         Attach(pi, x, y2, wd, bh, mb, baseline, ovL, ovT, ovR, ovB, clipX, clipY, rdx, rdy);
+        if (emptyClearing && _frames[pi].NextChild >= 0)
+        {
+            // An empty block with `clear` is placed at its hypothetical position or below the floats, as CSS2 §9.5.2 says, but the margins
+            // after it are measured from its top margin edge: its margins collapse together and with the next box's, and the run starts
+            // where the box's own top margin began (at y - margin-top), not at its border edge. Chrome's output has next = y - mt +
+            // max(mt, mb, next margin-top) whether or not the floats reach it (WPT clear-clearance-calculation-003 needs this for the
+            // case where they do not, and a clearing block between paragraphs shows the margin before it never merging with the one
+            // after it). With margin-top 0 this is the usual "margin before + margin after". As the last child of its parent it keeps the
+            // plain rule (the parent reaches its border edge; WPT margin-collapse-018 and -027).
+            _frames[pi].Cursor -= Math.Max(0, marginTop);
+            StrutAdd(marginTop);
+        }
+
         _sp--;
     }
 

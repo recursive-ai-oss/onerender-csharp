@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The tide clock of Pellam Sound</title>
+<style>
+  body { font: 17px/1.55 "Times New Roman", serif; max-width: 38em; margin: 0 auto; padding: 1.5rem 1rem 3rem; color: #222; }
+  h1 { font-size: 2rem; line-height: 1.15; margin-bottom: .3em; }
+  h1 small { display: block; font-size: .55em; font-weight: normal; color: #666; margin-top: .3em; }
+  p { margin: 0 0 1em; text-indent: 1.5em; }
+  p.first { text-indent: 0; }
+  a { color: #0645ad; }
+  a:visited { color: #5a3696; }
+  sup, sub { line-height: 0; }
+  sup a, .fn { text-decoration: none; }
+  .formula { text-align: center; text-indent: 0; font-size: 1.1em; margin: 1.2em 0; }
+  .fn { font-size: .8em; }
+  ol.notes { font-size: .88rem; line-height: 1.4; padding-left: 1.6rem; border-top: 1px solid #aaa; margin-top: 2.5rem; padding-top: .8rem; }
+  ol.notes li { margin-bottom: .4rem; }
+  abbr { text-decoration: underline dotted; }
+  .chem { white-space: nowrap; }
+  .big sup { font-size: 60%; }
+  h2 { font-size: 1.3rem; margin: 1.8rem 0 .5rem; }
+  q { color: #333; }
+  .ordinal { font-variant-numeric: normal; }
+</style>
+</head>
+<body>
+<h1>The tide clock of Pellam Sound<small>A short history, with notes</small></h1>
+<p class="first">When the harbour authority installed a public clock on the quay in the 1880s, it showed more than the hour.<sup class="fn"><a href="#n1">[1]</a></sup> A second dial, set below the first, gave the state of the tide, and for a century the town set its day by it: fishing boats left on the ebb, and the market opened when the water reached the third mark.</p>
+<p>The mechanism was a simple one. A float in a stilling well, connected by a chain and a pulley to a pointer, rose and fell with the water. The pointer carried a counterweight; the whole assembly weighed under 12 kg, which made it light enough to repair on site, and it needed repair rather often.<sup class="fn"><a href="#n2">[2]</a></sup></p>
+
+<h2>The arithmetic of tides</h2>
+<p class="first">Tidal height at a given hour is well approximated by a sum of cosines, one for each astronomical influence. The two largest are the lunar and solar semidiurnal terms:</p>
+<p class="formula">h(t) = h<sub>0</sub> + A<sub>M2</sub> cos(&omega;<sub>M2</sub>t &minus; &phi;<sub>M2</sub>) + A<sub>S2</sub> cos(&omega;<sub>S2</sub>t &minus; &phi;<sub>S2</sub>)</p>
+<p>Here <i>h</i><sub>0</sub> is mean sea level, <i>A</i> an amplitude, &omega; an angular speed and &phi; a phase. The ratio of the two speeds is close to 28.98&deg;/h against 30.00&deg;/h, which is why the pattern of spring and neap tides repeats about every 14.8 days. The town's almanac for the year 1<sup>st</sup> to 31<sup>st</sup> of May, 2<sup>nd</sup> in the list of fortnights, always printed it that way.</p>
+
+<h2>Salt, rust and other trouble</h2>
+<p class="first">The sea air was hard on the works. Iron rusted (Fe + O<sub>2</sub> + H<sub>2</sub>O gives hydrated iron oxide, to be exact), brass pitted, and the chain stretched. In 1911 the clockmaker replaced it with one of <span class="chem">Cu<sub>3</sub>Zn<sub>2</sub></span> alloy, which lasted forty years. The weights, by contrast, never gave trouble: lead is patient, and so, apparently, were the keepers.</p>
+<p>Visitors often ask whether the clock is accurate. It is, as long as you remember that it shows the tide <span>&ldquo;as it was&rdquo;</span>, not as it is; the float lags the true level by a few minutes because water must flow through a narrow pipe to reach the well. Locals correct for this without noticing. See also the <a href="#n3">note on the pipe</a> and the <a href="https://example.com/pellam-history">town archive</a>, whose <a href="https://example.com/pellam-history/tides">tide pages</a> are, regrettably, offline more often than the tide itself.</p>
+<p>The current keeper, a retired schoolteacher with a gift for dry remarks, says that the <abbr title="Mean Sea Level">MSL</abbr> mark on the second dial is &ldquo;the only honest number in Pellam.&rdquo; Nobody has argued the point with her.</p>
+
+<ol class="notes">
+  <li id="n1">The date is disputed. The authority's minutes give 1884; the clockmaker's ledger, which survives only in part, suggests 1887. Both agree that the second dial was added later.</li>
+  <li id="n2">Repairs recorded between 1890 and 1930: eleven chains, four pulleys, two dials (one broken by a gull, so the story goes), and a pointer replaced after a boat hit the quay.</li>
+  <li id="n3">The pipe is 40 mm across and runs about 6 m from the harbour wall to the well. Its narrowness is deliberate: it smooths out the slap of waves so the pointer does not twitch.</li>
+</ol>
+</body>
+</html>

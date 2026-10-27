@@ -32,7 +32,7 @@ public class RetainedStorageTests
     {
         string html = ThousandNodeDocument();
         Document doc = Document.Parse(html);
-        DocumentStyles styles = DocumentStyles.Create(doc, new StyleContext());
+        DocumentStyles styles = DocumentStyles.Create(doc, new StyleContext(), new StyleSourceOptions { DeclarationValidator = OneRender.Style.StyleValidation.Validator });
         styles.ComputeAll();
         var tree = new StyledTree();
         var front = new HtmlFrontEnd(tree);
@@ -335,7 +335,7 @@ public class RetainedStorageTests
 
         sb.Append("deep");
         Document doc = Document.Parse(sb.ToString(), new ParseOptions { Limits = new ParseLimits { MaxOpenElements = Depth * 2 } });
-        DocumentStyles styles = DocumentStyles.Create(doc, new StyleContext());
+        DocumentStyles styles = DocumentStyles.Create(doc, new StyleContext(), new StyleSourceOptions { DeclarationValidator = OneRender.Style.StyleValidation.Validator });
         var tree = new StyledTree();
         new HtmlFrontEnd(tree).Build(styles);
         Assert.True(tree.Count > Depth);

@@ -56,7 +56,8 @@ public sealed partial class BlockLayoutEngine
 
         ref readonly ComputedValues v = ref c.Values;
         ref Frame f = ref _frames[pi];
-        double w = f.ContentWidth;
+        // Multicol 1 §6: a column-span: all box is as wide as the whole container, not one column.
+        double w = (f.Flags & FrameFlags.Multicol) != 0 && v.ColumnSpan == ColumnSpanKind.All && !outOfFlow ? f.McFullW : f.ContentWidth;
         bool rtl = (f.Flags & FrameFlags.Rtl) != 0;
         bool isFloat = outOfFlow;
 
@@ -134,6 +135,7 @@ public sealed partial class BlockLayoutEngine
         double x = 0, y = 0;
         bool pending = false;
         bool clearedPending = false;
+        bool clearsFloats = false;
         double clearedEdge = double.NegativeInfinity;
         if (!isFloat)
         {
@@ -149,9 +151,11 @@ public sealed partial class BlockLayoutEngine
                 if (HasDeferred && DeferredClearedBy(v.Clear))
                 {
                     certain = true;
+                    clearsFloats = true;
                 }
                 else if (ClearEdge(in _bfcs[_bsp - 1], v.Clear) > double.NegativeInfinity)
                 {
+                    clearsFloats = true;
                     int j = SettledOf(pi);
                     certain = _frames[j].BfcTop + _frames[j].Cursor + CollapsedTopMargin(c, w, mt) < ClearEdge(in _bfcs[_bsp - 1], v.Clear);
                 }
@@ -283,6 +287,11 @@ public sealed partial class BlockLayoutEngine
             flags |= FrameFlags.Cleared;
         }
 
+        if (clearsFloats)
+        {
+            flags |= FrameFlags.ClearsFloats;
+        }
+
         if (v.Direction == DirectionKind.Rtl)
         {
             flags |= FrameFlags.Rtl;
@@ -368,6 +377,11 @@ public sealed partial class BlockLayoutEngine
             SavedNeg = savedNeg,
             ClearBfc = clearedEdge,
         };
+        if (v.IsMulticol && c.Context is FormattingContext.Block or FormattingContext.FlowRoot)
+        {
+            MulticolOpen(ref nf, in v, contentW);
+        }
+
         PushFrame(in nf);
         int ni = _sp - 1;
         if (bfc)
@@ -397,7 +411,7 @@ public sealed partial class BlockLayoutEngine
             // The container has line boxes, so it has content: its margins stop collapsing through it.
             ResolveStrut();
             ref Frame t = ref _frames[ni];
-            var req = new InlineLayoutRequest(c, contentW, t.ContentLeft, t.ContentTop, t.BfcLeft, t.BfcTop, _fonts, this);
+            var req = new InlineLayoutRequest(c, t.ContentWidth, t.ContentLeft, t.ContentTop, t.BfcLeft, t.BfcTop, _fonts, this);
             InlineLayoutResult r = _inline.Layout(in req, _out, new Fragment(_out, t.Frag), _token);
             t = ref _frames[ni];
             t.Cursor = r.Height;

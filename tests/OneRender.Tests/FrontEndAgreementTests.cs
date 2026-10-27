@@ -168,7 +168,7 @@ public class FrontEndAgreementTests
         Node link = doc.GetElementById("l");
         double Width(StyleContext context)
         {
-            DocumentStyles styles = DocumentStyles.Create(doc, context);
+            DocumentStyles styles = DocumentStyles.Create(doc, context, new StyleSourceOptions { DeclarationValidator = OneRender.Style.StyleValidation.Validator });
             var tree = new StyledTree();
             new HtmlFrontEnd(tree).Build(styles);
             return tree.FindBySource(link.Index).Values.Width.Value;

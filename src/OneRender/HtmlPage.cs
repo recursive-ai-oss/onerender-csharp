@@ -91,6 +91,14 @@ public sealed class HtmlPage
     /// </summary>
     public ScrollState Scroll { get; } = new();
 
+    /// <summary>
+    /// Defaults the HTML rendering section asks for that the family's user-agent sheet does not carry as rules. It is applied as a
+    /// user-origin sheet, so author rules and presentational hints override it and the user-agent sheet does not.
+    /// <para>HTML §15.3.2 (The page): when no <c>marginwidth</c>/<c>leftmargin</c>/<c>marginheight</c>/<c>topmargin</c> attribute gives
+    /// the body's margins, "a default value of 8px is expected to be used".</para>
+    /// </summary>
+    internal const string UserAgentSupplement = "body { margin: 8px; }";
+
     /// <summary>Parses <paramref name="html"/>, cascades, builds the box tree and lays it out.</summary>
     /// <param name="html">The document source, decoded to text.</param>
     /// <param name="options">Viewport, fonts, resource hooks and layout.</param>
@@ -113,7 +121,9 @@ public sealed class HtmlPage
         var sourceOptions = new StyleSourceOptions
         {
             IncludeUserAgentSheet = options.UserAgentStyles,
+            UserSheets = options.UserAgentStyles ? [Stylesheet.Parse(UserAgentSupplement, null, null, cancellationToken)] : null,
             BaseUrl = options.BaseUrl,
+            DeclarationValidator = StyleValidation.Validator,
             Resolver = bytes is null ? null : url =>
             {
                 byte[]? b = bytes(url);

@@ -383,6 +383,22 @@ public enum ReplacedKind : byte
     Svg,
 }
 
+/// <summary>The <c>text-transform</c> property (CSS Text 3 §2.1); the single-keyword forms.</summary>
+public enum TextTransformKind : byte
+{
+    /// <summary><c>none</c>.</summary>
+    None,
+
+    /// <summary><c>capitalize</c>: the first letter of each word is put in title case.</summary>
+    Capitalize,
+
+    /// <summary><c>uppercase</c>.</summary>
+    Uppercase,
+
+    /// <summary><c>lowercase</c>.</summary>
+    Lowercase,
+}
+
 /// <summary>The <c>word-break</c> property (CSS Text 3 §5.2).</summary>
 public enum WordBreakKind : byte
 {

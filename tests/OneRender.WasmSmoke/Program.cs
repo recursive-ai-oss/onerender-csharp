@@ -15,7 +15,7 @@ byte[] bytes = face.ReadAllBytes();
 Console.WriteLine($"{face} {bytes.Length}");
 
 Document doc = Document.Parse("<!DOCTYPE html><body><p>Hello <b>world</b></p><div style=\"display:flex\"><span>a</span></div>");
-DocumentStyles styles = DocumentStyles.Create(doc, new StyleContext(), new StyleSourceOptions { IncludeUserAgentSheet = true });
+DocumentStyles styles = DocumentStyles.Create(doc, new StyleContext(), new StyleSourceOptions { IncludeUserAgentSheet = true, DeclarationValidator = OneRender.Style.StyleValidation.Validator });
 var styled = new StyledTree();
 new HtmlFrontEnd(styled).Build(styles);
 var boxTree = new BoxTree(styled);
@@ -38,6 +38,12 @@ var scrollList = new RetainedDisplayList();
 scrollPainter.Paint(scrollPage.Fragments, scrollList, new PaintOptions(100, 50) { Scroll = scrollPage.Scroll });
 scrollPage.Scroll.SetViewportOffset(0, 30);
 Console.WriteLine($"scroll patch changed {scrollPainter.PatchScroll(scrollList)} items");
+
+// Columns: balancing, a spanner and the rewrite of the fragment tree.
+HtmlPage columnPage = HtmlPage.Create(
+    "<body style='margin:0'><div style='columns:2;column-gap:0;width:100px'><div style='height:10px;break-inside:avoid'></div><div style='height:10px;break-inside:avoid'></div><div style='column-span:all;height:5px'></div><div style='height:10px'></div></div></body>",
+    new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 100, ViewportHeight = 50 });
+Console.WriteLine($"columns page {columnPage.Fragments.Count} fragments");
 
 // The rasterizer must trim and run on WebAssembly too.
 DisplayList list = new();

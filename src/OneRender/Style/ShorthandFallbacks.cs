@@ -11,7 +11,7 @@ internal static partial class ShorthandFallbacks
     private static readonly string[] Collapse = ["collapse", "preserve", "preserve-breaks", "preserve-spaces", "break-spaces"];
 
     /// <summary>The shorthands this class expands, for callers that look at the cascade's declarations.</summary>
-    public static readonly string[] Names = ["white-space", "border-radius", "overflow", "flex", "flex-flow", "place-items", "place-content", "place-self", "grid-area", "grid-row", "grid-column", "grid-template", "grid", "border-image"];
+    public static readonly string[] Names = ["white-space", "border-radius", "overflow", "flex", "flex-flow", "place-items", "place-content", "place-self", "columns", "column-rule", "page-break-before", "page-break-after", "page-break-inside", "grid-area", "grid-row", "grid-column", "grid-template", "grid", "border-image"];
 
     public static bool IsHandled(string name)
     {
@@ -75,6 +75,21 @@ internal static partial class ShorthandFallbacks
             return ExpandPlace(name, value, output);
         }
 
+        if (name.Equals("columns", StringComparison.OrdinalIgnoreCase))
+        {
+            return ExpandColumns(value, output);
+        }
+
+        if (name.Equals("column-rule", StringComparison.OrdinalIgnoreCase))
+        {
+            return ExpandColumnRule(value, output);
+        }
+
+        if (name.StartsWith("page-break-", StringComparison.OrdinalIgnoreCase))
+        {
+            return ExpandPageBreak(name, value, output);
+        }
+
         return ExpandOverflow(value, output);
     }
 
@@ -123,6 +138,31 @@ internal static partial class ShorthandFallbacks
         if (name.Equals("place-self", StringComparison.OrdinalIgnoreCase))
         {
             return new[] { PropertyId.AlignSelf };
+        }
+
+        if (name.Equals("columns", StringComparison.OrdinalIgnoreCase))
+        {
+            return new[] { PropertyId.ColumnWidth, PropertyId.ColumnCount };
+        }
+
+        if (name.Equals("column-rule", StringComparison.OrdinalIgnoreCase))
+        {
+            return new[] { PropertyId.ColumnRuleWidth, PropertyId.ColumnRuleStyle, PropertyId.ColumnRuleColor };
+        }
+
+        if (name.Equals("page-break-before", StringComparison.OrdinalIgnoreCase))
+        {
+            return new[] { PropertyId.BreakBefore };
+        }
+
+        if (name.Equals("page-break-after", StringComparison.OrdinalIgnoreCase))
+        {
+            return new[] { PropertyId.BreakAfter };
+        }
+
+        if (name.Equals("page-break-inside", StringComparison.OrdinalIgnoreCase))
+        {
+            return new[] { PropertyId.BreakInside };
         }
 
         return new[] { PropertyId.OverflowX, PropertyId.OverflowY };
@@ -368,6 +408,162 @@ internal static partial class ShorthandFallbacks
             return false;
         }
 
+        return true;
+    }
+
+    // Multicol 1 §3.1: columns: [ <'column-width'> || <'column-count'> ]; "auto" stands for whichever the other part did not set.
+    private static bool ExpandColumns(ComponentValueList value, List<(PropertyId, ComponentValueList)> output)
+    {
+        string? width = null, count = null;
+        int autos = 0, parts = 0;
+        foreach (ComponentValue part in value)
+        {
+            if (part.IsWhitespace)
+            {
+                continue;
+            }
+
+            if (++parts > 2 || part.Kind != ComponentValueKind.Token)
+            {
+                return false;
+            }
+
+            if (part.Token.Kind == CssTokenKind.Ident && part.Raw.Equals("auto", StringComparison.OrdinalIgnoreCase))
+            {
+                autos++;
+            }
+            else if (part.Token.Kind == CssTokenKind.Number && part.Raw.ToString() != "0")
+            {
+                if (count is not null)
+                {
+                    return false;
+                }
+
+                count = part.Raw.ToString();
+            }
+            else if (part.Token.Kind is CssTokenKind.Dimension or CssTokenKind.Number)
+            {
+                if (width is not null)
+                {
+                    return false;
+                }
+
+                width = part.Raw.ToString();
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        if (parts == 0 || (parts - autos) > 2 || (width is not null ? 1 : 0) + (count is not null ? 1 : 0) + autos != parts)
+        {
+            return false;
+        }
+
+        output.Add((PropertyId.ColumnWidth, Text(width ?? "auto")));
+        output.Add((PropertyId.ColumnCount, Text(count ?? "auto")));
+        return true;
+    }
+
+    // Multicol 1 §4.2: column-rule: <'column-rule-width'> || <'column-rule-style'> || <'column-rule-color'>.
+    private static bool ExpandColumnRule(ComponentValueList value, List<(PropertyId, ComponentValueList)> output)
+    {
+        string? width = null, style = null, color = null;
+        foreach (ComponentValue part in value)
+        {
+            if (part.IsWhitespace)
+            {
+                continue;
+            }
+
+            string text = part.Raw.ToString();
+            bool isIdent = part.Kind == ComponentValueKind.Token && part.Token.Kind == CssTokenKind.Ident;
+            if (isIdent && Array.Exists(RuleStyles, w => w.Equals(text, StringComparison.OrdinalIgnoreCase)))
+            {
+                if (style is not null)
+                {
+                    return false;
+                }
+
+                style = text;
+            }
+            else if ((isIdent && (text.Equals("thin", StringComparison.OrdinalIgnoreCase) || text.Equals("medium", StringComparison.OrdinalIgnoreCase) || text.Equals("thick", StringComparison.OrdinalIgnoreCase)))
+                || (part.Kind == ComponentValueKind.Token && part.Token.Kind is CssTokenKind.Dimension or CssTokenKind.Number))
+            {
+                if (width is not null)
+                {
+                    return false;
+                }
+
+                width = text;
+            }
+            else
+            {
+                if (color is not null)
+                {
+                    return false;
+                }
+
+                color = text;
+            }
+        }
+
+        if (width is null && style is null && color is null)
+        {
+            return false;
+        }
+
+        output.Add((PropertyId.ColumnRuleWidth, Text(width ?? "medium")));
+        output.Add((PropertyId.ColumnRuleStyle, Text(style ?? "none")));
+        output.Add((PropertyId.ColumnRuleColor, Text(color ?? "currentcolor")));
+        return true;
+    }
+
+    private static readonly string[] RuleStyles = ["none", "hidden", "dotted", "dashed", "solid", "double", "groove", "ridge", "inset", "outset"];
+
+    // Fragmentation 3 §3.4: page-break-before/after/inside are legacy shorthands of break-before/after/inside; always means page.
+    private static bool ExpandPageBreak(string name, ComponentValueList value, List<(PropertyId, ComponentValueList)> output)
+    {
+        string? word = null;
+        foreach (ComponentValue part in value)
+        {
+            if (part.IsWhitespace)
+            {
+                continue;
+            }
+
+            if (word is not null || part.Kind != ComponentValueKind.Token || part.Token.Kind != CssTokenKind.Ident)
+            {
+                return false;
+            }
+
+            word = part.Raw.ToString();
+        }
+
+        if (word is null)
+        {
+            return false;
+        }
+
+        bool inside = name.EndsWith("inside", StringComparison.OrdinalIgnoreCase);
+        if (word.Equals("always", StringComparison.OrdinalIgnoreCase))
+        {
+            if (inside)
+            {
+                return false;
+            }
+
+            word = "page";
+        }
+        else if (!(word.Equals("auto", StringComparison.OrdinalIgnoreCase) || word.Equals("avoid", StringComparison.OrdinalIgnoreCase)
+            || (!inside && (word.Equals("left", StringComparison.OrdinalIgnoreCase) || word.Equals("right", StringComparison.OrdinalIgnoreCase)))))
+        {
+            return false;
+        }
+
+        PropertyId id = inside ? PropertyId.BreakInside : name.EndsWith("before", StringComparison.OrdinalIgnoreCase) ? PropertyId.BreakBefore : PropertyId.BreakAfter;
+        output.Add((id, Text(word)));
         return true;
     }
 

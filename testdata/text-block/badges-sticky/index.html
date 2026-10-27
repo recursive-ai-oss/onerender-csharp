@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Trail guide &mdash; Eastern Ridge</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.5; color: #1f2a24; background: #eef2ee; }
+  .bar { position: sticky; top: 0; z-index: 10; background: #1f4d36; color: #fff; padding: 10px 20px; border-bottom: 3px solid #8fc4a0; }
+  .bar h1 { margin: 0; font-size: 18px; display: inline-block; }
+  .bar span { float: right; font-size: 13px; opacity: .85; }
+  .container { max-width: 880px; margin: 0 auto; padding: 20px; }
+  .card { position: relative; background: #fff; border: 1px solid #cfd8d1; border-radius: 6px; padding: 16px 18px 14px; margin: 24px 0; }
+  .card h2 { margin: 0 0 6px; font-size: 20px; padding-right: 90px; }
+  .card p { margin: 0 0 8px; }
+  .badge { position: absolute; top: -10px; right: 14px; padding: 2px 10px; font-size: 12px; font-weight: bold; color: #fff; background: #c0392b; border-radius: 3px; }
+  .badge.easy { background: #2e8b57; }
+  .badge.mod { background: #d68910; }
+  .ribbon { position: absolute; top: 0; left: -8px; width: 8px; height: 40px; background: #8fc4a0; }
+  .stat { display: inline-block; margin-right: 18px; font-size: 13px; color: #556; }
+  .stat b { color: #1f2a24; }
+  .section-head { position: sticky; top: 44px; z-index: 5; background: #eef2ee; margin: 0; padding: 8px 0; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: #587; border-bottom: 1px solid #cfd8d1; }
+  .overlay { position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: linear-gradient(#8fc4a0, #1f4d36); }
+  .tooltip-host { position: relative; display: inline-block; border-bottom: 1px dotted #555; }
+  .tooltip { position: absolute; left: 0; top: 100%; margin-top: 4px; width: 180px; padding: 6px 8px; background: #222; color: #fff; font-size: 12px; border-radius: 4px; }
+  .rel { position: relative; top: 3px; left: 6px; color: #a33; }
+  .warn { position: fixed; right: 12px; bottom: 12px; width: 180px; padding: 8px 10px; background: #fff3cd; border: 1px solid #e0c36a; font-size: 12px; z-index: 20; }
+  .corner { position: absolute; top: 0; right: 0; width: 60px; height: 60px; background: #eee; z-index: 1; }
+  .layer-a { position: absolute; top: 20px; left: 20px; width: 120px; height: 60px; background: #a5d6a7; z-index: 2; }
+  .layer-b { position: absolute; top: 40px; left: 60px; width: 120px; height: 60px; background: #81c784; z-index: 1; }
+  .stage { position: relative; height: 130px; margin: 16px 0; background: #f7faf7; border: 1px dashed #99b; }
+</style>
+</head>
+<body>
+<div class="bar"><h1>Eastern Ridge trail guide</h1><span>Updated weekly &middot; 12 routes</span></div>
+<div class="container">
+  <h3 class="section-head">Day walks</h3>
+  <div class="card">
+    <span class="ribbon"></span><span class="badge easy">EASY</span>
+    <h2>Millpond circuit</h2>
+    <p>A flat, family-friendly loop around the old millpond, with benches at every bend and a short boardwalk through the reeds. Surfaces are firm in all weather.</p>
+    <p><span class="stat">Distance <b>3.2 km</b></span><span class="stat">Time <b>45 min</b></span><span class="stat">Ascent <b>20 m</b></span></p>
+    <div class="overlay"></div>
+  </div>
+  <div class="card">
+    <span class="badge mod">MODERATE</span>
+    <h2>Birch Hollow and the long ridge</h2>
+    <p>Climbs steadily through birch woodland, emerges onto open moor and follows the ridge for two kilometres before dropping back by a stream. Take water; there is none on the tops. <span class="tooltip-host">Cairns<span class="tooltip">Small piles of stones marking the route when mist comes down.</span></span> mark the path where it fades.</p>
+    <p><span class="stat">Distance <b>11.5 km</b></span><span class="stat">Time <b>4 h</b></span><span class="stat">Ascent <b>480 m</b></span></p>
+    <div class="overlay"></div>
+  </div>
+
+  <h3 class="section-head">Mountain routes</h3>
+  <div class="card">
+    <span class="badge">HARD</span>
+    <h2>The Saddle traverse <span class="rel">(new)</span></h2>
+    <p>A committing day over two summits and the exposed saddle between them. Navigation skills and good weather are needed; turn back at the notch if cloud is below the second summit. Winter conditions are common from November.</p>
+    <p><span class="stat">Distance <b>18 km</b></span><span class="stat">Time <b>7&ndash;8 h</b></span><span class="stat">Ascent <b>1,150 m</b></span></p>
+    <div class="overlay"></div>
+  </div>
+
+  <div class="stage">
+    <div class="corner"></div>
+    <div class="layer-a">A</div>
+    <div class="layer-b">B</div>
+  </div>
+
+  <div class="card">
+    <span class="badge easy">EASY</span>
+    <h2>Quarry steps</h2>
+    <p>One hundred and forty stone steps built by the quarrymen, rising to a viewpoint above the village. Short, steep, and rewarding. Handrail on the upper half.</p>
+    <p><span class="stat">Distance <b>1.1 km</b></span><span class="stat">Time <b>25 min</b></span><span class="stat">Ascent <b>90 m</b></span></p>
+    <div class="overlay"></div>
+  </div>
+  <div class="card">
+    <span class="badge mod">MODERATE</span>
+    <h2>Heron Beck gorge</h2>
+    <p>Follows the beck upstream through a narrow wooded gorge, with several stream crossings on stepping stones. After rain the stones are underwater and the route should not be attempted.</p>
+    <p><span class="stat">Distance <b>7 km</b></span><span class="stat">Time <b>3 h</b></span><span class="stat">Ascent <b>210 m</b></span></p>
+    <div class="overlay"></div>
+  </div>
+</div>
+<div class="warn">Check the weather forecast before setting out.</div>
+</body>
+</html>
