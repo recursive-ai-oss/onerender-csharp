@@ -189,7 +189,8 @@ public sealed class LayoutQueries
         Rect r = _hits.AbsoluteBox(f.Index);
         double v = vertical ? r.Y : r.X;
         Node parent = OffsetParent(element);
-        if (!parent.IsNull)
+        // CSSOM View offsetLeft: a null or body offsetParent leaves the value relative to the initial containing block origin.
+        if (!parent.IsNull && !FocusRules.IsHtml(parent, "body"))
         {
             Fragment pf = FirstFragment(StyledOf(parent));
             if (!pf.IsNull)
@@ -279,7 +280,8 @@ public sealed class LayoutQueries
             return Math.Max(client, Round(_page.Fragments.OverflowOf(0).Right));
         }
 
-        return Math.Max(client, Round(f.ScrollableOverflow.Right - f.Border.Left));
+        // The overflow rect always includes the border box; only content past it extends the padding-edge-based scroll area.
+        return f.ScrollableOverflow.Right > f.BorderBox.Width ? Math.Max(client, Round(f.ScrollableOverflow.Right - f.Border.Left)) : client;
     }
 
     /// <summary><c>scrollHeight</c>: see <see cref="ScrollWidth(Node)"/>.</summary>
@@ -299,7 +301,7 @@ public sealed class LayoutQueries
             return Math.Max(client, Round(_page.Fragments.OverflowOf(0).Bottom));
         }
 
-        return Math.Max(client, Round(f.ScrollableOverflow.Bottom - f.Border.Top));
+        return f.ScrollableOverflow.Bottom > f.BorderBox.Height ? Math.Max(client, Round(f.ScrollableOverflow.Bottom - f.Border.Top)) : client;
     }
 
     /// <summary><c>scrollLeft</c>: the horizontal scroll offset of a scroll container, or of the viewport for the root element; 0 otherwise.</summary>

@@ -423,7 +423,7 @@ public class LayoutQueryTests
         Rect rbody = q.GetBoundingClientRect(a.Parent);
         Assert.Equal(10, rbody.Y);
         Assert.Equal(20, q.OffsetLeft(a));
-        Assert.Equal(0, q.OffsetTop(a));
+        Assert.Equal(10, q.OffsetTop(a)); // relative to the page origin when the offset parent is the body
         Assert.True(q.OffsetParent(a).Equals(p.Page.Document.DocumentElement.LastChild));
 
         // b is relatively positioned: moved by 7,4 from its place inside a's content box (20+3+5+6, 10+3+5+6).
@@ -437,7 +437,7 @@ public class LayoutQueryTests
         Assert.Equal(9, q.OffsetLeft(c));
         Assert.Equal(0, q.OffsetTop(c));
         Assert.Equal(300, q.OffsetLeft(pos));
-        Assert.Equal(40, q.OffsetTop(pos));
+        Assert.Equal(50, q.OffsetTop(pos));
     }
 
     [Fact]
@@ -471,7 +471,7 @@ public class LayoutQueryTests
         Assert.Equal(120, q.ScrollTop(sc));
         // Scrolling moves the rectangles the client sees but not the layout offsets.
         Rect inner = q.GetBoundingClientRect(sc);
-        Assert.Equal(inner.Y - q.GetBoundingClientRect(sc.Parent).Y, q.OffsetTop(sc), 1.0);
+        Assert.Equal(inner.Y, q.OffsetTop(sc), 1.0); // the body is the offset parent, so the value is from the page origin
     }
 
     [Fact]
