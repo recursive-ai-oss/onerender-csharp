@@ -6,10 +6,10 @@
 
 | viewport | pages | elements | within tolerance | rate | position-only | size-only | position+size | text-run | missing-ours | missing-chrome | tag conflicts | pages at gate | median page |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1280x800 | 7 | 744 | 206 | 27.688% | 179 | 34 | 118 | 200 | 1 | 6 | 0 | 0 | 1.010% |
-| 390x844 | 7 | 722 | 36 | 4.986% | 263 | 53 | 140 | 223 | 1 | 6 | 0 | 0 | 0.000% |
-| all | 14 | 1466 | 242 | 16.508% | 442 | 87 | 258 | 423 | 2 | 12 | 0 | 0 | 0.000% |
+| 1280x800 | 7 | 744 | 602 | 80.914% | 112 | 15 | 6 | 2 | 1 | 6 | 0 | 2 | 96.795% |
+| 390x844 | 7 | 722 | 546 | 75.623% | 106 | 39 | 11 | 13 | 1 | 6 | 0 | 2 | 96.795% |
+| all | 14 | 1466 | 1148 | 78.308% | 218 | 54 | 17 | 15 | 2 | 12 | 0 | 4 | 96.795% |
 
-Root causes (mismatches with no mismatching ancestor), all viewports: position-only 2, size-only 16, position+size 3, text-run 21.
+Root causes (mismatches with no mismatching ancestor), all viewports: position-only 10, size-only 8, position+size 2, text-run 0.
 
-Tags with the most mismatches: div 269/350, li 112/152, p 106/112, span 105/114, a 91/138, td 77/86, button 38/38, h2 38/48, h3 37/40, th 35/42
+Tags with the most mismatches: div 75/350, li 49/152, p 33/112, h3 16/40, h2 14/48, input 14/28, span 14/114, option 12/12, button 11/38, a 10/138

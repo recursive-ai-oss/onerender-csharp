@@ -2197,7 +2197,7 @@
     "css/CSS2/text/white-space-002.xht": "== white-space-002-ref.xht differs (max 51, 64 px)",
     "css/CSS2/text/white-space-003.xht": "== white-space-001-ref.xht differs (max 51, 64 px)",
     "css/CSS2/text/white-space-005.xht": "== white-space-001-ref.xht differs (max 51, 64 px)",
-    "css/CSS2/text/white-space-006.xht": "== white-space-002-ref.xht differs (max 255, 1088 px)",
+    "css/CSS2/text/white-space-006.xht": "== white-space-002-ref.xht differs (max 51, 64 px)",
     "css/CSS2/text/white-space-007.xht": "== white-space-007-ref.xht differs (max 255, 57500 px)",
     "css/CSS2/text/white-space-applies-to-001.xht": "== white-space-002-ref.xht differs (max 51, 64 px)",
     "css/CSS2/text/white-space-applies-to-002.xht": "== white-space-002-ref.xht differs (max 51, 64 px)",

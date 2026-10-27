@@ -8,12 +8,12 @@
   "sampleStride": 1,
   "counts": {
     "total": 181,
-    "pass": 17,
-    "fail": 77,
+    "pass": 18,
+    "fail": 76,
     "blank": 0,
     "skipped": 87
   },
-  "rate": "0.1809",
+  "rate": "0.1915",
   "pass": [
     "css/css-borders/border-radius-currentcolor.html",
     "css/css-borders/border-radius-greater-than-width.html",
@@ -31,6 +31,7 @@
     "css/css-borders/borders-on-sub-unit-sized-elements.html",
     "css/css-borders/corner-shape/corner-shape-backdrop-filter-overflow.html",
     "css/css-borders/corner-shape/corner-shape-img.html",
+    "css/css-borders/corner-shape/corner-shape-inset-shadow.html",
     "css/css-borders/corner-shape/corner-shape-noop-keyframe.html"
   ],
   "blank": [],
@@ -78,7 +79,6 @@
     "css/css-borders/corner-shape/corner-shape-fill.html": "== corner-shape-fill-ref.html differs (max 255, 3116 px)",
     "css/css-borders/corner-shape/corner-shape-iframe-border.html": "== corner-shape-img-border-ref.html differs (max 255, 21128 px)",
     "css/css-borders/corner-shape/corner-shape-img-border.html": "== corner-shape-img-border-ref.html differs (max 64, 1368 px)",
-    "css/css-borders/corner-shape/corner-shape-inset-shadow.html": "== corner-shape-inset-shadow-ref.html differs (max 255, 861 px)",
     "css/css-borders/corner-shape/corner-shape-notch-mixed.html": "== corner-shape-notch-mixed-ref.html differs (max 255, 2940 px)",
     "css/css-borders/corner-shape/corner-shape-notch-squircle-outset.html": "== corner-shape-notch-squircle-outset-ref.html differs (max 255, 69456 px)",
     "css/css-borders/corner-shape/corner-shape-notch.html": "== corner-shape-notch-ref.html differs (max 255, 2940 px)",

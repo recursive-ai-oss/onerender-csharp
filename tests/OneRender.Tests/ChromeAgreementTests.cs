@@ -94,11 +94,6 @@ public class ChromeAgreementTests
     {
         Dictionary<string, ElementBox> m = Lay(
             "<div style='--s:4px'><div id=a style='padding-block:calc(var(--s) * 4)'>x</div></div>");
-        if (m["0/1/0/0"].Height == 20)
-        {
-            // OneHtml 1.1.0 resolves a pair shorthand that holds var() against the physical side, so the value is lost there.
-            Assert.Skip("needs a OneHtml that resolves logical pair shorthands with var()");
-        }
 
         Assert.Equal(52, m["0/1/0/0"].Height, 3);
     }

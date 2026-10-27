@@ -38,9 +38,8 @@ public static class StyleValidation
                 return true;
             }
 
-            // OneHtml hands over token indexes into its own tree and the engine's parsers read component-value lists, which a
-            // range cannot be turned into without re-reading the text. This runs once per declaration per stylesheet, not per element.
-            ComponentValueList list = CssTree.ParseComponentValueList(value.RawText()).Values;
+            // The range is a view over OneHtml's own token tree, so the engine's parsers read it without re-parsing the text.
+            ComponentValueList list = value.ToList();
             lock (_gate)
             {
                 if (isLonghand)
