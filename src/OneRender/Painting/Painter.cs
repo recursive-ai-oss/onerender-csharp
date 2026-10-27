@@ -70,6 +70,12 @@ public sealed partial class Painter
     private const int PhasePositive = 5; // step 9: child stacking contexts with positive z-index
     private const int PhaseCount = 6;
 
+    /// <summary>
+    /// Told where painting is in the paint order, for consumers that relate display list items to fragments; null (the default)
+    /// means nobody is told and painting does no extra work.
+    /// </summary>
+    public IPaintObserver? Observer { get; set; }
+
     private const int MaxScopes = 240;
     private const int MaxClipSteps = 4096;
     private const int MaxDeferredClips = 64;
@@ -171,6 +177,8 @@ public sealed partial class Painter
         public bool Clip;
         public bool Outer;
         public bool Scroll;
+        public byte FxOuter;
+        public byte FxInner;
         public ulong PreMask;
     }
 
@@ -449,7 +457,7 @@ public sealed partial class Painter
         }
 
         bool positioned = v.Position != PositionKind.Static;
-        bool stacking = (positioned && (v.Position is PositionKind.Fixed or PositionKind.Sticky || !v.ZIndexAuto)) || v.Opacity < 1.0;
+        bool stacking = (positioned && (v.Position is PositionKind.Fixed or PositionKind.Sticky || !v.ZIndexAuto)) || v.CreatesEffectContext;
         if (stacking)
         {
             // Compositing 1 §3: opacity below 1 paints like a positioned element with z-index 0 in a stacking context of its own.
@@ -691,16 +699,36 @@ public sealed partial class Painter
         int f = _stack[top].Fragment;
         Box box = _boxes.Make(_tree.BoxOf(f));
         ref readonly ComputedValues v = ref box.Values;
+        if (Observer is { } observer)
+        {
+            bool stackingContext = (_flags[f] & FlagStackingContext) != 0;
+            observer.EnterUnit(_tree.Make(f), stackingContext || v.Position != PositionKind.Static || (_flags[f] & FlagClips) != 0, stackingContext, _list.Count);
+        }
+
         if (_scroll is not null && PushOuterTransform(f, in v))
         {
             _stack[top].Outer = true;
         }
 
-        if (v.Opacity < 1.0 && (_flags[f] & FlagStackingContext) != 0 && _scopes < MaxScopes)
+        if (v.CreatesEffectContext && (_flags[f] & FlagStackingContext) != 0)
         {
-            _list.PushGroup(Id(f, 4), (float)Math.Clamp(v.Opacity, 0.0, 1.0));
+            _stack[top].FxOuter = EnterTransform(f, in v);
+            if (!v.BackdropFilter.IsNone && _scopes < MaxScopes - 1)
+            {
+                PaintBackdropFilter(f, in v);
+            }
+        }
+
+        if ((v.Opacity < 1.0 || v.MixBlendMode != BlendMode.Normal || v.Isolate) && (_flags[f] & FlagStackingContext) != 0 && _scopes < MaxScopes)
+        {
+            _list.PushGroup(Id(f, 4), (float)Math.Clamp(v.Opacity, 0.0, 1.0), v.MixBlendMode);
             _scopes++;
             _stack[top].Group = true;
+        }
+
+        if (v.CreatesEffectContext && (_flags[f] & FlagStackingContext) != 0)
+        {
+            _stack[top].FxInner = EnterFx(f, in v, 0);
         }
 
         // The root's background went to the canvas (Backgrounds 3 §2.11.2); its border is its own.
@@ -737,11 +765,14 @@ public sealed partial class Painter
         }
 
         PaintOutlines(frag, true);
+        ExitFx(_stack[top].FxInner);
         if (_stack[top].Group)
         {
             _list.PopGroup();
             _scopes--;
         }
+
+        ExitTransform(_stack[top].FxOuter);
 
         if (_stack[top].Outer)
         {
@@ -761,6 +792,8 @@ public sealed partial class Painter
             _list.PopClip();
             _scopes--;
         }
+
+        Observer?.ExitUnit(_tree.Make(frag), _list.Count);
     }
 
     // ------------------------------------------------------------------ scroll and sticky patch items
@@ -814,7 +847,7 @@ public sealed partial class Painter
             _vpEntry = k;
             _patch[k].Range = _vpRange;
         }
-        else if (v.Position == PositionKind.Fixed)
+        else if (v.Position == PositionKind.Fixed && !HasTransformedAncestor(f))
         {
             if (!_vpRange.CanScroll)
             {
@@ -1063,12 +1096,26 @@ public sealed partial class Painter
         return pushed;
     }
 
+    // Transforms 1 §2: inside a transformed box a fixed box is positioned against that box and scrolls with it.
+    private bool HasTransformedAncestor(int f)
+    {
+        for (int a = _tree.ParentOf(f); a >= 0; a = _tree.ParentOf(a))
+        {
+            if ((FragmentKind)_tree.KindOf(a) == FragmentKind.Box && _boxes.Make(_tree.BoxOf(a)).Values.CreatesTransformContext)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private int ContainingBlockOf(int f)
     {
         Box box = _boxes.Make(_tree.BoxOf(f));
         PositionKind p = box.Values.Position;
         int a = _tree.ParentOf(f);
-        if (p == PositionKind.Fixed)
+        if (p == PositionKind.Fixed && !HasTransformedAncestor(f))
         {
             return -1;
         }
@@ -1077,7 +1124,15 @@ public sealed partial class Painter
         {
             if ((FragmentKind)_tree.KindOf(a) == FragmentKind.Box)
             {
-                if (p != PositionKind.Absolute || _boxes.Make(_tree.BoxOf(a)).Values.Position != PositionKind.Static || a == 0)
+                if (p == PositionKind.Fixed)
+                {
+                    if (_boxes.Make(_tree.BoxOf(a)).Values.CreatesTransformContext)
+                    {
+                        return a;
+                    }
+                }
+                else if (p != PositionKind.Absolute || _boxes.Make(_tree.BoxOf(a)).Values.Position != PositionKind.Static
+                    || _boxes.Make(_tree.BoxOf(a)).Values.CreatesTransformContext || a == 0)
                 {
                     return a;
                 }

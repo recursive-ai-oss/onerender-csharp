@@ -8,6 +8,7 @@
     <ProjectReference Include="../OneRender/OneRender.csproj" />
     <ProjectReference Include="../OneRender.Fonts/OneRender.Fonts.csproj" />
     <PackageReference Include="RecursiveAI.OneImage" />
+    <PackageReference Include="RecursiveAI.OneImage.Svg" />
   </ItemGroup>
 
 </Project>

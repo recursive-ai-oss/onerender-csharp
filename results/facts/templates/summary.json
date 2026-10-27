@@ -1,0 +1,1302 @@
+{
+  "set": "templates",
+  "reference": "Chrome/156.0.8078.47",
+  "viewports": {
+    "1280x800": {
+      "pages": 6,
+      "refused": 0,
+      "failed": 0,
+      "nodes": 6494,
+      "kinds": {
+        "bg.color.exact": {
+          "compared": 2054,
+          "agree": 2054
+        },
+        "bg.color.within2": {
+          "compared": 2054,
+          "agree": 2054
+        },
+        "bg.presence": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "box.borderBox": {
+          "compared": 3052,
+          "agree": 3051
+        },
+        "box.exists.element": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "box.exists.text": {
+          "compared": 2653,
+          "agree": 2651
+        },
+        "generated.bounds": {
+          "compared": 146,
+          "agree": 44
+        },
+        "generated.text": {
+          "compared": 146,
+          "agree": 0
+        },
+        "generated.types": {
+          "compared": 146,
+          "agree": 146
+        },
+        "paint.order.exact": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "paint.order.relative": {
+          "compared": 3046,
+          "agree": 3046
+        },
+        "rect.client": {
+          "compared": 3052,
+          "agree": 3037
+        },
+        "rect.client.within1": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "rect.offset": {
+          "compared": 3052,
+          "agree": 2384
+        },
+        "rect.offset.within1": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "rect.scroll": {
+          "compared": 3052,
+          "agree": 3037
+        },
+        "rect.scroll.within1": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "stacking.context": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "stacking.root": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style.all": {
+          "compared": 241108,
+          "agree": 236168
+        },
+        "style.uncomputed": {
+          "compared": 51884,
+          "agree": 0
+        },
+        "style:background-attachment": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:background-clip": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:background-color": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:background-image": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:background-repeat": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:background-size": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:border-bottom-color": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:border-bottom-style": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:border-bottom-width": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:border-left-color": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:border-left-style": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:border-left-width": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:border-right-color": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:border-right-style": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:border-right-width": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:border-top-color": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:border-top-style": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:border-top-width": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:bottom": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:box-shadow": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:clear": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:clip-path": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:color": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:content": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:direction": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:display": {
+          "compared": 3052,
+          "agree": 3004
+        },
+        "style:filter": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:float": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:font-family": {
+          "compared": 3052,
+          "agree": 342
+        },
+        "style:font-size": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:font-style": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:font-weight": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:height": {
+          "compared": 3052,
+          "agree": 2939
+        },
+        "style:isolation": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:left": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:letter-spacing": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:line-height": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:list-style-type": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:margin-bottom": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:margin-left": {
+          "compared": 3052,
+          "agree": 3051
+        },
+        "style:margin-right": {
+          "compared": 3052,
+          "agree": 3051
+        },
+        "style:margin-top": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:max-height": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:max-width": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:min-height": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:min-width": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:mix-blend-mode": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:opacity": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:outline-color": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:outline-offset": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:outline-style": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:outline-width": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:overflow-wrap": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:overflow-x": {
+          "compared": 3052,
+          "agree": 3050
+        },
+        "style:overflow-y": {
+          "compared": 3052,
+          "agree": 3050
+        },
+        "style:padding-bottom": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:padding-left": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:padding-right": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:padding-top": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:pointer-events": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:position": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:right": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:table-layout": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:text-align": {
+          "compared": 3052,
+          "agree": 2810
+        },
+        "style:text-decoration-color": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:text-decoration-line": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:text-decoration-style": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:text-indent": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:text-shadow": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:text-transform": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:top": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:transform": {
+          "compared": 3052,
+          "agree": 3051
+        },
+        "style:unicode-bidi": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:vertical-align": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:visibility": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:width": {
+          "compared": 3052,
+          "agree": 1232
+        },
+        "style:word-break": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:word-spacing": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:z-index": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "text.bounds": {
+          "compared": 2651,
+          "agree": 2649
+        },
+        "text.boxes.bounds": {
+          "compared": 2651,
+          "agree": 2649
+        },
+        "text.boxes.count": {
+          "compared": 2651,
+          "agree": 2651
+        },
+        "text.boxes.ranges": {
+          "compared": 2651,
+          "agree": 2651
+        },
+        "text.layoutText": {
+          "compared": 2651,
+          "agree": 2651
+        },
+        "text.opacity": {
+          "compared": 3052,
+          "agree": 3052
+        }
+      }
+    },
+    "390x844": {
+      "pages": 6,
+      "refused": 0,
+      "failed": 0,
+      "nodes": 6494,
+      "kinds": {
+        "bg.color.exact": {
+          "compared": 1870,
+          "agree": 1869
+        },
+        "bg.color.within2": {
+          "compared": 1870,
+          "agree": 1869
+        },
+        "bg.presence": {
+          "compared": 3052,
+          "agree": 2868
+        },
+        "box.borderBox": {
+          "compared": 3052,
+          "agree": 3051
+        },
+        "box.exists.element": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "box.exists.text": {
+          "compared": 2653,
+          "agree": 2651
+        },
+        "generated.bounds": {
+          "compared": 146,
+          "agree": 44
+        },
+        "generated.text": {
+          "compared": 146,
+          "agree": 0
+        },
+        "generated.types": {
+          "compared": 146,
+          "agree": 146
+        },
+        "paint.order.exact": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "paint.order.relative": {
+          "compared": 3046,
+          "agree": 3046
+        },
+        "rect.client": {
+          "compared": 3052,
+          "agree": 3013
+        },
+        "rect.client.within1": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "rect.offset": {
+          "compared": 3052,
+          "agree": 2354
+        },
+        "rect.offset.within1": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "rect.scroll": {
+          "compared": 3052,
+          "agree": 3013
+        },
+        "rect.scroll.within1": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "stacking.context": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "stacking.root": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style.all": {
+          "compared": 241108,
+          "agree": 236015
+        },
+        "style.uncomputed": {
+          "compared": 51884,
+          "agree": 0
+        },
+        "style:background-attachment": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:background-clip": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:background-color": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:background-image": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:background-repeat": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:background-size": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:border-bottom-color": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:border-bottom-style": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:border-bottom-width": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:border-left-color": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:border-left-style": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:border-left-width": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:border-right-color": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:border-right-style": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:border-right-width": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:border-top-color": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:border-top-style": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:border-top-width": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:bottom": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:box-shadow": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:clear": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:clip-path": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:color": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:content": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:direction": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:display": {
+          "compared": 3052,
+          "agree": 3004
+        },
+        "style:filter": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:float": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:font-family": {
+          "compared": 3052,
+          "agree": 342
+        },
+        "style:font-size": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:font-style": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:font-weight": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:height": {
+          "compared": 3052,
+          "agree": 2968
+        },
+        "style:isolation": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:left": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:letter-spacing": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:line-height": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:list-style-type": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:margin-bottom": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:margin-left": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:margin-right": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:margin-top": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:max-height": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:max-width": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:min-height": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:min-width": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:mix-blend-mode": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:opacity": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:outline-color": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:outline-offset": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:outline-style": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:outline-width": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:overflow-wrap": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:overflow-x": {
+          "compared": 3052,
+          "agree": 3050
+        },
+        "style:overflow-y": {
+          "compared": 3052,
+          "agree": 3050
+        },
+        "style:padding-bottom": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:padding-left": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:padding-right": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:padding-top": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:pointer-events": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:position": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:right": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:table-layout": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:text-align": {
+          "compared": 3052,
+          "agree": 2810
+        },
+        "style:text-decoration-color": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:text-decoration-line": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:text-decoration-style": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:text-indent": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:text-shadow": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:text-transform": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:top": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:transform": {
+          "compared": 3052,
+          "agree": 3051
+        },
+        "style:unicode-bidi": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:vertical-align": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:visibility": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:width": {
+          "compared": 3052,
+          "agree": 1048
+        },
+        "style:word-break": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:word-spacing": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "style:z-index": {
+          "compared": 3052,
+          "agree": 3052
+        },
+        "text.bounds": {
+          "compared": 2651,
+          "agree": 2649
+        },
+        "text.boxes.bounds": {
+          "compared": 2651,
+          "agree": 2649
+        },
+        "text.boxes.count": {
+          "compared": 2651,
+          "agree": 2651
+        },
+        "text.boxes.ranges": {
+          "compared": 2651,
+          "agree": 2651
+        },
+        "text.layoutText": {
+          "compared": 2651,
+          "agree": 2651
+        },
+        "text.opacity": {
+          "compared": 3052,
+          "agree": 3052
+        }
+      }
+    }
+  },
+  "all": {
+    "pages": 12,
+    "refused": 0,
+    "failed": 0,
+    "nodes": 12988,
+    "kinds": {
+      "bg.color.exact": {
+        "compared": 3924,
+        "agree": 3923
+      },
+      "bg.color.within2": {
+        "compared": 3924,
+        "agree": 3923
+      },
+      "bg.presence": {
+        "compared": 6104,
+        "agree": 5920
+      },
+      "box.borderBox": {
+        "compared": 6104,
+        "agree": 6102
+      },
+      "box.exists.element": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "box.exists.text": {
+        "compared": 5306,
+        "agree": 5302
+      },
+      "generated.bounds": {
+        "compared": 292,
+        "agree": 88
+      },
+      "generated.text": {
+        "compared": 292,
+        "agree": 0
+      },
+      "generated.types": {
+        "compared": 292,
+        "agree": 292
+      },
+      "paint.order.exact": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "paint.order.relative": {
+        "compared": 6092,
+        "agree": 6092
+      },
+      "rect.client": {
+        "compared": 6104,
+        "agree": 6050
+      },
+      "rect.client.within1": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "rect.offset": {
+        "compared": 6104,
+        "agree": 4738
+      },
+      "rect.offset.within1": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "rect.scroll": {
+        "compared": 6104,
+        "agree": 6050
+      },
+      "rect.scroll.within1": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "stacking.context": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "stacking.root": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style.all": {
+        "compared": 482216,
+        "agree": 472183
+      },
+      "style.uncomputed": {
+        "compared": 103768,
+        "agree": 0
+      },
+      "style:background-attachment": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:background-clip": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:background-color": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:background-image": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:background-repeat": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:background-size": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:border-bottom-color": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:border-bottom-style": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:border-bottom-width": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:border-left-color": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:border-left-style": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:border-left-width": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:border-right-color": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:border-right-style": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:border-right-width": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:border-top-color": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:border-top-style": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:border-top-width": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:bottom": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:box-shadow": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:clear": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:clip-path": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:color": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:content": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:direction": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:display": {
+        "compared": 6104,
+        "agree": 6008
+      },
+      "style:filter": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:float": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:font-family": {
+        "compared": 6104,
+        "agree": 684
+      },
+      "style:font-size": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:font-style": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:font-weight": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:height": {
+        "compared": 6104,
+        "agree": 5907
+      },
+      "style:isolation": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:left": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:letter-spacing": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:line-height": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:list-style-type": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:margin-bottom": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:margin-left": {
+        "compared": 6104,
+        "agree": 6103
+      },
+      "style:margin-right": {
+        "compared": 6104,
+        "agree": 6103
+      },
+      "style:margin-top": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:max-height": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:max-width": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:min-height": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:min-width": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:mix-blend-mode": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:opacity": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:outline-color": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:outline-offset": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:outline-style": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:outline-width": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:overflow-wrap": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:overflow-x": {
+        "compared": 6104,
+        "agree": 6100
+      },
+      "style:overflow-y": {
+        "compared": 6104,
+        "agree": 6100
+      },
+      "style:padding-bottom": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:padding-left": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:padding-right": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:padding-top": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:pointer-events": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:position": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:right": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:table-layout": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:text-align": {
+        "compared": 6104,
+        "agree": 5620
+      },
+      "style:text-decoration-color": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:text-decoration-line": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:text-decoration-style": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:text-indent": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:text-shadow": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:text-transform": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:top": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:transform": {
+        "compared": 6104,
+        "agree": 6102
+      },
+      "style:unicode-bidi": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:vertical-align": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:visibility": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:width": {
+        "compared": 6104,
+        "agree": 2280
+      },
+      "style:word-break": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:word-spacing": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "style:z-index": {
+        "compared": 6104,
+        "agree": 6104
+      },
+      "text.bounds": {
+        "compared": 5302,
+        "agree": 5298
+      },
+      "text.boxes.bounds": {
+        "compared": 5302,
+        "agree": 5298
+      },
+      "text.boxes.count": {
+        "compared": 5302,
+        "agree": 5302
+      },
+      "text.boxes.ranges": {
+        "compared": 5302,
+        "agree": 5302
+      },
+      "text.layoutText": {
+        "compared": 5302,
+        "agree": 5302
+      },
+      "text.opacity": {
+        "compared": 6104,
+        "agree": 6104
+      }
+    }
+  }
+}

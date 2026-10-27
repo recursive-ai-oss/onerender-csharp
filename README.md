@@ -11,6 +11,7 @@ The name is provisional. The code is at an early stage: every package below is c
 | `RecursiveAI.OneRender` | The engine. | OneHtml, OneFont |
 | `RecursiveAI.OneRender.Image` | Display list to pixels. | OneRender, OneImage |
 | `RecursiveAI.OneRender.Pdf` | Display list to tagged PDF. | OneRender, OnePdf (core) |
+| `RecursiveAI.OneRender.Accessibility` | Rendered page facts (boxes, paint order, text boxes, colors behind text) in OneHtml's `RenderedFacts` shape. See `docs/accessibility-facts.md`. | OneRender, OneHtml.Accessibility |
 | `RecursiveAI.OneRender.Fonts` | Default fonts: Liberation, Carlito, Caladea, embedded unmodified, with a family-name lookup. | fonts only |
 | `RecursiveAI.OneRender.Razor` | Razor component to PDF or image in one call. | the ASP.NET Core shared framework |
 

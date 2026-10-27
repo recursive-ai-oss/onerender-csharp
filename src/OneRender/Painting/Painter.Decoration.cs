@@ -85,6 +85,7 @@ public sealed partial class Painter
 
     private void PaintBoxDecoration(int f)
     {
+        Observer?.Content(_tree.Make(f), _list.Count);
         Box box = _boxes.Make(_tree.BoxOf(f));
         ref readonly ComputedValues v = ref box.Values;
         if (v.Visibility != VisibilityKind.Visible)
@@ -279,6 +280,15 @@ public sealed partial class Painter
     {
         BackgroundSpec bg = v.Background;
         int layers = Math.Min(bg.LayerCount, MaxLayers);
+        // Compositing 1 §5: background-blend-mode blends each layer with the layers below it and the color, never with what is behind the
+        // element, so the whole background is one isolated group when any layer blends.
+        bool blends = bg.HasImages && AnyBlend(v.BackgroundBlendModes) && _scopes < MaxScopes - 2;
+        if (blends)
+        {
+            _list.PushGroup(Id2(f, 28, 0), 1f);
+            _scopes++;
+        }
+
         if (!canvas && v.BackgroundColor.A > 0f)
         {
             // The color is clipped like the bottom (last) layer (Backgrounds 3 §3.10).
@@ -308,9 +318,40 @@ public sealed partial class Painter
             ImageSpec image = bg.Images[i];
             if (image.Kind != ImageSourceKind.None)
             {
-                PaintLayer(f, i, in v, in g, image, cur, canvas, in canvasRect);
+                BlendMode mode = blends ? v.BackgroundBlendModes[i % v.BackgroundBlendModes.Length] : BlendMode.Normal;
+                if (mode != BlendMode.Normal && _scopes < MaxScopes)
+                {
+                    _list.PushGroup(Id2(f, 29, i), 1f, mode);
+                    _scopes++;
+                    PaintLayer(f, i, in v, in g, image, cur, canvas, in canvasRect);
+                    _list.PopGroup();
+                    _scopes--;
+                }
+                else
+                {
+                    PaintLayer(f, i, in v, in g, image, cur, canvas, in canvasRect);
+                }
             }
         }
+
+        if (blends)
+        {
+            _list.PopGroup();
+            _scopes--;
+        }
+    }
+
+    private static bool AnyBlend(BlendMode[] modes)
+    {
+        foreach (BlendMode m in modes)
+        {
+            if (m != BlendMode.Normal)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static void ClipBoxOf(BackgroundBoxKind k, in BoxGeometry g, out RectF rect, out CornerRadii radii)
@@ -381,7 +422,7 @@ public sealed partial class Painter
         bool natural = false;
         if (image.Kind == ImageSourceKind.Url)
         {
-            if (!TryImage(image.Url!, out info))
+            if (!TryImage(image.Url!, out info, v.ImageOrientationNone))
             {
                 return;
             }
@@ -520,10 +561,10 @@ public sealed partial class Painter
     private static ImageSampling SamplingOf(in ComputedValues v) =>
         v.ImageRendering is ImageRenderingKind.Pixelated or ImageRenderingKind.CrispEdges ? ImageSampling.Pixelated : ImageSampling.Smooth;
 
-    private bool TryImage(string address, out ImageInfo info)
+    private bool TryImage(string address, out ImageInfo info, bool storedOrientation = false)
     {
         info = default;
-        if (_images is not null && _images.TryGetImage(address, out info))
+        if (_images is not null && _images.TryGetImage(address, storedOrientation, out info))
         {
             return true;
         }

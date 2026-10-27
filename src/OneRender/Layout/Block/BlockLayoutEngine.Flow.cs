@@ -256,6 +256,25 @@ public sealed partial class BlockLayoutEngine
 
         double marginTop = t.MarginTop;
         RecordTop(pi, frag, t.MarginTop, t.MarginRight, t.MarginBottom, t.MarginLeft);
+        ref readonly ComputedValues tv = ref _boxes.Make(t.Box).Values;
+        if (tv.HasTransform)
+        {
+            if (clipX)
+            {
+                ovL = 0;
+                ovR = wd;
+            }
+
+            if (clipY)
+            {
+                ovT = 0;
+                ovB = bh;
+            }
+
+            TransformOverflow(in tv, wd, bh, ref ovL, ref ovT, ref ovR, ref ovB);
+            clipX = clipY = false;
+        }
+
         Attach(pi, x, y2, wd, bh, mb, baseline, ovL, ovT, ovR, ovB, clipX, clipY, rdx, rdy);
         if (emptyClearing && _frames[pi].NextChild >= 0)
         {
@@ -476,6 +495,10 @@ public sealed partial class BlockLayoutEngine
         else if (!double.IsNaN(nw) && !double.IsNaN(nh))
         {
             ratio = nw / nh;
+        }
+        else if (node.NaturalRatio > 0)
+        {
+            ratio = node.NaturalRatio;
         }
 
         bool borderBox = v.BoxSizing == BoxSizingKind.BorderBox;

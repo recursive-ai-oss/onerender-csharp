@@ -45,7 +45,7 @@ internal static partial class ComputedValueText
             case PropertyId.ObjectPosition: return PositionText(v.ObjectPosition);
             case PropertyId.ImageRendering: return v.ImageRendering switch { ImageRenderingKind.Smooth => "smooth", ImageRenderingKind.CrispEdges => "crisp-edges", ImageRenderingKind.Pixelated => "pixelated", _ => "auto" };
             case PropertyId.ListStyleImage: return ImageText(v.ListStyleImage);
-            default: return null;
+            default: return EffectsText(id, in v);
         }
     }
 

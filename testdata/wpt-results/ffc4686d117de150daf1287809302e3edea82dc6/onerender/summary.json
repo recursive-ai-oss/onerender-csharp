@@ -5,26 +5,37 @@
   "rendererVersion": "OneRender 0.0.1.0",
   "modules": [
     {
+      "module": "compositing",
+      "sampleStride": 1,
+      "discovered": 75,
+      "total": 75,
+      "pass": 26,
+      "fail": 22,
+      "blank": 4,
+      "skipped": 23,
+      "rate": "0.5000"
+    },
+    {
       "module": "css-animations",
       "sampleStride": 1,
       "discovered": 163,
       "total": 163,
-      "pass": 3,
-      "fail": 13,
+      "pass": 4,
+      "fail": 12,
       "blank": 0,
       "skipped": 147,
-      "rate": "0.1875"
+      "rate": "0.2500"
     },
     {
       "module": "css-backgrounds",
       "sampleStride": 1,
       "discovered": 847,
       "total": 847,
-      "pass": 294,
-      "fail": 317,
+      "pass": 295,
+      "fail": 316,
       "blank": 8,
       "skipped": 228,
-      "rate": "0.4750"
+      "rate": "0.4766"
     },
     {
       "module": "css-borders",
@@ -42,33 +53,33 @@
       "sampleStride": 1,
       "discovered": 1191,
       "total": 1191,
-      "pass": 154,
-      "fail": 890,
+      "pass": 158,
+      "fail": 886,
       "blank": 0,
       "skipped": 147,
-      "rate": "0.1475"
+      "rate": "0.1513"
     },
     {
       "module": "css-color",
       "sampleStride": 1,
       "discovered": 377,
       "total": 377,
-      "pass": 233,
+      "pass": 234,
       "fail": 62,
-      "blank": 1,
+      "blank": 0,
       "skipped": 81,
-      "rate": "0.7872"
+      "rate": "0.7905"
     },
     {
       "module": "css-flexbox",
       "sampleStride": 1,
       "discovered": 1398,
       "total": 1398,
-      "pass": 642,
-      "fail": 292,
+      "pass": 648,
+      "fail": 286,
       "blank": 18,
       "skipped": 446,
-      "rate": "0.6744"
+      "rate": "0.6807"
     },
     {
       "module": "css-fonts",
@@ -86,22 +97,22 @@
       "sampleStride": 1,
       "discovered": 2481,
       "total": 2481,
-      "pass": 517,
-      "fail": 1046,
+      "pass": 522,
+      "fail": 1041,
       "blank": 10,
       "skipped": 908,
-      "rate": "0.3287"
+      "rate": "0.3318"
     },
     {
       "module": "css-images",
       "sampleStride": 1,
       "discovered": 510,
       "total": 510,
-      "pass": 221,
-      "fail": 170,
-      "blank": 20,
+      "pass": 231,
+      "fail": 161,
+      "blank": 19,
       "skipped": 99,
-      "rate": "0.5377"
+      "rate": "0.5620"
     },
     {
       "module": "css-inline",
@@ -126,6 +137,17 @@
       "rate": "0.4354"
     },
     {
+      "module": "css-masking",
+      "sampleStride": 1,
+      "discovered": 448,
+      "total": 448,
+      "pass": 94,
+      "fail": 180,
+      "blank": 8,
+      "skipped": 166,
+      "rate": "0.3333"
+    },
+    {
       "module": "css-multicol",
       "sampleStride": 1,
       "discovered": 563,
@@ -141,11 +163,11 @@
       "sampleStride": 1,
       "discovered": 892,
       "total": 892,
-      "pass": 112,
-      "fail": 383,
+      "pass": 114,
+      "fail": 381,
       "blank": 11,
       "skipped": 386,
-      "rate": "0.2213"
+      "rate": "0.2253"
     },
     {
       "module": "css-page",
@@ -207,11 +229,11 @@
       "sampleStride": 1,
       "discovered": 904,
       "total": 904,
-      "pass": 363,
-      "fail": 323,
-      "blank": 25,
+      "pass": 548,
+      "fail": 142,
+      "blank": 21,
       "skipped": 193,
-      "rate": "0.5105"
+      "rate": "0.7707"
     },
     {
       "module": "css-transitions",
@@ -240,11 +262,11 @@
       "sampleStride": 1,
       "discovered": 497,
       "total": 497,
-      "pass": 91,
-      "fail": 76,
+      "pass": 95,
+      "fail": 72,
       "blank": 0,
       "skipped": 330,
-      "rate": "0.5449"
+      "rate": "0.5689"
     },
     {
       "module": "css2-floats",
@@ -262,11 +284,11 @@
       "sampleStride": 1,
       "discovered": 2415,
       "total": 2415,
-      "pass": 1905,
-      "fail": 359,
+      "pass": 1904,
+      "fail": 360,
       "blank": 2,
       "skipped": 149,
-      "rate": "0.8407"
+      "rate": "0.8402"
     },
     {
       "module": "css2-generated",
@@ -300,14 +322,25 @@
       "blank": 0,
       "skipped": 126,
       "rate": "0.5783"
+    },
+    {
+      "module": "filter-effects",
+      "sampleStride": 1,
+      "discovered": 367,
+      "total": 367,
+      "pass": 129,
+      "fail": 137,
+      "blank": 4,
+      "skipped": 97,
+      "rate": "0.4778"
     }
   ],
   "totals": {
-    "total": 19538,
-    "pass": 7102,
-    "fail": 6059,
-    "blank": 144,
-    "skipped": 6233,
-    "rate": "0.5338"
+    "total": 20428,
+    "pass": 7569,
+    "fail": 6186,
+    "blank": 154,
+    "skipped": 6519,
+    "rate": "0.5442"
   }
 }

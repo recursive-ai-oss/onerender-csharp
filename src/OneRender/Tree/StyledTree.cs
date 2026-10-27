@@ -34,6 +34,7 @@ public sealed partial class StyledTree
     private byte[] _replaced;
     private double[] _naturalW;
     private double[] _naturalH;
+    private double[] _naturalRatio;
     private int[] _span;
     private string?[] _src;
     private char[] _text;
@@ -65,6 +66,7 @@ public sealed partial class StyledTree
         _replaced = new byte[64];
         _naturalW = new double[64];
         _naturalH = new double[64];
+        _naturalRatio = new double[64];
         _span = new int[64];
         _src = new string?[64];
         _text = new char[256];
@@ -92,6 +94,9 @@ public sealed partial class StyledTree
     /// <summary>The root, or the null handle when the tree is empty.</summary>
     public StyledNode Root => _count == 0 ? default : new StyledNode(this, 0);
 
+    /// <summary>The <c>&lt;clipPath&gt;</c> elements of the document's inline svgs by id, for <c>clip-path: url(#id)</c>.</summary>
+    internal Dictionary<string, ClipPathDef> ClipPaths { get; } = new(StringComparer.Ordinal);
+
     /// <summary>Removes every node and diagnostic; keeps all storage and cached styles.</summary>
     public void Clear()
     {
@@ -104,6 +109,7 @@ public sealed partial class StyledTree
         _chgCount = 0;
         _chgOverflow = false;
         _structureEpoch++;
+        ClipPaths.Clear();
         Styles.Diagnostics.Clear();
     }
 
@@ -339,6 +345,10 @@ public sealed partial class StyledTree
 
     internal double NaturalHeightOf(int i) => _naturalH[i];
 
+    internal double NaturalRatioOf(int i) => _naturalRatio[i];
+
+    internal void SetNaturalRatio(int idx, double ratio) => _naturalRatio[idx] = ratio > 0 && double.IsFinite(ratio) ? ratio : 0;
+
     internal int SourceIndexOf(int i) => _source[i];
 
     internal int DepthOf(int i) => _depth[i];
@@ -394,6 +404,7 @@ public sealed partial class StyledTree
         _replaced[i] = 0;
         _naturalW[i] = double.NaN;
         _naturalH[i] = double.NaN;
+        _naturalRatio[i] = 0;
         _span[i] = DefaultSpan;
         _src[i] = null;
         _decl[i] = null;
@@ -588,6 +599,7 @@ public sealed partial class StyledTree
         Array.Resize(ref _naturalW, n);
         Array.Resize(ref _span, n);
         Array.Resize(ref _naturalH, n);
+        Array.Resize(ref _naturalRatio, n);
         Array.Resize(ref _src, n);
         Array.Resize(ref _decl, n);
         Array.Resize(ref _states, n);

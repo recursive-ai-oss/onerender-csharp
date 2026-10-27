@@ -18,4 +18,11 @@ public interface IImageSource
     /// <param name="image">The handle and natural size.</param>
     /// <returns>False when the host has no such image; the painter then draws nothing for it and records a diagnostic.</returns>
     bool TryGetImage(string address, out ImageInfo image);
+
+    /// <summary>Looks up an image, optionally with the pixel layout stored in the file (CSS Images 3 §5.2, <c>image-orientation: none</c>).</summary>
+    /// <param name="address">The address as in <see cref="TryGetImage(string, out ImageInfo)"/>.</param>
+    /// <param name="storedOrientation">True to ignore the EXIF orientation of the file; false to rotate and flip the pixels upright (<c>from-image</c>).</param>
+    /// <param name="image">The handle and natural size.</param>
+    /// <returns>False when the host has no such image. The default implementation ignores <paramref name="storedOrientation"/>.</returns>
+    bool TryGetImage(string address, bool storedOrientation, out ImageInfo image) => TryGetImage(address, out image);
 }

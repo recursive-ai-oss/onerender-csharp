@@ -4,7 +4,7 @@ public partial struct ComputedValues
 {
     /// <summary>
     /// True when two styles differ at most in values that only paint reads (colors, backgrounds, shadows, outlines, text decoration,
-    /// opacity and transforms), so a change from one to the other needs a repaint and no layout. Layout reads none of these; anything
+    /// and opacity; transforms, filters and masks can make containing blocks or ink overflow, so they take the layout path), so a change from one to the other needs a repaint and no layout. Layout reads none of these; anything
     /// not listed here is assumed to matter to layout.
     /// </summary>
     internal static bool DiffersOnlyInPaint(in ComputedValues a, in ComputedValues b)
@@ -35,9 +35,6 @@ public partial struct ComputedValues
         t.ImageRendering = b.ImageRendering;
         t.ListStyleImage = b.ListStyleImage;
         t.Opacity = b.Opacity;
-        t.Transform = b.Transform;
-        t.TransformOriginX = b.TransformOriginX;
-        t.TransformOriginY = b.TransformOriginY;
         return ValueEquals(in t, in b);
     }
 }

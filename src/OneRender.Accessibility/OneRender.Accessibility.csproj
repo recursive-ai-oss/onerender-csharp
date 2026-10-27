@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Rendered page facts for accessibility checks, produced from OneRender's own layout and paint in the shape OneHtml.Accessibility reads.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../OneRender/OneRender.csproj" />
+    <PackageReference Include="RecursiveAI.OneHtml.Accessibility" />
+  </ItemGroup>
+
+</Project>
