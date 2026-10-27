@@ -486,6 +486,8 @@ internal sealed partial class PageEmitter
         var glyphs = new PdfShapedGlyph[ids.Length];
         double perEm = 1000.0 / size;
         float baseY = ys[0];
+        int spaceGlyph = run.Face.GetGlyphIndex(32);
+        bool notdefSeen = false;
         for (int i = 0; i < ids.Length; i++)
         {
             double advance;
@@ -499,8 +501,21 @@ internal sealed partial class PageEmitter
             }
 
             int gid = (uint)ids[i] < (uint)glyphCount ? ids[i] : 0;
+            if (gid == 0 && _s.Options.Profile != PdfProfile.None)
+            {
+                // ISO 14289-1 7.21.8 and ISO 19005-2 6.2.11.8 forbid showing .notdef: a character the face lacks keeps its advance
+                // but draws nothing (the text is still in the structure through /ActualText).
+                gid = spaceGlyph;
+                notdefSeen = true;
+            }
+
             int cl = Math.Clamp(clusters[i], 0, source.Length);
             glyphs[i] = new PdfShapedGlyph(gid, cl, advance, 0, -(ys[i] - baseY) * perEm);
+        }
+
+        if (notdefSeen && spaceGlyph == 0)
+        {
+            return;
         }
 
         BeginLeaf(true, it.RootBounds, text);
