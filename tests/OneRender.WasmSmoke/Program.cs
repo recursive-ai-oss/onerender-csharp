@@ -121,6 +121,11 @@ liveTree.SetStates(liveKid, ElementStates.None);
 FlushResult liveFlush = livePage.Flush();
 bool liveOk = liveHeight == 30 && liveQueries.OffsetHeight(liveKid) == 10 && liveFlush.Repainted && livePage.Display.Current.Count > 0;
 Console.WriteLine($"incremental {liveOk}");
+// The PDF backend: a tagged page through the PDF/UA identification pass must trim as well.
+byte[] pdfBytes = OneRender.Pdf.HtmlPdf.ToPdf(
+    "<!DOCTYPE html><html lang='en'><head><title>T</title></head><body><h1>Hi</h1><p style='background:linear-gradient(#f00,#00f);box-shadow:2px 2px 4px #888'>text</p></body></html>",
+    new OneRender.Pdf.HtmlPdfOptions { Output = new OneRender.Pdf.PdfOutputOptions { Profile = OneRender.Pdf.PdfProfile.PdfUA1 } });
+Console.WriteLine($"pdf {pdfBytes.Length} bytes");
 
 internal sealed class NoFonts : OneRender.Layout.IFontProvider
 {

@@ -1,0 +1,13 @@
+page	viewport	height	cropped	ssim	differing-pixels
+certificate	390x844	844	no	0.9850	0.0277
+certificate	1280x800	800	no	0.9829	0.0316
+email	390x844	844	no	0.9915	0.0524
+email	1280x800	800	no	0.9966	0.0212
+invoice	390x844	3762	no	0.9854	0.0570
+invoice	1280x800	1664	no	0.9899	0.0407
+receipt	390x844	844	no	0.9721	0.0656
+receipt	1280x800	800	no	0.9911	0.0211
+report	390x844	4000	yes	0.9596	0.1222
+report	1280x800	4000	yes	0.9822	0.0673
+statement	390x844	4000	yes	0.9821	0.0627
+statement	1280x800	4000	yes	0.9852	0.0530

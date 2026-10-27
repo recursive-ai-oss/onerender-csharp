@@ -12,6 +12,7 @@
     <Project Path="tests/OneRender.Tests/OneRender.Tests.csproj" />
     <Project Path="tests/OneRender.WptRunner.Tests/OneRender.WptRunner.Tests.csproj" />
     <Project Path="tests/OneRender.GeomDiff.Tests/OneRender.GeomDiff.Tests.csproj" />
+    <Project Path="tests/OneRender.Pdf.Tests/OneRender.Pdf.Tests.csproj" />
     <Project Path="tests/OneRender.AotSmoke/OneRender.AotSmoke.csproj" />
     <Project Path="tests/OneRender.WasmSmoke/OneRender.WasmSmoke.csproj" />
   </Folder>
@@ -19,6 +20,7 @@
     <Project Path="tools/OneRender.WptRunner/OneRender.WptRunner.csproj" />
     <Project Path="tools/OneRender.WptRunner.Chrome/OneRender.WptRunner.Chrome.csproj" />
     <Project Path="tools/geomdiff/OneRender.GeomDiff.csproj" />
+    <Project Path="tools/pdf/OneRender.PdfRun/OneRender.PdfRun.csproj" />
   </Folder>
   <Folder Name="/fuzz/">
     <Project Path="fuzz/OneRender.Fuzz.Values/OneRender.Fuzz.Values.csproj" />

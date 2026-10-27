@@ -136,4 +136,24 @@ public class IncrementalBoundsTests
         (StyledTree freshTree, _) = Wide(50, i => i == 1 ? "display:block;height:99px;" : i == 2 ? "display:block;height:77px;" : "display:block;height:10px;");
         Assert.Equal(EditSession.Snapshot(NewPage(freshTree)), EditSession.Snapshot(page));
     }
+
+    [Fact]
+    public void RootRelativeUnitsFollowARootFontChange()
+    {
+        var tree = new StyledTree();
+        StyledNode root = tree.AddRoot("div", GameUiScene.Declaration("display:block;font-size:16px;font-family:Liberation Sans;"));
+        // The middle box sets its own font, so a root font change leaves its computed style alone; only the rex/rch below can notice.
+        StyledNode mid = tree.AddElement(root, "div", GameUiScene.Declaration("display:block;font-family:Liberation Serif;font-size:16px;"));
+        StyledNode kid = tree.AddElement(mid, "div", GameUiScene.Declaration("display:block;height:10rex;width:5rch;"));
+        LivePage page = NewPage(tree);
+        int h0 = new OneRender.Interaction.LayoutQueries(page, new OneRender.Interaction.HitTester(page.Fragments, page.Scroll, 800, 600)).OffsetHeight(kid);
+        tree.SetDeclaration(root, GameUiScene.Declaration("display:block;font-size:16px;font-family:Liberation Mono;"));
+        page.Flush();
+        var fresh = new StyledTree();
+        StyledNode fr = fresh.AddRoot("div", GameUiScene.Declaration("display:block;font-size:16px;font-family:Liberation Mono;"));
+        StyledNode fm = fresh.AddElement(fr, "div", GameUiScene.Declaration("display:block;font-family:Liberation Serif;font-size:16px;"));
+        fresh.AddElement(fm, "div", GameUiScene.Declaration("display:block;height:10rex;width:5rch;"));
+        Assert.Equal(EditSession.Snapshot(NewPage(fresh)), EditSession.Snapshot(page));
+        Assert.True(h0 > 0);
+    }
 }

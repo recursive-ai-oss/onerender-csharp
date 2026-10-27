@@ -231,7 +231,13 @@ liveTree.SetStates(liveKid, ElementStates.None);
 FlushResult liveFlush = livePage.Flush();
 bool liveOk = liveHeight == 30 && liveQueries.OffsetHeight(liveKid) == 10 && liveFlush.Repainted && livePage.Display.Current.Count > 0;
 
-return liveOk && factsOk && ixOk && names.Length == 3 && tableOk && sfnt && painted && pageOk && boxes >= 3 && scrollOk && shaped && again && woff2Ok ? 0 : 1;
+// The PDF backend: a tagged one-page file with a gradient and a rasterized island, through the PDF/UA identification pass.
+byte[] pdfBytes = HtmlPdf.ToPdf(
+    "<!DOCTYPE html><html lang='en'><head><title>T</title></head><body><h1>Hi</h1><p style='background:linear-gradient(#f00,#00f);box-shadow:2px 2px 4px #888'>text <a href='https://example.invalid/'>link</a></p></body></html>",
+    new HtmlPdfOptions { Output = new PdfOutputOptions { Profile = PdfProfile.PdfUA1 } });
+bool pdfOk = pdfBytes.Length > 500 && pdfBytes[0] == (byte)'%' && pdfBytes[1] == (byte)'P' && pdfBytes[2] == (byte)'D' && pdfBytes[3] == (byte)'F';
+
+return liveOk && pdfOk && factsOk && ixOk && names.Length == 3 && tableOk && sfnt && painted && pageOk && boxes >= 3 && scrollOk && shaped && again && woff2Ok ? 0 : 1;
 
 internal sealed class NoFonts : OneRender.Layout.IFontProvider
 {

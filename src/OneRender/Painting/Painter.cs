@@ -41,6 +41,16 @@ public readonly struct PaintOptions
     /// Device pixels per CSS px, used only to snap box edges to whole device pixels (CSS px when 1). Default 1. The list itself stays in CSS px.
     /// </summary>
     public double DevicePixelRatio { get; init; } = 1;
+
+    /// <summary>
+    /// Emit <see cref="ItemKind.BeginTag"/> and <see cref="ItemKind.EndTag"/> items for the structure of the document (headings, paragraphs,
+    /// lists, tables, figures, links), around the text and images they contain. Default false: tags allocate strings and walk the box
+    /// tree, which an interactive frame does not want. A PDF backend sets it.
+    /// </summary>
+    public bool Tags { get; init; }
+
+    /// <summary>The address links are resolved against when <see cref="Tags"/> is on. Default none (links keep their written form).</summary>
+    public string? BaseUrl { get; init; }
 }
 
 /// <summary>
@@ -84,6 +94,8 @@ public sealed partial class Painter
     private const byte FlagStackingContext = 2;
     private const byte FlagClips = 4;
     private const byte FlagIsText = 8;
+    private const byte FlagAnchor = 128;
+    private int _n;
 
     private FragmentTree _tree = null!;
     private DisplayList _list = null!;
@@ -229,7 +241,8 @@ public sealed partial class Painter
     private void Run(in PaintOptions options, CancellationToken ct)
     {
         int n = _tree.Count;
-        EnsureCapacity(n);
+        _n = n;
+        EnsureCapacity(options.Tags ? n * 2 : n);
         Array.Fill(_head, -1, 0, n * PhaseCount);
         Array.Fill(_tail, -1, 0, n * PhaseCount);
         Array.Fill(_outlineHead, -1, 0, n);
@@ -256,10 +269,15 @@ public sealed partial class Painter
         ViewportOverflow.Resolve(_boxes, out _, out _, out _vpSource);
         _vpRange = _scroll is null ? default : ScrollState.GetViewportRange(_tree, _vw, _vh);
 
+        PrepareTags(in options);
         Prepass(n, ct);
         PaintCanvas(options);
         LinkSorted();
         Execute(ct);
+        while (_list.TopIsTag)
+        {
+            _list.EndTag();
+        }
     }
 
     private void EnsureCapacity(int n)
@@ -336,6 +354,7 @@ public sealed partial class Painter
 
         Box b = _boxes.Make(_tree.BoxOf(i));
         ref readonly ComputedValues v = ref b.Values;
+        AddAnchor(i);
         if (v.OutlineWidth > 0 && (v.OutlineStyle != BorderStyleKind.None || v.OutlineAuto) && v.Visibility == VisibilityKind.Visible)
         {
             // CSS2 Appendix E step 10: outlines are painted over everything else of their paint unit, in tree order.
@@ -673,12 +692,18 @@ public sealed partial class Painter
                 PushFrame(ref sp, entry, clips);
                 _stack[sp - 1].PreMask = mask;
             }
+            else if ((_flags[entry] & FlagAnchor) != 0)
+            {
+                PaintAnchor(entry - _n);
+            }
             else if ((_flags[entry] & FlagIsText) != 0)
             {
+                SyncTags(entry, true);
                 PaintText(entry);
             }
             else
             {
+                SyncTags(entry, false);
                 PaintBoxDecoration(entry);
             }
         }
@@ -697,6 +722,7 @@ public sealed partial class Painter
     private void Enter(int top)
     {
         int f = _stack[top].Fragment;
+        SyncTags(f, false);
         Box box = _boxes.Make(_tree.BoxOf(f));
         ref readonly ComputedValues v = ref box.Values;
         if (Observer is { } observer)

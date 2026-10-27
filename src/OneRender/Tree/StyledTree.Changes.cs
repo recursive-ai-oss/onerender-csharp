@@ -691,7 +691,7 @@ public sealed partial class StyledTree
         }
 
         bool any = false;
-        double rootFont = Styles.RootFontSizeValue;
+        ComputeEnvironment rootFont = Styles.RootEnvironment;
         for (int k = 0; k < _chgCount; k++)
         {
             int n = _chgList[k];
@@ -709,9 +709,9 @@ public sealed partial class StyledTree
             any |= RecomputeAndPropagate(n);
         }
 
-        if (Styles.RootFontSizeValue != rootFont)
+        if (Styles.RootEnvironment != rootFont)
         {
-            // rem lengths everywhere depend on the root's font size.
+            // rem, rex, rcap, rch and ric lengths everywhere depend on the root's font.
             RestyleAll();
             return true;
         }

@@ -233,14 +233,6 @@ internal sealed class OneHtmlSource : DeclarationSource
             return _originOverride[(int)id];
         }
 
-        if (id == PropertyId.VerticalAlign && sv is { IsInitial: true } && _style is not null && (_style.IsDeclared("vertical-align") || _style.IsDeclared("alignment-baseline")))
-        {
-            // The cascade reads a shorthand that was given a CSS-wide keyword as its initial value, for `inherit` too. The HTML table rules
-            // (tr, td, th: vertical-align: inherit) need the inherited value, so a declared-but-initial value inherits. An author's explicit
-            // `initial` is therefore read as `inherit`, which differs only below a parent that is not baseline-aligned.
-            return ValueOrigin.Inherit;
-        }
-
         if (sv is null)
         {
             return ValueOrigin.Unset;
