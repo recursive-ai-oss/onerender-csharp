@@ -1,3 +1,4 @@
+using OneRender.Text;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -180,7 +181,13 @@ internal static class Targets
 
     private sealed class NoFonts : IFontProvider
     {
-        public FontFallbackChain GetFallbackChain(in ComputedValues style) => throw new NotSupportedException();
+        public FontCatalog Catalog => throw new NotSupportedException();
+
+        public ResolvedFontList Resolve(in ComputedValues style) => throw new NotSupportedException();
+
+        public ShapedText Shape(ReadOnlySpan<char> text, in ComputedValues style, bool rightToLeft = false) => throw new NotSupportedException();
+
+        public FontMetricsInfo GetMetrics(in ComputedValues style) => throw new NotSupportedException();
     }
 
     /// <summary>

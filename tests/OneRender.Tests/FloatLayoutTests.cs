@@ -1,3 +1,4 @@
+using OneRender.Text;
 using System;
 using System.Linq;
 using System.Text;
@@ -17,7 +18,13 @@ public class FloatLayoutTests
 {
     private sealed class NoFonts : IFontProvider
     {
-        public FontFallbackChain GetFallbackChain(in ComputedValues style) => throw new NotSupportedException();
+        public FontCatalog Catalog => throw new NotSupportedException();
+
+        public ResolvedFontList Resolve(in ComputedValues style) => throw new NotSupportedException();
+
+        public ShapedText Shape(ReadOnlySpan<char> text, in ComputedValues style, bool rightToLeft = false) => throw new NotSupportedException();
+
+        public FontMetricsInfo GetMetrics(in ComputedValues style) => throw new NotSupportedException();
     }
 
     private sealed class FixedImages(double w, double h) : IResourceResolver

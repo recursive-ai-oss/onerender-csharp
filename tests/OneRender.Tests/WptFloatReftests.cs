@@ -7,137 +7,37 @@ using System.Text.RegularExpressions;
 using OneFont;
 using OneRender.Layout;
 using OneRender.Style;
-using OneRender.Tests.Support;
-using OneRender.Tree;
+using OneRender.Image;
 using Xunit;
 
 namespace OneRender.Tests;
 
 /// <summary>
 /// Reftests of the CSS2 float and clear directories, judged by geometry: the page and its reference are laid out and the painted
-/// pixels (backgrounds and borders drawn in paint order, no text) are compared. Tests that need text, positioning or tables
+/// pixels of the engine's own rendering are compared. Tests that need text, positioning or tables
 /// are not covered here; the committed pairs are the text-free ones this layout gets right.
 /// </summary>
 public partial class WptFloatReftests
 {
-    private sealed class NoFonts : IFontProvider
-    {
-        public FontFallbackChain GetFallbackChain(in ComputedValues style) => throw new NotSupportedException();
-    }
+    private const int CanvasW = 800, CanvasH = 600, White = -1;
 
-    private const int CanvasW = 800, CanvasH = 600;
-
-    private static int Pack(ColorValue c) =>
-        (255 << 24) | ((int)Math.Round(c.R * 255) << 16) | ((int)Math.Round(c.G * 255) << 8) | (int)Math.Round(c.B * 255);
-
-    private static void Fill(int[] px, double x0, double y0, double x1, double y1, ColorValue c)
-    {
-        if (c.A < 1 || x1 <= x0 || y1 <= y0)
-        {
-            return;
-        }
-
-        int ix0 = Math.Max(0, (int)Math.Round(x0, MidpointRounding.AwayFromZero)), ix1 = Math.Min(CanvasW, (int)Math.Round(x1, MidpointRounding.AwayFromZero));
-        int iy0 = Math.Max(0, (int)Math.Round(y0, MidpointRounding.AwayFromZero)), iy1 = Math.Min(CanvasH, (int)Math.Round(y1, MidpointRounding.AwayFromZero));
-        int v = Pack(c);
-        for (int y = iy0; y < iy1; y++)
-        {
-            for (int x = ix0; x < ix1; x++)
-            {
-                px[(y * CanvasW) + x] = v;
-            }
-        }
-    }
-
-    private static bool IsFloat(Fragment f) =>
-        f.Kind == FragmentKind.Box && f.Box.Values.Floating != FloatKind.None && (f.Box.Flags & BoxTraits.OutOfFlow) != 0;
-
-    private static Fragment NextInTree(Fragment cur, Fragment root, bool skipChildren)
-    {
-        if (!skipChildren && !cur.FirstChild.IsNull)
-        {
-            return cur.FirstChild;
-        }
-
-        while (!cur.Equals(root))
-        {
-            if (!cur.NextSibling.IsNull)
-            {
-                return cur.NextSibling;
-            }
-
-            cur = cur.Parent;
-        }
-
-        return default;
-    }
-
-    /// <summary>
-    /// A stand-in for painting: block backgrounds and borders of the subtree in tree order, then its floats, each as a unit (CSS2
-    /// Appendix E steps 4 and 5), into a canvas of opaque colours. Text, images and partial transparency are not drawn.
-    /// </summary>
-    private static void PaintContext(FragmentTree f, Fragment root, int[] px, int depth)
-    {
-        var floats = new List<Fragment>();
-        Fragment cur = root;
-        while (!cur.IsNull)
-        {
-            bool skip = false;
-            if (cur.Kind == FragmentKind.Box)
-            {
-                if (!cur.Equals(root) && IsFloat(cur))
-                {
-                    floats.Add(cur);
-                    skip = true;
-                }
-                else
-                {
-                    ref readonly ComputedValues v = ref cur.Box.Values;
-                    Rect r = f.AbsoluteBorderBox(cur);
-                    Fill(px, r.X, r.Y, r.X + r.Width, r.Y + r.Height, v.BackgroundColor);
-                    ColorValue cc = v.Color;
-                    if (v.BorderTopWidth > 0)
-                    {
-                        Fill(px, r.X, r.Y, r.X + r.Width, r.Y + v.BorderTopWidth, v.BorderTopColor.Resolve(cc));
-                    }
-
-                    if (v.BorderBottomWidth > 0)
-                    {
-                        Fill(px, r.X, r.Y + r.Height - v.BorderBottomWidth, r.X + r.Width, r.Y + r.Height, v.BorderBottomColor.Resolve(cc));
-                    }
-
-                    if (v.BorderLeftWidth > 0)
-                    {
-                        Fill(px, r.X, r.Y + v.BorderTopWidth, r.X + v.BorderLeftWidth, r.Y + r.Height - v.BorderBottomWidth, v.BorderLeftColor.Resolve(cc));
-                    }
-
-                    if (v.BorderRightWidth > 0)
-                    {
-                        Fill(px, r.X + r.Width - v.BorderRightWidth, r.Y + v.BorderTopWidth, r.X + r.Width, r.Y + r.Height - v.BorderBottomWidth, v.BorderRightColor.Resolve(cc));
-                    }
-                }
-            }
-
-            cur = NextInTree(cur, root, skip);
-        }
-
-        if (depth < 64)
-        {
-            foreach (Fragment fl in floats)
-            {
-                PaintContext(f, fl, px, depth + 1);
-            }
-        }
-    }
-
+    /// <summary>The page rendered through the engine's own painter and rasterizer, one packed ARGB int per pixel.</summary>
     internal static int[] Raster(string html)
     {
-        Pipeline p = Pipeline.FromHtml(html, CanvasW, CanvasH);
-        var f = new FragmentTree(p.Boxes);
-        new BlockLayoutEngine().Layout(p.Boxes, new LayoutInput(CanvasW, CanvasH, new NoFonts()), f);
+        // Lines have no real text yet and the default line height (1.2 em) is fractional, which would put the edges of boxes
+        // below a paragraph on fractional pixels, where the rasterizer blends the seams of two boxes that make up a square.
+        // A whole-pixel line height, the same in the test and its reference, keeps the comparison about layout.
+        const string WholePixels = "<style>*{line-height:20px !important}</style>";
+        int doctype = html.IndexOf("<!DOCTYPE", StringComparison.OrdinalIgnoreCase);
+        int at = doctype < 0 ? 0 : html.IndexOf('>', doctype) + 1;
+        RgbaImage img = HtmlRender.ToImage(html.Insert(at, WholePixels), new HtmlRenderOptions { Width = CanvasW, Height = CanvasH });
         var px = new int[CanvasW * CanvasH];
-        Array.Fill(px, -1);
-        PaintContext(f, f.Root, px, 0);
+        byte[] b = img.Pixels;
+        for (int i = 0; i < px.Length; i++)
+        {
+            px[i] = (b[(4 * i) + 3] << 24) | (b[4 * i] << 16) | (b[(4 * i) + 1] << 8) | b[(4 * i) + 2];
+        }
+
         return px;
     }
 
@@ -190,7 +90,7 @@ public partial class WptFloatReftests
         bool blank = true;
         for (int i = 0; i < a.Length; i++)
         {
-            if (a[i] != -1 || b[i] != -1)
+            if (a[i] != White || b[i] != White)
             {
                 blank = false;
             }
@@ -240,7 +140,7 @@ public partial class WptFloatReftests
         }
 
         Assert.True(count >= 10, "only " + count + " reftests listed");
-        Assert.Equal(string.Empty, failures.ToString());
+        Assert.True(failures.Length == 0, failures.ToString());
     }
 
     /// <summary>
