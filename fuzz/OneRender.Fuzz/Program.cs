@@ -24,6 +24,7 @@ internal static class Program
     {
         ["displaylist"] = DisplayListTarget.Run,
         ["fontdata"] = FontDataTarget.Run,
+        ["grid"] = GridTarget.Run,
     };
 
     private static int Main(string[] args)
@@ -35,6 +36,11 @@ internal static class Program
 
         if (args.Length > 2 && args[0] == "seeds")
         {
+            if (args[1] == "grid")
+            {
+                return GridTarget.WriteSeeds(args[2]);
+            }
+
             return args[1] == "fontdata"
                 ? FontDataTarget.WriteSeeds(args[2], Environment.GetEnvironmentVariable("ONERENDER_FUZZ_FONTS") ?? "testdata/fonts")
                 : DisplayListTarget.WriteSeeds(args[2]);

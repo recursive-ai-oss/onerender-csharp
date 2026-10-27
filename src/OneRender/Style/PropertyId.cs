@@ -94,12 +94,24 @@ internal enum PropertyId : byte
     ColumnRuleWidth,
     ColumnRuleStyle,
     ColumnRuleColor,
+    GridTemplateColumns,
+    GridTemplateRows,
+    GridTemplateAreas,
+    GridAutoColumns,
+    GridAutoRows,
+    GridAutoFlow,
+    GridRowStart,
+    GridRowEnd,
+    GridColumnStart,
+    GridColumnEnd,
+    JustifyItems,
+    JustifySelf,
 }
 
 /// <summary>Names and inheritance of <see cref="PropertyId"/> values.</summary>
 internal static class Properties
 {
-    public const int Count = (int)PropertyId.ColumnRuleColor + 1;
+    public const int Count = (int)PropertyId.JustifySelf + 1;
 
     private static readonly string[] Names =
     [
@@ -119,6 +131,8 @@ internal static class Properties
         "justify-content", "align-content", "align-items", "align-self", "row-gap", "column-gap",
         "break-before", "break-after", "break-inside", "orphans", "widows", "box-decoration-break",
         "column-count", "column-width", "column-fill", "column-span", "column-rule-width", "column-rule-style", "column-rule-color",
+        "grid-template-columns", "grid-template-rows", "grid-template-areas", "grid-auto-columns", "grid-auto-rows", "grid-auto-flow",
+        "grid-row-start", "grid-row-end", "grid-column-start", "grid-column-end", "justify-items", "justify-self",
     ];
 
     private static readonly Dictionary<string, PropertyId> ByName = BuildByName();

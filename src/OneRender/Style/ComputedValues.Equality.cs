@@ -80,7 +80,8 @@ public partial struct ComputedValues
         a.ListStyleTypeIsString.Equals(b.ListStyleTypeIsString) &&
         a.ListStylePosition == b.ListStylePosition &&
         FlexEquals(in a, in b) &&
-        FragmentationEquals(in a, in b);
+        FragmentationEquals(in a, in b) &&
+        GridEquals(in a, in b);
 
     internal static int ValueHash(in ComputedValues v)
     {
@@ -163,6 +164,7 @@ public partial struct ComputedValues
         h.Add(v.ListStylePosition);
         FlexHash(ref h, in v);
         FragmentationHash(ref h, in v);
+        GridHash(ref h, in v);
         return h.ToHashCode();
     }
 }
