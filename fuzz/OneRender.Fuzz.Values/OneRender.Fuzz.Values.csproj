@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>OneRender.Fuzz</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="SharpFuzz" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/OneRender/OneRender.csproj" />
+  </ItemGroup>
+</Project>
