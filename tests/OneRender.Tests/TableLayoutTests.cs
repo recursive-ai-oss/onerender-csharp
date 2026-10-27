@@ -233,6 +233,32 @@ public class TableLayoutTests
     }
 
     [Fact]
+    public void AlignAttributeCentersTablesAndText()
+    {
+        // HTML §15.3.8: align=center on a table centers it; align=center on a cell centers a table child and its text.
+        Lay l = Run("<table id=o width=400 cellspacing=0 cellpadding=0><tr><td align=center><table id=i width=100 cellspacing=0><tr><td>x</table></table><table id=c align=center width=100 cellspacing=0><tr><td>y</table>");
+        Assert.Equal(150, l["i"].X, 3);
+        Assert.Equal(350, l["c"].X, 3);
+    }
+
+    [Fact]
+    public void BorderAttributeSetsTableBorderWidth()
+    {
+        // HTML §15.3.8: border=0 removes the user agent's table and cell borders; border=N gives a table border of N pixels.
+        Lay zero = Run("<table id=t border=0 cellspacing=0><tr><td id=a>x</td></tr></table>");
+        Assert.Equal(0, zero["a"].X, 3);
+        Lay five = Run("<table id=t border=5 cellspacing=0><tr><td id=a>x</td></tr></table>");
+        Assert.Equal(5, five["a"].X, 3);
+    }
+
+    [Fact]
+    public void CenteredCellCentersATableChild()
+    {
+        Lay l = Run("<body style='margin:0'><table id=o width=100% cellpadding=0 cellspacing=0 border=0><tr><td align=center style='padding:24px 12px'><table id=i width=600 cellpadding=0 cellspacing=0 border=0><tr><td>hello</td></tr></table></td></tr></table></body>");
+        Assert.Equal((0, 800, 100, 600), (l["o"].X, l["o"].Width, l["i"].X, l["i"].Width));
+    }
+
+    [Fact]
     public void ChangingACellTextRelaysOutLikeAFullRecompute()
     {
         string Doc(string cell) => "<table id=t style='width:300px'><tr><td id=a>" + cell + "</td><td id=b>beta</td></tr><tr><td colspan=2 id=c>row two</td></tr></table>";

@@ -34,6 +34,8 @@ public sealed class HtmlFrontEnd
         Document doc = styles.Document;
         _tree.Clear();
         _cellPadding.Clear();
+        _alignHint.Clear();
+        _tableBorder.Clear();
         _tree.SetDocument(doc, doc.NodeCount);
         Node rootElement = doc.DocumentElement;
         if (rootElement.IsNull)
@@ -123,7 +125,7 @@ public sealed class HtmlFrontEnd
             ApplySpanAttributes(element, idx, tag);
         }
 
-        if (element.Namespace == ElementNamespace.Html && (tag.Equals("table", StringComparison.Ordinal) || tag.Equals("td", StringComparison.Ordinal) || tag.Equals("th", StringComparison.Ordinal)))
+        if (element.Namespace == ElementNamespace.Html && (tag.Equals("table", StringComparison.Ordinal) || tag.Equals("tr", StringComparison.Ordinal) || tag.Equals("td", StringComparison.Ordinal) || tag.Equals("th", StringComparison.Ordinal)))
         {
             ApplyTableHints(element, idx, tag);
         }
@@ -249,10 +251,36 @@ public sealed class HtmlFrontEnd
                 v.BorderSpacingH = v.BorderSpacingV = s.Value;
                 changed = true;
             }
+            else if (isTable && name.Equals("border", StringComparison.Ordinal))
+            {
+                ApplyBorderHint(a.Value, idx, ref v, ref changed);
+            }
+            else if (name.Equals("align", StringComparison.Ordinal))
+            {
+                ApplyAlignHint(a.Value, idx, isTable, ref v, ref changed);
+            }
             else if (isTable && name.Equals("cellpadding", StringComparison.Ordinal) && TryParseHintDimension(a.Value, out Length cp) && cp.Kind == LengthKind.Px)
             {
                 _cellPadding[idx] = cp.Value;
             }
+        }
+
+        // The parent cell's align="center" or "right" also places a table child, the way a centered block child sits in a cell.
+        if (isTable && _alignHint.TryGetValue(_tree.ParentOf(idx), out TextAlignKind parentAlign) && v.MarginLeft.Kind == LengthKind.Px && v.MarginLeft.Value == 0
+            && v.MarginRight.Kind == LengthKind.Px && v.MarginRight.Value == 0)
+        {
+            v.MarginLeft = Length.Auto;
+            v.MarginRight = parentAlign == TextAlignKind.Center ? Length.Auto : Length.Zero;
+            changed = true;
+        }
+
+        if (!isTable && tag.Length == 2 && tag[1] != 'r' && v.BorderTopStyle == BorderStyleKind.Inset && NearestTable(idx) is int owner and >= 0
+            && _tableBorder.TryGetValue(owner, out int tb) && tb == 0)
+        {
+            // The user agent sheet gives cells an inset border "only if the table's border is not equivalent to zero".
+            v.BorderTopStyle = v.BorderRightStyle = v.BorderBottomStyle = v.BorderLeftStyle = BorderStyleKind.None;
+            v.BorderTopWidth = v.BorderRightWidth = v.BorderBottomWidth = v.BorderLeftWidth = 0;
+            changed = true;
         }
 
         if (!isTable && IsUserAgentPadding(in v))
@@ -269,6 +297,90 @@ public sealed class HtmlFrontEnd
         {
             _tree.ReplaceStyle(idx, _tree.Styles.Derive(_tree.StyleOf(idx), in v));
         }
+    }
+
+    // HTML Standard §15.3.8: a table's border attribute is its border width in pixels; zero turns the user agent's outset border off, and
+    // a value that does not parse counts as one.
+    private void ApplyBorderHint(ReadOnlySpan<char> value, int idx, ref ComputedValues v, ref bool changed)
+    {
+        ReadOnlySpan<char> t = value.Trim();
+        int n = 1;
+        if (!t.IsEmpty && t.Length <= 6 && int.TryParse(t, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out int parsed))
+        {
+            n = parsed;
+        }
+
+        _tableBorder[idx] = n;
+        if (v.BorderTopStyle != BorderStyleKind.Outset)
+        {
+            return;
+        }
+
+        if (n == 0)
+        {
+            v.BorderTopStyle = v.BorderRightStyle = v.BorderBottomStyle = v.BorderLeftStyle = BorderStyleKind.None;
+            v.BorderTopWidth = v.BorderRightWidth = v.BorderBottomWidth = v.BorderLeftWidth = 0;
+        }
+        else
+        {
+            v.BorderTopWidth = v.BorderRightWidth = v.BorderBottomWidth = v.BorderLeftWidth = n;
+        }
+
+        changed = true;
+    }
+
+    private int NearestTable(int idx)
+    {
+        for (int p = _tree.ParentOf(idx); p >= 0; p = _tree.ParentOf(p))
+        {
+            if (_tree.KindOf(p) == (byte)StyledNodeKind.Element && _tree.TagNameOf(p).Equals("table", StringComparison.Ordinal))
+            {
+                return p;
+            }
+        }
+
+        return -1;
+    }
+
+    // HTML Standard §15.3.8: align on a table floats it left or right or centers it with auto margins; on a row or cell it sets text-align.
+    private void ApplyAlignHint(ReadOnlySpan<char> value, int idx, bool isTable, ref ComputedValues v, ref bool changed)
+    {
+        TextAlignKind kind;
+        if (value.Equals("center", StringComparison.OrdinalIgnoreCase) || value.Equals("middle", StringComparison.OrdinalIgnoreCase))
+        {
+            kind = TextAlignKind.Center;
+        }
+        else if (value.Equals("left", StringComparison.OrdinalIgnoreCase))
+        {
+            kind = TextAlignKind.Left;
+        }
+        else if (value.Equals("right", StringComparison.OrdinalIgnoreCase))
+        {
+            kind = TextAlignKind.Right;
+        }
+        else
+        {
+            return;
+        }
+
+        if (isTable)
+        {
+            if (kind == TextAlignKind.Center)
+            {
+                v.MarginLeft = v.MarginRight = Length.Auto;
+            }
+            else
+            {
+                v.Floating = kind == TextAlignKind.Left ? FloatKind.Left : FloatKind.Right;
+            }
+        }
+        else
+        {
+            v.TextAlign = kind;
+            _alignHint[idx] = kind;
+        }
+
+        changed = true;
     }
 
     private static bool IsUserAgentPadding(in ComputedValues v) =>
@@ -309,6 +421,8 @@ public sealed class HtmlFrontEnd
     }
 
     private readonly Dictionary<int, double> _cellPadding = [];
+    private readonly Dictionary<int, TextAlignKind> _alignHint = [];
+    private readonly Dictionary<int, int> _tableBorder = [];
 
     private static bool IsSpanTag(string tag) =>
         tag.Equals("td", StringComparison.Ordinal) || tag.Equals("th", StringComparison.Ordinal)
