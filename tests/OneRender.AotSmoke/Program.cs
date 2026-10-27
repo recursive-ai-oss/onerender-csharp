@@ -29,7 +29,7 @@ boxTree.Build();
 string dump = boxTree.Dump();
 // Block layout over that tree: no reflection or dynamic code, so it must trim and run the same way.
 var fragments = new OneRender.Layout.FragmentTree(boxTree);
-new OneRender.Layout.BlockLayoutEngine().Layout(boxTree, new OneRender.Layout.LayoutInput(800, 600, new NoFonts()), fragments);
+new OneRender.Layout.BlockLayoutEngine().Layout(boxTree, new OneRender.Layout.LayoutInput(800, 600, FontProviders.CreateDefault()), fragments);
 if (fragments.Root.IsNull || fragments.Root.BorderBox.Width != 800)
 {
     return 4;
