@@ -35,6 +35,8 @@ public partial struct ComputedValues
         t.ImageRendering = b.ImageRendering;
         t.ListStyleImage = b.ListStyleImage;
         t.Opacity = b.Opacity;
+        t.HostScope = b.HostScope;
+        t.HasHostScope = b.HasHostScope;
         t.ControlState = b.ControlState;
         t.ControlFraction = b.ControlFraction;
         return ValueEquals(in t, in b);

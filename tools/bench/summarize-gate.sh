@@ -61,6 +61,16 @@ for pair in IdleFrame:IdleFrame HoverRestyle:HoverRestyle HoverRestyle:HoverWith
   label=$enc; if [ "$enc" = HoverWithHitTest ]; then label="HoverWithHitTest (vs OneGame.UI hover)"; fi
   echo "| $label | $om | $ob | $em | $eb | $(awk -v e="$em" -v o="$om" 'BEGIN { printf "%.2f", e / o }')x |"
 done
+echo; echo "## An animated layout property: a CSS transition on one row's width, ticked every frame"; echo
+wt=$(grep -P "^MotionBenchmarks\.WidthTransitionTick\t" "$A" | head -1)
+if [ -n "$wt" ]; then
+  echo "| Benchmark | us per frame | B per frame | Within 1 ms and 0 B |"; echo "|---|---:|---:|---|"
+  wm=$(echo "$wt" | cut -f2); wb=$(echo "$wt" | cut -f3); wv=yes
+  if awk -v m="$wm" 'BEGIN { exit !(m > 1000) }' || [ "$wb" != 0 ]; then wv=NO; fi
+  echo "| WidthTransitionTick | $wm | $wb | $wv |"
+else
+  echo "The row was not found in the results."
+fi
 echo; echo "Interactive bar: $([ $fail = 0 ] && echo PASS || echo FAIL)"
 echo "Engine no slower than OneGame.UI on every change: $([ $same = 1 ] && echo yes || echo NO)"
 exit 0

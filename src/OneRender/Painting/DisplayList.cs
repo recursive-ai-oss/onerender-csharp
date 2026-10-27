@@ -24,7 +24,7 @@ public sealed partial class DisplayList
     public const int FormatMajor = 1;
 
     /// <summary>Minor version of the format this library writes. Higher minors only add item kinds and fields.</summary>
-    public const int FormatMinor = 2;
+    public const int FormatMinor = 3;
 
     private const int FlagInset = 1;
     private const int FlagTiled = 2;
@@ -58,7 +58,7 @@ public sealed partial class DisplayList
     private int _textCount;
 
     internal FontFace[] _faces = new FontFace[8];
-    private ulong[] _faceHashes = new ulong[8];
+    internal ulong[] _faceHashes = new ulong[8];
     private int _faceCount;
 
     internal string?[] _strings = new string?[16];
@@ -652,19 +652,7 @@ public sealed partial class DisplayList
 
         Grow(ref _faces, _faceCount + 1);
         Grow(ref _faceHashes, _faceCount + 1);
-        ulong h = 0x66616365UL;
-        foreach (char c in face.FamilyName)
-        {
-            h = Mix(h, c);
-        }
-
-        foreach (char c in face.SubfamilyName)
-        {
-            h = Mix(h, c);
-        }
-
-        h = Mix(h, (ulong)face.UnitsPerEm);
-        h = Mix(h, (ulong)face.GlyphCount);
+        ulong h = FaceKeyOf(face);
         _faces[_faceCount] = face;
         _faceHashes[_faceCount] = h;
         return _faceCount++;

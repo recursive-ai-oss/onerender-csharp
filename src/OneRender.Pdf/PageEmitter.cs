@@ -182,7 +182,7 @@ internal sealed partial class PageEmitter
 
     internal static bool IsPush(ItemKind k) =>
         k is ItemKind.PushClipRect or ItemKind.PushClipRoundedRect or ItemKind.PushClipPath or ItemKind.PushTransform or ItemKind.PushGroup or ItemKind.BeginTag
-            or ItemKind.PushTransform3D or ItemKind.PushFilter or ItemKind.PushMask or ItemKind.PushMaskLayer;
+            or ItemKind.PushTransform3D or ItemKind.PushFilter or ItemKind.PushMask or ItemKind.PushMaskLayer or ItemKind.PushHostScope;
 
     // ------------------------------------------------------------------ scopes
 

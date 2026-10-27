@@ -38,4 +38,15 @@ public class SmokeTests
         Assert.Contains("Inset shadow", text);
         Assert.True(pdf.Length < 60_000, "the shadow pictures should be small, the file is " + pdf.Length + " bytes");
     }
+
+    [Fact]
+    public void HostScopesDoNotChangeThePdf()
+    {
+        // A scope names a pass for a host that draws the list itself; the writer draws its content as if it were not there.
+        static byte[] Make(string extra) => HtmlPdf.ToPdf("<!DOCTYPE html><html lang='en'><head><title>Scopes</title></head><body><div style='background:#eef;padding:6px;" + extra + "'><h1>Scoped</h1><p style='opacity:.7'>Inside the scope.</p></div></body></html>");
+        byte[] plain = Make("isolation:isolate");
+        byte[] scoped = Make("--host-scope:12");
+        Assert.Equal(plain, scoped);
+        Assert.Contains("Inside the scope.", Support.AllText(scoped));
+    }
 }

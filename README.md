@@ -159,6 +159,8 @@ dotnet publish tests/OneRender.WasmSmoke -c Release -warnaserror
 
 Use your own runtime identifier for the first (`win-x64`, `linux-arm64`, `osx-arm64`); NativeAOT on Linux needs `clang` and `zlib1g-dev`. Benchmarks: `bench/` ([docs/benchmarks.md](docs/benchmarks.md)). Fuzzing: `fuzz/README.md`. Packages: `dotnet pack OneRender.slnx -c Release -o <dir>`, then `python3 tools/ci/check-packages.py <dir>`.
 
+The display list backends draw from is specified in `docs/display-list.md`. A game engine that draws the list itself (atlas keys, damage, host scopes, test-harness helpers) starts at `docs/game-hosts.md`.
+
 ## Licence
 
 `MIT OR Apache-2.0`, copyright Recursive AI, LLC (`LICENSE-MIT`, `LICENSE-APACHE`). Font packages are `(MIT OR Apache-2.0) AND OFL-1.1`. Bundled third-party material is listed in `THIRD-PARTY-NOTICES.md`.

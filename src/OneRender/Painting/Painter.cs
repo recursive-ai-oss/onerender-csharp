@@ -196,6 +196,7 @@ public sealed partial class Painter
         public bool Clip;
         public bool Outer;
         public bool Scroll;
+        public bool Host;
         public byte FxOuter;
         public byte FxInner;
         public ulong PreMask;
@@ -870,6 +871,15 @@ public sealed partial class Painter
             _stack[top].FxInner = EnterFx(f, in v, 0);
         }
 
+        // The host scope sits inside the element's transform, opacity group, mask and filter and around its own box decoration, overflow
+        // clip and descendants, so a host that splits the list by scope draws the element's effects around the whole pass.
+        if (v.HasHostScope && (_flags[f] & FlagStackingContext) != 0 && _scopes < MaxScopes)
+        {
+            _list.PushHostScope(Id2(f, PartHostScope, 0), v.HostScope);
+            _scopes++;
+            _stack[top].Host = true;
+        }
+
         // The root's background went to the canvas (Backgrounds 3 §2.11.2); its border is its own.
         PaintBoxDecoration(f);
 
@@ -904,6 +914,12 @@ public sealed partial class Painter
         }
 
         PaintOutlines(frag, true);
+        if (_stack[top].Host)
+        {
+            _list.PopHostScope();
+            _scopes--;
+        }
+
         ExitFx(_stack[top].FxInner);
         if (_stack[top].Group)
         {

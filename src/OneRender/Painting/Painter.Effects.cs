@@ -24,6 +24,7 @@ public sealed partial class Painter
     private const int PartBackdrop = 25;
     private const int PartHidden = 26;
     private const int PartSvg = 27;
+    private const int PartHostScope = 32;
 
     private FilterOp[] _ops = new FilterOp[DisplayList.MaxFilterOps];
     private readonly PathBuffer _fxPath = new();

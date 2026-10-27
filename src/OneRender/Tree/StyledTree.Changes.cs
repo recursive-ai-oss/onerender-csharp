@@ -194,6 +194,7 @@ public sealed partial class StyledTree
     private void FreeSlot(int n)
     {
         _gen[n]++;
+        ClearName(n);
         _kind[n] = FreeKind;
         _parent[n] = -1;
         _first[n] = -1;

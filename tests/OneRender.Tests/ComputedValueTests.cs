@@ -512,6 +512,11 @@ public class ComputedValueTests
             var id = (PropertyId)i;
             Assert.True(Properties.TryGet(Properties.NameOf(id), out PropertyId back));
             Assert.Equal(id, back);
+            if (id == PropertyId.HostScope)
+            {
+                continue; // a custom property by design, so it has no row in the specification table
+            }
+
             // our idea of inheritance agrees with the property table OneHtml generates from the specifications
             RecursiveAI.OneHtml.Css.PropertyInfo? info = RecursiveAI.OneHtml.Css.PropertyTable.Find(Properties.NameOf(id));
             Assert.NotNull(info);

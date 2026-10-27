@@ -18,6 +18,7 @@ Types live in `RecursiveAI.OneRender`, namespace `OneRender.Painting`: `DisplayL
 10. [Glyph runs](#glyph-runs)
 11. [Clips, transforms, groups, tags](#clips-transforms-groups-tags)
     - [Effects (1.2)](#effects-12)
+    - [Host scopes (1.3)](#host-scopes-13)
 12. [Bounds](#bounds)
 13. [Damage](#damage)
 14. [Patching](#patching)
@@ -29,12 +30,12 @@ Types live in `RecursiveAI.OneRender`, namespace `OneRender.Painting`: `DisplayL
 
 ## Version
 
-The format has a major and a minor number (`DisplayList.FormatMajor`, `FormatMinor`; now 1.2).
+The format has a major and a minor number (`DisplayList.FormatMajor`, `FormatMinor`; now 1.3).
 
 - A reader of major *N* must refuse lists of any other major.
 - A minor release only **adds**: new item kinds (new numbers), new properties on existing kinds with defaults that mean "as before", new enum members. It never renumbers, repurposes or removes.
-- `DisplayList.RequiredMinor` is the lowest minor a reader needs to draw this particular list. A reader of minor *M* must refuse a list whose `RequiredMinor` is above *M*, because an item it does not know cannot be ignored: masks, filters and clip-path shapes change the pixels of everything inside them. A list that uses only items of version 1.0 has `RequiredMinor` 0 whatever library version made it. Format 1.1 (below) adds two properties; a list that uses either has `RequiredMinor` 1. Format 1.2 adds the effect items listed under [Effects](#effects-12); a list that uses any has `RequiredMinor` 2.
-- Kind numbers 32 to 63 are reserved for effects that need a minor bump. 1.2 uses 32 to 38 and 40 (see [Effects](#effects-12)); 39 and 41 to 63 stay reserved. They follow the same push/pop discipline as the existing pairs, and a reader that does not know them refuses the list rather than skipping them. `clip-path` needs no kind of its own: its shapes are `PushClipRect`, `PushClipRoundedRect` and `PushClipPath`.
+- `DisplayList.RequiredMinor` is the lowest minor a reader needs to draw this particular list. A reader of minor *M* must refuse a list whose `RequiredMinor` is above *M*, because an item it does not know cannot be ignored: masks, filters and clip-path shapes change the pixels of everything inside them. A list that uses only items of version 1.0 has `RequiredMinor` 0 whatever library version made it. Format 1.1 (below) adds two properties; a list that uses either has `RequiredMinor` 1. Format 1.2 adds the effect items listed under [Effects](#effects-12); a list that uses any has `RequiredMinor` 2. Format 1.3 adds the host scope (`PushHostScope`/`PopHostScope`); a list that contains one has `RequiredMinor` 3, and every other list keeps the `RequiredMinor` it had, so a reader of 1.2 still reads it. The 1.3 reader properties `DisplayItem.SvgKey`, `GlyphRunView.FaceKey` and the image invalidation call add no item and change no list.
+- Kind numbers 32 to 63 are reserved for effects that need a minor bump. 1.2 uses 32 to 38 and 40 (see [Effects](#effects-12)) and 1.3 uses 41 and 42 (see [Host scopes](#host-scopes-13)); 39 and 43 to 63 stay reserved. They follow the same push/pop discipline as the existing pairs, and a reader that does not know them refuses the list rather than skipping them. `clip-path` needs no kind of its own: its shapes are `PushClipRect`, `PushClipRoundedRect` and `PushClipPath`.
 - Everything that is not a public member (storage layout, pool indices, hash values) is not part of the format. Reading goes through `DisplayList[i]` and `DisplayItem`.
 
 ## Space, units and conventions
@@ -108,6 +109,7 @@ All fields are in CSS pixels unless stated. "Rect" is the item's primary rectang
 | `PushMaskLayer` / `PopMaskLayer` | 36 / 37 | mode, composite operator | 1.2, only directly inside a mask |
 | `BackdropFilter` | 38 | rect, radii, filter chain | 1.2 |
 | `PushTransform3D` | 40 | 4×4 matrix | 1.2; closed by `PopTransform` |
+| `PushHostScope` / `PopHostScope` | 41 / 42 | host number (`int`) | 1.3, see [Host scopes](#host-scopes-13) |
 
 **Radii** (`CornerRadii`) are eight numbers: a horizontal and a vertical radius for each corner (top-left, top-right, bottom-right, bottom-left), an elliptical quarter at each corner. The list stores radii after CSS Backgrounds 3 §5.5: negative radii become zero, and if the radii on any side add up to more than that side, all eight are multiplied by the one factor that makes the worst side fit. A consumer therefore draws the stored radii as they are. A corner whose horizontal or vertical radius is zero is square.
 
@@ -164,6 +166,8 @@ Styles, per side (`BorderStyle`):
 
 `Image` draws part of a **host-resolved** image. The list holds an `ImageHandle` (any `int` the host chose) and never the pixels; the host maps handles to pixels or textures when it draws. `source` is in the image's own pixels; an empty source means the whole image. `destination` is the rectangle the source is scaled to fit exactly (the painter has already applied `object-fit`, `object-position`, `background-size` and repeat). `sampling` is `Smooth` (bilinear or better) or `Pixelated` (nearest neighbour; `image-rendering: pixelated` and `crisp-edges`).
 
+**New pixels behind a handle.** When the host replaces the pixels of a handle and keeps their size, nothing in the list changes. `DisplayList.InvalidateImage(handle, damage)` (and `RetainedDisplayList.InvalidateImage(handle)`, `LivePage.InvalidateImage(handle)`) adds the root bounds of every `Image` item that draws the handle to a damage region: plain images, tiled backgrounds and every piece of a nine-slice border image (which are ordinary `Image` items with different source and destination rectangles on one handle). It returns the number of items, does one pass over the items, and allocates nothing. A new size is a layout change and goes through the styled tree.
+
 A backend must not sample outside the source rectangle: edges repeat the border texels (clamp), so scaled images neither fade at their edges nor bleed their neighbours.
 
 **Tiled images (1.1).** An `Image` item with the tiled flag (`IsTiledImage`, made by `DrawImageTiled`) repeats the destination rectangle (the *tile*) across `ImageTileArea`: tile *(i, j)* is the destination moved by `(i · (width + ImageTileGapX), j · (height + ImageTileGapY))` for every integer *i*, *j*, including negative ones, and only the part inside the area is drawn. A gap is what `background-repeat: space` leaves between tiles; `round` and `repeat` use a gap of 0. The painter emits one tiled item per `url()` background layer that repeats; gradient layers repeat as one filled rectangle per tile (at most 4,096 per layer, with a diagnostic beyond), each on the pixel-snapped edges of its tile. `Sampling` is bit 0 of the flags (bit 1 is the tiled flag). A reader of 1.0 refuses the list (`RequiredMinor` 1).
@@ -172,7 +176,7 @@ A backend must not sample outside the source rectangle: edges repeat the border 
 
 A `GlyphRun` is one run of glyphs of one face, size and color.
 
-- `Face`: a `OneFont.FontFace`. The list keeps the reference until it is cleared; `FaceIndex` numbers the distinct faces of the list.
+- `Face`: a `OneFont.FontFace`. The list keeps the reference until it is cleared; `FaceIndex` numbers the distinct faces of the list and means nothing outside it. `FaceKey` (1.3) is a 64-bit key of the face that is the same in every list, frame and process for the same font file: FNV-1a 64 over the family, subfamily, full and PostScript names (UTF-16, low byte first, each closed by a 0xFE byte; a missing name by 0xFF), then units per em, glyph count, weight, and a flag word (italic 1, bold 2, CFF 4) as little-endian 32-bit integers, then the first 54 bytes of the `head` table. A glyph atlas keys on (`FaceKey`, size × device-pixel ratio, glyph id).
 - `FontSize` (CSS px) and `Origin` (x, y of the run's baseline origin).
 - Glyph *i* has id `GlyphIds[i]` in the face, and its **pen position** is `(OriginX + X[i], OriginY + Y[i])`; `Y` is the offset from the baseline, positive downward. Glyphs are in **visual order**, left to right on screen, whatever the text direction.
 - **Outline:** the face's outline for the glyph id, in font units with y up, scaled by `FontSize / face.UnitsPerEm` and flipped to y down: a font point `(fx, fy)` maps to `(pen.x + fx·s, pen.y − fy·s)` with `s = FontSize / UnitsPerEm`. Fill with the non-zero rule in `Color`.
@@ -194,11 +198,22 @@ Every effect scope is a push and a pop on the shared stack; the 256-level nestin
 - **Filters** (`PushFilter`, Filter Effects 1 §5). Content up to `PopFilter` is painted into a layer, the chain is applied in order, and the result is composited like any content (enclosing clips apply to the result). One to 32 operations, each `FilterOp(Kind, A, B, C, Color)`: `Blur` (A = standard deviation in CSS px, at most 4096), `Brightness`, `Contrast`, `Grayscale`, `Invert`, `Opacity`, `Saturate`, `Sepia` (A = amount), `HueRotate` (A = radians), `DropShadow` (A, B = offset, C = standard deviation, color). The item's bounds grow by the chain's outset (three standard deviations of each blur and shadow plus offsets), so damage covers blurred ink.
 - **Backdrop filter** (`BackdropFilter`, Filter Effects 2 §2). A leaf: the pixels of the current layer inside the rounded rectangle are replaced by the filtered pixels. The painter emits it before the element's own background.
 - **Masks** (`PushMask`, Masking 1 §6). Directly inside, zero to 16 `PushMaskLayer` scopes describe the mask bottom layer first, each painted into a transparent layer whose alpha (`Alpha`) or luminance times alpha (`Luminance`) is its coverage, combined with the layers before it by `Add` (source over), `Subtract` (source out), `Intersect` (source in) or `Exclude` (xor). The items after the layers, up to `PopMask`, are the masked content, multiplied by the combined coverage. A mask with no layers hides its content.
-- **Inline SVG** (`SvgImage`). The serialized `<svg>` element (at most 1,048,576 characters) is drawn as an image exactly the size of the rectangle: the backend replaces the root's `width` and `height` with the rectangle's size and keeps `viewBox` and `preserveAspectRatio`; `currentColor` is the item's color. The painter draws the element's own box; nothing in the markup refers to the page.
+- **Inline SVG** (`SvgImage`). The serialized `<svg>` element (at most 1,048,576 characters) is drawn as an image exactly the size of the rectangle: the backend replaces the root's `width` and `height` with the rectangle's size and keeps `viewBox` and `preserveAspectRatio`; `currentColor` is the item's color. The painter draws the element's own box; nothing in the markup refers to the page. `SvgKey` (1.3) is a 64-bit content key: FNV-1a 64 over the UTF-16 code units of the markup (low byte first), then the four channels of the clamped `currentColor` (R, G, B, A) as little-endian IEEE 754 single-precision bits. Equal markup and color give equal keys in every list, frame and process, whatever the rectangle; a host caches its rasterization by (`SvgKey`, size × device-pixel ratio) and reads `SvgMarkup` only on a miss.
 - **Projection** (`PushTransform3D`) is described under [Clips, transforms, groups, tags](#clips-transforms-groups-tags). `PatchTransform3D(id, matrix)` replaces the matrix in place (0 B) like `PatchTransform`.
 - **Scope order** the painter uses for one element: transform, then the opacity/blend group, then the mask, then the clip-path, then the filter, then the element (Filter Effects 1 §3, Masking 1 §5: filter, clip, mask, opacity).
 - **PDF.** `DisplayItem.PdfNative` says whether a PDF writer can express an item: opacity and blend groups, masks (soft masks) and an opacity-only filter chain are native; other filters, backdrop filters, projections and SVG images are drawn as rasterized islands with a diagnostic.
 - **Limits.** 32 filter operations, blur 4096 px, 16 mask layers, 1,048,576 SVG characters, 256 scopes; each is checked before the item is added. The painter stops opening scopes before the nesting limit and records `LimitExceeded`.
+
+### Host scopes (1.3)
+
+A host that draws the list through its own render graph often needs to split it: this material for these elements, that layer for those. A host scope is a push and a pop on the shared stack carrying one integer the host chose (`DisplayList.PushHostScope(id, value)`, `PopHostScope()`; read back with `DisplayItem.HostScope`). The engine attaches no meaning to the number: any `int` is valid, zero and negative ones included.
+
+- **Drawing is unchanged.** A backend that does not know the host's numbers draws the content as if the scope were not there. The image rasterizer and the PDF writer do exactly that (a PDF with a scope is byte for byte the PDF of the same page without one).
+- **Nesting.** A scope nests like any other: it closes the tags opened inside it, counts toward the 256-scope limit, may sit inside and around clips, transforms, groups, filters and masks, and scopes may nest inside each other (the innermost applies; a host that wants the outer number reads `ParentIndex` upward). A mask layer is still only valid directly inside its mask.
+- **Context.** The scope's value joins the context hash of everything inside it, so changing only the number damages exactly what is inside the scope.
+- **What the painter emits.** An element that sets `--host-scope` (or `StyleDeclaration.SetHostScope`, see `docs/game-hosts.md`) paints as one unit, like an element with `isolation: isolate` (a stacking context, so nothing outside it paints between its parts), and its items sit in this order, outermost first: the scroll or sticky offset transform, the element's own `transform`, its opacity/blend group, its mask, its `clip-path`, its filter, **the host scope**, then its background and border, its overflow clip and its descendants. The scope is inside the element's effects and around its own box and everything in it, so a host that renders the scope as a pass draws the pass with the element's transform, opacity and filter applied around it.
+- **A list without a scope** keeps its old `RequiredMinor`; a list with one has 3. A reader of 1.2 refuses it, because it cannot split the list the way the host wants.
+- **Ids.** The scope has an id of its own, derived from its element like the ids of its other scopes, so it is the same on every repaint of an unchanged element.
 
 ## Bounds
 
@@ -278,7 +293,7 @@ for i in 0 .. list.Count - 1:
 
 Notes for a GPU adapter:
 
-- **Caching.** Key resources by `item.Id`; they stay valid while `item.ContentHash` is unchanged (and, for anything baked with position or enclosing effects, `item.ContextHash` and `item.RootBounds`). Glyph runs: cache glyph outlines or atlas entries by (`FaceIndex`, glyph id, size).
+- **Caching.** Key resources by `item.Id`; they stay valid while `item.ContentHash` is unchanged (and, for anything baked with position or enclosing effects, `item.ContextHash` and `item.RootBounds`). Glyph runs: cache glyph outlines or atlas entries by (`FaceKey`, size × device-pixel ratio, glyph id); `FaceIndex` only numbers the faces of one list. Inline SVG: cache the rasterization by (`SvgKey`, size × device-pixel ratio). Images: the host owns the pixels behind a handle and says when they changed (see [Images](#images)). Host scopes: split the list into passes ([Host scopes](#host-scopes-13)). `docs/game-hosts.md` walks through all of this.
 - **Redraw.** Redraw only the `DamageRegion` of a `RetainedDisplayList`, with scissor and the culling above.
 - **Changing only a transform or opacity** (an animation) arrives as a patch with damage and needs no rebuilt resources: the `ContentHash` of the items inside does not change.
 - **Groups** may be realized as render targets, or as per-draw alpha when the group holds a single leaf item and the blend is `Normal`.
