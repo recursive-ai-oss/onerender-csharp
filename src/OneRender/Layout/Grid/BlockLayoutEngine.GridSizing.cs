@@ -306,10 +306,12 @@ public sealed partial class BlockLayoutEngine
                     continue;
                 }
 
-                if (n == L.Size.Length)
+                if (n >= L.Size.Length || n >= L.SizeMap.Length)
                 {
-                    Array.Resize(ref L.Size, n * 2);
-                    Array.Resize(ref L.SizeMap, n * 2);
+                    // The two arrays are resized independently elsewhere (order sorting borrows the size array), so grow both.
+                    int size = Math.Max(16, n * 2);
+                    Array.Resize(ref L.Size, size);
+                    Array.Resize(ref L.SizeMap, size);
                 }
 
                 int s = a == 0 ? it.O0 : it.O1;

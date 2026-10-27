@@ -177,6 +177,14 @@ public class GridLayoutTests
     }
 
     [Fact]
+    public void ZeroMinimumLetsFlexibleTracksShareTheContainerEvenly()
+    {
+        Lay l = Run("<div id=g><i id=a></i><i id=b></i><i id=c></i></div>", "#g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:300px}i{display:block;height:5px}#a{width:500px}");
+        Is(l, "b", 100, 0, 100, 5);
+        Is(l, "c", 200, 0, 100, 5);
+    }
+
+    [Fact]
     public void SpanningItemGrowsFlexibleTracks()
     {
         // Grid 2 §12.5: an item spanning two flexible tracks raises them in proportion to their factors.

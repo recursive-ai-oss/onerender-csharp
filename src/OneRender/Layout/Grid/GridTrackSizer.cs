@@ -697,22 +697,23 @@ internal sealed class GridTrackSizer
             {
                 _work++;
                 sum += ax.Base[t];
-                if (ax.MaxKind[t] == TrackKind.Flex)
+                if (ax.MaxKind[t] == TrackKind.Flex && IsIntrinsicMin(ax.MinKind[t]))
                 {
                     flexSum += ax.Flex[t];
                     flexCount++;
                 }
             }
 
+            // Only flexible tracks with an intrinsic minimum take part (Grid 2 §12.5: the step repeats "for intrinsic minimums").
             double space = contribution - sum;
-            if (space <= 0)
+            if (space <= 0 || flexCount == 0)
             {
                 continue;
             }
 
             for (int t = it.Start; t < it.End; t++)
             {
-                if (ax.MaxKind[t] != TrackKind.Flex)
+                if (ax.MaxKind[t] != TrackKind.Flex || !IsIntrinsicMin(ax.MinKind[t]))
                 {
                     continue;
                 }

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>grid alignment</title>
+<style>
+body{margin:0;padding:8px;background:#fff}
+.g{display:grid;margin:0 0 12px;background:#eee;width:300px;height:80px;grid-template-columns:60px 60px;grid-template-rows:20px 20px}
+.g>div{background:#8ac;width:30px;height:10px}
+</style></head><body>
+<div class="g" style="justify-items:center;align-items:end"><div></div><div></div><div></div></div>
+<div class="g" style="justify-content:space-between;align-content:space-between"><div></div><div></div><div></div><div></div></div>
+<div class="g" style="justify-content:space-around;align-content:space-evenly;gap:5px"><div></div><div></div><div></div><div></div></div>
+<div class="g" style="place-content:center end"><div></div><div></div><div></div></div>
+<div class="g" style="justify-items:stretch;align-items:stretch"><div style="width:auto;height:auto"></div><div style="width:auto;height:auto;margin:3px 5px"></div><div style="width:auto"></div></div>
+<div class="g"><div style="margin:auto"></div><div style="margin-left:auto;align-self:start"></div><div style="margin-top:auto;justify-self:end"></div><div style="justify-self:start;align-self:center"></div></div>
+<div class="g" style="justify-content:end;align-content:center;grid-template-columns:repeat(auto-fill,40px)"><div></div><div></div><div></div></div>
+<div class="g" style="padding:5px 10px;border:3px solid #444;box-sizing:border-box;justify-content:center"><div style="grid-column:1/3;width:auto"></div></div>
+<div class="g" style="direction:rtl;justify-items:start"><div></div><div></div><div></div></div>
+<div class="g" style="direction:rtl;justify-content:space-between;grid-template-columns:50px 1fr"><div style="width:auto"></div><div style="width:auto"></div></div>
+<div class="g" style="grid-template-columns:50px;grid-auto-rows:20px;height:auto"><div style="margin:4px"></div><div style="align-self:end;height:15px"></div></div>
+</body></html>

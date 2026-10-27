@@ -289,6 +289,11 @@ internal sealed partial class StyleComputer
 
                     break;
                 }
+
+                case CssTokenKind.Number when part.Token.NumberValue == 0:
+                    // CSS Values 4 §5.1: a unitless zero is a valid <length>.
+                    b = new GridBreadth(GridBreadthKind.Length, Length.Zero, 0);
+                    return true;
             }
         }
 
