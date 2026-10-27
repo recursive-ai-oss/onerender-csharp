@@ -910,6 +910,13 @@ public sealed partial class StyledTree
         Array.Clear(_chg, 0, _count);
         _chgCount = 0;
         _chgOverflow = true;
+        if (_count == 0)
+        {
+            // No root: slot 0 does not exist yet, and its zeroed child link would name itself.
+            _forceRestyle = false;
+            return;
+        }
+
         int sp = 0;
         EnsureWork(1);
         _work[sp++] = 0;

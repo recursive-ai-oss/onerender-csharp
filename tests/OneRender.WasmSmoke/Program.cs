@@ -10,6 +10,9 @@ using OneRender.Painting;
 using OneRender.Style;
 using OneRender.Text;
 
+// First, on a fresh runtime: this is the minimal reproduction of the crash described below.
+PagesAcrossCollections();
+
 Console.WriteLine(EngineInfo.Name);
 FontFaceInfo face = DefaultFonts.GetFaces("Carlito")[0];
 byte[] bytes = face.ReadAllBytes();
@@ -172,6 +175,33 @@ byte[] pdfBytes = OneRender.Pdf.HtmlPdf.ToPdf(
     "<!DOCTYPE html><html lang='en'><head><title>T</title></head><body><h1>Hi</h1><p style='background:linear-gradient(#f00,#00f);box-shadow:2px 2px 4px #888'>text</p></body></html>",
     new OneRender.Pdf.HtmlPdfOptions { Output = new OneRender.Pdf.PdfOutputOptions { Profile = OneRender.Pdf.PdfProfile.PdfUA1 } });
 Console.WriteLine($"pdf {pdfBytes.Length} bytes");
+
+// Regression: the first page, a garbage collection, then more pages. On 32-bit WebAssembly the Mono runtime did not keep the
+// references of a large static struct alive across a collection, so the second page read freed objects and the runtime asserted.
+static void PagesAcrossCollections()
+{
+    var options = new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 100, ViewportHeight = 100 };
+    InteractivePage first = InteractivePage.Create("<p>hi</p>", options);
+    GC.Collect();
+    InteractivePage second = InteractivePage.Create("<p>hi</p>", options);
+    GC.Collect();
+    InteractivePage third = InteractivePage.Create("<div style='width:40px;height:40px'><button id=b>x</button></div>", options);
+    if (second.Page.Fragments.Count != first.Page.Fragments.Count || third.ElementFromPoint(5, 5).IsNull)
+    {
+        throw new InvalidOperationException("pages after a collection differ");
+    }
+
+    // An empty styled tree is a page with nothing in it, not an error.
+    var empty = new LivePage(new StyledTree(), new LivePageOptions(FontProviders.CreateDefault()) { ViewportWidth = 100, ViewportHeight = 100 });
+    GC.Collect();
+    if (empty.Flush().Repainted && empty.Display.Current.Count != 0)
+    {
+        throw new InvalidOperationException("empty page painted something");
+    }
+
+    Console.WriteLine("pages across collections ok");
+}
+
 
 internal sealed class NoFonts : OneRender.Layout.IFontProvider
 {

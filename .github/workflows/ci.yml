@@ -95,6 +95,14 @@ jobs:
           global-json-file: global.json
       - name: Publish the browser-wasm smoke app (trim warnings are errors)
         run: dotnet publish tests/OneRender.WasmSmoke -c Release -o "${{ runner.temp }}/wasm" -warnaserror
+      # Run in a real browser, in both the trimmed Release build and the untrimmed Debug build on the Mono interpreter. This SDK
+      # has no wasm-tools workload, so neither build relinks the native runtime: the configuration many consumers use.
+      - name: Run the Release build in headless Chrome
+        run: node tests/OneRender.WasmSmoke/run-browser.mjs "${{ runner.temp }}/wasm/wwwroot"
+      - name: Publish the Debug build
+        run: dotnet publish tests/OneRender.WasmSmoke -c Debug -o "${{ runner.temp }}/wasm-debug"
+      - name: Run the Debug build in headless Chrome
+        run: node tests/OneRender.WasmSmoke/run-browser.mjs "${{ runner.temp }}/wasm-debug/wwwroot"
 
   packages:
     name: pack and check the packages

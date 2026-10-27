@@ -113,7 +113,19 @@ public sealed class FontFamilyList : IEquatable<FontFamilyList>
 public partial struct ComputedValues
 {
     /// <summary>The initial values of all properties (the style of a node with no declarations and no parent).</summary>
-    public static readonly ComputedValues Initial = CreateInitial();
+    /// <remarks>
+    /// Returned by reference so no copy is made; copy it to keep a modifiable value. It lives in a heap object, not in a static field: on
+    /// 32-bit WebAssembly the Mono runtime does not keep the references held by a static field of a struct this large (about 127 words
+    /// or more of statics per type) alive across a garbage collection, which left the style engine reading freed objects.
+    /// </remarks>
+    public static ref readonly ComputedValues Initial => ref s_initial.Value;
+
+    private static readonly InitialBox s_initial = new();
+
+    private sealed class InitialBox
+    {
+        public readonly ComputedValues Value = CreateInitial();
+    }
 
     /// <summary><c>display</c>.</summary>
     public DisplayType Display { get; internal set; }
