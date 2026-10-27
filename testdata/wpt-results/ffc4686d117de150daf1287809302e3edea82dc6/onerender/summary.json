@@ -53,11 +53,11 @@
       "sampleStride": 1,
       "discovered": 1191,
       "total": 1191,
-      "pass": 163,
-      "fail": 881,
+      "pass": 166,
+      "fail": 878,
       "blank": 0,
       "skipped": 147,
-      "rate": "0.1561"
+      "rate": "0.1590"
     },
     {
       "module": "css-color",
@@ -86,22 +86,22 @@
       "sampleStride": 1,
       "discovered": 551,
       "total": 551,
-      "pass": 160,
-      "fail": 153,
+      "pass": 162,
+      "fail": 151,
       "blank": 25,
       "skipped": 213,
-      "rate": "0.4734"
+      "rate": "0.4793"
     },
     {
       "module": "css-grid",
       "sampleStride": 1,
       "discovered": 2481,
       "total": 2481,
-      "pass": 531,
-      "fail": 1032,
+      "pass": 533,
+      "fail": 1030,
       "blank": 10,
       "skipped": 908,
-      "rate": "0.3376"
+      "rate": "0.3388"
     },
     {
       "module": "css-images",
@@ -196,11 +196,11 @@
       "sampleStride": 1,
       "discovered": 308,
       "total": 308,
-      "pass": 79,
-      "fail": 59,
+      "pass": 81,
+      "fail": 57,
       "blank": 0,
       "skipped": 170,
-      "rate": "0.5725"
+      "rate": "0.5870"
     },
     {
       "module": "css-text-decor",
@@ -218,11 +218,11 @@
       "sampleStride": 1,
       "discovered": 1860,
       "total": 1860,
-      "pass": 866,
-      "fail": 515,
+      "pass": 867,
+      "fail": 514,
       "blank": 4,
       "skipped": 475,
-      "rate": "0.6253"
+      "rate": "0.6260"
     },
     {
       "module": "css-transforms",
@@ -262,11 +262,11 @@
       "sampleStride": 1,
       "discovered": 497,
       "total": 497,
-      "pass": 95,
-      "fail": 72,
+      "pass": 96,
+      "fail": 71,
       "blank": 0,
       "skipped": 330,
-      "rate": "0.5689"
+      "rate": "0.5749"
     },
     {
       "module": "css2-floats",
@@ -337,10 +337,10 @@
   ],
   "totals": {
     "total": 20428,
-    "pass": 7588,
-    "fail": 6167,
+    "pass": 7599,
+    "fail": 6156,
     "blank": 154,
     "skipped": 6519,
-    "rate": "0.5455"
+    "rate": "0.5463"
   }
 }

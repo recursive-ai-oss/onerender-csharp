@@ -12,8 +12,8 @@ public sealed class FactsOptions
     /// </summary>
     public IReadOnlyList<string> ComputedStyles { get; init; } = [];
 
-    /// <summary>Bounds on the size of the facts; null means <see cref="DomSnapshotLimits.Default"/>. A page over a bound throws <see cref="DomSnapshotFormatException"/>.</summary>
-    public DomSnapshotLimits? Limits { get; init; }
+    /// <summary>Bounds on the number of boxes, text boxes and strings in the facts; null means <see cref="RenderedFactsLimits.Default"/>. A page over a bound throws <see cref="RenderedFactsLimitException"/>. There is no bound on the size of the page as bytes.</summary>
+    public RenderedFactsLimits? Limits { get; init; }
 
     /// <summary>
     /// How many display list items before a piece of text are looked at to work out the color behind it, at least 1.

@@ -29,7 +29,7 @@ internal abstract class DeclarationSource
 }
 
 /// <summary>What styles are computed against: the viewport (for <c>vw</c> and friends) and the root element's font size (for <c>rem</c>).</summary>
-internal readonly record struct ComputeEnvironment(double ViewportWidth, double ViewportHeight, double RootFontSize);
+internal readonly record struct ComputeEnvironment(double ViewportWidth, double ViewportHeight, double RootFontSize, double RootExRatio = 0, double RootCapRatio = 0, double RootChRatio = 0, double RootIcRatio = 0);
 
 /// <summary>
 /// Turns declared values into <see cref="ComputedValues"/>: parses each property against its grammar and applies the
@@ -100,7 +100,15 @@ internal sealed partial class StyleComputer
             ExRatio = m.XHeight > 0 ? m.XHeight / size : LengthContext.Default.ExRatio,
             ChRatio = m.ZeroAdvance > 0 ? m.ZeroAdvance / size : LengthContext.Default.ChRatio,
             IcRatio = m.IdeographicAdvance > 0 ? m.IdeographicAdvance / size : LengthContext.Default.IcRatio,
+            CapRatio = m.CapHeight > 0 ? m.CapHeight / size : LengthContext.Default.CapRatio,
         };
+    }
+
+    /// <summary>The font ratios of a root style, for <see cref="ComputeEnvironment"/>.</summary>
+    internal ComputeEnvironment WithRootFont(ComputeEnvironment env, in ComputedValues root)
+    {
+        LengthContext c = WithFontRatios(LengthContext.Default, in root);
+        return env with { RootFontSize = root.FontSize, RootExRatio = c.ExRatio, RootCapRatio = c.CapRatio, RootChRatio = c.ChRatio, RootIcRatio = c.IcRatio };
     }
 
     /// <summary>Counts declarations that did not parse, in the last <see cref="Compute"/>.</summary>
@@ -132,6 +140,11 @@ internal sealed partial class StyleComputer
         {
             FontSize = _parent.FontSize,
             RootFontSize = env.RootFontSize,
+            // CSS Values 4 §6.1.2: rex, rcap, rch and ric use the root element's font, not the element's.
+            RootExRatio = env.RootExRatio,
+            RootCapRatio = env.RootCapRatio,
+            RootChRatio = env.RootChRatio,
+            RootIcRatio = env.RootIcRatio,
             ViewportWidth = env.ViewportWidth,
             ViewportHeight = env.ViewportHeight,
         };

@@ -4,9 +4,9 @@
 
 ## Route
 
-`RenderedFacts` can only be built by parsing a capture, so the package writes a snapshot-shaped capture in memory (`{schema, format{domain, method, protocolVersion, product, parameters}, snapshot{documents, strings}}`, UTF-8 JSON) and passes it through `DomSnapshot.Parse` and `DomSnapshotAdapter.Map` with attribute checks on values and the caller's viewport and style context. A refused mapping throws `RenderedFactsException` carrying the refusal. `DomSnapshotLimits` bound the size of the capture; `FactsOptions.BackgroundScanLimit` (default 16384 display items) bounds the backward scan for colors behind one text box. All walks are iterative; cost is linear in nodes, text boxes and display items.
+The package reads the laid-out page and hands each box straight to OneHtml.Accessibility's `RenderedFactsBuilder` (OneHtml 1.2): no snapshot JSON is written or parsed, and there is no cap on the size of the page as bytes. `RenderedFactsLimits` (`FactsOptions.Limits`) bound boxes, text boxes and strings and throw `RenderedFactsLimitException` before storing past a bound; `FactsOptions.BackgroundScanLimit` (default 16384 display items) bounds the backward scan for colors behind one text box. All walks are iterative; cost is linear in nodes, text boxes and display items. Nodes are numbered as a snapshot would number them (document order, pseudo-elements included, the doctype counted but not a node of the facts), so `BackendNodeId` is that number plus one and `SnapshotNodeIndex` the number. Generated content (`::marker`, `::before`, `::after`) is added as generated boxes of its host: the pseudo-element's own box, then the box of its generated text.
 
-A direct builder in OneHtml.Accessibility would remove the round trip.
+The facts are the same as the earlier snapshot route gave on the text-block, templates and tailwind pages (every box, text box, style value, paint order and color), except that `StackingContextNodeIndex` is set for every node, as the builder derives it, including the doctype that the adapter left at -1.
 
 ## API
 
