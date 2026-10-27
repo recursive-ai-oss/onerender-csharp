@@ -81,12 +81,25 @@ internal enum PropertyId : byte
     AlignSelf,
     RowGap,
     ColumnGap,
+    BreakBefore,
+    BreakAfter,
+    BreakInside,
+    Orphans,
+    Widows,
+    BoxDecorationBreak,
+    ColumnCount,
+    ColumnWidth,
+    ColumnFill,
+    ColumnSpan,
+    ColumnRuleWidth,
+    ColumnRuleStyle,
+    ColumnRuleColor,
 }
 
 /// <summary>Names and inheritance of <see cref="PropertyId"/> values.</summary>
 internal static class Properties
 {
-    public const int Count = (int)PropertyId.ColumnGap + 1;
+    public const int Count = (int)PropertyId.ColumnRuleColor + 1;
 
     private static readonly string[] Names =
     [
@@ -104,6 +117,8 @@ internal static class Properties
         "direction", "unicode-bidi", "color", "opacity", "background-color", "content", "list-style-type", "list-style-position", "overflow-clip-margin",
         "flex-direction", "flex-wrap", "flex-grow", "flex-shrink", "flex-basis", "order",
         "justify-content", "align-content", "align-items", "align-self", "row-gap", "column-gap",
+        "break-before", "break-after", "break-inside", "orphans", "widows", "box-decoration-break",
+        "column-count", "column-width", "column-fill", "column-span", "column-rule-width", "column-rule-style", "column-rule-color",
     ];
 
     private static readonly Dictionary<string, PropertyId> ByName = BuildByName();
@@ -120,7 +135,7 @@ internal static class Properties
         PropertyId.Visibility or PropertyId.FontSize or PropertyId.FontFamily or PropertyId.FontWeight or PropertyId.FontStyle
             or PropertyId.FontStretch or PropertyId.LineHeight or PropertyId.WhiteSpaceCollapse or PropertyId.TextWrapMode
             or PropertyId.TextAlign or PropertyId.TextIndent or PropertyId.LetterSpacing or PropertyId.WordSpacing
-            or PropertyId.Direction or PropertyId.Color or PropertyId.ListStyleType or PropertyId.ListStylePosition => true,
+            or PropertyId.Direction or PropertyId.Color or PropertyId.ListStyleType or PropertyId.ListStylePosition or PropertyId.Orphans or PropertyId.Widows => true,
         _ => false,
     };
 

@@ -68,6 +68,7 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace
         ClipX = 512,
         ClipY = 1024,
         Flex = 2048,
+        Multicol = 4096,
     }
 
     private struct Frame
@@ -128,6 +129,12 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace
 
         // For a flex container: its index in the flex stack (see BlockLayoutEngine.Flex.cs).
         public int FlexIndex;
+
+        // For a multi-column container (Layout/Multicol): the content width the columns share, the column width, the gap and the column count.
+        public double McFullW;
+        public double McColW;
+        public double McGap;
+        public int McCount;
     }
 
     /// <inheritdoc />
@@ -157,6 +164,7 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace
         PrepareFlex(boxes.Count);
         PrepareIntrinsicCache(boxes.Count);
         output.Clear();
+        _frag.ClearPlans();
         if (boxes.Root.IsNull)
         {
             return;
@@ -175,6 +183,7 @@ public sealed partial class BlockLayoutEngine : ILayoutEngine, IExclusionSpace
         }
 
         ResolveAbsolutes();
+        ApplyColumns();
     }
 
     /// <summary>

@@ -166,8 +166,10 @@ public sealed partial class BlockLayoutEngine
                 FinishFlexIntrinsic(ref done);
             }
 
-            _minContent[done.Box] = Math.Max(0, done.Min);
-            _maxContent[done.Box] = Math.Max(0, Math.Max(done.Max, done.FloatRun));
+            double dmin = Math.Max(0, done.Min), dmax = Math.Max(0, Math.Max(done.Max, done.FloatRun));
+            MulticolIntrinsic(_boxes.Make(done.Box), ref dmin, ref dmax);
+            _minContent[done.Box] = dmin;
+            _maxContent[done.Box] = dmax;
             _isp--;
             if (_isp > baseSp)
             {
@@ -216,6 +218,7 @@ public sealed partial class BlockLayoutEngine
             }
         }
 
+        MulticolIntrinsic(b, ref min, ref max);
         _minContent[b.Index] = min;
         _maxContent[b.Index] = max;
     }
