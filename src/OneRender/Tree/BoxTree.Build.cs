@@ -92,6 +92,12 @@ public sealed partial class BoxTree
             return;
         }
 
+        if (d.IsContents && s == 0)
+        {
+            // The root has no parent box to promote its children into, and a tree needs a root box: lay it out as a block.
+            d = DisplayType.Block;
+        }
+
         ReplacedKind replaced = st.ReplacedOf(s);
         bool isBr = kind == StyledNodeKind.Element && replaced == ReplacedKind.None && st.TagNameOf(s).Equals("br", StringComparison.Ordinal);
         if (d.IsContents)

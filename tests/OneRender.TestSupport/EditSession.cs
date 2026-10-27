@@ -260,6 +260,9 @@ public sealed class EditSession
     /// <summary>The number of edits applied.</summary>
     public int Steps => _steps;
 
+    /// <summary>True when the chooser reads bytes and has used them all.</summary>
+    public bool Exhausted => _c.Exhausted;
+
     /// <summary>The last edit, described.</summary>
     public string LastEdit => _lastEdit;
 

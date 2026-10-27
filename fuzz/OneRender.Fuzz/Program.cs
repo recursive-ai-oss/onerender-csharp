@@ -28,6 +28,7 @@ internal static class Program
         ["flow"] = FlowTarget.Run,
         ["table"] = TableTarget.Run,
         ["effects"] = EffectsTarget.Run,
+        ["incremental"] = IncrementalTarget.Run,
     };
 
     private static int Main(string[] args)
@@ -52,6 +53,11 @@ internal static class Program
             if (args[1] == "effects")
             {
                 return EffectsTarget.WriteSeeds(args[2]);
+            }
+
+            if (args[1] == "incremental")
+            {
+                return IncrementalTarget.WriteSeeds(args[2]);
             }
 
             if (args[1] == "table")
