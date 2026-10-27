@@ -33,7 +33,20 @@ public class IncrementalBenchmarks
         _row = nodes["quest3"];
         _tall = GameUiScene.Declaration("display:flex;height:48px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;");
         _normal = GameUiScene.Declaration("display:flex;height:24px;overflow:hidden;justify-content:space-between;align-items:center;padding:0 6px;background:#1d2535;");
+
+        // Warm the code paths (and let the JIT promote them) so a measurement sees steady state, as a running game does.
+        for (int i = 0; i < 200; i++)
+        {
+            HoverRestyle();
+            TextChange();
+            SubtreeRelayout();
+            IdleFrame();
+        }
     }
+
+    /// <summary>A frame in which nothing changed: the steady state of a UI at rest. Expected: next to nothing and 0 B.</summary>
+    [Benchmark]
+    public FlushResult IdleFrame() => _page.Flush();
 
     /// <summary>Moves the pointer from one slot to another: two hover flips, restyle and repaint.</summary>
     [Benchmark]
