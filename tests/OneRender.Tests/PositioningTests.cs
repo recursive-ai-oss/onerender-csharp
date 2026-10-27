@@ -56,7 +56,7 @@ public class PositioningTests
         Pipeline p = Pipeline.FromHtml(html, width, height, resolver: images);
         var f = new FragmentTree(p.Boxes);
         var engine = new BlockLayoutEngine();
-        engine.Layout(p.Boxes, new LayoutInput(width, height, new NoFonts()), f);
+        engine.Layout(p.Boxes, new LayoutInput(width, height, OneRender.Image.FontProviders.ForCurrentThread()), f);
         return new Lay { P = p, F = f, Engine = engine };
     }
 
@@ -254,11 +254,29 @@ public class PositioningTests
     }
 
     [Fact]
-    public void StaticPositionInInlineContentIsTheStartOfTheContent()
+    public void StaticPositionOfAnInlineLevelBoxIsWhereItMetTheLine()
     {
-        // Placeholder inline layout: until real inline layout reports positions, the start of the container's content box stands in.
+        // CSS2 §10.3.7: the hypothetical box sits after the text before it, at the top of the line.
         Lay l = Run("<p style='margin:0;padding:4px 0 0 6px'>text <span id=a style='position:absolute;width:10px;height:5px'></span></p>");
-        Assert.Equal(new Rect(6, 4, 10, 5), l["a"]);
+        Assert.True(l["a"].X > 6 + 10, "x " + l["a"].X);
+        Assert.Equal(4, l["a"].Y);
+        Assert.Equal(10, l["a"].Width);
+    }
+
+    [Fact]
+    public void StaticPositionOfABoxAtTheStartOfALineIsTheContentStart()
+    {
+        Lay l = Run("<div style='margin:0;padding:4px 0 0 6px'><div id=a style='position:absolute;width:10px;height:5px'></div>text</div>");
+        Assert.Equal(6, l["a"].X);
+    }
+
+    [Fact]
+    public void APositionedInlineBoxIsTheContainingBlockOfAbsoluteBoxesInside()
+    {
+        // CSS2 §10.1 item 4.
+        Lay l = Run("<div style='margin:0;padding:0'>aaaa <span id=s style='position:relative'>bbbb<span id=a style='position:absolute;left:0;top:0;width:7px;height:5px'></span></span></div>");
+        Assert.Equal(l["s"].X, l["a"].X);
+        Assert.Equal(l["s"].Y, l["a"].Y);
     }
 
     [Fact]

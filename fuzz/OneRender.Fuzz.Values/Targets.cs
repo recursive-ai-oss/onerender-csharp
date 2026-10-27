@@ -24,6 +24,7 @@ internal static class Targets
         ["layout"] = Layout,
         ["flex"] = FlexTarget.Run,
         ["positioning"] = Positioning,
+        ["inline"] = Inline,
     };
 
     private static readonly string[] PropertyNames =
@@ -308,6 +309,73 @@ internal static class Targets
                     throw new InvalidOperationException("a scroll patch differs from a fresh paint at item " + i);
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// An HTML document and style sheet as for <c>layout</c>, laid out with the real default fonts at a width taken from the first byte.
+    /// The inline layout must give the same fragments when run again into the retained tree and into a fresh one, with finite
+    /// geometry, text fragments inside their text, lines inside their container and min-content no wider than max-content.
+    /// </summary>
+    private static void Inline(ReadOnlySpan<byte> data)
+    {
+        if (data.Length < 2)
+        {
+            return;
+        }
+
+        string text = Decode(data);
+        int ff = text.IndexOf('\f', StringComparison.Ordinal);
+        string css = ff < 0 ? string.Empty : text[(ff + 1)..];
+        string html = ff < 0 ? text : text[..ff];
+        Document doc = Document.Parse("<style>" + css.Replace("</", "<\\/", StringComparison.Ordinal) + "</style>" + html);
+        DocumentStyles styles = DocumentStyles.Create(doc, new StyleContext(), new StyleSourceOptions { IncludeUserAgentSheet = true });
+        var tree = new StyledTree(null, new TreeLimits { MaxNodes = 1 << 12, MaxDepth = 128, MaxTextLength = 1 << 16 });
+        new HtmlFrontEnd(tree).Build(styles);
+        var boxes = new BoxTree(tree);
+        boxes.Build();
+        double width = 20 + ((data[0] >> 1) * 5);
+        var input = new LayoutInput(width, double.NaN, OneRender.Image.FontProviders.ForCurrentThread());
+        var engine = new BlockLayoutEngine();
+        var fragments = new FragmentTree(boxes);
+        engine.Layout(boxes, input, fragments);
+        string first = fragments.Dump();
+        for (Fragment f = fragments.Root; !f.IsNull; f = Next(f))
+        {
+            Rect r = f.BorderBox;
+            if (!double.IsFinite(r.X + r.Y + r.Width + r.Height) || r.Width < 0 || r.Height < 0)
+            {
+                throw new InvalidOperationException("bad geometry in " + f);
+            }
+
+            if (f.Kind == FragmentKind.Text && (f.TextStart < 0 || f.TextLength < 0 || f.TextStart + f.TextLength > f.Box.Text.Length))
+            {
+                throw new InvalidOperationException("text range outside its text in " + f);
+            }
+
+            if (f.Kind == FragmentKind.Line && !f.Parent.IsNull && f.Parent.Kind == FragmentKind.Box && f.Parent.Parent.IsNull && r.Y < -1e-6)
+            {
+                throw new InvalidOperationException("line above its container");
+            }
+        }
+
+        engine.Layout(boxes, input, fragments);
+        if (!string.Equals(first, fragments.Dump(), StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("laying out again into the retained fragment tree gave different fragments");
+        }
+
+        var fresh = new FragmentTree(boxes);
+        new BlockLayoutEngine().Layout(boxes, input, fresh);
+        if (!string.Equals(first, fresh.Dump(), StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("a fresh layout gave different fragments");
+        }
+
+        engine.GetIntrinsicSizes(boxes.Root, out double min, out double max);
+        if (!(min <= max + 1e-6) || double.IsNaN(min) || double.IsNaN(max))
+        {
+            throw new InvalidOperationException("min-content " + min + " is wider than max-content " + max);
         }
     }
 

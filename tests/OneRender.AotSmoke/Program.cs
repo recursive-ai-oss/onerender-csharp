@@ -29,7 +29,7 @@ boxTree.Build();
 string dump = boxTree.Dump();
 // Block layout over that tree: no reflection or dynamic code, so it must trim and run the same way.
 var fragments = new OneRender.Layout.FragmentTree(boxTree);
-new OneRender.Layout.BlockLayoutEngine().Layout(boxTree, new OneRender.Layout.LayoutInput(800, 600, new NoFonts()), fragments);
+new OneRender.Layout.BlockLayoutEngine().Layout(boxTree, new OneRender.Layout.LayoutInput(800, 600, FontProviders.CreateDefault()), fragments);
 if (fragments.Root.IsNull || fragments.Root.BorderBox.Width != 800)
 {
     return 4;
@@ -45,13 +45,45 @@ scrollPainter.Paint(scrollPage.Fragments, scrollList, new PaintOptions(100, 50) 
 scrollPage.Scroll.SetViewportOffset(0, 30);
 bool scrollOk = scrollPainter.PatchScroll(scrollList) > 0;
 
+// Inline layout: wrapping, a nested inline box, an atomic inline and a bidi run through the real fonts.
+HtmlPage textPage = HtmlPage.Create(
+    "<body style='margin:0;font:16px/20px Arial'><p style='width:90px;margin:0'>one two <b>three <span style='padding:0 2px'>four</span></b> <i style='display:inline-block;width:10px;height:5px'></i> \u05d0\u05d1\u05d2 five</p></body>",
+    new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 200, ViewportHeight = 100 });
+int textLines = 0;
+OneRender.Layout.Fragment walk = textPage.Fragments.Root;
+while (!walk.IsNull)
+{
+    if (walk.Kind == OneRender.Layout.FragmentKind.Line)
+    {
+        textLines++;
+    }
+
+    if (!walk.FirstChild.IsNull)
+    {
+        walk = walk.FirstChild;
+        continue;
+    }
+
+    while (!walk.IsNull && walk.NextSibling.IsNull)
+    {
+        walk = walk.Parent;
+    }
+
+    walk = walk.IsNull ? walk : walk.NextSibling;
+}
+
+if (textLines < 3)
+{
+    return 5;
+}
+
 // A wrapping flex container with grow and gap: the flex algorithm must survive trimming and AOT.
 HtmlPage flexPage = HtmlPage.Create(
     "<body style='margin:0'><div style='display:flex;flex-wrap:wrap;gap:10px;width:100px'><div style='flex:1 1 40px;height:10px'></div><div style='flex:1 1 40px;height:10px'></div><div style='flex:1 1 40px;height:10px'></div></div></body>",
     new HtmlPageOptions(FontProviders.CreateDefault()) { ViewportWidth = 100, ViewportHeight = 50 });
 if (flexPage.Fragments.Root.IsNull || flexPage.Fragments.Root.BorderBox.Width != 100)
 {
-    return 5;
+    return 6;
 }
 
 // A grid with fr tracks, auto-fill, a subgrid and a named line: placement, track sizing and subgrid must survive trimming and AOT.

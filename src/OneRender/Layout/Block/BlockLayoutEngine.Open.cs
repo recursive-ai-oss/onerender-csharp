@@ -409,7 +409,19 @@ public sealed partial class BlockLayoutEngine
 
             t.NextChild = -1;
             t.Flags |= FrameFlags.AnyChild;
-            QueueInlineAbsolutes(ni);
+            if (!r.QueuedAbsolutes)
+            {
+                QueueInlineAbsolutes(ni);
+            }
+
+            if (r.HasOverflow)
+            {
+                t = ref _frames[ni];
+                t.OvL = Math.Min(t.OvL, r.OverflowLeft);
+                t.OvT = Math.Min(t.OvT, r.OverflowTop);
+                t.OvR = Math.Max(t.OvR, r.OverflowRight);
+                t.OvB = Math.Max(t.OvB, r.OverflowBottom);
+            }
         }
     }
 

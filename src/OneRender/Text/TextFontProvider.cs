@@ -61,9 +61,10 @@ public sealed class TextFontProvider : IFontProvider
             names[i] = g != GenericFamily.None ? FontFamilyName.OfGeneric(g) : new FontFamilyName(list[i]);
         }
 
-        double size = style.FontSize > 0 && double.IsFinite(style.FontSize) ? style.FontSize : 0.001;
+        // A size or stretch beyond what a float holds (or one that rounds to 0) would be rejected by the request; clamp it first.
+        double size = style.FontSize > 0 && double.IsFinite(style.FontSize) ? Math.Clamp(style.FontSize, 0.001, 1_000_000) : style.FontSize > 0 ? 1_000_000 : 0.001;
         double weight = double.IsNaN(style.FontWeight) ? 400 : Math.Clamp(style.FontWeight, 1, 1000);
-        double stretch = style.FontStretch > 0 && double.IsFinite(style.FontStretch) ? style.FontStretch : 100;
+        double stretch = style.FontStretch > 0 && double.IsFinite(style.FontStretch) ? Math.Clamp(style.FontStretch, 0.01, 10_000) : 100;
         double angle = double.IsNaN(style.ObliqueAngle) ? 14 : Math.Clamp(style.ObliqueAngle, -90, 90);
         var request = new FontRequest(names, (float)size, (float)weight, style.FontStyle, (float)angle, (float)stretch);
         _requests[key] = request;
