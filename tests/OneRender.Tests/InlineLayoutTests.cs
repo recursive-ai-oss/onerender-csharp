@@ -769,6 +769,17 @@ public class InlineLayoutTests
     // ------------------------------------------------------------------ determinism, allocation and limits
 
     [Fact]
+    public void AbsoluteBoxInsideAnInlineBlockLaysOutTheSameAgainIntoTheRetainedTree()
+    {
+        // The inline-block's fragment is moved under its line after the line exists; origins must not depend on fragment order.
+        Lay l = Run("<p>texts <span id=i style='display:inline-block;width:40px;vertical-align:top'><span id=x style='position:absolute;top:0'></span>b</span> c</p>", width: 220);
+        string first = l.F.Dump();
+        l.Engine.Layout(l.P.Boxes, new LayoutInput(220, double.NaN, FontProviders.ForCurrentThread()), l.F);
+        Assert.Equal(first, l.F.Dump());
+        Assert.Equal(l["i"].Y, l["x"].Y, 3);
+    }
+
+    [Fact]
     public void TheSameInputGivesTheSameFragments()
     {
         const string body = "<p id=a style='width:123px;text-align:justify'>Lorem ipsum <b>dolor</b> sit <i>amet, consectetur</i> adipiscing אבג elit.</p>";

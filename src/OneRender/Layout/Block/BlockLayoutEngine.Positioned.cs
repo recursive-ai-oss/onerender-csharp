@@ -35,6 +35,10 @@ public sealed partial class BlockLayoutEngine
     private double[] _oy = new double[64];
     private int[] _cbOf = new int[64];
     private byte[] _dirty = new byte[64];
+    private int[] _stamp = new int[64];
+    private int _stampNo;
+    private int[] _walk = new int[64];
+    private int[] _post = new int[64];
 
     private void BeginPositioning(BoxTree boxes, in LayoutInput input)
     {
@@ -215,18 +219,51 @@ public sealed partial class BlockLayoutEngine
         Array.Resize(ref _oy, size);
         Array.Resize(ref _cbOf, size);
         Array.Resize(ref _dirty, size);
+        Array.Resize(ref _stamp, size);
     }
 
+    /// <summary>
+    /// Document-space origins of the fragments [from, to). A parent usually has a lower index than its children, but not always:
+    /// inline layout moves an atomic inline's fragment under the line it lands on (<see cref="FragmentTree.Reparent"/>), and that
+    /// line is created after it. So a fragment whose parent is not done yet waits for it: the chain up to the first finished
+    /// ancestor is walked and filled from the top down, each fragment once.
+    /// </summary>
     private void FillOrigins(int from, int to)
     {
+        _stampNo++;
         for (int i = from; i < to; i++)
         {
-            Rect r = _out.BorderBoxOf(i);
-            int p = _out.ParentOf(i);
-            _ox[i] = (p < 0 ? 0 : _ox[p]) + r.X;
-            _oy[i] = (p < 0 ? 0 : _oy[p]) + r.Y;
             _cbOf[i] = -1;
             _dirty[i] = 0;
+        }
+
+        for (int i = from; i < to; i++)
+        {
+            if (_stamp[i] == _stampNo)
+            {
+                continue;
+            }
+
+            int n = 0;
+            for (int j = i; j >= from && j < to && _stamp[j] != _stampNo; j = _out.ParentOf(j))
+            {
+                if (n == _walk.Length)
+                {
+                    Array.Resize(ref _walk, n * 2);
+                }
+
+                _walk[n++] = j;
+            }
+
+            for (int k = n - 1; k >= 0; k--)
+            {
+                int f = _walk[k];
+                Rect r = _out.BorderBoxOf(f);
+                int p = _out.ParentOf(f);
+                _ox[f] = (p < 0 ? 0 : _ox[p]) + r.X;
+                _oy[f] = (p < 0 ? 0 : _oy[p]) + r.Y;
+                _stamp[f] = _stampNo;
+            }
         }
     }
 
@@ -557,10 +594,59 @@ public sealed partial class BlockLayoutEngine
     /// through its containing block, not through its parent. Fixed boxes add nothing. One pass from the last fragment to the
     /// first carries every contribution up, so each fragment is touched once.
     /// </summary>
+    private int PostOrder()
+    {
+        int n = _out.Count;
+        if (_post.Length < n)
+        {
+            Array.Resize(ref _post, Math.Max(n, _post.Length * 2));
+        }
+
+        int k = 0;
+        int cur = 0;
+        if (n == 0)
+        {
+            return 0;
+        }
+
+        while (true)
+        {
+            for (int c = _out.FirstChildOf(cur); c >= 0; c = _out.FirstChildOf(cur))
+            {
+                cur = c;
+            }
+
+            while (true)
+            {
+                _post[k++] = cur;
+                int next = _out.NextSiblingOf(cur);
+                if (next >= 0)
+                {
+                    cur = next;
+                    break;
+                }
+
+                cur = _out.ParentOf(cur);
+                if (cur < 0)
+                {
+                    return k;
+                }
+            }
+        }
+    }
+
     private void PropagateAbsoluteOverflow()
     {
-        for (int i = _out.Count - 1; i >= 1; i--)
+        // Descendants before ancestors. Fragment indices do not guarantee that (see FillOrigins), so walk the tree in post-order.
+        int count = PostOrder();
+        for (int q = 0; q < count; q++)
         {
+            int i = _post[q];
+            if (i == 0)
+            {
+                continue;
+            }
+
             int target = _cbOf[i];
             bool abs = target != -1;
             if (target == -2 || (!abs && _dirty[i] == 0))

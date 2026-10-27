@@ -168,9 +168,12 @@ void Measure(Box container, IFontProvider fonts, out double minContent, out doub
 - The result is the total line height, the line count and the first and last baselines from the content top. A container
   with lines counts as having content for margin collapsing; the block layout settles the margin run before the call.
 - `Measure` returns the content-box min-content and max-content widths.
-- `PlaceholderInlineLayout` is the stand-in used until inline layout lands: a container with any non-blank text, replaced or
-  atomic inline child gets one empty line box as tall as `line-height` (`normal` is 1.2 × font size) and the intrinsic
-  inline sizes are 0.
+- The result also carries the extent of everything the lines occupy (`HasOverflow`, `Overflow*`, in the container's border-box
+  coordinates), which the block layout adds to the scrollable overflow, and `QueuedAbsolutes`, true when the inline layout has
+  already handed the absolute boxes of its content to the block layout (`IAtomicInlineHost.QueueAbsolute`).
+- `InlineLayoutEngine` (see "Inline layout") is the default. `PlaceholderInlineLayout` is the stand-in for tests of the block
+  layout that need no fonts: a container with any non-blank text, replaced or atomic inline child gets one empty line box as
+  tall as `line-height` (`normal` is 1.2 × font size) and the intrinsic inline sizes are 0.
 
 ### Floats
 
@@ -227,13 +230,81 @@ Floats, `clear` and the boxes that avoid floats live in `Layout/Block/BlockLayou
   with the whole-pixel line height injected. The test with `ONERENDER_FLOAT_SWEEP` set sweeps the whole
   directories of a web-platform-tests checkout and writes one result per test.
 
+## Inline layout (`Layout/Inline/`)
+
+`InlineLayoutEngine` is the `IInlineLayout` behind `BlockLayoutEngine()`. It lays out one inline formatting context (CSS2 §9.4.2,
+CSS Text 3, CSS Inline 3) per call, as one paragraph, and keeps one worker per nesting depth because atomic inlines
+re-enter it through `IAtomicInlineHost` (at most 40 deep; deeper content is dropped). Everything is stored in arrays that grow and
+are reused, so a relayout of unchanged content allocates nothing.
+
+- **Collect.** An explicit-stack walk of the container's subtree produces the paragraph text and raw elements: text runs, inline
+  box open and close, atomic inlines (U+FFFC in the text), tabs, forced breaks, floats and absolute boxes. White space is
+  processed here (CSS Text 3 §4.1, every `white-space-collapse` and `text-wrap-mode` value): collapsing crosses inline box
+  boundaries, segment breaks and `tab-size` follow the mode, and each character keeps a flag for "collapsible", "word separator"
+  and the source offset it came from. `unicode-bidi` embeddings, isolates and overrides become the UAX #9 controls.
+- **Prepare.** UAX #14 opportunities and grapheme starts come from OneFont; `AdjustOpportunities` turns them into CSS's:
+  `white-space`, `word-break` (normal, break-all, keep-all, break-word), `line-break: anywhere`, soft hyphens (`hyphens: manual`
+  only; `none` removes them), the `break-spaces` rule, and breaks around atomic inlines. Bidi levels come from UAX #9; a
+  paragraph with a left-to-right base and no character at U+0590 or above skips the algorithm (all levels are 0). Text is split by
+  level and into pieces of at most 1,024 characters (at a break opportunity or grapheme boundary) and shaped through
+  `IFontProvider.Shape`, whose cache is keyed by text and style, so an unchanged paragraph hits it without allocating (a page with
+  more than about 4,096 distinct runs thrashes that cache and allocates on a relayout).
+- **Scan.** `ScanLine` is the greedy breaker: it accumulates clusters, remembers the last opportunity that fits, rolls back to
+  it, hangs trailing collapsible and preserved spaces (CSS Text 3 §4.1.3), and breaks inside a word only when the line has no
+  opportunity (`overflow-wrap: break-word | anywhere`). Min-content and max-content (`Measure`) run the same scan with an
+  available width of 0 and infinity; a forced break splits max-content, atomic inlines count whole, `anywhere` counts in
+  min-content and `break-word` does not.
+- **Lines.** For each line the exclusion space is asked for the usable range at the line's top and height; a line whose first
+  unbreakable item does not fit moves down to the next float edge. Floats met in the content are placed with
+  `PlaceFloat`: at the line's top when the content before the float plus its shrink-to-fit width fits on the line, below the
+  line otherwise (CSS2 §9.5.1 rule 6); the line is scanned again when a float joined it. The line's height needs the vertical
+  metrics of its pieces, and the strut is always part of it (§10.8.1).
+- **Vertical metrics.** Each inline box has ascent, descent and half-leading from its font and `line-height`; `vertical-align`
+  shifts it (baseline, sub, super, text-top, text-bottom, middle, lengths and percentages of the line height; top and bottom
+  align to the line box after the others are placed). An inline-block's baseline is the baseline of its last in-flow line, or
+  its bottom margin edge when `overflow` is not `visible` or it has no line. The first baseline is stored on the container's
+  fragment (`SetBaseline`); an inline-block's last baseline is found by walking its fragments.
+- **Emit.** Alignment (`text-align`, `text-align-last`, `text-indent` with `hanging` and `each-line`, justification between
+  words, `letter-spacing`, `word-spacing`), then bidi reordering of the line's pieces (UAX #9 L2), then fragments: a `Line`
+  fragment per line; inside it one `Box` fragment per run of consecutive pieces of an inline box (so a box split across lines, or
+  across a nested bidi run, has several pieces chained with `NextOfBox`, with `ContinuesBefore`/`ContinuesAfter`, and its
+  border and padding only on the first and last piece, `box-decoration-break: slice`); inside those one `Text` fragment per
+  font face of each piece with a glyph run (glyph ids, positions, source offsets). Atomic inlines are laid out through the host
+  while preparing and moved into the right fragment with `FragmentTree.Reparent`. `TryGetBorderBox` of an inline element is the
+  union of its pieces.
+- **Bounds.** No recursion on tree depth (a 10,000-deep span nest is walked with the explicit stack). A paragraph holds at most
+  4,194,304 characters (the rest is dropped); line scanning checks the cancellation token every 1,024 steps; a line that cannot
+  place anything still consumes one cluster, so there is no endless loop. Costs on the development machine: a 1,000,000-character
+  paragraph (12,171 lines) lays out in about 0.3 s including the document build, a 100,000-character unbreakable word in about
+  25 ms (one line) or 30 ms with `overflow-wrap: anywhere` (4,000 lines), a 10,000-deep inline nest in about 30 ms. All are
+  linear: shaping is per piece of at most 1,024 characters and a line is scanned once, plus once more for each float that
+  joins it.
+- **Choices where the specs leave room** (each checked against Chrome by the `inline-lab` pages, where 98.7% to 99.4% of the
+  elements are within the geometry tolerance):
+  - Ascent, descent and line gap are rounded to whole pixels (half away from zero) before half-leading is computed; the
+    half-leading's top is the floor of half the leading and the bottom takes the rest. This put the lab from 9% to 90% within
+    tolerance.
+  - `sub` lowers by a fifth of the parent's font size plus 1 px and `super` raises by a third plus 1 px.
+  - An inline box's open and close edges take the bidi level of the next/previous content, so the box's pieces stay contiguous.
+    Known deviation: an RTL-direction box around left-to-right text puts its start edge on the wrong side.
+  - `text-justify: inter-character` is treated as `inter-word`; `line-break: strict | loose | normal` are alike; letter-spacing
+    does not disable ligatures; a percentage `word-spacing` is a fraction of the separator's advance.
+  - An empty inline box alone on a line produces no fragment (Chrome gives a zero-size box).
+  - Percentage `line-height`, and `em` lengths of `letter-spacing`, `word-spacing`, `text-indent` and `tab-size`, inherit as the
+    ancestor's computed length (CSS Values 4 §7.1), not as text resolved against the descendant's font.
+- **Not done:** `::first-line` and `::first-letter`, `text-overflow`, line clamping, `hyphens: auto`, `text-decoration` and text
+  shadows, vertical writing modes, ruby, `box-decoration-break: clone`, inline-flex, inline-grid and inline-table as anything
+  but blocks, markers inside the line, and `initial-letter`.
+- **Checked by.** `InlineLayoutTests` (a section per topic, the 0 B relayout of a 1,000-box text page and the limits above);
+  the `inline` fuzz target; the `inline-lab` differential pages in `testdata/inline-lab/`.
+
 ## Positioning (`BlockLayoutEngine.Positioned.cs`)
 
 - **Containing blocks** (CSS2 §10.1, Position 3 §2). Each block frame carries `CbFrag`, the fragment of its nearest positioned
   ancestor (`position` other than `static`), or -1 for the initial containing block. Nested layouts started through
-  `LayoutIndependent` inherit it from the frame that started them. An inline box is never a containing block yet: a positioned
-  `span` does not contain absolute boxes, the nearest block-level positioned ancestor does. That is the one approximation, and it
-  sits behind `CbFrag`, so an inline layout that produces fragments for inline boxes only has to set it for them.
+  `LayoutIndependent` inherit it from the frame that started them. A positioned inline box is a containing block too (§10.1 item 4): inline layout
+  passes the fragment of the nearest positioned inline box around an absolute box as that box's containing block. When the
+  inline box is split across lines this is the piece that holds the absolute box, not the union of the first and last pieces.
 - **Relative** (§9.4.3). The shift is applied when a box closes, to the fragment rectangle only: the flow position that siblings
   and the parent's height see is unchanged. A shifted box adds its shifted rectangle to the parent's scrollable overflow.
   `left` wins over `right` in a left-to-right containing block, `top` over `bottom` always; percentage `top`/`bottom` against a
@@ -262,9 +333,13 @@ Floats, `clear` and the boxes that avoid floats live in `Layout/Block/BlockLayou
   does it push floats. A relatively positioned float is placed as a float first and drawn shifted afterwards; the
   exclusion it leaves for lines and later floats stays where the float was placed, and its shifted rectangle adds to the scrollable
   overflow.
-- **Absolute boxes inside inline content** have the start of the container's content box as their static position until the inline
-  layout reports where the hypothetical box would be. `QueueInlineAbsolutes` is the seam: an inline layout calls the same queue
-  with its own position.
+- **Absolute boxes inside inline content.** The inline layout reports each one with `IAtomicInlineHost.QueueAbsolute`: the static
+  position is the inline position reached on the line when the box is met, at the top of the line box. A box with nothing
+  but out-of-flow boxes before it on its line is at the start edge of the container's content box, however floats narrow the
+  line. An inline layout that does not report (the placeholder) leaves the box at the start of the content box
+  (`QueueInlineAbsolutes`).
+- **Relatively positioned inline boxes** are drawn shifted by their offset; the line and the box's content move with the
+  fragment and the line is unchanged.
 - **Sticky** (Position 3 §3.4) takes no part in layout (it is in flow like `relative` with no offset). The shift is computed at
   paint time, see below.
 - **Bounds.** The queue is capped at 4M boxes, nothing recurses, the resolution pass is linear in fragments plus queue entries, and
@@ -310,4 +385,6 @@ Floats, `clear` and the boxes that avoid floats live in `Layout/Block/BlockLayou
   change is arithmetic on a table. A sticky box inside another sticky box is shifted relative to the outer one's final position.
   The scrollport of a sticky box is its nearest scroll container's padding box, or the viewport.
 - **Not done:** scrollbars (no gutter, nothing is drawn), scroll snapping, scroll events, `scroll-behavior`, `overscroll`, `contain`, and
-  scrollable overflow of inline content (line and text fragments add none until inline layout lands).
+  the overflow of the content of an atomic inline (the border box is used).
+- **Overflow of inline content.** Line boxes, inline box edges, text that runs past the end of its line (an unbreakable word, a
+  `nowrap` line) and atomic inlines add to the scrollable overflow of the container (`InlineLayoutResult.Overflow*`).
