@@ -501,7 +501,7 @@ public sealed partial class BlockLayoutEngine
         ref readonly ComputedValues cv = ref _boxes.Make(cell.Box).Values;
         double dy = 0;
         double used = cell.Height;
-        if (cv.VerticalAlign is VerticalAlignKind.Bottom or VerticalAlignKind.Middle)
+        if (cv.VerticalAlign is VerticalAlignKind.Bottom or VerticalAlignKind.Middle && !cv.Height.IsAuto)
         {
             // A cell's own height is a minimum (CSS2 §17.5.3): the content to align is what its children fill, plus the bottom padding and border.
             double inner = 0;
