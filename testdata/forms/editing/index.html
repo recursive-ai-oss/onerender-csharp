@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Text fields in use</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.4 Arial, Helvetica, sans-serif; color: #222; background: #fafafa; }
+  main { max-width: 640px; margin: 24px auto; padding: 0 16px; }
+  h1 { font-size: 22px; margin: 0 0 12px; }
+  label { display: block; margin: 14px 0 4px; font-weight: bold; }
+  input, textarea { font: inherit; padding: 6px 8px; border: 1px solid #99a; border-radius: 3px; background: #fff; }
+  input.wide { width: 100%; }
+  input.short { width: 90px; }
+  input.native, textarea.native { padding: initial; border: initial; border-radius: initial; }
+  textarea { width: 100%; height: 110px; resize: vertical; }
+  .row { display: flex; gap: 10px; align-items: center; }
+  .row > * { flex: 0 0 auto; }
+  .grow { flex: 1 1 auto !important; }
+  .count { font-size: 12px; color: #667; }
+  input:focus, textarea:focus { outline: 2px solid #36c; outline-offset: 0; }
+  input[readonly] { background: #eee; }
+  input[disabled] { color: #888; }
+</style></head>
+<body><main>
+<h1>Text fields in use</h1>
+<label for=name>Name (filled, focused)</label>
+<input id=name class=wide autofocus value="Ada Lovelace, Countess of Lovelace">
+<label for=email>Email</label>
+<div class=row><input id=email type=email class=grow value="ada@example.org"><span class=count>15 / 64</span></div>
+<label for=long>A value much longer than the field</label>
+<input id=long style="width:180px" value="The quick brown fox jumps over the lazy dog and keeps running">
+<label for=pw>Password</label>
+<input id=pw type=password class=short value="hunter2hunter2">
+<label for=ph>Placeholder</label>
+<input id=ph class=wide placeholder="Search the documentation">
+<label for=num>Number, search, readonly, disabled</label>
+<div class=row>
+  <input id=num type=number class=short value="42"><input id=q type=search class=short value="query">
+  <input id=ro readonly class=short value="fixed"><input id=dis disabled class=short value="off">
+</div>
+<label for=plain>Default look</label>
+<div class=row><input id=plain class=native value="unstyled"><input id=plain2 class=native size=8 value="size 8"></div>
+<label for=notes>Notes (filled textarea)</label>
+<textarea id=notes>First line of the note.
+A second line that is long enough that it has to wrap inside the box when the box is narrow, and then a third paragraph.
+
+After a blank line.</textarea>
+<label for=empty>Empty textarea with a placeholder</label>
+<textarea id=empty class=native rows=3 cols=30 placeholder="Write something here"></textarea>
+</main></body></html>
