@@ -470,6 +470,10 @@ public sealed partial class BlockLayoutEngine
         {
             ratio = nw / nh;
         }
+        else if (node.NaturalRatio > 0)
+        {
+            ratio = node.NaturalRatio;
+        }
 
         bool borderBox = v.BoxSizing == BoxSizingKind.BorderBox;
         double sw = ReplacedLength(v.Width, containing, ph, borderBox, available);

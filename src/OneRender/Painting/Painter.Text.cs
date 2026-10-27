@@ -531,6 +531,12 @@ public sealed partial class Painter
     // Images 3 §5.5 and §5.6: object-fit sizes the image within the content box and object-position places it.
     private void PaintReplaced(int f, Box box, in ComputedValues v, in BoxGeometry g)
     {
+        if (box.Node.Replaced == ReplacedKind.Svg)
+        {
+            PaintSvg(f, box, in v, in g);
+            return;
+        }
+
         if (box.Node.Replaced != ReplacedKind.Image)
         {
             return;

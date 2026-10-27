@@ -34,6 +34,7 @@ public sealed partial class StyledTree
     private byte[] _replaced;
     private double[] _naturalW;
     private double[] _naturalH;
+    private double[] _naturalRatio;
     private string?[] _src;
     private char[] _text;
     private int[] _sourceToNode = [];
@@ -64,6 +65,7 @@ public sealed partial class StyledTree
         _replaced = new byte[64];
         _naturalW = new double[64];
         _naturalH = new double[64];
+        _naturalRatio = new double[64];
         _src = new string?[64];
         _text = new char[256];
         _tagIds[""] = 0;
@@ -294,6 +296,10 @@ public sealed partial class StyledTree
 
     internal double NaturalHeightOf(int i) => _naturalH[i];
 
+    internal double NaturalRatioOf(int i) => _naturalRatio[i];
+
+    internal void SetNaturalRatio(int idx, double ratio) => _naturalRatio[idx] = ratio > 0 && double.IsFinite(ratio) ? ratio : 0;
+
     internal int SourceIndexOf(int i) => _source[i];
 
     internal int DepthOf(int i) => _depth[i];
@@ -349,6 +355,7 @@ public sealed partial class StyledTree
         _replaced[i] = 0;
         _naturalW[i] = double.NaN;
         _naturalH[i] = double.NaN;
+        _naturalRatio[i] = 0;
         _src[i] = null;
         if (parent >= 0)
         {
@@ -510,6 +517,7 @@ public sealed partial class StyledTree
         Array.Resize(ref _replaced, n);
         Array.Resize(ref _naturalW, n);
         Array.Resize(ref _naturalH, n);
+        Array.Resize(ref _naturalRatio, n);
         Array.Resize(ref _src, n);
     }
 }

@@ -15,6 +15,7 @@ public partial struct ComputedValues
         v.TextUnderlineOffset = Length.Auto;
         v.ObjectPosition = PositionSpec.Center;
         v.ListStyleImage = ImageSpec.None;
+        InitEffects(ref v);
     }
 
     internal static bool PaintEquals(in ComputedValues a, in ComputedValues b) =>
@@ -36,7 +37,8 @@ public partial struct ComputedValues
         a.ObjectFit == b.ObjectFit &&
         a.ObjectPosition.Equals(b.ObjectPosition) &&
         a.ImageRendering == b.ImageRendering &&
-        a.ListStyleImage.Equals(b.ListStyleImage);
+        a.ListStyleImage.Equals(b.ListStyleImage) &&
+        EffectsEqual(in a, in b);
 
     internal static void PaintHash(ref HashCode h, in ComputedValues v)
     {
@@ -51,5 +53,6 @@ public partial struct ComputedValues
         h.Add(v.TextDecorationStyle);
         h.Add(v.ObjectFit);
         h.Add(v.ImageRendering);
+        EffectsHash(ref h, in v);
     }
 }

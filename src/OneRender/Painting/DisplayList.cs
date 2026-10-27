@@ -24,7 +24,7 @@ public sealed partial class DisplayList
     public const int FormatMajor = 1;
 
     /// <summary>Minor version of the format this library writes. Higher minors only add item kinds and fields.</summary>
-    public const int FormatMinor = 1;
+    public const int FormatMinor = 2;
 
     private const int FlagInset = 1;
     private const int FlagTiled = 2;
@@ -742,21 +742,29 @@ public sealed partial class DisplayList
     }
 
     /// <summary>
-    /// Pushes a 3D transform flattened to 2D: the mapping of the z = 0 plane's x and y (the 2D part of the matrix),
-    /// divided by <c>M44</c>. Perspective terms (<c>M14</c>, <c>M24</c>) are dropped, so a perspective transform is
-    /// approximated by its affine part at the origin.
+    /// Pushes a 3D transform. A matrix with no perspective (<c>M14</c> and <c>M24</c> zero) maps the z = 0 plane affinely, so it is stored
+    /// as an ordinary 2D transform: the 2D part of the matrix divided by <c>M44</c>. A matrix with perspective is stored whole
+    /// (<see cref="ItemKind.PushTransform3D"/>, format 1.2): the content is drawn flat, then projected with
+    /// <c>x' = (x*M11 + y*M21 + M41) / w</c>, <c>y' = (x*M12 + y*M22 + M42) / w</c>, <c>w = x*M14 + y*M24 + M44</c>.
+    /// Inside another projection the perspective is dropped (the list does not nest projections).
     /// </summary>
     /// <param name="id">The item's stable id.</param>
     /// <param name="matrix">The 3D transform in CSS pixels (row-vector convention, as <see cref="Matrix4x4"/>).</param>
     public void PushTransform3D(ItemId id, in Matrix4x4 matrix)
     {
         float w = matrix.M44;
-        if (!float.IsFinite(w) || w == 0f)
+        if (!float.IsFinite(w) || w <= 0f)
         {
-            throw new ArgumentException("The matrix has no finite, non-zero M44.", nameof(matrix));
+            throw new ArgumentException("The matrix has no finite, positive M44.", nameof(matrix));
         }
 
-        PushTransform(id, new Matrix3x2(matrix.M11 / w, matrix.M12 / w, matrix.M21 / w, matrix.M22 / w, matrix.M41 / w, matrix.M42 / w));
+        if ((matrix.M14 == 0f && matrix.M24 == 0f) || InsideProjection())
+        {
+            PushTransform(id, new Matrix3x2(matrix.M11 / w, matrix.M12 / w, matrix.M21 / w, matrix.M22 / w, matrix.M41 / w, matrix.M42 / w));
+            return;
+        }
+
+        PushTransform3DCore(id, matrix);
     }
 
     /// <summary>Ends the innermost transform.</summary>
@@ -1111,6 +1119,7 @@ public sealed partial class DisplayList
         public ulong CtxHash;
         public RectF Local;
         public RectF Device;
+        public RectF Rel;
         public int Num;
         public int A;
         public int B;
@@ -1127,6 +1136,9 @@ public sealed partial class DisplayList
         public Matrix3x2 Ctm;
         public RectF Clip;
         public ulong Ctx;
+        public Matrix4x4 Outer;
+        public bool Has3D;
+        public float Expand;
     }
 
     internal struct GradientRecord

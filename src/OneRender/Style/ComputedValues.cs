@@ -1,3 +1,5 @@
+using OneRender.Painting;
+
 namespace OneRender.Style;
 
 /// <summary>An immutable <c>font-family</c> list: family names in order, generic keywords lower-cased (CSS Fonts 4 §2.1).</summary>
@@ -537,6 +539,60 @@ public partial struct ComputedValues
 
     /// <summary><c>list-style-image</c> (inherited).</summary>
     public ImageSpec ListStyleImage { get; internal set; }
+
+    /// <summary><c>transform</c>.</summary>
+    internal TransformSpec Transform { get; set; }
+
+    /// <summary>The individual <c>translate</c> property.</summary>
+    internal TransformSpec Translate { get; set; }
+
+    /// <summary>The individual <c>rotate</c> property.</summary>
+    internal TransformSpec Rotate { get; set; }
+
+    /// <summary>The individual <c>scale</c> property.</summary>
+    internal TransformSpec Scale { get; set; }
+
+    /// <summary><c>transform-origin</c> x and y; percentages are of the reference box.</summary>
+    internal PositionSpec TransformOrigin { get; set; }
+
+    /// <summary>The z offset of <c>transform-origin</c> in px.</summary>
+    internal double TransformOriginZ { get; set; }
+
+    /// <summary><c>transform-box</c>.</summary>
+    internal TransformBoxKind TransformBox { get; set; }
+
+    /// <summary><c>perspective</c> in px; 0 for <c>none</c>.</summary>
+    internal double Perspective { get; set; }
+
+    /// <summary><c>perspective-origin</c>.</summary>
+    internal PositionSpec PerspectiveOrigin { get; set; }
+
+    /// <summary><c>transform-style</c>.</summary>
+    internal TransformStyleKind TransformStyle { get; set; }
+
+    /// <summary>True for <c>backface-visibility: hidden</c>.</summary>
+    internal bool BackfaceHidden { get; set; }
+
+    /// <summary><c>filter</c>.</summary>
+    internal FilterSpec Filter { get; set; }
+
+    /// <summary><c>backdrop-filter</c>.</summary>
+    internal FilterSpec BackdropFilter { get; set; }
+
+    /// <summary><c>clip-path</c>.</summary>
+    internal ClipPathSpec ClipPath { get; set; }
+
+    /// <summary>The <c>mask-*</c> layer longhands.</summary>
+    internal MaskSpec Mask { get; set; }
+
+    /// <summary><c>mix-blend-mode</c>.</summary>
+    internal BlendMode MixBlendMode { get; set; }
+
+    /// <summary>True for <c>isolation: isolate</c>.</summary>
+    internal bool Isolate { get; set; }
+
+    /// <summary><c>background-blend-mode</c> list; layer <i>i</i> takes entry <c>i mod Length</c>.</summary>
+    internal BlendMode[] BackgroundBlendModes { get; set; }
 
     /// <summary><c>break-before</c>.</summary>
     public BreakKind BreakBefore { get; internal set; }

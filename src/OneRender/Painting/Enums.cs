@@ -27,6 +27,9 @@ public enum ItemKind : byte
     /// <summary>A run of positioned glyphs of one face, size and color, with its source text.</summary>
     GlyphRun = 7,
 
+    /// <summary>An inline SVG document drawn into a rectangle (format 1.2).</summary>
+    SvgImage = 8,
+
     /// <summary>Starts clipping to a rectangle.</summary>
     PushClipRect = 16,
 
@@ -57,8 +60,31 @@ public enum ItemKind : byte
     /// <summary>Ends the innermost semantic element.</summary>
     EndTag = 25,
 
-    // 32 to 63 are reserved for effects that need a version bump: PushMask / PopMask (mask-image), PushFilter / PopFilter
-    // (filter and backdrop-filter), PushClipShape (clip-path with a reference box). They cannot be created in format 1.0.
+    /// <summary>Starts a filter chain applied to the content until the matching <see cref="PopFilter"/> (format 1.2).</summary>
+    PushFilter = 32,
+
+    /// <summary>Ends the innermost filter scope.</summary>
+    PopFilter = 33,
+
+    /// <summary>Starts a masked scope: the mask layers come first, then the masked content (format 1.2).</summary>
+    PushMask = 34,
+
+    /// <summary>Ends the innermost masked scope and applies the mask.</summary>
+    PopMask = 35,
+
+    /// <summary>Starts one layer of a mask; only valid directly inside a <see cref="PushMask"/> and before its content (format 1.2).</summary>
+    PushMaskLayer = 36,
+
+    /// <summary>Ends a mask layer.</summary>
+    PopMaskLayer = 37,
+
+    /// <summary>Filters what has already been painted under a shape, <c>backdrop-filter</c> (format 1.2).</summary>
+    BackdropFilter = 38,
+
+    /// <summary>Starts a 3D transform with perspective; the content is flattened into its plane and projected (format 1.2).</summary>
+    PushTransform3D = 40,
+
+    // 39 and 41 to 63 stay reserved. Format 1.2 draws clip-path shapes with PushClipPath and PushClipRoundedRect, so no separate clip-shape kind exists.
 }
 
 /// <summary>The kind of paint a fill item uses.</summary>

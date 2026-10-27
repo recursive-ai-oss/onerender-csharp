@@ -143,12 +143,36 @@ internal enum PropertyId : byte
     ObjectPosition,
     ImageRendering,
     ListStyleImage,
+    Transform,
+    TransformOrigin,
+    TransformBox,
+    Translate,
+    Rotate,
+    Scale,
+    Perspective,
+    PerspectiveOrigin,
+    TransformStyle,
+    BackfaceVisibility,
+    Filter,
+    BackdropFilter,
+    ClipPath,
+    MaskImage,
+    MaskMode,
+    MaskRepeat,
+    MaskPosition,
+    MaskSize,
+    MaskOrigin,
+    MaskClip,
+    MaskComposite,
+    MixBlendMode,
+    Isolation,
+    BackgroundBlendMode,
 }
 
 /// <summary>Names and inheritance of <see cref="PropertyId"/> values.</summary>
 internal static class Properties
 {
-    public const int Count = (int)PropertyId.ListStyleImage + 1;
+    public const int Count = (int)PropertyId.BackgroundBlendMode + 1;
 
     private static readonly string[] Names =
     [
@@ -172,6 +196,9 @@ internal static class Properties
         "grid-template-columns", "grid-template-rows", "grid-template-areas", "grid-auto-columns", "grid-auto-rows", "grid-auto-flow",
         "grid-row-start", "grid-row-end", "grid-column-start", "grid-column-end", "justify-items", "justify-self",
         "background-image", "background-repeat", "background-position-x", "background-position-y", "background-size", "background-origin", "background-clip", "background-attachment", "border-image-source", "border-image-slice", "border-image-width", "border-image-outset", "border-image-repeat", "box-shadow", "outline-width", "outline-style", "outline-color", "outline-offset", "text-decoration-line", "text-decoration-style", "text-decoration-color", "text-decoration-thickness", "text-underline-offset", "text-underline-position", "text-shadow", "object-fit", "object-position", "image-rendering", "list-style-image",
+        "transform", "transform-origin", "transform-box", "translate", "rotate", "scale", "perspective", "perspective-origin", "transform-style", "backface-visibility",
+        "filter", "backdrop-filter", "clip-path", "mask-image", "mask-mode", "mask-repeat", "mask-position", "mask-size", "mask-origin", "mask-clip", "mask-composite",
+        "mix-blend-mode", "isolation", "background-blend-mode",
     ];
 
     private static readonly Dictionary<string, PropertyId> ByName = BuildByName();
