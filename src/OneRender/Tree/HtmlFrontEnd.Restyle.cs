@@ -25,13 +25,13 @@ public sealed partial class HtmlFrontEnd : INodeStyler
         int source = tree.SourceIndexOf(node);
         if (styles is null || doc is null || source < 0)
         {
-            return new StyleId(tree.StyleOf(node).Index);
+            return _wrapperOf.TryGetValue(node, out int owner) ? FieldsetContentStyle(tree.StyleOf(owner), owner) : new StyleId(tree.StyleOf(node).Index);
         }
 
         Node element = doc.GetNode(source);
         int parent = tree.ParentOf(node);
         StyleId resolved = Resolve(styles.GetStyle(element), parentStyle, parent >= 0, parent < 0);
-        resolved = AdjustControlStyle(element, resolved, parent < 0 ? default : tree.StyleOf(parent));
+        resolved = AdjustControlStyle(element, SplitFieldset(element, node, resolved), parent < 0 ? default : tree.StyleOf(parent));
         string tag = tree.TagNameOf(node);
         if (element.Namespace == ElementNamespace.Html && (tag.Equals("table", StringComparison.Ordinal) || tag.Equals("tr", StringComparison.Ordinal) || tag.Equals("td", StringComparison.Ordinal) || tag.Equals("th", StringComparison.Ordinal)))
         {

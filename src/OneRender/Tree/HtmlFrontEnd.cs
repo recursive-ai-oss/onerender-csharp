@@ -36,6 +36,8 @@ public sealed partial class HtmlFrontEnd
         Document doc = styles.Document;
         _tree.Clear();
         _cellPadding.Clear();
+        _fieldsetOrig.Clear();
+        _wrapperOf.Clear();
         _alignHint.Clear();
         _tableBorder.Clear();
         _tree.SetDocument(doc, doc.NodeCount);
@@ -55,6 +57,11 @@ public sealed partial class HtmlFrontEnd
 
         int top = 0;
         _stack[0] = new Frame(rootElement.FirstChild, rootIdx, rootElement);
+        if (_fieldsetOrig.ContainsKey(rootIdx))
+        {
+            _stack[0].Fieldset = rootIdx;
+        }
+
         int counter = 0;
         while (top >= 0)
         {
@@ -81,12 +88,22 @@ public sealed partial class HtmlFrontEnd
                     ReadOnlySpan<char> data = child.Data;
                     if (!data.IsEmpty)
                     {
+                        if (f.Fieldset >= 0 && !data.IsWhiteSpace())
+                        {
+                            parentIdx = EnsureFieldsetContent(ref f);
+                        }
+
                         _tree.AppendText(parentIdx, data);
                     }
 
                     break;
                 case NodeKind.Element:
                 {
+                    if (f.Fieldset >= 0 && !IsRenderedLegend(child))
+                    {
+                        parentIdx = EnsureFieldsetContent(ref f);
+                    }
+
                     int idx = AddElement(styles, child, parentIdx);
                     if (idx >= 0 && ShouldDescend(idx))
                     {
@@ -96,6 +113,10 @@ public sealed partial class HtmlFrontEnd
                         }
 
                         _stack[++top] = new Frame(child.FirstChild, idx, child);
+                        if (_fieldsetOrig.ContainsKey(idx))
+                        {
+                            _stack[top].Fieldset = idx;
+                        }
                     }
 
                     break;
@@ -142,7 +163,7 @@ public sealed partial class HtmlFrontEnd
         _tree.SetElementInfo(idx, tag, replaced);
         ControlKind control = Classify(element);
         _noDescend = control is ControlKind.SelectMenu or ControlKind.Progress or ControlKind.Meter;
-        _tree.ReplaceStyle(idx, AdjustControlStyle(element, _tree.StyleOf(idx), parentIdx < 0 ? default : _tree.StyleOf(parentIdx)));
+        _tree.ReplaceStyle(idx, AdjustControlStyle(element, SplitFieldset(element, idx, _tree.StyleOf(idx)), parentIdx < 0 ? default : _tree.StyleOf(parentIdx)));
         if (element.Namespace == ElementNamespace.Html && tag.Length is 2 or 3 or 5 or 8 && IsSpanTag(tag))
         {
             ApplySpanAttributes(element, idx, tag);
@@ -600,5 +621,10 @@ public sealed partial class HtmlFrontEnd
         public Node Cursor = cursor;
         public int StyledParent = styledParent;
         public Node Owner = owner;
+
+        // A fieldset whose display is grid or flex: its rendered legend stays a child of the fieldset and every other child goes into the
+        // anonymous content box (HTML §15.3.13), made when the first of them arrives.
+        public int Fieldset = -1;
+        public int Wrap = -1;
     }
 }

@@ -315,6 +315,82 @@ public sealed partial class HtmlFrontEnd
 
     private bool IsOptionSelected(Node option) => Form is not null && Form.TryGetSelected(option, out bool on) ? on : option.HasAttribute("selected");
 
+    // HTML §15.3.13: a fieldset's rendered legend is not part of the fieldset's own layout (a grid or flex container lays out only the
+    // content that follows it), so for `display: grid | flex` the fieldset becomes a block and everything but the legend goes into an
+    // anonymous box that carries the original display and its flex or grid properties. Probe: a grid fieldset's first row starts after the
+    // legend and the fieldset's padding, with no grid gap between them (daisyUI's fieldset; docs/forms.md).
+    private readonly Dictionary<int, int> _fieldsetOrig = [];
+    private readonly Dictionary<int, int> _wrapperOf = [];
+
+    private StyleId SplitFieldset(Node element, int idx, StyleId style)
+    {
+        if (!IsHtmlTag(element, "fieldset"))
+        {
+            return style;
+        }
+
+        StyleTable table = _tree.Styles;
+        ComputedValues v = table[style];
+        if (v.Display.IsNone || v.Display.Inside is not (InnerDisplay.Flex or InnerDisplay.Grid))
+        {
+            _fieldsetOrig.Remove(idx);
+            return style;
+        }
+
+        _fieldsetOrig[idx] = style.Index;
+        v.Display = new DisplayType(v.Display.Outside, InnerDisplay.Flow);
+        return table.Derive(style, in v);
+    }
+
+    // The content box's style: what the fieldset inherits, with the fieldset's own display and the properties that arrange its children.
+    private StyleId FieldsetContentStyle(StyleId fieldsetStyle, int fieldset)
+    {
+        StyleTable table = _tree.Styles;
+        if (!_fieldsetOrig.TryGetValue(fieldset, out int origIndex))
+        {
+            return fieldsetStyle;
+        }
+
+        ComputedValues o = table[new StyleId(origIndex)];
+        StyleId anon = table.GetAnonymous(fieldsetStyle, new DisplayType(OuterDisplay.Block, o.Display.Inside));
+        ComputedValues v = table[anon];
+        v.FlexDirection = o.FlexDirection;
+        v.FlexWrap = o.FlexWrap;
+        v.JustifyContent = o.JustifyContent;
+        v.JustifyContentOverflow = o.JustifyContentOverflow;
+        v.AlignContent = o.AlignContent;
+        v.AlignContentOverflow = o.AlignContentOverflow;
+        v.AlignItems = o.AlignItems;
+        v.AlignItemsOverflow = o.AlignItemsOverflow;
+        v.JustifyItems = o.JustifyItems;
+        v.JustifyItemsOverflow = o.JustifyItemsOverflow;
+        v.RowGap = o.RowGap;
+        v.ColumnGap = o.ColumnGap;
+        v.GridTemplateColumns = o.GridTemplateColumns;
+        v.GridTemplateRows = o.GridTemplateRows;
+        v.GridTemplateAreas = o.GridTemplateAreas;
+        v.GridAutoColumns = o.GridAutoColumns;
+        v.GridAutoRows = o.GridAutoRows;
+        v.GridAutoFlow = o.GridAutoFlow;
+        v.GridAutoFlowDense = o.GridAutoFlowDense;
+        return table.Derive(anon, in v);
+    }
+
+    private int EnsureFieldsetContent(ref Frame f)
+    {
+        if (f.Wrap < 0)
+        {
+            StyleId s = FieldsetContentStyle(_tree.StyleOf(f.Fieldset), f.Fieldset);
+            f.Wrap = _tree.NewNode(StyledNodeKind.Element, f.Fieldset, s, -1);
+            if (f.Wrap >= 0)
+            {
+                _wrapperOf[f.Wrap] = f.Fieldset;
+            }
+        }
+
+        return f.Wrap >= 0 ? f.Wrap : f.Fieldset;
+    }
+
     // The baseline of a line of the control's text, from the top of its content box: the rounded ascent, moved by half the difference
     // between the used line height and the face's line spacing. Probe: 12 px below the content top for Arial 13.33 px (input baseline 15).
     private static double InnerBaselineOf(Layout.IFontProvider? fonts, in ComputedValues v, bool menulist)
