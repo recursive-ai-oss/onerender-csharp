@@ -254,6 +254,12 @@ internal sealed partial class Fragmenter
                 Add(Math.Min(lw.PrevLineBottom, cTop), cTop, in lw, level, false, true, BreakBits.None);
             }
 
+            if (lw.IsRoot)
+            {
+                // Lines directly in the fragmented container (inline content with no block children) are its content.
+                NoteRowChild(cTop, cBot);
+            }
+
             lw.LineNo++;
             lw.PrevLineBottom = cBot;
             return;

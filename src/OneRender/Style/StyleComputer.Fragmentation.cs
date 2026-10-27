@@ -163,7 +163,8 @@ internal sealed partial class StyleComputer
                     px = l.Value;
                 }
 
-                _rawColumnRuleWidth = px;
+                // Multicol 1 §4.4 / Backgrounds 3 §4.3: a rule width between 0 and 1px computes to 1px, others round down to whole px.
+                _rawColumnRuleWidth = px > 0 && px < 1 ? 1 : Math.Floor(px);
                 return true;
             }
 
