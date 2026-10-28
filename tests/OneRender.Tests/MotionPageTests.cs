@@ -47,6 +47,42 @@ public class MotionPageTests
     }
 
     [Fact]
+    public void KeyframesResolveVarPerElement()
+    {
+        // var() inside a keyframe reads the animated element's own custom property (CSS Variables 1 §3.2).
+        InteractivePage p = Page(
+            "<div id=a style='--to:0.5;animation:fade 1s linear both'>x</div><div id=b style='--to:0.25;animation:fade 1s linear both'>y</div>",
+            "@keyframes fade{from{opacity:1}to{opacity:var(--to)}}");
+        p.Advance(1000);
+        Assert.Equal(0.5, Opacity(p, "a"), 6);
+        Assert.Equal(0.25, Opacity(p, "b"), 6);
+    }
+
+    [Fact]
+    public void ALaterLayerWinsAndUnlayeredBeatsLayered()
+    {
+        // CSS Cascade 5 §6.4: unlayered rules beat layered ones, a later layer beats an earlier one; the source order is only the last tie-break.
+        InteractivePage p = Page("<div id=a style='animation:fade 1s linear both'>x</div>",
+            "@keyframes fade{to{opacity:0.1}}@layer one{@keyframes fade{to{opacity:0.7}}}@layer two{@keyframes fade{to{opacity:0.4}}}");
+        p.Advance(1000);
+        Assert.Equal(0.1, Opacity(p, "a"), 6);
+        InteractivePage q = Page("<div id=a style='animation:fade 1s linear both'>x</div>",
+            "@layer one,two;@layer two{@keyframes fade{to{opacity:0.4}}}@layer one{@keyframes fade{to{opacity:0.7}}}");
+        q.Advance(1000);
+        Assert.Equal(0.4, Opacity(q, "a"), 6);
+    }
+
+    [Fact]
+    public void AMissingFirstKeyframeStartsFromTheElementsOwnValue()
+    {
+        InteractivePage p = Page("<div id=a style='opacity:0.8;animation:fade 1s linear both'>x</div>", "@keyframes fade{to{opacity:0.2}}");
+        p.Advance(0);
+        Assert.Equal(0.8, Opacity(p, "a"), 6);
+        p.Advance(500);
+        Assert.Equal(0.5, Opacity(p, "a"), 6);
+    }
+
+    [Fact]
     public void OpacityAnimationDoesNotRelayout()
     {
         InteractivePage p = Page("<div id=a style='animation:fade 1s linear infinite'>x</div>", "@keyframes fade{from{opacity:0}to{opacity:1}}");

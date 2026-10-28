@@ -1,4 +1,5 @@
 using OneRender.Forms;
+using OneRender.Interaction;
 using OneRender.Style;
 using RecursiveAI.OneHtml;
 using RecursiveAI.OneHtml.Selectors;
@@ -39,7 +40,7 @@ public sealed partial class HtmlFrontEnd
         switch (tag)
         {
             case "input":
-                return ClassifyInput(element.GetAttribute("type"));
+                return FocusRules.TryGetAttribute(element, "type", out ReadOnlySpan<char> type) ? ClassifyInput(type) : ControlKind.TextField;
             case "textarea": return ControlKind.TextArea;
             case "button": return ControlKind.Button;
             case "select":
@@ -51,24 +52,47 @@ public sealed partial class HtmlFrontEnd
         }
     }
 
-    internal static ControlKind ClassifyInput(string? type)
+    // The type attribute is compared as a span so that restyling a control (a hover, a ticked box) allocates nothing.
+    internal static ControlKind ClassifyInput(ReadOnlySpan<char> type)
     {
-        if (string.IsNullOrEmpty(type))
+        if (type.IsEmpty)
         {
             return ControlKind.TextField;
         }
 
-        return type.ToLowerInvariant() switch
+        if (IsAny(type, "hidden", "image", "file", "color", "date", "datetime-local", "month", "week", "time"))
         {
-            "hidden" or "image" or "file" or "color" or "date" or "datetime-local" or "month" or "week" or "time" => ControlKind.None,
-            "checkbox" => ControlKind.Checkbox,
-            "radio" => ControlKind.Radio,
-            "range" => ControlKind.Range,
-            "button" or "submit" or "reset" => ControlKind.ButtonInput,
-            "password" => ControlKind.Password,
-            _ => ControlKind.TextField,
-        };
+            return ControlKind.None;
+        }
+
+        if (type.Equals("checkbox", StringComparison.OrdinalIgnoreCase))
+        {
+            return ControlKind.Checkbox;
+        }
+
+        if (type.Equals("radio", StringComparison.OrdinalIgnoreCase))
+        {
+            return ControlKind.Radio;
+        }
+
+        if (type.Equals("range", StringComparison.OrdinalIgnoreCase))
+        {
+            return ControlKind.Range;
+        }
+
+        if (IsAny(type, "button", "submit", "reset"))
+        {
+            return ControlKind.ButtonInput;
+        }
+
+        return type.Equals("password", StringComparison.OrdinalIgnoreCase) ? ControlKind.Password : ControlKind.TextField;
     }
+
+    private static bool IsAny(ReadOnlySpan<char> value, string a, string b, string c) =>
+        value.Equals(a, StringComparison.OrdinalIgnoreCase) || value.Equals(b, StringComparison.OrdinalIgnoreCase) || value.Equals(c, StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsAny(ReadOnlySpan<char> value, string a, string b, string c, string d, string e, string f, string g, string h, string i) =>
+        IsAny(value, a, b, c) || IsAny(value, d, e, f) || IsAny(value, g, h, i);
 
     // HTML §4.10.7: a select with the multiple attribute, or a size attribute above 1, is a list box.
     private static bool IsListbox(Node select) => select.HasAttribute("multiple") || ListSize(select) > 1;

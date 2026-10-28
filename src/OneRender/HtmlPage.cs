@@ -247,7 +247,7 @@ public sealed partial class HtmlPage
             Animation.AnimationController? motion = null;
             if (animate || options.AnimationTime.HasValue)
             {
-                motion = new Animation.AnimationController(Animation.KeyframesRegistry.Collect(styles, media, cancellationToken));
+                motion = new Animation.AnimationController();
             }
 
             // Animations and transitions begin at the clock's start; a page rendered once at a later time is that far into them.

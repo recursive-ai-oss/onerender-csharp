@@ -2,6 +2,21 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- Form-state selectors follow live form state: `:checked`, `:indeterminate`, `:disabled`, `:enabled`, `:read-only` and `:read-write` (with `:checked + label`, `:has(:checked)`, disabled `fieldset` and radio groups) restyle when the user clicks or uses the keyboard, and after `SetChecked`, `SetIndeterminate`, a selected option, a form reset or a `disabled` attribute edit, and equal a page parsed with that state. A host can style `appearance: none` checkboxes and radios with these selectors.
+- `InteractivePage.SetIndeterminate` and `IsIndeterminate`.
+- A text control's selection highlight takes its `color` and `background-color` from `::selection` rules.
+
+### Changed
+
+- OneHtml and OneHtml.Accessibility 1.4.0.
+- Hover, active and focus on an HTML page, and form state changes, go through OneHtml's live cascade: restyling allocates nothing once warm (a hover on the 1,000-node HUD page was about 24 KB).
+- `@keyframes` come from OneHtml's resolved keyframes: `@layer` and origin precedence, `var()` per element, merged offsets. Animations that are already running keep the keyframes they started with.
+- `OneRender.Interaction.ElementStateChange` now has the same name as a type OneHtml 1.4.0 added to `RecursiveAI.OneHtml.Css`. Code that imports both namespaces needs a using alias or a qualified name.
+
 ## [1.1.0] - 2026-10-27
 
 ### Added
