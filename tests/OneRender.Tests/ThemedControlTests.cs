@@ -80,7 +80,8 @@ public class ThemedControlTests
     [InlineData("1")]
     public void InvalidColorSchemesAreRejected(string value)
     {
-        Assert.False(new StyleDeclaration().TrySet("color-scheme", value));
+        // An invalid declaration is ignored, so the inherited dark scheme survives it.
+        Assert.True(Child("color-scheme:dark", "color-scheme:" + value).DarkScheme);
     }
 
     [Fact]
@@ -90,7 +91,7 @@ public class ThemedControlTests
         Assert.False(Child("color-scheme:dark", "color-scheme:light").DarkScheme);
         Assert.True(Child(string.Empty, string.Empty, midCss: "color-scheme:dark").DarkScheme);
         Assert.Equal(ColorSchemes.Light | ColorSchemes.Dark | ColorSchemes.Only, Root("color-scheme:only light dark").ColorScheme);
-        Assert.Equal("light dark", Root("color-scheme:light dark").ToCss(PropertyId.ColorScheme));
+        Assert.Equal("light dark", ComputedValueText.Get(PropertyId.ColorScheme, Root("color-scheme:light dark")));
     }
 
     // ------------------------------------------------------------------ system colors under each scheme
@@ -264,7 +265,6 @@ public class ThemedControlTests
     [Fact]
     public void ADarkRootPaintsTheDarkCanvasAndALightOneNothing()
     {
-        Assert.True(Has(Paint("<p>x</p>", false).Count == 0 ? Paint("<p>x</p>") : Paint("<html style='color-scheme:dark'><p>x</p>"), ItemKind.FillRect, 0x121212) || true);
         DisplayList dark = Paint("<div style='display:none'></div>", prefersDark: true);
         Assert.False(Has(dark, ItemKind.FillRect, 0x121212));
 
@@ -373,10 +373,44 @@ public class ThemedControlTests
         }
     }
 
+    private static bool HasText(DisplayList list, string text, int rgb)
+    {
+        for (int i = 0; i < list.Count; i++)
+        {
+            DisplayItem it = list[i];
+            if (it.Kind == ItemKind.GlyphRun && it.GlyphRun.Text.ToString() == text && Near(it.GlyphRun.Color, Hex(rgb)))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    [Fact]
+    public void ThePlaceholderIsChromesGreyInBothSchemesUnlessTheCascadeSaysOtherwise()
+    {
+        const string Field = "<input placeholder=Hint><textarea placeholder=Note></textarea>";
+        Assert.True(HasText(Paint(Field), "Hint", 0x757575));
+        Assert.True(HasText(Paint("<div style='color-scheme:dark'>" + Field + "</div>"), "Hint", 0x757575));
+        Assert.True(HasText(Paint("<div style='color-scheme:dark'>" + Field + "</div>"), "Note", 0x757575));
+        Assert.True(HasText(Paint("<style>input{color:red}</style>" + Field), "Hint", 0x757575));
+    }
+
+    [Fact]
+    public void APlaceholderRuleSetsTheColorOfThePlaceholderOnly()
+    {
+        DisplayList list = Paint("<style>input::placeholder{color:#c00000}</style><input placeholder=Hint><input value=Typed placeholder=Gone>");
+        Assert.True(HasText(list, "Hint", 0xc00000));
+        Assert.True(HasText(list, "Typed", 0x000000));
+        DisplayList dark = Paint("<style>textarea::placeholder{color:#abcdef}</style><div style='color-scheme:dark'><textarea placeholder=Note></textarea></div>");
+        Assert.True(HasText(dark, "Note", 0xabcdef));
+    }
+
     [Fact]
     public void ThePopupAndSelectedOptionsUseTheDarkPalette()
     {
         DisplayList list = Paint("<div style='color-scheme:dark'><select multiple><option selected>a</option><option>b</option></select></div>");
-        Assert.True(Has(list, ItemKind.FillRect, 0x545454) || Has(list, ItemKind.FillRoundedRect, 0x545454) || true);
+        Assert.True(Has(list, ItemKind.FillRect, 0x545454) || Has(list, ItemKind.FillRoundedRect, 0x545454));
     }
 }

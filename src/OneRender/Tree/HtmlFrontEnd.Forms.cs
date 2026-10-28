@@ -2,6 +2,7 @@ using OneRender.Forms;
 using OneRender.Interaction;
 using OneRender.Style;
 using RecursiveAI.OneHtml;
+using RecursiveAI.OneHtml.Css;
 using RecursiveAI.OneHtml.Selectors;
 
 namespace OneRender.Tree;
@@ -861,15 +862,27 @@ public sealed partial class HtmlFrontEnd
 
         if (placeholder.Length > 0)
         {
-            // Chrome's placeholder color (darkgray at 75% luminance).
             ComputedValues tv = table[ts];
-            tv.Color = new ColorValue(117 / 255f, 117 / 255f, 117 / 255f, 1);
+            tv.Color = PlaceholderColor(element, owner);
             int p = _tree.NewNode(StyledNodeKind.Text, idx, table.Derive(ts, in tv), -1);
             if (p >= 0)
             {
                 _tree.SetText(p, shown.IsEmpty ? placeholder : string.Empty);
             }
         }
+    }
+
+    // The placeholder's text colour: the ::placeholder rule's colour when the cascade has one (CSS Pseudo-Elements 4 §3.2 lists color among
+    // the properties it takes), else Chrome's own #757575, which it paints under both color schemes (measured from Chrome's rendering).
+    private ColorValue PlaceholderColor(Node element, StyleId ownerStyle)
+    {
+        ComputedStyle? ps = _current.IsNull ? null : _current.GetPseudoStyle(element, PseudoElementKind.Placeholder);
+        if (ps is not null)
+        {
+            return _tree.Styles[Resolve(ps, ownerStyle, true, false)].Color;
+        }
+
+        return new ColorValue(117 / 255f, 117 / 255f, 117 / 255f, 1);
     }
 
     /// <summary>The value a text control starts with: the <c>value</c> attribute, or for a textarea its text (HTML §4.10.11 raw value, line breaks normalized).</summary>
