@@ -39,6 +39,12 @@ public sealed class HtmlRenderOptions
     /// time, so an animation with a negative delay, or one sampled at a given time, renders as a browser's screenshot at that time would.
     /// </summary>
     public double? AnimationTime { get; init; }
+
+    /// <summary>
+    /// Whether the host prefers a dark color scheme: the <c>prefers-color-scheme</c> media feature, and the scheme a <c>color-scheme: light dark</c>
+    /// page uses. A page that does not opt in with <c>color-scheme</c> stays light. Default false.
+    /// </summary>
+    public bool PrefersDarkColorScheme { get; init; }
 }
 
 /// <summary>
@@ -78,6 +84,7 @@ public static class HtmlRender
             StylesheetBytes = options.Resources,
             Layout = options.Layout,
             AnimationTime = options.AnimationTime,
+            PrefersDarkColorScheme = options.PrefersDarkColorScheme,
         };
         HtmlPage page = HtmlPage.Create(html, pageOptions, cancellationToken);
         var list = new DisplayList();

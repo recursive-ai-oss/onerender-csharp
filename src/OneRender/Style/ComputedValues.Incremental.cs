@@ -35,6 +35,12 @@ public partial struct ComputedValues
         t.ImageRendering = b.ImageRendering;
         t.ListStyleImage = b.ListStyleImage;
         t.Opacity = b.Opacity;
+        t.AccentColor = b.AccentColor;
+        t.AccentColorAuto = b.AccentColorAuto;
+        t.CaretColor = b.CaretColor;
+        t.CaretColorAuto = b.CaretColorAuto;
+        t.ColorScheme = b.ColorScheme;
+        t.DarkScheme = b.DarkScheme;
         t.HostScope = b.HostScope;
         t.HasHostScope = b.HasHostScope;
         t.ControlState = b.ControlState;

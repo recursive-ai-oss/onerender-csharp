@@ -84,6 +84,7 @@ public sealed class StyleTable
     private double _viewportWidth = 800;
     private double _viewportHeight = 600;
     private double _rootFontSize = 16;
+    private bool _prefersDark;
     private ComputeEnvironment _rootEnv = new(0, 0, 16);
 
     /// <summary>Creates a table whose row 0 is the initial style.</summary>
@@ -131,6 +132,25 @@ public sealed class StyleTable
         Reset();
     }
 
+    /// <summary>
+    /// Whether the host prefers a dark color scheme (the value of the <c>prefers-color-scheme</c> media feature). A <c>color-scheme</c> that lists both
+    /// <c>light</c> and <c>dark</c> resolves to it (CSS Color Adjust 1 §2.2). Default false. A change drops every cached style, so set it before building a tree.
+    /// </summary>
+    public bool PrefersDarkScheme
+    {
+        get => _prefersDark;
+        set
+        {
+            if (_prefersDark == value)
+            {
+                return;
+            }
+
+            _prefersDark = value;
+            Reset();
+        }
+    }
+
     /// <summary>Drops every cached style. Handles obtained before the call must not be used afterwards.</summary>
     public void Reset()
     {
@@ -144,7 +164,7 @@ public sealed class StyleTable
         _reclaimAt = MinReclaimGap;
         Array.Clear(_gen);
         _rootFontSize = 16;
-        _rootEnv = new(0, 0, 16);
+        _rootEnv = new(0, 0, 16, PrefersDark: _prefersDark);
     }
 
     /// <summary>The text service whose metrics resolve <c>ex</c>, <c>ch</c> and <c>ic</c>; set before building, since cached styles keep the numbers they were computed with.</summary>
@@ -265,8 +285,8 @@ public sealed class StyleTable
     internal StyleId Compute(object key, int version, DeclarationSource declarations, StyleId parent, bool hasParent, bool isRoot, bool weak = false)
     {
         ComputeEnvironment env = isRoot
-            ? new ComputeEnvironment(_viewportWidth, _viewportHeight, 16)
-            : _rootEnv with { ViewportWidth = _viewportWidth, ViewportHeight = _viewportHeight, RootFontSize = _rootFontSize };
+            ? new ComputeEnvironment(_viewportWidth, _viewportHeight, 16, PrefersDark: _prefersDark)
+            : _rootEnv with { ViewportWidth = _viewportWidth, ViewportHeight = _viewportHeight, RootFontSize = _rootFontSize, PrefersDark = _prefersDark };
         ref ComputedValues parentRow = ref _rows[hasParent ? parent.Index : 0];
         ComputedValues values = _computer.Compute(declarations, in parentRow, hasParent, in env, isRoot);
         if (_computer.InvalidCount > 0)
@@ -564,7 +584,7 @@ public sealed class StyleTable
     /// </summary>
     internal ComputedValues ComputeDetached(DeclarationSource declarations, StyleId parent, bool hasParent)
     {
-        var env = new ComputeEnvironment(_viewportWidth, _viewportHeight, _rootFontSize);
+        var env = new ComputeEnvironment(_viewportWidth, _viewportHeight, _rootFontSize, PrefersDark: _prefersDark);
         return _computer.Compute(declarations, in _rows[hasParent ? parent.Index : 0], hasParent, in env, false);
     }
 

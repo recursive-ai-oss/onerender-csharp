@@ -427,6 +427,15 @@ public partial struct ComputedValues
     /// <summary>True for <c>accent-color: auto</c>, the user agent's accent. Inherited.</summary>
     public bool AccentColorAuto { get; internal set; }
 
+    /// <summary>The computed <c>color-scheme</c> (CSS Color Adjust 1 §2.1); <see cref="ColorSchemes.Normal"/> when it is <c>normal</c>. Inherited.</summary>
+    public ColorSchemes ColorScheme { get; internal set; }
+
+    /// <summary>
+    /// True when the element's used color scheme is dark (CSS Color Adjust 1 §2.2): the list names <c>dark</c> and either not <c>light</c> or
+    /// the host prefers a dark scheme (<see cref="StyleTable.PrefersDarkScheme"/>). Controls, system colors and <c>light-dark()</c> follow it. Inherited.
+    /// </summary>
+    public bool DarkScheme { get; internal set; }
+
     /// <summary><c>opacity</c>, clamped to 0 to 1.</summary>
     public double Opacity { get; internal set; }
 

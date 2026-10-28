@@ -162,6 +162,7 @@ internal static partial class ComputedValueText
             case PropertyId.CaretColor: return v.CaretColorAuto ? "auto" : v.CaretColor.ToCss();
             case PropertyId.HostScope: return v.HasHostScope ? v.HostScope.ToString(System.Globalization.CultureInfo.InvariantCulture) : "none";
             case PropertyId.AccentColor: return v.AccentColorAuto ? "auto" : v.AccentColor.ToCss();
+            case PropertyId.ColorScheme: return ColorSchemeText(v.ColorScheme);
             default: return (id >= PropertyId.TransitionProperty && id <= PropertyId.AnimationPlayState ? MotionText(id, in v) : PaintText(id, in v)) ?? string.Empty;
         }
     }
@@ -247,5 +248,18 @@ internal static partial class ComputedValueText
 
         string ratio = CssText.Number(v.AspectRatioWidth) + (v.AspectRatioHeight == 1 ? string.Empty : " / " + CssText.Number(v.AspectRatioHeight));
         return v.AspectRatioAuto ? "auto " + ratio : ratio;
+    }
+
+    // CSS Color Adjust 1 §2.1: the computed value lists the known schemes in the order light, dark, with `only` last.
+    private static string ColorSchemeText(ColorSchemes s)
+    {
+        bool light = (s & ColorSchemes.Light) != 0, dark = (s & ColorSchemes.Dark) != 0, only = (s & ColorSchemes.Only) != 0;
+        if (!light && !dark)
+        {
+            return only ? "only light" : "normal";
+        }
+
+        string list = light && dark ? "light dark" : light ? "light" : "dark";
+        return only ? "only " + list : list;
     }
 }

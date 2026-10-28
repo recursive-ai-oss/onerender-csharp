@@ -1017,7 +1017,7 @@ internal sealed partial class StyleComputer
 
     private bool ParseColorProperty(PropertyId id, ComponentValueList v)
     {
-        if (!CssColor.TryParse(v, out CssColor c))
+        if (!CssColor.TryParse(v, out CssColor c, ColorOptions))
         {
             return false;
         }
@@ -1028,7 +1028,7 @@ internal sealed partial class StyleComputer
             // CSS Color 4 §4.5: for the `color` property itself currentcolor means inherit.
             if (id == PropertyId.Color)
             {
-                value = _hasParent ? _parent.Color : ColorValue.Black;
+                value = _hasParent ? _parent.Color : SystemColors.CanvasText(_r.DarkScheme);
             }
             else
             {
@@ -1037,8 +1037,7 @@ internal sealed partial class StyleComputer
         }
         else
         {
-            (double r, double g, double b, double a) = c.ToSrgb();
-            value = new ColorValue((float)r, (float)g, (float)b, (float)a);
+            value = ToColorValue(in c);
         }
 
         switch (id)

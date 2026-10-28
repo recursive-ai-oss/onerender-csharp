@@ -723,6 +723,13 @@ public sealed partial class Painter
         bool hasImages = bgValues.Background.HasImages;
         if (bg.A <= 0f && !hasImages)
         {
+            // CSS Color Adjust 1 §2.3 (and Backgrounds 3 §2.11.2): a canvas with no background of its own takes the user agent's canvas color, which
+            // follows the root's used color scheme. The light canvas is the surface the host draws on, so nothing is painted for it.
+            if (rv.DarkScheme)
+            {
+                _list.FillRect(ItemId.Of(0, 5, 0), _canvasRect, ToColor(Style.SystemColors.Canvas(true), rv.Color));
+            }
+
             return;
         }
 

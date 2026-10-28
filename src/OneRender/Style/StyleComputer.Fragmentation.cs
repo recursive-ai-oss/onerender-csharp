@@ -248,20 +248,12 @@ internal sealed partial class StyleComputer
 
             case PropertyId.ColumnRuleColor:
             {
-                if (!CssColor.TryParse(v, out CssColor c))
+                if (!CssColor.TryParse(v, out CssColor c, ColorOptions))
                 {
                     return false;
                 }
 
-                if (c.IsCurrentColor)
-                {
-                    _r.ColumnRuleColor = ColorValue.CurrentColor;
-                }
-                else
-                {
-                    (double r, double g, double b, double a) = c.ToSrgb();
-                    _r.ColumnRuleColor = new ColorValue((float)r, (float)g, (float)b, (float)a);
-                }
+                _r.ColumnRuleColor = c.IsCurrentColor ? ColorValue.CurrentColor : ToColorValue(in c);
 
                 return true;
             }

@@ -335,26 +335,36 @@ internal sealed partial class StyleComputer
 
     // ---- small value parsers ----
 
-    private static bool TryColorPart(ComponentValue p, out ColorValue color)
+    // The environment colors are parsed in: light-dark() picks by the element's used color scheme (CSS Color 5 §4).
+    private static readonly ColorParseOptions DarkColorOptions = new() { DarkScheme = true };
+
+    private ColorParseOptions ColorOptions => _r.DarkScheme ? DarkColorOptions : ColorParseOptions.Default;
+
+    // A parsed color as a computed one. A system color keyword takes its value under the element's used scheme (CSS Color Adjust 1 §2.2).
+    private ColorValue ToColorValue(in CssColor c)
+    {
+        if (c.SystemName is { } system && SystemColors.TryResolve(system, _r.DarkScheme, out ColorValue resolved))
+        {
+            return resolved;
+        }
+
+        (double r, double g, double b, double a) = c.ToSrgb();
+        return new ColorValue((float)r, (float)g, (float)b, (float)a);
+    }
+
+    private bool TryColorPart(ComponentValue p, out ColorValue color)
     {
         color = default;
-        if (!CssColor.TryParse(ListOf(p), out CssColor c))
+        if (!CssColor.TryParse(ListOf(p), out CssColor c, ColorOptions))
         {
             return false;
         }
 
-        if (c.IsCurrentColor)
-        {
-            color = ColorValue.CurrentColor;
-            return true;
-        }
-
-        (double r, double g, double b, double a) = c.ToSrgb();
-        color = new ColorValue((float)r, (float)g, (float)b, (float)a);
+        color = c.IsCurrentColor ? ColorValue.CurrentColor : ToColorValue(in c);
         return true;
     }
 
-    private static bool TryColorList(ComponentValueList v, out ColorValue color)
+    private bool TryColorList(ComponentValueList v, out ColorValue color)
     {
         color = default;
         return SinglePart(v, out ComponentValue p) && TryColorPart(p, out color);
@@ -644,7 +654,7 @@ internal sealed partial class StyleComputer
         return true;
     }
 
-    private static bool IsRadialConfig(ComponentValue[] head)
+    private bool IsRadialConfig(ComponentValue[] head)
     {
         if (TryColorPart(head[0], out _))
         {

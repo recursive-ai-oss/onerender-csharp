@@ -1091,12 +1091,16 @@ public sealed partial class Painter
         CornerRadii radii = ResolveRadii(in v, bb.Width, bb.Height, 0);
         if (v.OutlineAuto)
         {
-            // CSS UI 4 §4.4 leaves the rendering of `auto` to the user agent. Chrome 156 draws a 2 px ring, #101010 unless the author gave a
-            // color, whose outer edge lies `outline-offset` outside the border box when the box has no border, and exactly at the border box
-            // edge when it has one (probes: a plain div and a checkbox, a bordered text field, button and rounded div; docs/forms.md).
+            // CSS UI 4 §4.4 leaves the rendering of `auto` to the user agent. Chrome 156 draws a 2 px ring (#101010 under the light scheme,
+            // #eeeeee under the dark one, unless the author gave a color) whose outer edge lies `outline-offset` outside the border box when the
+            // box has no border, and exactly at the border box edge when it has one (probes: a plain div and a checkbox, a bordered text field,
+            // button and rounded div; docs/forms.md), and a 1 px ring just outside it (white light, #101010 dark).
             bool bordered = v.BorderTopWidth > 0 || v.BorderRightWidth > 0 || v.BorderBottomWidth > 0 || v.BorderLeftWidth > 0;
-            PaintColor ringColor = v.OutlineColor.IsCurrentColor ? new PaintColor(16 / 255f, 16 / 255f, 16 / 255f, 1f) : color;
-            DrawOutlineRing(f, 1, grow + (bordered ? 0 : 1), 2, ringColor, BorderStyle.Solid, radii, 2);
+            FormPalette pal = FormPalette.For(v.DarkScheme);
+            PaintColor ringColor = v.OutlineColor.IsCurrentColor ? pal.FocusInner : color;
+            double edge = grow + (bordered ? 0 : 1);
+            DrawOutlineRing(f, 1, edge, 2, ringColor, BorderStyle.Solid, radii, 2);
+            DrawOutlineRing(f, 2, edge + 1, 1, pal.FocusOuter, BorderStyle.Solid, radii, 2);
             return;
         }
 

@@ -63,6 +63,12 @@ public sealed class HtmlPageOptions
     public bool PrefersReducedMotion { get; init; }
 
     /// <summary>
+    /// The value of the <c>prefers-color-scheme</c> media feature: true for <c>dark</c>, false (the default) for <c>light</c>. It also decides which scheme
+    /// a <c>color-scheme</c> that lists both <c>light</c> and <c>dark</c> uses (CSS Color Adjust 1 §2.2). A page that sets no <c>color-scheme</c> stays light.
+    /// </summary>
+    public bool PrefersDarkColorScheme { get; init; }
+
+    /// <summary>
     /// For a page rendered once (image or PDF): the time, in milliseconds on the animation clock, at which CSS animations and transitions
     /// are sampled. Animations start at time 0, so this is how far into them the picture is. Null (the default) renders the page without
     /// animations, as the cascade gives it. An <see cref="Interaction.InteractivePage"/> always runs animations and takes its time from the host.
@@ -179,7 +185,7 @@ public sealed partial class HtmlPage
         ArgumentOutOfRangeException.ThrowIfLessThan(options.ViewportWidth, 1);
         ArgumentOutOfRangeException.ThrowIfLessThan(options.ViewportHeight, 1);
         cancellationToken.ThrowIfCancellationRequested();
-        var context = new StyleContext { Media = new MediaFeatures { Width = options.ViewportWidth, Height = options.ViewportHeight, Type = options.PrintMedia ? MediaType.Print : MediaType.Screen, ReducedMotion = options.PrefersReducedMotion ? PrefersReduced.Reduce : PrefersReduced.NoPreference } };
+        var context = new StyleContext { Media = new MediaFeatures { Width = options.ViewportWidth, Height = options.ViewportHeight, Type = options.PrintMedia ? MediaType.Print : MediaType.Screen, ReducedMotion = options.PrefersReducedMotion ? PrefersReduced.Reduce : PrefersReduced.NoPreference, ColorScheme = options.PrefersDarkColorScheme ? PrefersColorScheme.Dark : PrefersColorScheme.Light } };
         Func<string, byte[]?>? bytes = options.StylesheetBytes;
         StyleSourceOptions MakeOptions(string? registered)
         {
@@ -258,6 +264,7 @@ public sealed partial class HtmlPage
     {
         var table = new StyleTable();
         table.SetViewport(options.ViewportWidth, options.ViewportHeight);
+        table.PrefersDarkScheme = options.PrefersDarkColorScheme;
         table.Fonts = options.Fonts;
         var styled = new StyledTree(table) { Resolver = options.Replaced };
         var front = new HtmlFrontEnd(styled) { References = references, Form = form ??= new Forms.FormState(), TextOverrides = textOverrides };
