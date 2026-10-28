@@ -47,6 +47,12 @@ internal sealed class Tab : IDisposable
         await t.SendAsync("Emulation.setScriptExecutionDisabled", "{\"value\":true}", ct: ct).ConfigureAwait(false);
         await t.SendAsync("Emulation.setDeviceMetricsOverride",
             "{\"width\":" + J.N(vp.Width) + ",\"height\":" + J.N(vp.Height) + ",\"deviceScaleFactor\":1,\"mobile\":false}", ct: ct).ConfigureAwait(false);
+        if (Environment.GetEnvironmentVariable("GEOMDIFF_PREFERS_DARK") == "1")
+        {
+            // Pages that opt in with `color-scheme: light dark` resolve against the host's preference; the engine side is told the same.
+            await t.SendAsync("Emulation.setEmulatedMedia", "{\"features\":[{\"name\":\"prefers-color-scheme\",\"value\":\"dark\"}]}", ct: ct).ConfigureAwait(false);
+        }
+
         await t.SendAsync("Fetch.enable", "{\"patterns\":[{\"urlPattern\":\"*\"}]}", ct: ct).ConfigureAwait(false);
         return t;
     }

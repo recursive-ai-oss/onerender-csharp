@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang=en style=""><head><meta charset=utf-8><title>Focus rings</title>
+<style>
+body{margin:0;font:13px Arial,sans-serif}
+section{padding:8px 16px;background:Canvas;color:CanvasText;overflow:hidden}
+h2{font-size:14px;margin:0 0 6px}
+.row{display:flex;align-items:center;gap:10px;margin:4px 0}
+.name{width:90px;flex:none}
+.ring input,.ring textarea,.ring select,.ring button{outline:auto}
+</style></head><body>
+<section class="ring" style="color-scheme:light"><h2>outline: auto, light</h2>
+<div class=row><span class=name>text</span><input value="Abc"></div>
+<div class=row><span class=name>textarea</span><textarea style="width:120px;height:34px">Notes</textarea></div>
+<div class=row><span class=name>select</span><select><option>One</option><option>Two</option></select></div>
+<div class=row><span class=name>button</span><button>Save</button></div>
+<div class=row><span class=name>checkbox-on</span><input type=checkbox checked></div>
+<div class=row><span class=name>radio-on</span><input type=radio name=s checked></div>
+<div class=row><span class=name>range</span><input type=range value=40></div>
+</section>
+<section class="ring" style="color-scheme:dark"><h2>outline: auto, dark</h2>
+<div class=row><span class=name>text</span><input value="Abc"></div>
+<div class=row><span class=name>textarea</span><textarea style="width:120px;height:34px">Notes</textarea></div>
+<div class=row><span class=name>select</span><select><option>One</option><option>Two</option></select></div>
+<div class=row><span class=name>button</span><button>Save</button></div>
+<div class=row><span class=name>checkbox-on</span><input type=checkbox checked></div>
+<div class=row><span class=name>radio-on</span><input type=radio name=s checked></div>
+<div class=row><span class=name>range</span><input type=range value=40></div>
+</section>
+</body></html>
