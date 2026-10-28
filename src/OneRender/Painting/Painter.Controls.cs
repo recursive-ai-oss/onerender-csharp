@@ -4,8 +4,9 @@ using OneRender.Style;
 
 namespace OneRender.Painting;
 
-// Form controls drawn the way Chrome 156 draws them by default (light scheme). Every number here was read off screenshots of Chrome for
-// Testing with the probe pages in testdata/forms-probes and the gallery in testdata/forms; docs/forms.md lists them with the evidence.
+// Form controls drawn the way Chrome 156 draws them by default, under the light and the dark color scheme (FormPalette). Every number here
+// was read off screenshots of Chrome for Testing with the probe pages in testdata/forms-probes and the gallery in testdata/forms;
+// docs/forms.md lists them with the evidence.
 // A text field, textarea, select or button keeps the native look only while its border and background are still the defaults the
 // native look expects; once the author changes one the box is drawn from its CSS, as browsers do (CSS UI 4 §6.1, `appearance: auto`).
 public sealed partial class Painter
@@ -26,14 +27,18 @@ public sealed partial class Painter
     private static bool Near(ColorValue c, int r, int g, int b) =>
         Math.Abs((c.R * 255f) - r) < 1.5f && Math.Abs((c.G * 255f) - g) < 1.5f && Math.Abs((c.B * 255f) - b) < 1.5f;
 
-    private static bool IsDefaultBorderColor(ColorValue c) =>
-        (c.A > 0.99f && (Near(c, 118, 118, 118) || Near(c, 79, 79, 79) || Near(c, 70, 70, 70)))
-        || (Math.Abs(c.A - 0.3f) < 0.02f && Near(c, 118, 118, 118));
+    private static bool IsDefaultBorderColor(ColorValue c, bool dark) =>
+        dark
+            ? c.A > 0.99f && (Near(c, 133, 133, 133) || Near(c, 107, 107, 107) || Near(c, 97, 97, 97) || Near(c, 98, 98, 98) || Near(c, 54, 54, 54) || Near(c, 74, 74, 74) || Near(c, 59, 59, 59))
+            : (c.A > 0.99f && (Near(c, 118, 118, 118) || Near(c, 79, 79, 79) || Near(c, 70, 70, 70) || Near(c, 141, 141, 141) || Near(c, 226, 226, 226)))
+              || (Math.Abs(c.A - 0.3f) < 0.02f && Near(c, 118, 118, 118));
 
-    private static bool IsDefaultFill(ColorValue c, bool field) =>
-        field
-            ? (c.A > 0.99f && Near(c, 255, 255, 255)) || (Math.Abs(c.A - 0.3f) < 0.02f && Near(c, 239, 239, 239))
-            : (c.A > 0.99f && (Near(c, 239, 239, 239) || Near(c, 229, 229, 229) || Near(c, 245, 245, 245))) || (Math.Abs(c.A - 0.3f) < 0.02f && Near(c, 239, 239, 239));
+    private static bool IsDefaultFill(ColorValue c, bool field, bool dark) =>
+        dark
+            ? c.A > 0.99f && (field ? Near(c, 59, 59, 59) || Near(c, 46, 46, 46) : Near(c, 107, 107, 107) || Near(c, 97, 97, 97) || Near(c, 54, 54, 54) || Near(c, 46, 46, 46))
+            : field
+                ? (c.A > 0.99f && Near(c, 255, 255, 255)) || (Math.Abs(c.A - 0.3f) < 0.02f && Near(c, 239, 239, 239))
+                : (c.A > 0.99f && (Near(c, 239, 239, 239) || Near(c, 229, 229, 229) || Near(c, 245, 245, 245))) || (Math.Abs(c.A - 0.3f) < 0.02f && Near(c, 239, 239, 239));
 
     // Whether a control's own border and background are the ones its native look replaces.
     private static NativeLook LookOf(in ComputedValues v, bool square)
@@ -64,7 +69,7 @@ public sealed partial class Painter
 
     private static bool IsDefaultFrame(in ComputedValues v, bool square, double width, BorderStyleKind style, bool field)
     {
-        if (!square || v.Background.HasImages || !IsDefaultFill(v.BackgroundColor, field))
+        if (!square || v.Background.HasImages || !IsDefaultFill(v.BackgroundColor, field, v.DarkScheme))
         {
             return false;
         }
@@ -72,35 +77,32 @@ public sealed partial class Painter
         return Math.Abs(v.BorderTopWidth - width) < 0.01 && Math.Abs(v.BorderRightWidth - width) < 0.01
             && Math.Abs(v.BorderBottomWidth - width) < 0.01 && Math.Abs(v.BorderLeftWidth - width) < 0.01
             && v.BorderTopStyle == style && v.BorderRightStyle == style && v.BorderBottomStyle == style && v.BorderLeftStyle == style
-            && IsDefaultBorderColor(v.BorderTopColor) && IsDefaultBorderColor(v.BorderRightColor)
-            && IsDefaultBorderColor(v.BorderBottomColor) && IsDefaultBorderColor(v.BorderLeftColor);
+            && IsDefaultBorderColor(v.BorderTopColor, v.DarkScheme) && IsDefaultBorderColor(v.BorderRightColor, v.DarkScheme)
+            && IsDefaultBorderColor(v.BorderBottomColor, v.DarkScheme) && IsDefaultBorderColor(v.BorderLeftColor, v.DarkScheme);
     }
 
     private ItemId ControlId(int f, int index) => Id2(f, ControlPart, index);
 
     private static PaintColor Rgb(int r, int g, int b, float a = 1f) => new(r / 255f, g / 255f, b / 255f, a);
 
-    // The color of the checked and filled parts: accent-color, or Chrome's default blue (#0075ff); washed out when disabled.
-    private static PaintColor AccentOf(in ComputedValues v)
+    // The color of the checked and filled parts: accent-color (CSS UI 4 §6.2), or the user agent's accent under the used scheme
+    // (#0075ff light, #99c8ff dark); a disabled control ignores accent-color and is washed out (measured from Chrome).
+    private static PaintColor AccentOf(in ComputedValues v, FormPalette pal)
     {
         if ((v.ControlState & ControlStates.Disabled) != 0)
         {
-            return Rgb(209, 209, 209);
+            return pal.DisabledAccent;
         }
 
         if (v.AccentColorAuto)
         {
-            return Rgb(0, 117, 255);
+            return pal.AutoAccent;
         }
 
         // CSS UI 4: accent-color takes currentcolor like any color, resolved against this element's own color.
         ColorValue a = v.AccentColor.Resolve(v.Color);
         return new PaintColor(a.R, a.G, a.B, a.A);
     }
-
-    // Probe: the mark on an accent-colored box is white, and black when the accent color is light.
-    private static PaintColor OnAccent(PaintColor accent, bool disabled) =>
-        disabled ? Rgb(237, 237, 237) : ((0.299f * accent.R) + (0.587f * accent.G) + (0.114f * accent.B)) > 0.7f ? PaintColor.Black : PaintColor.White;
 
     // ------------------------------------------------------------------ border and background replaced by the native look
 
@@ -117,10 +119,10 @@ public sealed partial class Painter
         var radii = CornerRadii.Uniform(radius);
         PaintColor cur = new(v.Color.R, v.Color.G, v.Color.B, v.Color.A);
         PaintColor fill = ToColor(v.BackgroundColor, cur);
-        // Probe: a drop-down's face is white whatever its computed background (#efefef) says.
-        if (v.Control == ControlKind.SelectMenu && v.BackgroundColor.A > 0.99f)
+        // Probe: an enabled drop-down's face is the field color (white, #3b3b3b dark) whatever its computed background (#efefef, #6b6b6b) says.
+        if (v.Control == ControlKind.SelectMenu && v.BackgroundColor.A > 0.99f && (v.ControlState & ControlStates.Disabled) == 0)
         {
-            fill = PaintColor.White;
+            fill = FormPalette.For(v.DarkScheme).Face;
         }
 
         if (!fill.IsTransparent)
@@ -138,7 +140,7 @@ public sealed partial class Painter
         }
         else if (v.Control == ControlKind.TextArea && v.OverflowX is OverflowKind.Visible or OverflowKind.Auto or OverflowKind.Scroll or OverflowKind.Clip)
         {
-            PaintResizer(f, r);
+            PaintResizer(f, r, FormPalette.For(v.DarkScheme));
         }
     }
 
@@ -150,13 +152,15 @@ public sealed partial class Painter
         FillPolyline3(ControlId(f, 2), right - 13f, cy - 3.2f, right - 9f, cy + 1.6f, right - 5f, cy - 3.2f, 2f, c);
     }
 
-    // Probe: two diagonal 1 px strokes (#666) in the bottom right corner, 7 px and 3 px long, 3.5 px in from the edges.
-    private void PaintResizer(int f, in RectF r)
+    // Probe: two diagonal 1 px strokes in the bottom right corner, 7 px and 3 px long, 3.5 px in from the edges (#666 light, #171717 dark),
+    // each followed by a lighter stroke one pixel to the right (white, #b0b0b0 dark).
+    private void PaintResizer(int f, in RectF r, FormPalette pal)
     {
         float right = r.X + r.Width, bottom = r.Y + r.Height;
-        PaintColor c = Rgb(102, 102, 102);
-        FillLine(ControlId(f, 2), right - 3.5f, bottom - 9.5f, right - 9.5f, bottom - 3.5f, 1f, c);
-        FillLine(ControlId(f, 3), right - 3.5f, bottom - 5.5f, right - 5.5f, bottom - 3.5f, 1f, c);
+        FillLine(ControlId(f, 2), right - 3.5f, bottom - 9.5f, right - 9.5f, bottom - 3.5f, 1f, pal.ResizerDark);
+        FillLine(ControlId(f, 3), right - 3.5f, bottom - 5.5f, right - 5.5f, bottom - 3.5f, 1f, pal.ResizerDark);
+        FillLine(ControlId(f, 4), right - 2.5f, bottom - 9.5f, right - 8.5f, bottom - 3.5f, 1f, pal.ResizerLight);
+        FillLine(ControlId(f, 5), right - 2.5f, bottom - 5.5f, right - 4.5f, bottom - 3.5f, 1f, pal.ResizerLight);
     }
 
     // ------------------------------------------------------------------ native parts over the CSS box
@@ -190,10 +194,11 @@ public sealed partial class Painter
         }
     }
 
-    // Probe: 13x13, 2 px corner radius; unchecked is white inside a 1 px #767676 border, checked is filled with the accent color with a white
-    // check (an indeterminate box has a white bar instead).
+    // Probe: 13x13, 2 px corner radius; unchecked is the field color inside a 1 px border, checked is filled with the accent color with a mark
+    // that is white or dark by the accent's contrast (an indeterminate box has a bar instead).
     private void PaintCheckbox(int f, in ComputedValues v, in RectF outer, bool disabled)
     {
+        FormPalette pal = FormPalette.For(v.DarkScheme);
         // Probe: a checkbox stretched by a grid or flex container still draws 13 px square, centered in its box.
         float side13 = Math.Min(outer.Width, outer.Height);
         var r = new RectF(outer.X + ((outer.Width - side13) / 2), outer.Y + ((outer.Height - side13) / 2), side13, side13);
@@ -201,9 +206,9 @@ public sealed partial class Painter
         var radii = CornerRadii.Uniform(2f);
         if (on)
         {
-            PaintColor accent = AccentOf(in v);
+            PaintColor accent = AccentOf(in v, pal);
             _list.FillRoundedRect(ControlId(f, 0), r, radii, accent);
-            PaintColor mark = OnAccent(accent, disabled);
+            PaintColor mark = disabled ? pal.DisabledMark : pal.MarkOn(accent);
             if ((v.ControlState & ControlStates.Indeterminate) != 0)
             {
                 _list.FillRect(ControlId(f, 1), new RectF(r.X + 3f, r.Y + (r.Height / 2) - 1f, r.Width - 6f, 2f), mark);
@@ -217,20 +222,22 @@ public sealed partial class Painter
             return;
         }
 
-        _list.FillRoundedRect(ControlId(f, 0), r, radii, disabled ? Rgb(248, 248, 248) : PaintColor.White);
-        var side = new BorderSide(SnapWidth(1), BorderStyle.Solid, disabled ? Rgb(209, 209, 209) : Rgb(118, 118, 118));
+        _list.FillRoundedRect(ControlId(f, 0), r, radii, disabled ? pal.DisabledFace : pal.Face);
+        var side = new BorderSide(SnapWidth(1), BorderStyle.Solid, disabled ? pal.DisabledBorder : pal.Border);
         _list.DrawBorder(ControlId(f, 1), r, radii, side, side, side, side);
     }
 
-    // Probe: a 13 px circle; unchecked is white with a 1 px #767676 ring, checked is a 1 px accent ring, 2 px of white, then an accent dot 7 px across.
+    // Probe: a 13 px circle; unchecked is the field color with a 1 px ring, checked is a 1 px accent ring, 2 px of the field color, then an accent
+    // dot 7 px across.
     private void PaintRadio(int f, in ComputedValues v, in RectF r, bool disabled)
     {
+        FormPalette pal = FormPalette.For(v.DarkScheme);
         float d = Math.Min(r.Width, r.Height);
         var box = new RectF(r.X + ((r.Width - d) / 2), r.Y + ((r.Height - d) / 2), d, d);
         var radii = CornerRadii.Uniform(d / 2);
         bool on = (v.ControlState & ControlStates.Checked) != 0;
-        PaintColor ring = on ? AccentOf(in v) : disabled ? Rgb(209, 209, 209) : Rgb(118, 118, 118);
-        _list.FillRoundedRect(ControlId(f, 0), box, radii, disabled ? Rgb(248, 248, 248) : PaintColor.White);
+        PaintColor ring = on ? AccentOf(in v, pal) : disabled ? pal.DisabledBorder : pal.Border;
+        _list.FillRoundedRect(ControlId(f, 0), box, radii, disabled ? pal.DisabledFace : pal.Face);
         var side = new BorderSide(SnapWidth(1), BorderStyle.Solid, ring);
         _list.DrawBorder(ControlId(f, 1), box, radii, side, side, side, side);
         if (on)
@@ -241,48 +248,60 @@ public sealed partial class Painter
         }
     }
 
-    // Probe: the track is 8 px tall, centered, inset 1 px at each end, a pill with a 1 px #b2b2b2 border and #efefef inside; the part up to the
-    // thumb is the accent color; the thumb is a 16 px accent circle that travels between 8 px in from each end.
+    // Probe: the track is 8 px tall, centered, inset 1 px at each end, a pill with a 1 px border; the part up to the thumb is the accent color;
+    // the thumb is a 16 px accent circle that travels between 8 px in from each end. The track and the thumb are separate parts
+    // (PaintRangeTrack, PaintRangeThumb) so that styling of the slider's pseudo-elements can replace either one.
     private void PaintRange(int f, in ComputedValues v, in RectF r, bool disabled)
     {
+        FormPalette pal = FormPalette.For(v.DarkScheme);
         float cy = r.Y + (r.Height / 2);
-        var track = new RectF(r.X + 1f, cy - 4f, Math.Max(0, r.Width - 2f), 8f);
-        PaintColor accent = disabled ? Rgb(203, 203, 203) : AccentOf(in v);
-        PaintTrack(f, track, disabled ? Rgb(250, 250, 250) : Rgb(239, 239, 239), disabled ? Rgb(210, 210, 210) : Rgb(178, 178, 178), 0);
+        PaintColor accent = disabled ? pal.DisabledRangeAccent : AccentOf(in v, pal);
         float travel = Math.Max(0, r.Width - 16f);
         float t = (float)Math.Clamp(v.ControlFraction, 0, 1);
         float cx = r.X + 8f + (travel * t);
-        PaintFilledPart(f, track, accent, cx - track.X, 2);
-        _list.FillRoundedRect(ControlId(f, 4), new RectF(cx - 8f, cy - 8f, 16f, 16f), CornerRadii.Uniform(8f), accent);
+        PaintRangeTrack(f, in v, new RectF(r.X + 1f, cy - 4f, Math.Max(0, r.Width - 2f), 8f), accent, cx, disabled, pal);
+        PaintRangeThumb(f, new RectF(cx - 8f, cy - 8f, 16f, 16f), accent);
     }
 
-    // Probe: like the range track; the filled part reaches the border (blue over the gray), with a square end.
+    private void PaintRangeTrack(int f, in ComputedValues v, in RectF track, PaintColor accent, float thumbCenterX, bool disabled, FormPalette pal)
+    {
+        PaintTrack(f, track, disabled ? pal.DisabledTrackFill : pal.TrackFillFor(accent), disabled ? pal.DisabledTrackBorder : pal.TrackBorderFor(accent), 0);
+        PaintFilledPart(f, track, accent, thumbCenterX - track.X, 2, disabled ? PaintColor.Transparent : pal.FilledRing(accent));
+    }
+
+    private void PaintRangeThumb(int f, in RectF thumb, PaintColor accent) =>
+        _list.FillRoundedRect(ControlId(f, 6), thumb, CornerRadii.Uniform(thumb.Height / 2), accent);
+
+    // Probe: like the range track; the filled part reaches the border (the accent over the track, with the border's ring over it), with a square end.
     private void PaintProgress(int f, in ComputedValues v, in RectF r)
     {
+        FormPalette pal = FormPalette.For(v.DarkScheme);
         float cy = r.Y + (r.Height / 2);
         var track = new RectF(r.X, cy - 4f, r.Width, 8f);
-        PaintTrack(f, track, Rgb(239, 239, 239), Rgb(178, 178, 178), 0);
-        PaintColor accent = AccentOf(in v);
+        PaintColor accent = AccentOf(in v, pal);
+        PaintTrack(f, track, pal.TrackFillFor(accent), pal.TrackBorderFor(accent), 0);
+        PaintColor ring = pal.FilledRing(accent);
         if ((v.ControlState & ControlStates.Indeterminate) != 0)
         {
             // Probe: an indeterminate bar shows a chunk a fifth of the track wide, starting a quarter of the way along.
-            PaintFilledRange(f, track, accent, track.Width * 0.24f, track.Width * 0.44f, 2);
+            PaintFilledRange(f, track, accent, track.Width * 0.24f, track.Width * 0.44f, 2, ring);
             return;
         }
 
-        PaintFilledPart(f, track, accent, track.Width * (float)Math.Clamp(v.ControlFraction, 0, 1), 2);
+        PaintFilledPart(f, track, accent, track.Width * (float)Math.Clamp(v.ControlFraction, 0, 1), 2, ring);
     }
 
-    // Probe: the track has a 1 px #cbcbcb border and #efefef inside, and the value is a pill inside the border: green in the optimum
-    // region (#107c10), yellow in the suboptimum one, red (#d83b01) in the even-less-good one.
+    // Probe: the track has a 1 px border and the value is a pill inside the border: green in the optimum region, yellow in the suboptimum one,
+    // red in the even-less-good one (#107c10, #ffb900, #d83b01 light; #74b374, #f2c812, #e98f6d dark).
     private void PaintMeter(int f, in ComputedValues v, in RectF r)
     {
+        FormPalette pal = FormPalette.For(v.DarkScheme);
         float cy = r.Y + (r.Height / 2);
         var track = new RectF(r.X, cy - 4f, r.Width, 8f);
-        PaintTrack(f, track, Rgb(239, 239, 239), Rgb(203, 203, 203), 0);
-        PaintColor c = (v.ControlState & ControlStates.MeterBad) != 0 ? Rgb(216, 59, 1) : (v.ControlState & ControlStates.MeterSuboptimum) != 0 ? Rgb(255, 185, 0) : Rgb(16, 124, 16);
+        PaintTrack(f, track, pal.MeterFill, pal.MeterBorder, 0);
+        PaintColor c = (v.ControlState & ControlStates.MeterBad) != 0 ? pal.MeterBad : (v.ControlState & ControlStates.MeterSuboptimum) != 0 ? pal.MeterSuboptimum : pal.MeterOptimum;
         var inner = new RectF(track.X + 1f, track.Y + 1f, Math.Max(0, track.Width - 2f), 6f);
-        PaintFilledPart(f, inner, c, inner.Width * (float)Math.Clamp(v.ControlFraction, 0, 1), 2);
+        PaintFilledPart(f, inner, c, inner.Width * (float)Math.Clamp(v.ControlFraction, 0, 1), 2, PaintColor.Transparent);
     }
 
     private void PaintTrack(int f, in RectF track, PaintColor fill, PaintColor border, int index)
@@ -298,10 +317,10 @@ public sealed partial class Painter
         _list.DrawBorder(ControlId(f, index + 1), track, radii, side, side, side, side);
     }
 
-    // The pill of `track` clipped to its first `width` px.
-    private void PaintFilledPart(int f, in RectF track, PaintColor color, float width, int index) => PaintFilledRange(f, track, color, 0, width, index);
+    // The pill of `track` clipped to its first `width` px, with `ring` (when not transparent) as the track's 1 px border over it.
+    private void PaintFilledPart(int f, in RectF track, PaintColor color, float width, int index, PaintColor ring) => PaintFilledRange(f, track, color, 0, width, index, ring);
 
-    private void PaintFilledRange(int f, in RectF track, PaintColor color, float from, float to, int index)
+    private void PaintFilledRange(int f, in RectF track, PaintColor color, float from, float to, int index, PaintColor ring)
     {
         float w = Math.Min(to, track.Width) - from;
         if (!(w > 0) || track.IsEmpty)
@@ -309,8 +328,15 @@ public sealed partial class Painter
             return;
         }
 
+        var radii = CornerRadii.Uniform(track.Height / 2);
         _list.PushClipRect(ControlId(f, index), new RectF(track.X + from, track.Y, w, track.Height));
-        _list.FillRoundedRect(ControlId(f, index + 1), track, CornerRadii.Uniform(track.Height / 2), color);
+        _list.FillRoundedRect(ControlId(f, index + 1), track, radii, color);
+        if (!ring.IsTransparent)
+        {
+            var side = new BorderSide(1f, BorderStyle.Solid, ring);
+            _list.DrawBorder(ControlId(f, 8), track, radii, side, side, side, side);
+        }
+
         _list.PopClip();
     }
 

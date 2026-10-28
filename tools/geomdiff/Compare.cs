@@ -325,13 +325,18 @@ internal static class EngineSide
 {
     private const double NonFiniteStandIn = 1e12;
 
+    // GEOMDIFF_PREFERS_DARK=1 makes both sides prefer a dark color scheme (Chrome through media emulation).
+    private static readonly bool PrefersDark = Environment.GetEnvironmentVariable("GEOMDIFF_PREFERS_DARK") == "1";
+
     private static OneRender.Text.TextFontProvider Fonts => OneRender.Image.FontProviders.ForCurrentThread();
 
     public static GeometryCapture LayOut(string snapshotRoot, string pageId, ViewportSize vp, CancellationToken ct)
     {
         (SnapshotPage page, string html, Dictionary<string, (byte[] Body, string Type)> res) = Snapshots.Load(snapshotRoot, pageId);
         Func<Uri, byte[]?> resolve = uri => res.TryGetValue(Snapshots.UrlKey(uri.AbsoluteUri), out (byte[] Body, string Type) r) ? r.Body : null;
-        IReadOnlyList<ElementBox> boxes = GeometryProbe.LayOut(html, new Uri(page.Url), resolve, vp.Width, vp.Height, Fonts, null, ct);
+        IReadOnlyList<ElementBox> boxes = PrefersDark
+            ? HtmlPage.Create(html, new HtmlPageOptions(Fonts) { ViewportWidth = vp.Width, ViewportHeight = vp.Height, BaseUrl = page.Url, PrefersDarkColorScheme = true, StylesheetBytes = u => Uri.TryCreate(u, UriKind.Absolute, out Uri? a) ? resolve(a) : null }, ct).ElementBoxes(ct)
+            : GeometryProbe.LayOut(html, new Uri(page.Url), resolve, vp.Width, vp.Height, Fonts, null, ct);
         GeometryCapture cap = new() { Source = "engine", Page = pageId, Viewport = vp };
         foreach (ElementBox b in boxes)
         {

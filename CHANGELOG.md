@@ -9,6 +9,12 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - Form-state selectors follow live form state: `:checked`, `:indeterminate`, `:disabled`, `:enabled`, `:read-only` and `:read-write` (with `:checked + label`, `:has(:checked)`, disabled `fieldset` and radio groups) restyle when the user clicks or uses the keyboard, and after `SetChecked`, `SetIndeterminate`, a selected option, a form reset or a `disabled` attribute edit, and equal a page parsed with that state. A host can style `appearance: none` checkboxes and radios with these selectors.
 - `InteractivePage.SetIndeterminate` and `IsIndeterminate`.
 - A text control's selection highlight takes its `color` and `background-color` from `::selection` rules.
+- `color-scheme` (`light`, `dark`, `light dark`, `only`) and the system colors under it (`Canvas`, `CanvasText`, `Field`, `ButtonFace`, `GrayText`, `Highlight`, `AccentColor` and the rest, with Chrome's light and dark values), `light-dark()` by the element's used scheme, and the dark canvas of a dark root. `ColorSchemes`, `ComputedValues.ColorScheme` and `DarkScheme`.
+- `HtmlPageOptions.PrefersDarkColorScheme`, `HtmlRenderOptions.PrefersDarkColorScheme` and `StyleTable.PrefersDarkScheme`: the host's preferred scheme, used by `color-scheme: light dark` and `prefers-color-scheme`.
+- Native form controls in Chrome's dark palette: fields, buttons, selects and list boxes, checkboxes and radios, range, progress and meter, disabled states, the focus ring and the select popup.
+- `accent-color` follows Chrome's contrast rules: the check mark is white or dark by contrast, and a range or progress track turns dark under a light accent (and light under a dark accent in the dark scheme); the track border leaves a ring over the filled part.
+- `::placeholder` rules set the `color` of a text control's placeholder; the default is `#757575` under both schemes.
+- A `forms-themed` geometry set and pixel-similarity runs under a dark preferred scheme (`GEOMDIFF_PREFERS_DARK`).
 
 ### Changed
 
@@ -16,6 +22,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - Hover, active and focus on an HTML page, and form state changes, go through OneHtml's live cascade: restyling allocates nothing once warm (a hover on the 1,000-node HUD page was about 24 KB).
 - `@keyframes` come from OneHtml's resolved keyframes: `@layer` and origin precedence, `var()` per element, merged offsets. Animations that are already running keep the keyframes they started with.
 - `OneRender.Interaction.ElementStateChange` now has the same name as a type OneHtml 1.4.0 added to `RecursiveAI.OneHtml.Css`. Code that imports both namespaces needs a using alias or a qualified name.
+- Light-scheme paint, measured from Chrome again: the track border of a range and progress is drawn over the filled part, the focus ring has a 1 px white outer ring, the selected option of an unfocused list box is `#cecece` (was `#cbcbcb`), a disabled list box is white with a `#e2e2e2` border, and the textarea resizer has a light second stroke.
+- The range thumb is item part 6 and its ring part 8 of the control's ids (the parts of the track and the thumb are painted separately).
 
 ## [1.1.0] - 2026-10-27
 

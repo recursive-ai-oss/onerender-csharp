@@ -51,6 +51,78 @@ Chrome paints native widgets itself; these are the values read from its screensh
 - **Focus ring (`:focus-visible`):** 2 px `#101010`; its outer edge is at the border-box edge for boxes with a border (inputs, buttons, select, textarea, a bordered `div`), 1 px outside for borderless boxes; checkbox and radio use `outline-offset: 2px`; a range uses an outer offset of 1.
 - **Fieldset:** the top border is drawn through the middle of the legend (legend top + floor((legend height - border) / 2)); the gap in it is exactly the legend's border box. A `display: grid | flex` fieldset becomes a block holding the legend plus an anonymous box that carries the original display and its grid or flex properties: the first row starts after the legend and padding, with no gap (daisyUI's fieldset, `tailwind/daisy-app`). A subgrid fieldset keeps its own grid (WPT `css-grid/subgrid/independent-formatting-context-fieldset`).
 
+## Themed controls (`color-scheme`, `accent-color`)
+
+Every value below was read from Chrome 156.0.8078.47's rendering and computed styles (`tools/forms/scheme-shots.py`, `shot-page.py`, `scheme-styles.py`, `run-scheme-probes.sh`; probe pages in `testdata/forms-probes/scheme/`). Chrome's palette is not in any specification; a port reproduces these numbers.
+
+**Used scheme (CSS Color Adjust 1 §2.2).** `color-scheme` is inherited. The used scheme is dark when the list names `dark` and either does not name `light` or the host prefers dark; `normal`, unknown names and `only light` give light. `only` may come first or last, once; `normal` stands alone; CSS-wide keywords inside the list are invalid. A page that does not opt in with `color-scheme` stays light under a dark preference. The host's preference is `HtmlPageOptions.PrefersDarkColorScheme` (also `HtmlRenderOptions.PrefersDarkColorScheme` in `.Image`), or `StyleTable.PrefersDarkScheme` for builder trees; it also drives `@media (prefers-color-scheme)`.
+
+**System colors** resolve when the value is computed, under the element's own used scheme; an inherited `color` keeps the parent's computed value (a dark subtree of a light page keeps black text until a keyword such as `CanvasText` is written there). `light-dark()` follows the element's used scheme. The root's initial `color` is `CanvasText` of its scheme.
+
+| Color | light | dark |
+|---|---|---|
+| Canvas (and Window, Background, Menu ...) | `#fff` | `#121212` |
+| CanvasText (WindowText ...) | `#000` | `#fff` |
+| Field | `#fff` | `#3b3b3b` |
+| FieldText, ButtonText | `#000` | `#fff` |
+| ButtonFace (ThreeDFace ...) | `#efefef` | `#6b6b6b` |
+| ButtonBorder | `#000` | `#fff` |
+| GrayText | `#808080` | `#808080` |
+| Highlight | `rgba(0,65,198,.8)` | same |
+| HighlightText, AccentColorText | `#fff` | `#fff` |
+| Mark / MarkText | yellow / black | same |
+| AccentColor | `#0075ff` | `#0075ff` |
+| ActiveText | red | red |
+| LinkText | `#0000ee` | `#9e9eff` |
+| VisitedText | `#551a8b` | `#d0adf0` |
+| SelectedItem / SelectedItemText | `#1967d2` / `#fff` | `#99c8ff` / `#3b3b3b` |
+
+**Canvas.** When the root element (not the body) is dark and has no background of its own, the canvas is filled `#121212` (a `FillRect` with item id `(0,5,0)`; the display list format is unchanged).
+
+**Native look per scheme** (light is the table above):
+
+| Part | light | dark |
+|---|---|---|
+| Field, textarea, menu select, listbox: face / border / text | `#fff` / `#767676` / black | `#3b3b3b` / `#858585` / white |
+| Placeholder text | `#757575` | `#757575` |
+| Button: face / border / text | `#efefef` / `#767676` / black | `#6b6b6b` / `#6b6b6b` / white |
+| Button active face | `#f5f5f5` | `#616161` |
+| Button hover | unchanged in light (not tinted in Chrome's headless rendering) | none |
+| Disabled field: face / border / text | as before | `#3b3b3b` / `#626262` / `#aaa` |
+| Disabled button: face / border / text | `#eee` | `#363636` / same as face / `rgba(255,255,255,.3)` |
+| Disabled select: face / border / text | as before | `#2e2e2e` / `#4a4a4a` / `rgba(255,255,255,.38)` |
+| Listbox selected option, list unfocused / disabled | `#cecece` / `#dcdcdc` | `#545454` / `#404040` |
+| Listbox selected option, list focused | SelectedItem pair | SelectedItem pair |
+| Disabled listbox: face / border | white / `#e2e2e2` | `#2e2e2e` / `#3b3b3b` |
+| Textarea resizer strokes (dark, light) | `#666`, white (+1 px x) | `#171717`, `#b0b0b0` |
+| Checkbox, radio unchecked: face / border | `#fff` / `#767676` | `#3b3b3b` / `#858585` |
+| Disabled checkbox/radio: face / border / checked fill / mark | `#f8f8f8` / `#d1d1d1` / `#d1d1d1` / `#ededed` | `#3b3b3b` / `#626262` / `#757575` / `#3b3b3b` |
+| Range, progress track: fill / border | `#efefef` / `#b2b2b2` | `#3b3b3b` / `#858585` |
+| Disabled range track: fill / border / value | `#fafafa` / `#d2d2d2` / `#cbcbcb` | `#363636` / `#626262` / `#757575` |
+| Automatic accent | `#0075ff` | `#99c8ff` |
+| Meter: track border / optimum / suboptimum / bad | `#cbcbcb` / `#107c10` / `#ffb900` / `#d83b01` | `#858585` / `#74b374` / `#f2c812` / `#e98f6d` |
+| Fieldset border | `#efefef`-based groove | `#bfbfbf`-based groove |
+| Select popup (ours: Chrome's is a native window) face / border / highlighted option | white / `#767676` / `#0075ff` + white | `#3b3b3b` / `#858585` / `#99c8ff` + `#3b3b3b` |
+
+A field or button whose border or background the author set keeps the author's values (the native look is only used while they are the user agent's). Meter ignores `accent-color`. Disabled controls ignore `accent-color`.
+
+**Accent rules.** Contrast is the WCAG relative-luminance ratio. Measured with grey and colour sweeps; the flip points are exact.
+
+- *Mark of a checked checkbox.* Light scheme: white when contrast(accent, white) is at least 3 (`#949494` yes, `#959595` no), else `#3b3b3b`. Dark scheme: `#3b3b3b` when contrast(accent, `#3b3b3b`) is at least 3 (`#848484` no, `#858585` yes), else white.
+- *Track of a range and progress.* Light scheme: the light track (`#efefef` / `#b2b2b2`) when contrast(accent, `#efefef`) is at least 3, else the dark track (`#3b3b3b` / `#858585`) (flip `#8a8a8a` / `#8b8b8b`). Dark scheme: the dark track when contrast(accent, `#3b3b3b`) is at least 3, else the light track (flip `#848484` / `#858585`).
+- *Ring over the filled part* (range and progress): the 1 px track border is drawn over the accent fill. On a light track it is the mix `((accent + 118) >> 1)` per 8-bit channel (`#0075ff` gives `#3b75ba`); on a dark track it is `#858585`.
+- *Radio checked:* 1 px accent ring, 2 px of the face colour, a 7 px accent dot.
+
+**Focus ring (`outline: auto`).** An inner 2 px ring (`#101010` light, `#eeeeee` dark) plus a 1 px outer ring just outside it (white light, `#101010` dark); offsets as above.
+
+**`::placeholder`.** The placeholder takes `color` from a matching `::placeholder` rule; without one it is `#757575` under both schemes, also when disabled (Chrome's computed colour of the pseudo-element equals the control's, but it paints `#757575`).
+
+**Range parts.** The track and thumb are painted by separate routines (`PaintRangeTrack`, `PaintRangeThumb`) so that pseudo-element styling can address them later.
+
+**Known differences.** The fieldset groove: our groove paints the border colour as the light half and shades the dark half at 2/3, so a dark-scheme fieldset border is computed as `#bfbfbf` where Chrome reports `#6b6b6b` and shades `#161616` (the box is the same size). Button hover is not tinted in Chrome's headless rendering, so light hover is the pre-existing guess. The select popup is ours.
+
+**Gate set.** `testdata/forms-themed/` (generated by `tools/forms/gen-themed.py`): light, dark, `light dark`, nested schemes, accent colours under both schemes, disabled controls, `outline: auto` rings. Run it twice: `tools/forms/run-forms.sh forms-themed` and, with the host preferring dark, `GEOMDIFF_PREFERS_DARK=1 SRC_DIR=testdata/forms-themed tools/forms/run-forms.sh forms-themed-dark` (the variable makes Chrome emulate `prefers-color-scheme: dark` and the engine side set `PrefersDarkColorScheme`); pixel similarity with `tools/geomdiff/scripts/run-pixels.sh` and the same variable. Results are in `results/geometry/forms-themed*` and `results/pixels/forms-themed*`.
+
 ## Interaction (`InteractivePage`)
 
 - **Activation:** a click toggles a checkbox or radio before the `click` listeners run (legacy pre-activation, reverted when `preventDefault` is called), then fires `input` and `change`. Radios in one group (same form owner and `name`) uncheck each other. A click on a `label` activates its control. Disabled controls do nothing.

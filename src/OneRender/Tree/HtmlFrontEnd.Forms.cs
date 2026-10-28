@@ -2,6 +2,7 @@ using OneRender.Forms;
 using OneRender.Interaction;
 using OneRender.Style;
 using RecursiveAI.OneHtml;
+using RecursiveAI.OneHtml.Css;
 using RecursiveAI.OneHtml.Selectors;
 
 namespace OneRender.Tree;
@@ -330,7 +331,7 @@ public sealed partial class HtmlFrontEnd
         v.ControlState = st;
     }
 
-    // A selected option of a list box shows the selection color (Chrome: #cbcbcb while the list is unfocused); the option of an open
+    // A selected option of a list box shows the selection color (Chrome: #cecece light, #545454 dark, while the list is unfocused); the option of an open
     // drop-down that is highlighted is drawn in the highlight colors.
     private StyleId AdjustOption(Node option, StyleId style)
     {
@@ -358,12 +359,17 @@ public sealed partial class HtmlFrontEnd
         v.ControlState = ControlStates.Checked;
         if (highlighted)
         {
-            v.BackgroundColor = new ColorValue(0, 117 / 255f, 1f, 1);
-            v.Color = new ColorValue(1, 1, 1, 1);
+            // The popup is drawn by us (a native window in Chrome): the light highlight is the accent with white text, the dark one the dark
+            // scheme's selected-item pair (the colors Chrome gives a focused list box's selection under that scheme).
+            v.BackgroundColor = v.DarkScheme ? new ColorValue(153 / 255f, 200 / 255f, 1f, 1) : new ColorValue(0, 117 / 255f, 1f, 1);
+            v.Color = v.DarkScheme ? new ColorValue(59 / 255f, 59 / 255f, 59 / 255f, 1) : new ColorValue(1, 1, 1, 1);
         }
         else if (v.BackgroundColor.A == 0)
         {
-            v.BackgroundColor = new ColorValue(203 / 255f, 203 / 255f, 203 / 255f, 1);
+            // Probe: the selected option of an unfocused list is #cecece (light) or #545454 (dark); in a disabled list #dcdcdc or #404040.
+            bool disabledList = select.HasAttribute("disabled");
+            int g = v.DarkScheme ? (disabledList ? 64 : 84) : (disabledList ? 220 : 206);
+            v.BackgroundColor = new ColorValue(g / 255f, g / 255f, g / 255f, 1);
         }
 
         return table.Derive(style, in v);
@@ -467,8 +473,8 @@ public sealed partial class HtmlFrontEnd
         v.BoxSizing = BoxSizingKind.BorderBox;
         v.ZIndexAuto = false;
         v.ZIndex = int.MaxValue;
-        v.BackgroundColor = new ColorValue(1, 1, 1, 1);
-        var line = new ColorValue(118 / 255f, 118 / 255f, 118 / 255f, 1);
+        v.BackgroundColor = v.DarkScheme ? new ColorValue(59 / 255f, 59 / 255f, 59 / 255f, 1) : new ColorValue(1, 1, 1, 1);
+        var line = v.DarkScheme ? new ColorValue(133 / 255f, 133 / 255f, 133 / 255f, 1) : new ColorValue(118 / 255f, 118 / 255f, 118 / 255f, 1);
         v.BorderTopWidth = v.BorderRightWidth = v.BorderBottomWidth = v.BorderLeftWidth = 1;
         v.BorderTopStyle = v.BorderRightStyle = v.BorderBottomStyle = v.BorderLeftStyle = BorderStyleKind.Solid;
         v.BorderTopColor = v.BorderRightColor = v.BorderBottomColor = v.BorderLeftColor = line;
@@ -856,15 +862,27 @@ public sealed partial class HtmlFrontEnd
 
         if (placeholder.Length > 0)
         {
-            // Chrome's placeholder color (darkgray at 75% luminance).
             ComputedValues tv = table[ts];
-            tv.Color = new ColorValue(117 / 255f, 117 / 255f, 117 / 255f, 1);
+            tv.Color = PlaceholderColor(element, owner);
             int p = _tree.NewNode(StyledNodeKind.Text, idx, table.Derive(ts, in tv), -1);
             if (p >= 0)
             {
                 _tree.SetText(p, shown.IsEmpty ? placeholder : string.Empty);
             }
         }
+    }
+
+    // The placeholder's text colour: the ::placeholder rule's colour when the cascade has one (CSS Pseudo-Elements 4 §3.2 lists color among
+    // the properties it takes), else Chrome's own #757575, which it paints under both color schemes (measured from Chrome's rendering).
+    private ColorValue PlaceholderColor(Node element, StyleId ownerStyle)
+    {
+        ComputedStyle? ps = _current.IsNull ? null : _current.GetPseudoStyle(element, PseudoElementKind.Placeholder);
+        if (ps is not null)
+        {
+            return _tree.Styles[Resolve(ps, ownerStyle, true, false)].Color;
+        }
+
+        return new ColorValue(117 / 255f, 117 / 255f, 117 / 255f, 1);
     }
 
     /// <summary>The value a text control starts with: the <c>value</c> attribute, or for a textarea its text (HTML §4.10.11 raw value, line breaks normalized).</summary>

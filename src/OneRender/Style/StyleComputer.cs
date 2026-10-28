@@ -28,8 +28,8 @@ internal abstract class DeclarationSource
     public abstract ValueOrigin Get(PropertyId id, out ComponentValueList value);
 }
 
-/// <summary>What styles are computed against: the viewport (for <c>vw</c> and friends) and the root element's font size (for <c>rem</c>).</summary>
-internal readonly record struct ComputeEnvironment(double ViewportWidth, double ViewportHeight, double RootFontSize, double RootExRatio = 0, double RootCapRatio = 0, double RootChRatio = 0, double RootIcRatio = 0);
+/// <summary>What styles are computed against: the viewport (for <c>vw</c> and friends), the root element's font size (for <c>rem</c>) and the host's preferred color scheme.</summary>
+internal readonly record struct ComputeEnvironment(double ViewportWidth, double ViewportHeight, double RootFontSize, double RootExRatio = 0, double RootCapRatio = 0, double RootChRatio = 0, double RootIcRatio = 0, bool PrefersDark = false);
 
 /// <summary>
 /// Turns declared values into <see cref="ComputedValues"/>: parses each property against its grammar and applies the
@@ -151,6 +151,15 @@ internal sealed partial class StyleComputer
         // font-size itself is computed in the parent's font, so its ex and ch come from the parent's face (CSS Values 4 §6.1.1).
         _parentCtx = WithFontRatios(_parentCtx, in _parent);
         _ctx = _parentCtx;
+        // color-scheme is resolved first because every color keyword and light-dark() below reads the used scheme (CSS Color Adjust 1 §2.2).
+        Step(PropertyId.ColorScheme, hasParent);
+        _r.DarkScheme = UsedDark(_r.ColorScheme, env.PrefersDark);
+        // CSS Color Adjust 1 §2.2: the initial `color` is CanvasText of the root's scheme; every other element inherits the computed value.
+        if (!hasParent)
+        {
+            _r.Color = SystemColors.CanvasText(_r.DarkScheme);
+        }
+
         // font-family is resolved first because the size of a generic `monospace` list depends on it (see MonospaceScale).
         Step(PropertyId.FontFamily, hasParent);
         Step(PropertyId.FontSize, hasParent);
@@ -169,7 +178,7 @@ internal sealed partial class StyleComputer
         for (int i = 0; i < Properties.Count; i++)
         {
             var id = (PropertyId)i;
-            if (id is PropertyId.FontFamily or PropertyId.FontSize or PropertyId.FontWeight or PropertyId.FontStyle or PropertyId.FontStretch or PropertyId.LineHeight)
+            if (id is PropertyId.FontFamily or PropertyId.FontSize or PropertyId.FontWeight or PropertyId.FontStyle or PropertyId.FontStretch or PropertyId.LineHeight or PropertyId.ColorScheme)
             {
                 continue;
             }
@@ -309,6 +318,8 @@ internal sealed partial class StyleComputer
         v.AccentColorAuto = p.AccentColorAuto;
         v.CaretColor = p.CaretColor;
         v.CaretColorAuto = p.CaretColorAuto;
+        v.ColorScheme = p.ColorScheme;
+        v.DarkScheme = p.DarkScheme;
         v.FontFamily = p.FontFamily;
         v.FontSize = p.FontSize;
         v.FontSizeKeyword = p.FontSizeKeyword;
@@ -359,7 +370,19 @@ internal sealed partial class StyleComputer
 
     private void CopyFromParent(PropertyId id) => CopyProperty(id, ref _r, in _parent, true);
 
-    private void SetFromInitial(PropertyId id) => CopyProperty(id, ref _r, in ComputedValues.Initial, false);
+    private void SetFromInitial(PropertyId id)
+    {
+        CopyProperty(id, ref _r, in ComputedValues.Initial, false);
+        if (id == PropertyId.Color)
+        {
+            // `color: initial` is CanvasText under the element's own used scheme (CSS Color Adjust 1 §2.2).
+            _r.Color = SystemColors.CanvasText(_r.DarkScheme);
+        }
+    }
+
+    // CSS Color Adjust 1 §2.2: with both schemes listed the host's preference decides; with one, that one; with neither (normal, or
+    // names the engine does not know) the page is light.
+    private static bool UsedDark(ColorSchemes s, bool prefersDark) => (s & ColorSchemes.Dark) != 0 && ((s & ColorSchemes.Light) == 0 || prefersDark);
 
     /// <summary>Copies one property (all the fields that make it up) from <paramref name="s"/> to <paramref name="d"/>.</summary>
     internal void CopyProperty(PropertyId id, ref ComputedValues d, in ComputedValues s, bool fromParent)

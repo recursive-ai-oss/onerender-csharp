@@ -115,6 +115,7 @@ internal static class Pixels
             ViewportHeight = vp.Height,
             BaseUrl = url,
             StylesheetBytes = resources,
+            PrefersDarkColorScheme = Environment.GetEnvironmentVariable("GEOMDIFF_PREFERS_DARK") == "1",
         };
         HtmlPage doc = HtmlPage.Create(html, options, ct);
         DisplayList list = new();

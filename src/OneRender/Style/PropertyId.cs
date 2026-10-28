@@ -193,12 +193,13 @@ internal enum PropertyId : byte
     CaretColor,
     Contain,
     HostScope,
+    ColorScheme,
 }
 
 /// <summary>Names and inheritance of <see cref="PropertyId"/> values.</summary>
 internal static class Properties
 {
-    public const int Count = (int)PropertyId.HostScope + 1;
+    public const int Count = (int)PropertyId.ColorScheme + 1;
 
     private static readonly string[] Names =
     [
@@ -228,7 +229,7 @@ internal static class Properties
         "border-collapse", "border-spacing", "empty-cells", "caption-side", "table-layout", "pointer-events",
         "transition-property", "transition-duration", "transition-timing-function", "transition-delay", "transition-behavior",
         "animation-name", "animation-duration", "animation-timing-function", "animation-delay", "animation-iteration-count", "animation-direction", "animation-fill-mode", "animation-play-state",
-        "appearance", "accent-color", "caret-color", "contain", "--host-scope",
+        "appearance", "accent-color", "caret-color", "contain", "--host-scope", "color-scheme",
     ];
 
     private static readonly Dictionary<string, PropertyId> ByName = BuildByName();
@@ -250,7 +251,7 @@ internal static class Properties
             or PropertyId.TextUnderlineOffset or PropertyId.TextUnderlinePosition
             or PropertyId.WordBreak or PropertyId.OverflowWrap or PropertyId.LineBreak or PropertyId.Hyphens or PropertyId.TabSize
             or PropertyId.TextAlignLast or PropertyId.TextJustify or PropertyId.TextTransform
-            or PropertyId.BorderCollapse or PropertyId.BorderSpacing or PropertyId.EmptyCells or PropertyId.CaptionSide or PropertyId.PointerEvents or PropertyId.AccentColor or PropertyId.CaretColor or PropertyId.Page => true,
+            or PropertyId.BorderCollapse or PropertyId.BorderSpacing or PropertyId.EmptyCells or PropertyId.CaptionSide or PropertyId.PointerEvents or PropertyId.AccentColor or PropertyId.CaretColor or PropertyId.ColorScheme or PropertyId.Page => true,
         _ => false,
     };
 
