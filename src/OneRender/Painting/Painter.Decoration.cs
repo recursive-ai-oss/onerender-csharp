@@ -132,7 +132,7 @@ public sealed partial class Painter
         }
         else
         {
-            if (f != _skipBackground && f != 0)
+            if (f != _skipBackground && f != 0 && look != NativeLook.Bare)
             {
                 PaintBackground(f, in v, in g, cur, false, default);
             }
@@ -140,7 +140,7 @@ public sealed partial class Painter
             PaintInsetShadows(f, in v, in g, cur);
         }
 
-        Insets border = look == NativeLook.Replace ? default : PaintTableBorders(f, g.Border) ? default : _tree.BorderOf(f);
+        Insets border = look is NativeLook.Replace or NativeLook.Bare ? default : PaintTableBorders(f, g.Border) ? default : _tree.BorderOf(f);
         double top = SideWidth(border.Top, v.BorderTopStyle);
         double right = sliceEnd ? 0 : SideWidth(border.Right, v.BorderRightStyle);
         double bottom = SideWidth(border.Bottom, v.BorderBottomStyle);
@@ -181,7 +181,7 @@ public sealed partial class Painter
             PaintColumnRules(f, in v);
         }
 
-        if (look == NativeLook.Overlay)
+        if (look is NativeLook.Overlay or NativeLook.Bare)
         {
             PaintNativeParts(f, in v, in g);
         }

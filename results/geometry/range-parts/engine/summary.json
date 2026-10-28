@@ -1,0 +1,98 @@
+{
+  "format": "onerender-geometry-summary/1",
+  "set": "range-parts",
+  "label": "engine",
+  "ours": "engine",
+  "tolerancePx": 1,
+  "tolerancePercent": 0.5,
+  "gateRate": 0.99,
+  "browser": "Chrome/156.0.8078.47",
+  "fontSet": "8768bf2774f6c8e8 (20 files)",
+  "viewports": [
+    {
+      "viewport": "1280x800",
+      "pages": 6,
+      "elements": 173,
+      "matched": 173,
+      "rate": 1,
+      "classes": {
+        "positionOnly": 0,
+        "sizeOnly": 0,
+        "positionAndSize": 0,
+        "textRun": 0,
+        "missingOurs": 0,
+        "missingChrome": 0
+      },
+      "rootCauses": {
+        "positionOnly": 0,
+        "sizeOnly": 0,
+        "positionAndSize": 0,
+        "textRun": 0,
+        "missingOurs": 0,
+        "missingChrome": 0
+      },
+      "tagConflicts": 0,
+      "pagesAtGate": 6,
+      "medianPageRate": 1,
+      "minPageRate": 1,
+      "worstTags": []
+    },
+    {
+      "viewport": "390x844",
+      "pages": 6,
+      "elements": 173,
+      "matched": 173,
+      "rate": 1,
+      "classes": {
+        "positionOnly": 0,
+        "sizeOnly": 0,
+        "positionAndSize": 0,
+        "textRun": 0,
+        "missingOurs": 0,
+        "missingChrome": 0
+      },
+      "rootCauses": {
+        "positionOnly": 0,
+        "sizeOnly": 0,
+        "positionAndSize": 0,
+        "textRun": 0,
+        "missingOurs": 0,
+        "missingChrome": 0
+      },
+      "tagConflicts": 0,
+      "pagesAtGate": 6,
+      "medianPageRate": 1,
+      "minPageRate": 1,
+      "worstTags": []
+    }
+  ],
+  "total": {
+    "viewport": "all",
+    "pages": 12,
+    "elements": 346,
+    "matched": 346,
+    "rate": 1,
+    "classes": {
+      "positionOnly": 0,
+      "sizeOnly": 0,
+      "positionAndSize": 0,
+      "textRun": 0,
+      "missingOurs": 0,
+      "missingChrome": 0
+    },
+    "rootCauses": {
+      "positionOnly": 0,
+      "sizeOnly": 0,
+      "positionAndSize": 0,
+      "textRun": 0,
+      "missingOurs": 0,
+      "missingChrome": 0
+    },
+    "tagConflicts": 0,
+    "pagesAtGate": 12,
+    "medianPageRate": 1,
+    "minPageRate": 1,
+    "worstTags": []
+  },
+  "gateMet": true
+}

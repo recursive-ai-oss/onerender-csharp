@@ -1,3 +1,4 @@
+using OneRender.Forms;
 using OneRender.Style;
 using OneRender.Tree;
 
@@ -87,9 +88,19 @@ public sealed partial class BlockLayoutEngine
     /// left-to-right containers and <c>top</c> over <c>bottom</c> always; one given inset moves the box by it, and the other
     /// one moves it the opposite way. Percentages of <c>top</c>/<c>bottom</c> against a height that depends on content are <c>auto</c>.
     /// </summary>
-    internal static void RelativeOffset(in ComputedValues v, double cbWidth, double cbHeight, bool rtl, out double dx, out double dy)
+    internal static void RelativeOffset(in ComputedValues v, double cbWidth, double cbHeight, bool rtl, out double dx, out double dy, double ownBorderWidth = 0)
     {
         dx = dy = 0;
+        if (v.Control == ControlKind.RangeThumb || v.ThumbFraction != 0)
+        {
+            // CSS Forms 1 §4.2 (range slider): the thumb sits where the value is along the track, so it moves by its share of the room
+            // the track's content box leaves beside it. The margins stay where they are (measured from Chrome's rendering).
+            // In a right-to-left track a box narrower than the track starts at the right edge, so it is moved back from there.
+            double room = cbWidth - ownBorderWidth;
+            dx = (v.ThumbFraction * room) - (rtl ? room : 0);
+            return;
+        }
+
         if (v.Position != PositionKind.Relative)
         {
             return;

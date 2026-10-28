@@ -74,6 +74,7 @@ public sealed partial class HtmlFrontEnd
         _cellPadding.Clear();
         _fieldsetOrig.Clear();
         _wrapperOf.Clear();
+        _ranges.Clear();
         _alignHint.Clear();
         _tableBorder.Clear();
         _styles = styles;

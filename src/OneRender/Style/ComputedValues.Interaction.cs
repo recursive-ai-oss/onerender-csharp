@@ -28,6 +28,7 @@ public partial struct ComputedValues
         v.Control = Forms.ControlKind.None;
         v.ControlState = Forms.ControlStates.None;
         v.ControlFraction = 0;
+        v.ThumbFraction = 0;
         v.InnerBaseline = double.NaN;
         v.ControlWidth = double.NaN;
         v.WidthIsIntrinsic = false;
@@ -47,7 +48,7 @@ public partial struct ComputedValues
     }
 
     internal static bool InteractionEquals(in ComputedValues a, in ComputedValues b) =>
-        a.PointerEvents == b.PointerEvents && a.Control == b.Control && a.ControlState == b.ControlState && a.ControlFraction.Equals(b.ControlFraction) && a.DisplayWasInlineLevel == b.DisplayWasInlineLevel
+        a.PointerEvents == b.PointerEvents && a.Control == b.Control && a.ControlState == b.ControlState && a.ControlFraction.Equals(b.ControlFraction) && a.ThumbFraction.Equals(b.ThumbFraction) && a.DisplayWasInlineLevel == b.DisplayWasInlineLevel
         && a.BaselineAtBorderEdge == b.BaselineAtBorderEdge && a.InnerBaseline.Equals(b.InnerBaseline) && a.ControlWidth.Equals(b.ControlWidth) && a.WidthIsIntrinsic == b.WidthIsIntrinsic && a.HeightIsIntrinsic == b.HeightIsIntrinsic && a.ContentCenteredByPadding == b.ContentCenteredByPadding && a.LegendGap.Equals(b.LegendGap) && a.ControlInnerPadding.Equals(b.ControlInnerPadding) && a.Appearance == b.Appearance && a.AccentColorAuto == b.AccentColorAuto && a.AccentColor.Equals(b.AccentColor) && a.CaretColorAuto == b.CaretColorAuto && a.CaretColor.Equals(b.CaretColor) && a.ColorScheme == b.ColorScheme && a.DarkScheme == b.DarkScheme && a.HostScope == b.HostScope && a.HasHostScope == b.HasHostScope;
 
     internal static void InteractionHash(ref HashCode h, in ComputedValues v)
@@ -56,6 +57,7 @@ public partial struct ComputedValues
         h.Add(v.Control);
         h.Add(v.ControlState);
         h.Add(v.ControlFraction);
+        h.Add(v.ThumbFraction);
         h.Add(v.DisplayWasInlineLevel);
         h.Add(v.BaselineAtBorderEdge);
         h.Add(v.InnerBaseline);

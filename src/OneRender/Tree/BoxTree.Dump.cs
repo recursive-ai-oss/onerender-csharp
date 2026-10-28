@@ -143,6 +143,9 @@ public sealed partial class BoxTree
             StyledNodeKind.Before => "::before",
             StyledNodeKind.After => "::after",
             StyledNodeKind.Marker => "::marker",
+            StyledNodeKind.SliderContainer => "::slider-container",
+            StyledNodeKind.SliderTrack => "::slider-track",
+            StyledNodeKind.SliderThumb => "::slider-thumb",
             _ => node.TagName,
         };
     }

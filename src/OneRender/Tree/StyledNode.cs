@@ -19,6 +19,15 @@ public enum StyledNodeKind : byte
 
     /// <summary>The <c>::after</c> of an element; see <see cref="Before"/>.</summary>
     After,
+
+    /// <summary>The box that holds the track of an <c>input type=range</c> (its shadow container): a flex container that centers the track in the input.</summary>
+    SliderContainer,
+
+    /// <summary>The track of a range (<c>::slider-track</c>, CSS Forms 1): a child of the <see cref="SliderContainer"/>, styled from the cascade.</summary>
+    SliderTrack,
+
+    /// <summary>The thumb of a range (<c>::slider-thumb</c>): the track's only child, styled from the cascade.</summary>
+    SliderThumb,
 }
 
 /// <summary>Size limits for building a tree from untrusted input. Checked before anything is stored.</summary>

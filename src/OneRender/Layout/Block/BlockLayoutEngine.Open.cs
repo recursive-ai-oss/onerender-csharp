@@ -274,7 +274,7 @@ public sealed partial class BlockLayoutEngine
             }
         }
 
-        RelativeOffset(in v, w, f.SpecH, rtl, out double relDx, out double relDy);
+        RelativeOffset(in v, w, f.SpecH, rtl, out double relDx, out double relDy, borderW);
         if (replaced)
         {
             double bh = replacedH + pv;

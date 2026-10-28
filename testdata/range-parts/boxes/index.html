@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang=en><head><meta charset=utf-8><title>Box model of the parts</title>
+<style>
+body{margin:0;font:13px Arial,sans-serif}
+section{padding:8px 16px}
+.row{display:flex;align-items:center;gap:10px;margin:6px 0}
+.name{width:110px;flex:none}
+
+input{-webkit-appearance:none;appearance:none;background:transparent;width:240px}
+.a::-webkit-slider-runnable-track{height:8px;border:3px solid #2563eb;padding:2px;background:#bfdbfe;border-radius:8px}
+.a::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;background:#f59e0b;border-radius:50%}
+.b::-webkit-slider-runnable-track{height:8px;margin:0 10px;background:#ccc}
+.b::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;background:#e11d48;margin-left:6px;margin-right:9px}
+.c{height:36px;border:1px solid #666;padding:4px 8px}
+.c::-webkit-slider-runnable-track{height:8px;background:#ccc}
+.c::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;background:#0d9488;margin-top:-4px}
+.d::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:10px;height:10px;border:3px solid #000;background:#fbbf24}
+.d::-webkit-slider-runnable-track{height:8px;background:#ccc}
+.e::-webkit-slider-runnable-track{height:8px;background:#ccc;width:50px}
+.e::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:5%;height:14px;background:#7c3aed}
+.f{height:2px;background:#9ca3af}
+.f::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:#0ea5e9}
+.g::-webkit-slider-runnable-track{background:#ccc}
+.g::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;background:#10b981;margin-top:4px}
+.h{direction:rtl}
+.h::-webkit-slider-runnable-track{height:6px;background:#ccc}
+.h::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:12px;height:12px;background:#ef4444;margin-top:-3px}
+.i{width:240px}
+.i::-webkit-slider-runnable-track{height:8px;background:#ccc;border-radius:4px}
+.i::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:0;height:0;border:8px solid transparent;border-top-color:#1d4ed8;border-bottom:0}
+
+</style></head><body>
+<section>
+<div class=row><span class=name>track border+padding</span><input class=a type=range value=50></div>
+<div class=row><span class=name>track + thumb margins</span><input class=b type=range value=50></div>
+<div class=row><span class=name>input height+padding</span><input class=c type=range value=50></div>
+<div class=row><span class=name>thumb border</span><input class=d type=range value=50></div>
+<div class=row><span class=name>track width ignored</span><input class=e type=range value=50></div>
+<div class=row><span class=name>thin input, big thumb</span><input class=f type=range value=50></div>
+<div class=row><span class=name>thumb margin-top 4</span><input class=g type=range value=50></div>
+<div class=row><span class=name>rtl</span><input class=h type=range value=20></div>
+<div class=row><span class=name>zero-size thumb</span><input class=i type=range value=50></div>
+</section>
+</body></html>

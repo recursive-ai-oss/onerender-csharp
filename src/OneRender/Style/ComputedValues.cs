@@ -397,6 +397,13 @@ public partial struct ComputedValues
     /// <summary>The state flags of the control that its native look depends on. Set by the front end; not a CSS property.</summary>
     internal Forms.ControlStates ControlState { get; set; }
 
+    /// <summary>
+    /// For the thumb of a range (<see cref="Forms.ControlKind.RangeThumb"/> or a thumb the author styled): where along its track the thumb sits, 0 to 1 from
+    /// the start edge (already mirrored for a right-to-left input). Layout shifts the thumb by this share of the room the track has left beside it.
+    /// It lives apart from <see cref="ControlFraction"/> because it moves the box, where that one only changes what is painted.
+    /// </summary>
+    internal double ThumbFraction { get; set; }
+
     /// <summary>For a range, progress or meter: how far along the track the value is, 0 to 1 (NaN for a progress bar without a value). Set by the front end.</summary>
     internal double ControlFraction { get; set; }
 

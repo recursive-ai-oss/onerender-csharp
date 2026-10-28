@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang=en><head><meta charset=utf-8><title>Ranges in flow</title>
+<style>
+body{margin:0;font:13px Arial,sans-serif}
+section{padding:8px 16px}
+.row{display:flex;align-items:center;gap:10px;margin:6px 0}
+.name{width:110px;flex:none}
+
+p{margin:8px 0}
+.n1{-webkit-appearance:none;appearance:none;background:transparent}
+.n1::-webkit-slider-runnable-track{height:6px;background:#ccc}
+.n1::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:12px;height:12px;margin-top:-3px;background:#444;border-radius:50%}
+.n2{-webkit-appearance:none;appearance:none;width:80px;height:3px;background:#999}
+.n2::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:10px;height:26px;background:#222}
+.blk{display:block;width:60%;margin:6px 0}
+.fx{display:flex;gap:8px;align-items:center}
+.fx input{flex:1}
+.gr{display:grid;grid-template-columns:80px 1fr 40px;align-items:center;gap:6px}
+
+</style></head><body>
+<section>
+<p>Native <input type=range value=50> in a line of text with another <input type=range value=20 style="width:60px"> after it.</p>
+<p>Custom <input class=n1 type=range value=50> in a line of text, and a tall thumb <input class=n2 type=range value=50> after it.</p>
+<p><input class=n1 type=range value=50 style="display:block;width:60%"></p>
+<div class=fx><span>Low</span><input class=n1 type=range value=50><span>High</span></div>
+<div class=fx style="height:50px"><span>Low</span><input type=range value=50><span>High</span></div>
+<div class=gr><span>Vol</span><input class=n1 type=range value=75><span>75</span></div>
+<div class=gr style="height:60px"><span>Vol</span><input type=range value=75><span>75</span></div>
+</section>
+</body></html>

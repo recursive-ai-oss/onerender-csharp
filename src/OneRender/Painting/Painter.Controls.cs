@@ -22,6 +22,9 @@ public sealed partial class Painter
 
         // The CSS background and border are drawn as usual and the native parts go on top.
         Overlay,
+
+        // The CSS background and border are not drawn at all (their space stays); the native parts are. A range with its native look.
+        Bare,
     }
 
     private static bool Near(ColorValue c, int r, int g, int b) =>
@@ -45,9 +48,12 @@ public sealed partial class Painter
     {
         switch (v.Control)
         {
+            case ControlKind.Range:
+                // With appearance: none the input draws no native track; its thumb part still may (see PaintRange).
+                return v.Appearance == AppearanceKind.Auto ? NativeLook.Bare : NativeLook.None;
+            case ControlKind.RangeThumb:
             case ControlKind.Checkbox:
             case ControlKind.Radio:
-            case ControlKind.Range:
             case ControlKind.Progress:
             case ControlKind.Meter:
                 return NativeLook.Overlay;
@@ -183,7 +189,12 @@ public sealed partial class Painter
                 PaintRadio(f, in v, r, disabled);
                 break;
             case ControlKind.Range:
-                PaintRange(f, in v, r, disabled);
+                PaintRange(f, in v, r, g.Content, disabled);
+                break;
+            case ControlKind.RangeThumb:
+                // The thumb is drawn where layout put it, not snapped to device pixels (measured from Chrome's rendering).
+                Rect tb = _tree.BorderBoxOf(f);
+                PaintRangeThumb(f, new RectF(C(_absX[f]), C(_absY[f]), C(tb.Width), C(tb.Height)), disabled ? FormPalette.For(v.DarkScheme).DisabledRangeAccent : AccentOf(in v, FormPalette.For(v.DarkScheme)));
                 break;
             case ControlKind.Progress:
                 PaintProgress(f, in v, r);
@@ -249,24 +260,35 @@ public sealed partial class Painter
     }
 
     // Probe: the track is 8 px tall, centered, inset 1 px at each end, a pill with a 1 px border; the part up to the thumb is the accent color;
-    // the thumb is a 16 px accent circle that travels between 8 px in from each end. The track and the thumb are separate parts
-    // (PaintRangeTrack, PaintRangeThumb) so that styling of the slider's pseudo-elements can replace either one.
-    private void PaintRange(int f, in ComputedValues v, in RectF r, bool disabled)
+    // the thumb is a 16 px accent circle that travels between 8 px in from each end. The input draws the native track and the filled part;
+    // the thumb is a box of its own inside the range (its fragment is placed by layout, see BlockLayoutEngine.RelativeOffset) and draws
+    // itself through PaintRangeThumb, so an author-styled track or thumb replaces either one independently.
+    private void PaintRange(int f, in ComputedValues v, in RectF r, in RectF content, bool disabled)
     {
         FormPalette pal = FormPalette.For(v.DarkScheme);
         float cy = r.Y + (r.Height / 2);
         PaintColor accent = disabled ? pal.DisabledRangeAccent : AccentOf(in v, pal);
-        float travel = Math.Max(0, r.Width - 16f);
+        float travel = Math.Max(0, content.Width - 16f);
+        bool rtl = v.Direction == DirectionKind.Rtl;
         float t = (float)Math.Clamp(v.ControlFraction, 0, 1);
-        float cx = r.X + 8f + (travel * t);
-        PaintRangeTrack(f, in v, new RectF(r.X + 1f, cy - 4f, Math.Max(0, r.Width - 2f), 8f), accent, cx, disabled, pal);
-        PaintRangeThumb(f, new RectF(cx - 8f, cy - 8f, 16f, 16f), accent);
+        // The thumb is a box in the content box, so the filled part ends at its center.
+        float cx = content.X + 8f + (travel * (rtl ? 1f - t : t));
+        PaintRangeTrack(f, in v, new RectF(r.X + 1f, cy - 4f, Math.Max(0, r.Width - 2f), 8f), accent, cx, disabled, pal, rtl);
     }
 
-    private void PaintRangeTrack(int f, in ComputedValues v, in RectF track, PaintColor accent, float thumbCenterX, bool disabled, FormPalette pal)
+    private void PaintRangeTrack(int f, in ComputedValues v, in RectF track, PaintColor accent, float thumbCenterX, bool disabled, FormPalette pal, bool rtl)
     {
         PaintTrack(f, track, disabled ? pal.DisabledTrackFill : pal.TrackFillFor(accent), disabled ? pal.DisabledTrackBorder : pal.TrackBorderFor(accent), 0);
-        PaintFilledPart(f, track, accent, thumbCenterX - track.X, 2, disabled ? PaintColor.Transparent : pal.FilledRing(accent));
+        // The filled part runs from the start edge to the thumb's center: the left edge, or the right edge of a right-to-left range.
+        PaintColor ring = disabled ? PaintColor.Transparent : pal.FilledRing(accent);
+        if (rtl)
+        {
+            PaintFilledRange(f, track, accent, thumbCenterX - track.X, track.Width, 2, ring);
+        }
+        else
+        {
+            PaintFilledPart(f, track, accent, thumbCenterX - track.X, 2, ring);
+        }
     }
 
     private void PaintRangeThumb(int f, in RectF thumb, PaintColor accent) =>
