@@ -3,6 +3,7 @@ using OneRender.Style;
 using OneRender.Tree;
 using RecursiveAI.OneHtml;
 using RecursiveAI.OneHtml.Css;
+using HtmlStateChange = RecursiveAI.OneHtml.Css.ElementStateChange;
 
 namespace OneRender.Interaction;
 
@@ -27,13 +28,15 @@ public sealed partial class InteractivePage
     private readonly HtmlPageOptions _options;
     private readonly InteractionOptions _io;
     private readonly EventDispatcher _events;
-    private DocumentStyles _baseStyles;
     private HtmlPage _page;
     private HitTester _hits;
     private LayoutQueries _queries;
-    private StyleContext _context;
     private DocumentStyles _view;
-    private int _viewDepth = 1;
+
+    // The cascade that moves in place once an interaction or form state changes (hover, focus, a ticked box). Until then, and after an
+    // edit makes a new snapshot, it is null and `_view` is the cascade; while it exists, `_view` is rebuilt from it when a snapshot is needed.
+    private LiveDocumentStyles? _live;
+    private bool _viewStale;
     private int _generation;
     private IStateChangeHandler? _handler;
 
@@ -43,9 +46,7 @@ public sealed partial class InteractivePage
     private InteractivePage(HtmlPage page, DocumentStyles styles, HtmlPageOptions options, InteractionOptions io)
     {
         _page = page;
-        _baseStyles = styles;
         _view = styles;
-        _context = styles.Context;
         _options = options;
         _io = io;
         _events = new EventDispatcher(page.Document);
@@ -104,7 +105,7 @@ public sealed partial class InteractivePage
     public ReadOnlySpan<ElementStateChange> LastStateChanges => new(_changes, 0, _changeCount);
 
     /// <summary>The style context the document is currently styled under.</summary>
-    public StyleContext StyleContext => _context;
+    public StyleContext StyleContext => _live is null ? _view.Context : _live.GetContext();
 
     /// <summary>The element under the pointer, or the null node.</summary>
     public Node HoveredElement => _hovered;
@@ -141,7 +142,6 @@ public sealed partial class InteractivePage
 
     private readonly HitResult[] _hitBuffer = new HitResult[HitBufferSize];
     private const int HitBufferSize = 256;
-    private const int MaxViewDepth = 8;
 
     private HitTester NewHitTester(HtmlPage page)
     {
@@ -175,6 +175,21 @@ public sealed partial class InteractivePage
 
     // The same element in the document the cascade is made for (node indices are the same in every snapshot of a page).
     private Node InSnapshot(Node n) => n.IsNull || _snapshot is null ? n : _snapshot.GetNode(n.Index);
+
+    // The cascade as an immutable view of what the page shows now (for a rebuild, an edit or a handler).
+    private DocumentStyles CurrentView()
+    {
+        if (_live is not null && _viewStale)
+        {
+            _view = _live.ToSnapshot();
+            _viewStale = false;
+        }
+
+        return _view;
+    }
+
+    // Starts the cascade that moves in place; `_view` must be current.
+    private LiveDocumentStyles EnsureLive() => _live ??= LiveDocumentStyles.Create(_view);
 
     private static ElementStates StatesOf(Node e, Node hover, Node active, Node focus, bool focusVisible)
     {
@@ -247,38 +262,46 @@ public sealed partial class InteractivePage
         CollectChanges(_appliedFocus);
         CollectChanges(_focused);
 
-        // The context differs only in these four fields; a record `with` allocates, which is fine once per state change.
+        // The cascade belongs to the latest edited snapshot (see SetTextContent), so it names that snapshot's nodes. Only the parts that
+        // moved are named; the live cascade restyles from them without allocating.
         FocusSource source = _focusVisible || _focusReason == FocusReason.Keyboard ? FocusSource.Keyboard : FocusSource.PointingDevice;
-        // The cascade belongs to the latest edited snapshot (see SetTextContent), so the context names that snapshot's nodes.
-        StyleContext next = _context with { Hover = InSnapshot(_hovered), Active = InSnapshot(_active), Focus = InSnapshot(_focused), FocusSource = source };
+        HtmlStateChange change = default;
+        if (!_appliedHover.Equals(_hovered))
+        {
+            change = change.WithHover(InSnapshot(_hovered));
+        }
+
+        if (!_appliedActive.Equals(_active))
+        {
+            change = change.WithActive(InSnapshot(_active));
+        }
+
+        if (!_appliedFocus.Equals(_focused) || _appliedFocusVisible != _focusVisible)
+        {
+            change = change.WithFocus(InSnapshot(_focused), source);
+        }
+
         _appliedHover = _hovered;
         _appliedActive = _active;
         _appliedFocus = _focused;
         _appliedFocusVisible = _focusVisible;
+        LiveDocumentStyles live = EnsureLive();
+        live.ApplyState(change);
+        _viewStale = true;
         InputOutcome outcome = InputOutcome.StatesChanged;
         if (_changeCount == 0)
         {
-            _context = next;
             return outcome;
         }
 
-        if (_handler is not null && _handler.ElementStatesChanged(this, LastStateChanges, next))
+        if (_handler is not null && _handler.ElementStatesChanged(this, LastStateChanges, live.GetContext()))
         {
-            _context = next;
             return outcome;
         }
 
-        // Whole-document restyle. Each view is derived from the previous one so that ChangedElements says exactly what differs from
-        // the page as it is now; after a few such steps the chain is rebased on the interaction-free styles so lookups stay short.
-        bool rebase = _viewDepth >= MaxViewDepth;
-        DocumentStyles styles = (rebase ? _baseStyles : _view).WithContext(next, ct);
-        bool differs = rebase || styles.ChangedElements.Count > 0 || styles.HasInteractivePseudoElementRules;
-        _context = next;
-        _view = styles;
-        _viewDepth = rebase ? 1 : _viewDepth + 1;
-        if (differs)
+        if (live.ChangedElementCount > 0 || live.HasInteractivePseudoElementRules)
         {
-            outcome |= ShowStyles(styles, rebase, false, -1, null, ct);
+            outcome |= ShowStyles(new StyleSource(live), live.ChangedElementIndices, false, false, -1, null, ct);
         }
 
         return outcome;
@@ -286,10 +309,13 @@ public sealed partial class InteractivePage
 
     // Brings the page up to date with a new view of the cascade, in place when the change allows it, else by building the page again.
     // `textElement` (a node index, or -1) names an element whose single text child takes `text` in the same pass.
-    private InputOutcome ShowStyles(DocumentStyles styles, bool all, bool edit, int textElement, string? text, CancellationToken ct, bool rebuild = false)
+    private InputOutcome ShowStyles(DocumentStyles styles, bool all, bool edit, int textElement, string? text, CancellationToken ct, bool rebuild = false) =>
+        ShowStyles(new StyleSource(styles), all ? [] : [.. styles.ChangedElements], all, edit, textElement, text, ct, rebuild);
+
+    private InputOutcome ShowStyles(StyleSource styles, ReadOnlySpan<int> changed, bool all, bool edit, int textElement, string? text, CancellationToken ct, bool rebuild = false)
     {
         _motionNow = Math.Max(_motionNow, _lastTime);
-        if (!rebuild && !DisableInPlaceRestyle && _page.CanRestyleInPlace && _page.TryRestyle(styles, all, ct, _motionNow, edit, textElement, text))
+        if (!rebuild && !DisableInPlaceRestyle && _page.CanRestyleInPlace && _page.TryRestyle(styles, changed, all, ct, _motionNow, edit, textElement, text))
         {
             // The page object stays; its trees were updated in place, so the hit tester reads the new fragments.
             _hits.Rebuild();
@@ -297,7 +323,7 @@ public sealed partial class InteractivePage
         else
         {
             HtmlPage before = _page;
-            _page = _page.Rebuild(styles, ct, _motionNow);
+            _page = _page.Rebuild(_live is not null ? CurrentView() : styles.ToSnapshot(), ct, _motionNow);
             if (edit)
             {
                 // Scroll positions follow their elements into the new tree.
@@ -328,7 +354,7 @@ public sealed partial class InteractivePage
         else
         {
             HtmlPage before = _page;
-            _page = _page.Rebuild(_view, ct, _motionNow);
+            _page = _page.Rebuild(CurrentView(), ct, _motionNow);
             _page.Scroll.Remap(before.Styled, _page.Styled);
             _hits = NewHitTester(_page);
             _queries = new LayoutQueries(_page, _hits);

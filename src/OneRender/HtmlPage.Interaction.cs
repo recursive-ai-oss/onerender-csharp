@@ -32,13 +32,20 @@ public sealed partial class HtmlPage
     /// <returns>False when the change reaches which nodes and boxes exist (a <c>display: none</c> that came or went, generated content, list markers); the page is then stale and the caller builds a new one with <see cref="Rebuild"/>.</returns>
     internal bool TryRestyle(DocumentStyles styles, bool all, CancellationToken cancellationToken, double now = 0, bool edit = false, int textElement = -1, string? text = null)
     {
+        int[] changed = all ? [] : [.. styles.ChangedElements];
+        return TryRestyle(new StyleSource(styles), changed, all, cancellationToken, now, edit, textElement, text);
+    }
+
+    // The same for a style source that may be live; `changed` holds the element indices whose style object differs from what the page shows (ignored when `all`).
+    internal bool TryRestyle(StyleSource styles, ReadOnlySpan<int> changed, bool all, CancellationToken cancellationToken, double now = 0, bool edit = false, int textElement = -1, string? text = null)
+    {
         if (_updater is null || _front is null || styles.HasInteractivePseudoElementRules)
         {
             return false;
         }
 
         // Whether a ::before, ::after or ::marker box exists, and the text it shows, are fixed when the boxes are made; an edit can change them.
-        if (edit && UsesGeneratedContentRules(styles))
+        if (edit && UsesGeneratedContentRules(styles.ToSnapshot()))
         {
             return false;
         }
@@ -57,7 +64,7 @@ public sealed partial class HtmlPage
         }
         else
         {
-            foreach (int index in styles.ChangedElements)
+            foreach (int index in changed)
             {
                 StyledNode n = st.FindBySource(index);
                 if (!n.IsNull)
@@ -107,7 +114,7 @@ public sealed partial class HtmlPage
     /// their styles are recomputed, the text they show is refreshed, and only what changed is laid out and painted again.
     /// </summary>
     /// <returns>False when the page cannot take the change in place and must be built again with <see cref="Rebuild"/>.</returns>
-    internal bool TryApplyFormChange(ReadOnlySpan<Node> controls, CancellationToken cancellationToken)
+    internal bool TryApplyFormChange(ReadOnlySpan<Node> controls, StyleSource styles, ReadOnlySpan<int> changed, CancellationToken cancellationToken)
     {
         if (_updater is null || _front is null)
         {
@@ -115,6 +122,17 @@ public sealed partial class HtmlPage
         }
 
         StyledTree st = Styled;
+        _front.CurrentStyles = styles;
+        foreach (int index in changed)
+        {
+            // Controls whose `:checked`, `:disabled` or `:indeterminate` style changed, and what depends on them.
+            StyledNode n = st.FindBySource(index);
+            if (!n.IsNull)
+            {
+                st.MarkStyleDirty(n.Index);
+            }
+        }
+
         foreach (Node control in controls)
         {
             StyledNode n = st.FindBySource(control.Index);

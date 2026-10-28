@@ -6,13 +6,13 @@ namespace OneRender.Tree;
 
 public sealed partial class HtmlFrontEnd : INodeStyler
 {
-    private DocumentStyles? _current;
+    private StyleSource _current;
 
     /// <summary>
     /// Makes the cascade that later restyles read: after <see cref="Build"/> it is the one the tree was built from, and a host that
     /// restyles in place (a state change) hands the new view here before marking nodes.
     /// </summary>
-    internal DocumentStyles? CurrentStyles
+    internal StyleSource CurrentStyles
     {
         get => _current;
         set => _current = value;
@@ -20,10 +20,10 @@ public sealed partial class HtmlFrontEnd : INodeStyler
 
     StyleId INodeStyler.ComputeElement(StyledTree tree, int node, StyleId parentStyle)
     {
-        DocumentStyles? styles = _current;
+        StyleSource styles = _current;
         Document? doc = tree.SourceDocument;
         int source = tree.SourceIndexOf(node);
-        if (styles is null || doc is null || source < 0)
+        if (styles.IsNull || doc is null || source < 0)
         {
             return _wrapperOf.TryGetValue(node, out int owner) ? FieldsetContentStyle(tree.StyleOf(owner), owner) : new StyleId(tree.StyleOf(node).Index);
         }
@@ -49,10 +49,10 @@ public sealed partial class HtmlFrontEnd : INodeStyler
 
     StyleId INodeStyler.ComputeOther(StyledTree tree, int node, StyleId parentStyle)
     {
-        DocumentStyles? styles = _current;
+        StyleSource styles = _current;
         Document? doc = tree.SourceDocument;
         int owner = tree.ParentOf(node);
-        if (styles is null || doc is null || owner < 0 || tree.SourceIndexOf(owner) < 0)
+        if (styles.IsNull || doc is null || owner < 0 || tree.SourceIndexOf(owner) < 0)
         {
             return tree.StyleOf(node);
         }

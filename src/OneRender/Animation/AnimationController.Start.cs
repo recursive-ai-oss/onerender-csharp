@@ -49,13 +49,15 @@ internal sealed partial class AnimationController
 
             if (inst is null)
             {
-                if (!Keyframes.TryGet(name, out KeyframesRule? rule) || rule.Blocks.Length == 0 || e.Animations.Count >= MaxAnimationsPerElement)
+                ComputedStyle? cascade = e.Animations.Count >= MaxAnimationsPerElement ? null : CascadeStyleOf(tree, node);
+                IReadOnlyList<ResolvedKeyframes?>? lists = cascade is null ? null : _styles.GetAnimationKeyframes(cascade);
+                if (lists is null || i >= lists.Count || lists[i] is not { Keyframes.Count: > 0 } resolved)
                 {
                     continue;
                 }
 
                 inst = new AnimationInstance { Name = name, StartTime = now, Order = _order++ };
-                ResolveKeyframes(tree, e, node, inst, rule, in after, _styles);
+                ResolveKeyframes(tree, e, node, inst, resolved, cascade!, in after);
                 if (inst.Tracks.Length == 0 && !HasTimingEffect(inst))
                 {
                     // A rule with no animatable declarations still runs (its events fire), just without values.
@@ -106,12 +108,26 @@ internal sealed partial class AnimationController
 
     private static T Pick<T>(T[] list, int index) => list[index % list.Length];
 
+    // The element's source node and computed style in the cascade the page is styled from; the style is null without a cascade.
+    private ComputedStyle? CascadeStyleOf(StyledTree tree, int node)
+    {
+        if (_styles.IsNull || tree.SourceDocument is null)
+        {
+            return null;
+        }
+
+        int source = tree.SourceIndexOf(node);
+        RecursiveAI.OneHtml.Node n = source < 0 ? default : _styles.Document.GetNode(source);
+        return n.IsNull ? null : _styles.GetStyle(n);
+    }
+
     /// <summary>
-    /// Computes the keyframes of <paramref name="rule"/> for one element: each block's declarations become typed values against the
-    /// element's own font size and parent, then one track per property is assembled with the implicit 0% and 100% keyframes taking the
-    /// element's underlying value (CSS Animations 1 §4.2).
+    /// Turns the resolved keyframes of one animation into what sampling reads: each keyframe's declared values become typed values
+    /// against the element's own font size and parent, then one track per property is assembled. A value that is the element's own value
+    /// (the keyframes OneHtml adds at 0% and 100%, or an explicit value equal to it) stays "the underlying value" and is read from the
+    /// element's base style at each tick (CSS Animations 1 §4.2).
     /// </summary>
-    private static void ResolveKeyframes(StyledTree tree, ElementEffects e, int node, AnimationInstance inst, KeyframesRule rule, in ComputedValues after, DocumentStyles? styles)
+    private static void ResolveKeyframes(StyledTree tree, ElementEffects e, int node, AnimationInstance inst, ResolvedKeyframes resolved, ComputedStyle cascade, in ComputedValues after)
     {
         StyleTable table = tree.Styles;
         int parentNode = tree.ParentOf(node);
@@ -119,26 +135,69 @@ internal sealed partial class AnimationController
         bool hasParent = parentNode >= 0;
         ComponentValueList fontSize = CssTree.ParseComponentValueList(CssText.Px(after.FontSize)).Values;
         var source = new KeyframeSource();
-        KeyframeBlock[] blocks = rule.Blocks;
-        var values = new ComputedValues[blocks.Length];
-        for (int b = 0; b < blocks.Length; b++)
+        IReadOnlyList<ResolvedKeyframe> frames = resolved.Keyframes;
+        int count = Math.Min(frames.Count, MaxKeyframes);
+        var values = new ComputedValues[count];
+        var declared = new bool[count * Properties.Count];
+        var explicitValue = new bool[count * Properties.Count];
+        var easings = new EasingFunction?[count];
+        for (int b = 0; b < count; b++)
         {
-            source.Reset(blocks[b].Declaration, fontSize);
+            ResolvedKeyframe frame = frames[b];
+            var decl = new StyleDeclaration();
+            foreach (KeyframeValue v in frame.Values)
+            {
+                if (!Properties.TryGet(v.Property, out PropertyId pid))
+                {
+                    continue;
+                }
+
+                string text = v.Value;
+                if (frame.IsImplicit || (!v.InvalidAtComputedValueTime && text.Equals(cascade.GetComputedValue(v.Property), StringComparison.Ordinal)))
+                {
+                    // The element's own value: read from the base style when sampled.
+                    if (PropertyAnimator.IsAnimatable(pid))
+                    {
+                        declared[(b * Properties.Count) + (int)pid] = true;
+                    }
+
+                    continue;
+                }
+
+                // The declaration store treats unset as "not declared", but in a keyframe it is a value: inherit or initial by property (CSS Animations 1 §4.2).
+                if (v.InvalidAtComputedValueTime || text.Trim().Equals("unset", StringComparison.OrdinalIgnoreCase))
+                {
+                    text = Properties.IsInherited(pid) ? "inherit" : "initial";
+                }
+
+                decl.TrySet(v.Property, text);
+            }
+
+            source.Reset(decl, fontSize);
             values[b] = table.ComputeDetached(source, parent, hasParent);
+            easings[b] = frame.TimingFunction.Equals(resolved.TimingFunction, StringComparison.Ordinal) ? null : StyleComputer.ParseEasing(frame.TimingFunction);
+            for (int i = 0; i < Properties.Count; i++)
+            {
+                if (decl.Get((PropertyId)i, out _) != ValueOrigin.Unset && PropertyAnimator.IsAnimatable((PropertyId)i))
+                {
+                    declared[(b * Properties.Count) + i] = true;
+                    explicitValue[(b * Properties.Count) + i] = true;
+                }
+            }
         }
 
         inst.KeyframeValues = values;
 
         // Properties in property order, so the result does not depend on hash or declaration order.
         var tracks = new List<PropertyTrack>();
-        var offsets = new List<double>(blocks.Length + 2);
-        var idx = new List<int>(blocks.Length + 2);
-        var eas = new List<EasingFunction?>(blocks.Length + 2);
+        var offsets = new List<double>(count + 2);
+        var idx = new List<int>(count + 2);
+        var eas = new List<EasingFunction?>(count + 2);
         MotionLevel level = MotionLevel.Compositor;
         for (int p = 0; p < Properties.Count; p++)
         {
             var id = (PropertyId)p;
-            if (!PropertyAnimator.IsAnimatable(id) || IsImportantWinner(tree, node, id, styles))
+            if (!PropertyAnimator.IsAnimatable(id) || IsImportantWinner(cascade, id))
             {
                 continue;
             }
@@ -146,27 +205,16 @@ internal sealed partial class AnimationController
             offsets.Clear();
             idx.Clear();
             eas.Clear();
-            for (int b = 0; b < blocks.Length; b++)
+            for (int b = 0; b < count; b++)
             {
-                if (Array.IndexOf(blocks[b].Properties, id) < 0)
+                if (!declared[(b * Properties.Count) + p])
                 {
                     continue;
                 }
 
-                double o = blocks[b].Offset;
-                int last = offsets.Count - 1;
-                if (last >= 0 && offsets[last] == o)
-                {
-                    // The same offset again: the later declaration wins, including its easing.
-                    idx[last] = b;
-                    eas[last] = blocks[b].Easing;
-                }
-                else
-                {
-                    offsets.Add(o);
-                    idx.Add(b);
-                    eas.Add(blocks[b].Easing);
-                }
+                offsets.Add(frames[b].Offset);
+                idx.Add(explicitValue[(b * Properties.Count) + p] ? b : -1);
+                eas.Add(easings[b]);
             }
 
             if (offsets.Count == 0)
@@ -203,17 +251,8 @@ internal sealed partial class AnimationController
 
     // CSS Cascade 4 §6.4.1: important declarations of the author, user and user-agent origins beat animations, so an animation does
     // not drive a property whose winning declaration is !important.
-    private static bool IsImportantWinner(StyledTree tree, int node, PropertyId id, DocumentStyles? styles)
-    {
-        Document? doc = tree.SourceDocument;
-        if (styles is null || doc is null)
-        {
-            return false;
-        }
-
-        RecursiveAI.OneHtml.Node n = styles.Document.GetNode(tree.SourceIndexOf(node));
-        return !n.IsNull && styles.GetStyle(n).GetSource(Properties.NameOf(id)) is { IsImportant: true };
-    }
+    private static bool IsImportantWinner(ComputedStyle cascade, PropertyId id) =>
+        cascade.GetSource(Properties.NameOf(id)) is { IsImportant: true };
 
     /// <summary>Declarations of one keyframe as the computer's input; font-size is the element's, so <c>em</c> in a keyframe means the element's em.</summary>
     private sealed class KeyframeSource : OneRender.Style.DeclarationSource

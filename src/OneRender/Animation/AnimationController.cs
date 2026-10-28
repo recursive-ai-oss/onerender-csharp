@@ -95,16 +95,10 @@ internal sealed partial class AnimationController : IStyleHolder
     private readonly int[] _propStamp = new int[Properties.Count];
     private int _propStampValue;
 
-    private DocumentStyles? _styles;
+    private StyleSource _styles;
 
-    /// <summary>Creates a controller reading <c>@keyframes</c> from <paramref name="keyframes"/>.</summary>
-    public AnimationController(KeyframesRegistry keyframes)
-    {
-        Keyframes = keyframes;
-    }
-
-    /// <summary>The <c>@keyframes</c> rules animations look up by name.</summary>
-    public KeyframesRegistry Keyframes { get; set; }
+    // Keyframes one animation keeps; OneHtml merges blocks of the same offset, so only a hostile rule gets near this.
+    private const int MaxKeyframes = 1024;
 
     /// <summary>Elements that currently have a transition or animation (including finished ones holding a fill).</summary>
     public int ElementCount => _effects.Count;
@@ -180,7 +174,7 @@ internal sealed partial class AnimationController : IStyleHolder
     /// <param name="previous">The tree the page showed before, or null for the first style. Its styles are the before-change style.</param>
     /// <param name="now">The host's time in ms.</param>
     /// <param name="styles">The cascade the tree was built from; important declarations in it keep their properties out of animations. May be null.</param>
-    public void Recalc(StyledTree tree, StyledTree? previous, double now, DocumentStyles? styles = null)
+    public void Recalc(StyledTree tree, StyledTree? previous, double now, StyleSource styles = default)
     {
         _styles = styles;
         ArgumentNullException.ThrowIfNull(tree);
@@ -227,7 +221,7 @@ internal sealed partial class AnimationController : IStyleHolder
     /// <param name="now">The host's time in ms.</param>
     /// <param name="styles">The cascade the tree was restyled from; may be null.</param>
     /// <returns>True when any restyled element has, or had, transitions or animations (its style row may differ in content from the recorded old style).</returns>
-    public bool RecalcPending(StyledTree tree, double now, DocumentStyles? styles = null)
+    public bool RecalcPending(StyledTree tree, double now, StyleSource styles = default)
     {
         ArgumentNullException.ThrowIfNull(tree);
         _styles = styles;

@@ -19,6 +19,14 @@ public class HtmlIncrementalTests
         "<ul><li>First</li><li>Second</li><li>Third <b>bold</b></li></ul>" +
         "<div class=row><button id=b3>Three</button><input id=i1 value=x></div></body></html>";
 
+    private const string FormPage =
+        "<!DOCTYPE html><html><head><style>body{margin:0;font:14px Liberation Sans}input.cb{appearance:none;width:18px;height:18px;border:2px solid #333;margin:6px;display:inline-block}" +
+        "input.cb:hover{border-color:#f0f}input.cb:checked{background:#06c;width:24px}input.cb:checked + label{color:#c00}input.cb:indeterminate{background:#999}" +
+        "input.cb:focus{outline:2px solid #0f0}input:disabled{opacity:.4}fieldset:disabled{background:#eee}label{margin-right:10px}.g:has(:checked){background:#eef}</style></head><body>" +
+        "<div class=g><input id=a class=cb type=checkbox><label for=a>A</label><input id=b class=cb type=checkbox checked><label for=b>B</label></div>" +
+        "<div class=g><input class=cb type=radio name=r><input class=cb type=radio name=r><input class=cb type=radio name=r checked></div>" +
+        "<fieldset disabled><input class=cb type=checkbox><input class=cb type=radio name=q></fieldset><button>ok</button></body></html>";
+
     private static string Describe(InteractivePage p) => p.Page.Styled.Dump() + "\n--\n" + p.Page.Boxes.Dump() + "\n--\n" + p.Page.Fragments.Dump();
 
     private static void Drive(string html, int w, int h, int seed, int steps)
@@ -94,6 +102,15 @@ public class HtmlIncrementalTests
         for (int seed = 1; seed <= 3; seed++)
         {
             Drive(GameUiScene.Html(), GameUiScene.Width, GameUiScene.Height, seed, 120);
+        }
+    }
+
+    [Fact]
+    public void StateFlipsAndClicksOnAFormPageEqualARebuild()
+    {
+        for (int seed = 1; seed <= 12; seed++)
+        {
+            Drive(FormPage, 300, 200, seed, 150);
         }
     }
 }

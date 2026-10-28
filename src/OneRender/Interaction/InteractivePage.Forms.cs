@@ -8,8 +8,8 @@ namespace OneRender.Interaction;
 
 // Form controls (HTML §4.10): the default actions of clicks and keys on checkboxes, radio buttons, buttons, ranges and selects, and the
 // events they fire. The document is read-only, so what the user changed lives in a FormState beside it that the page reads when it
-// styles a control. `:checked` and the other state selectors read the document's attributes and so do not follow these changes
-// (OneHtml has no dynamic form state yet); the native look and the queries below do.
+// styles a control. The cascade's `:checked`, `:indeterminate`, `:disabled` and related selectors follow the same state: every change
+// is passed to the live cascade as a form-state override (HTML §4.16.3), so a restyled control equals a page parsed with that state.
 public sealed partial class InteractivePage
 {
     private static readonly SelectorList InvalidSelector = SelectorList.Parse(":invalid");
@@ -114,6 +114,32 @@ public sealed partial class InteractivePage
 
         return ApplyFormChange(n, cancellationToken);
     }
+
+    /// <summary>Whether a checkbox is in the indeterminate state its <c>indeterminate</c> property gives (HTML §4.10.5.1.15); a click or <see cref="SetChecked"/> clears it.</summary>
+    /// <param name="input">An <c>input</c> element.</param>
+    /// <returns>True for a checkbox set indeterminate; false for anything else.</returns>
+    public bool IsIndeterminate(Node input) => IsCheckbox(input) && _page.Form.IsIndeterminate(input);
+
+    /// <summary>Sets a checkbox's <c>indeterminate</c> property. The native look and the <c>:indeterminate</c> selector follow it.</summary>
+    /// <param name="input">An <c>input type=checkbox</c> element.</param>
+    /// <param name="value">The new state.</param>
+    /// <param name="cancellationToken">Cancels the restyle.</param>
+    /// <returns>What changed on the page; nothing for anything that is not a checkbox.</returns>
+    public InputOutcome SetIndeterminate(Node input, bool value, CancellationToken cancellationToken = default)
+    {
+        if (!IsCheckbox(input) || _page.Form.IsIndeterminate(input) == value)
+        {
+            return InputOutcome.None;
+        }
+
+        _page.Form.SetIndeterminate(input, value);
+        int n = 0;
+        AddScratch(ref n, input);
+        return ApplyFormChange(n, cancellationToken);
+    }
+
+    private static bool IsCheckbox(Node n) =>
+        FocusRules.IsHtml(n, "input") && FocusRules.TryGetAttribute(n, "type", out ReadOnlySpan<char> t) && t.Equals("checkbox", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Sets the value of a range input as a script would (no events): snapped to the step and clamped to the range.</summary>
     /// <param name="input">An <c>input type=range</c> element.</param>
@@ -317,6 +343,38 @@ public sealed partial class InteractivePage
         return cursor;
     }
 
+    private FormStateChange[] _formChanges = new FormStateChange[32];
+
+    // Passes the state of the controls in the scratch list to the live cascade, as overrides of what their attributes say (null: the
+    // attribute again, after a reset). Returns how many elements' styles changed; they are listed in the cascade's changed list.
+    private void StyleFormState(int count)
+    {
+        if (_formChanges.Length < count * 2)
+        {
+            _formChanges = new FormStateChange[count * 4];
+        }
+
+        int n = 0;
+        for (int i = 0; i < count; i++)
+        {
+            Node control = _formScratch[i];
+            Node inSnapshot = InSnapshot(control);
+            if (IsCheckable(control))
+            {
+                _formChanges[n++] = FormStateChange.Checked(inSnapshot, _page.Form.TryGetChecked(control, out bool on) ? on : null);
+                _formChanges[n++] = FormStateChange.Indeterminate(inSnapshot, _page.Form.IsIndeterminate(control) ? true : null);
+            }
+            else if (FocusRules.IsHtml(control, "option"))
+            {
+                _formChanges[n++] = FormStateChange.Checked(inSnapshot, _page.Form.TryGetSelected(control, out bool selected) ? selected : null);
+            }
+        }
+
+        LiveDocumentStyles live = EnsureLive();
+        live.ApplyFormState(new ReadOnlySpan<FormStateChange>(_formChanges, 0, n));
+        _viewStale = true;
+    }
+
     // Brings the page up to date with the controls in the scratch list.
     private InputOutcome ApplyFormChange(int count, CancellationToken ct)
     {
@@ -325,11 +383,13 @@ public sealed partial class InteractivePage
             return InputOutcome.None;
         }
 
+        StyleFormState(count);
+        LiveDocumentStyles live = _live!;
         var span = new ReadOnlySpan<Node>(_formScratch, 0, count);
         _motionNow = Math.Max(_motionNow, _lastTime);
-        if (!_page.TryApplyFormChange(span, ct))
+        if (live.HasInteractivePseudoElementRules || !_page.TryApplyFormChange(span, new StyleSource(live), live.ChangedElementIndices, ct))
         {
-            _page = _page.Rebuild(_view, ct, _motionNow);
+            _page = _page.Rebuild(CurrentView(), ct, _motionNow);
             _hits = NewHitTester(_page);
             _queries = new LayoutQueries(_page, _hits);
         }
@@ -809,7 +869,7 @@ public sealed partial class InteractivePage
     private InputOutcome Rebuild(CancellationToken ct)
     {
         _motionNow = Math.Max(_motionNow, _lastTime);
-        _page = _page.Rebuild(_view, ct, _motionNow);
+        _page = _page.Rebuild(CurrentView(), ct, _motionNow);
         _hits = NewHitTester(_page);
         _queries = new LayoutQueries(_page, _hits);
         _generation++;

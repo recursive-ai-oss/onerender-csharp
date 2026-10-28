@@ -3,6 +3,7 @@ using OneRender.Layout;
 using OneRender.Style;
 using OneRender.Tree;
 using RecursiveAI.OneHtml;
+using RecursiveAI.OneHtml.Css;
 
 namespace OneRender.Interaction;
 
@@ -160,6 +161,7 @@ public sealed partial class InteractivePage
         s.Editor.MaxLength = !s.Numeric && max is not null && int.TryParse(max, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out int m) ? m : -1;
         TextEditView v = s.View;
         v.SourceElement = element.Index;
+        ReadSelectionColors(element, v);
         StyledNode n = _page.Styled.FindBySource(element.Index);
         if (!n.IsNull)
         {
@@ -171,6 +173,33 @@ public sealed partial class InteractivePage
                 ColorValue r = cv.CaretColor.Resolve(cv.Color);
                 v.CaretColor = cv.CaretColorAuto ? default : new Painting.PaintColor(r.R, r.G, r.B, r.A);
             }
+        }
+    }
+
+    // CSS Pseudo-Elements 4 §3 (highlight pseudo-elements): the colors of the control's `::selection`. Without a rule the highlight is the
+    // browser default (or what the host put on the view); a rule that sets only `color` keeps the background, and one that sets only the
+    // background keeps the text color.
+    private void ReadSelectionColors(Node element, TextEditView v)
+    {
+        Node inSnapshot = InSnapshot(element);
+        ComputedStyle? selection = _live is not null ? _live.GetPseudoStyle(inSnapshot, PseudoElementKind.Selection) : _view.GetPseudoStyle(inSnapshot, PseudoElementKind.Selection);
+        if (selection is null)
+        {
+            return;
+        }
+
+        v.SelectionForeground = default;
+        if (selection.GetValue("background-color") is { IsInitial: false })
+        {
+            (double r, double g, double b, double a) = selection.BackgroundColor.Resolve(selection.Color).ToSrgb();
+            v.SelectionBackground = new Painting.PaintColor((float)r, (float)g, (float)b, (float)a);
+        }
+
+        ComputedStyle own = _live is not null ? _live.GetStyle(inSnapshot) : _view.GetStyle(inSnapshot);
+        if (!selection.Color.Equals(own.Color))
+        {
+            (double r, double g, double b, double a) = selection.Color.ToSrgb();
+            v.SelectionForeground = new Painting.PaintColor((float)r, (float)g, (float)b, (float)a);
         }
     }
 
