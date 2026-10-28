@@ -51,6 +51,9 @@ public enum ControlKind : byte
     /// <summary>The rendered legend of a fieldset (its first <c>legend</c> child).</summary>
     Legend,
 
+    /// <summary>The thumb of a range with its native look: a styled-tree part inside the range's track, painted as an accent-colored circle.</summary>
+    RangeThumb,
+
     /// <summary>The list of an open drop-down select: painted and hit-tested in the top layer, above everything else of the page.</summary>
     SelectPopup,
 }

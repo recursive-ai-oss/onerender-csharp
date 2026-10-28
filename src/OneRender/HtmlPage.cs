@@ -286,6 +286,7 @@ public sealed partial class HtmlPage
         ILayoutEngine engine = options.Layout ?? reusing ?? new BlockLayoutEngine();
         engine.Layout(boxes, new LayoutInput(options.ViewportWidth, options.ViewportHeight, options.Fonts) { Reuse = reusing is not null }, fragments, cancellationToken);
         var page = new HtmlPage(document, styled, boxes, fragments, options) { Motion = motion, UsedPageReferences = front.UsedPageReferences, Form = form, TextOverrides = textOverrides };
+        page._sliderOnlyDynamic = DynamicPseudoRulesAreSliderOnly(new StyleSource(styles));
         if (reusing is not null)
         {
             boxes.ClearDirty();

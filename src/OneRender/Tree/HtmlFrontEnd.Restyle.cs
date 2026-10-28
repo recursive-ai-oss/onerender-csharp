@@ -33,6 +33,12 @@ public sealed partial class HtmlFrontEnd : INodeStyler
         int parent = tree.ParentOf(node);
         StyleId resolved = Resolve(styles.GetStyle(element), parentStyle, parent >= 0, parent < 0);
         resolved = AdjustControlStyle(element, SplitFieldset(element, node, resolved), parent < 0 ? default : tree.StyleOf(parent));
+        if (tree.Styles[resolved].Control == Forms.ControlKind.Range)
+        {
+            // The cascade for the parts may have moved without the input's own style moving (a ::slider-thumb rule behind a class).
+            MarkPartsDirty(node);
+        }
+
         string tag = tree.TagNameOf(node);
         if (element.Namespace == ElementNamespace.Html && (tag.Equals("table", StringComparison.Ordinal) || tag.Equals("tr", StringComparison.Ordinal) || tag.Equals("td", StringComparison.Ordinal) || tag.Equals("th", StringComparison.Ordinal)))
         {
@@ -49,6 +55,12 @@ public sealed partial class HtmlFrontEnd : INodeStyler
 
     StyleId INodeStyler.ComputeOther(StyledTree tree, int node, StyleId parentStyle)
     {
+        var partKind = (StyledNodeKind)tree.KindOf(node);
+        if (partKind is StyledNodeKind.SliderContainer or StyledNodeKind.SliderTrack or StyledNodeKind.SliderThumb)
+        {
+            return SliderPartStyle(node, parentStyle);
+        }
+
         StyleSource styles = _current;
         Document? doc = tree.SourceDocument;
         int owner = tree.ParentOf(node);

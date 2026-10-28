@@ -1,0 +1,1 @@
+<p>a<input type=range value=50 class=e>b<input type=range class=f style="direction:rtl;writing-mode:vertical-rl"></p>.e{appearance:none;height:2px;overflow:hidden}.e::-webkit-slider-thumb{appearance:none;height:9999px;box-shadow:-400px 0 0 400px green}.f::-webkit-slider-runnable-track{margin:-50px;border-radius:50%;width:10%}.f::-webkit-slider-thumb{width:101%;height:-1px}

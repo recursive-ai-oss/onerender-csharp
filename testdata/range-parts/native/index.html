@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang=en><head><meta charset=utf-8><title>Native with styled parts</title>
+<style>
+body{margin:0;font:13px Arial,sans-serif}
+section{padding:8px 16px}
+.row{display:flex;align-items:center;gap:10px;margin:6px 0}
+.name{width:110px;flex:none}
+
+.t1::-webkit-slider-runnable-track{height:20px;background:#fde68a}
+.t2::-webkit-slider-runnable-track{height:4px;background:transparent}
+.t3::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:30px;height:30px;background:red}
+.t4{accent-color:#d03060}
+.t4::-webkit-slider-runnable-track{background:rgba(0,0,0,.1);height:10px}
+.t5{-webkit-appearance:none;appearance:none;background:transparent}
+.t6{-webkit-appearance:none;appearance:none;background:transparent;accent-color:#16a34a}
+.t6::-webkit-slider-runnable-track{height:6px;background:#ccc}
+.t7{-webkit-appearance:none;appearance:none;background:transparent}
+.t7::-webkit-slider-thumb{width:30px;height:30px;background:red}
+.h40{height:40px;border:1px solid #888}
+.pad{padding:6px 10px;border:2px solid #888}
+
+</style></head><body>
+<section>
+<div class=row><span class=name>native, tall track</span><input class=t1 type=range value=50></div>
+<div class=row><span class=name>native, thin track</span><input class=t2 type=range value=50></div>
+<div class=row><span class=name>native, thumb styled</span><input class=t3 type=range value=50></div>
+<div class=row><span class=name>accent + track</span><input class=t4 type=range value=70></div>
+<div class=row><span class=name>appearance none only</span><input class=t5 type=range value=50></div>
+<div class=row><span class=name>none + accent + track</span><input class=t6 type=range value=30></div>
+<div class=row><span class=name>none, native thumb</span><input class=t7 type=range value=50></div>
+<div class=row><span class=name>native, height 40</span><input class=h40 type=range value=50></div>
+<div class=row><span class=name>native, padding</span><input class=pad type=range value=50></div>
+<div class=row><span class=name>native, bg + border</span><input type=range value=50 style="background:#fde68a;border:3px solid red;border-radius:12px"></div>
+<div class=row><span class=name>plain native</span><input type=range value=50></div>
+<div class=row><span class=name>native, width 300</span><input type=range value=80 style="width:300px"></div>
+</section>
+</body></html>

@@ -201,17 +201,23 @@ public sealed partial class HtmlFrontEnd
 
                 break;
             case ControlKind.Range:
-                if (native)
+            {
+                // Probe (Chrome 156): a range is 129 px wide with either appearance, and as high as its track, which is as high as its thumb
+                // unless the author sizes it; its parts are boxes inside it (HtmlFrontEnd.Range.cs).
+                SetContentWidth(ref v, 129, borderBox);
+                bool autoHeight = v.Height.IsAuto;
+                if (!autoHeight)
                 {
-                    SetContentWidth(ref v, 129, borderBox);
-                    bool autoHeight = v.Height.IsAuto;
                     SetContentHeight(ref v, 16, borderBox);
-                    // Probe (Chrome 156, grid and flex stretch of a range): a slider fills the stretched area and centers its track in it.
-                    v.HeightIsIntrinsic = autoHeight;
-                    v.BaselineAtBorderEdge = true;
                 }
 
+                // Probe (Chrome 156, grid and flex stretch of a range): a slider fills the stretched area and centers its track in it.
+                v.HeightIsIntrinsic = autoHeight;
+                // Probe (Chrome 156): the baseline is the bottom border edge with either appearance.
+                v.BaselineAtBorderEdge = true;
+
                 break;
+            }
             case ControlKind.TextArea:
             {
                 int cols = 20, rows = 2;
@@ -778,6 +784,12 @@ public sealed partial class HtmlFrontEnd
         if (kind is ControlKind.TextField or ControlKind.Password or ControlKind.TextArea)
         {
             AddTextControlContent(element, idx, kind);
+            return;
+        }
+
+        if (kind == ControlKind.Range)
+        {
+            AddRangeParts(idx);
             return;
         }
 

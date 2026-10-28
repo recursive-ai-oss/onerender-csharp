@@ -1,4 +1,5 @@
 using OneRender.Forms;
+using OneRender.Style;
 using OneRender.Tree;
 using RecursiveAI.OneHtml;
 using RecursiveAI.OneHtml.Css;
@@ -387,7 +388,7 @@ public sealed partial class InteractivePage
         LiveDocumentStyles live = _live!;
         var span = new ReadOnlySpan<Node>(_formScratch, 0, count);
         _motionNow = Math.Max(_motionNow, _lastTime);
-        if (live.HasInteractivePseudoElementRules || !_page.TryApplyFormChange(span, new StyleSource(live), live.ChangedElementIndices, ct))
+        if (_page.NeedsRebuildForPseudoRules(new StyleSource(live)) || !_page.TryApplyFormChange(span, new StyleSource(live), live.ChangedElementIndices, ct))
         {
             _page = _page.Rebuild(CurrentView(), ct, _motionNow);
             _hits = NewHitTester(_page);
@@ -688,13 +689,42 @@ public sealed partial class InteractivePage
     private Node _dragRange;
     private double _dragStartValue;
 
-    // Probe: the thumb is 16 px across and its center travels from 8 px inside the left edge to 8 px inside the right edge of the control.
+    // The thumb's center follows the pointer along the room the track's content box gives it: from half a thumb inside the start edge to half a
+    // thumb inside the end edge, for the thumb as laid out (a styled one has the author's size). Probe: 16 px, 8 px in, for the native look.
     private InputOutcome RangeFromPointer(Node input, double x, CancellationToken ct)
     {
-        Layout.Rect r = _queries.GetBoundingClientRect(input);
-        double travel = Math.Max(1, r.Width - 16);
+        double start, room, thumbWidth;
+        bool rtl = false;
+        StyledNode track = default, thumb = default;
+        StyledNode n = _page.Styled.FindBySource(input.Index);
+        if (!n.IsNull)
+        {
+            StyledNode container = n.FirstChild;
+            track = container.IsNull || container.Kind != StyledNodeKind.SliderContainer ? default : container.FirstChild;
+            thumb = track.IsNull || track.Kind != StyledNodeKind.SliderTrack ? default : track.FirstChild;
+            rtl = n.Values.Direction == DirectionKind.Rtl;
+        }
+
+        if (!thumb.IsNull && thumb.Kind == StyledNodeKind.SliderThumb)
+        {
+            Layout.Rect tr = _queries.GetBoundingClientRect(track);
+            ref readonly ComputedValues tv = ref track.Values;
+            double left = tv.BorderLeftWidth + tv.PaddingLeft.Resolve(tr.Width);
+            double right = tv.BorderRightWidth + tv.PaddingRight.Resolve(tr.Width);
+            thumbWidth = _queries.GetBoundingClientRect(thumb).Width;
+            start = tr.X + left + (thumbWidth / 2);
+            room = Math.Max(1, tr.Width - left - right - thumbWidth);
+        }
+        else
+        {
+            Layout.Rect r = _queries.GetBoundingClientRect(input);
+            start = r.X + 8;
+            room = Math.Max(1, r.Width - 16);
+        }
+
+        double fraction = (x - start) / room;
         FormValues.RangeSpec spec = RangeOf(input);
-        double value = spec.FromFraction((x - (r.X + 8)) / travel);
+        double value = spec.FromFraction(rtl ? 1 - fraction : fraction);
         return ChangeRange(input, value, false, ct);
     }
 

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang=en><head><meta charset=utf-8><title>Disabled, hover rules and ends</title>
+<style>
+body{margin:0;font:13px Arial,sans-serif}
+section{padding:8px 16px}
+.row{display:flex;align-items:center;gap:10px;margin:6px 0}
+.name{width:110px;flex:none}
+
+input{-webkit-appearance:none;appearance:none;background:transparent;width:220px}
+input::-webkit-slider-runnable-track{height:8px;background:#d4d4d8;border-radius:4px}
+input::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;margin-top:-5px;border-radius:50%;background:#2563eb;border:2px solid #fff;box-shadow:0 0 0 1px #2563eb}
+input:hover::-webkit-slider-thumb{background:#dc2626}
+input:disabled::-webkit-slider-thumb{background:#a1a1aa;box-shadow:0 0 0 1px #a1a1aa}
+input:disabled{opacity:.6}
+.o{opacity:.5}
+
+</style></head><body>
+<section>
+<div class=row><span class=name>enabled</span><input type=range value=40></div>
+<div class=row><span class=name>disabled</span><input type=range value=40 disabled></div>
+<div class=row><span class=name>opacity .5</span><input class=o type=range value=40></div>
+<div class=row><span class=name>value 0</span><input type=range value=0></div>
+<div class=row><span class=name>value 100</span><input type=range value=100></div>
+<div class=row><span class=name>native disabled</span><input type=range value=40 disabled style="-webkit-appearance:auto;appearance:auto;background:none"></div>
+<div class=row><span class=name>in a form</span><form style="margin:0"><label>Volume <input type=range value=65></label></form></div>
+</section>
+</body></html>

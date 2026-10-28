@@ -69,6 +69,15 @@ public sealed partial class StyledTree
             case StyledNodeKind.Before:
                 sb.Append("::before \"").Append(TextOf(n)).Append('"');
                 break;
+            case StyledNodeKind.SliderContainer:
+                sb.Append("::slider-container");
+                break;
+            case StyledNodeKind.SliderTrack:
+                sb.Append("::slider-track");
+                break;
+            case StyledNodeKind.SliderThumb:
+                sb.Append("::slider-thumb");
+                break;
             default:
                 sb.Append("::after \"").Append(TextOf(n)).Append('"');
                 break;

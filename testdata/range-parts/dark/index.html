@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang=en style="color-scheme:dark"><head><meta charset=utf-8><title>Dark scheme</title>
+<style>
+body{margin:0;font:13px Arial,sans-serif}
+section{padding:8px 16px}
+.row{display:flex;align-items:center;gap:10px;margin:6px 0}
+.name{width:110px;flex:none}
+
+.c1{-webkit-appearance:none;appearance:none;background:transparent;width:240px}
+.c1::-webkit-slider-runnable-track{height:8px;background:#3f3f46;border-radius:4px}
+.c1::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;margin-top:-5px;border-radius:50%;background:#a5b4fc}
+.c2{-webkit-appearance:none;appearance:none;background:transparent;width:240px}
+.c2::-webkit-slider-runnable-track{height:6px;background:CanvasText;opacity:.3}
+.c2::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;margin-top:-5px;background:Highlight;border-radius:50%}
+.c3::-webkit-slider-runnable-track{height:12px;background:#27272a}
+.c4{accent-color:#f97316}
+.c4::-webkit-slider-runnable-track{height:14px;background:rgba(255,255,255,.15)}
+
+</style></head><body>
+<section>
+<div class=row><span class=name>styled track+thumb</span><input class=c1 type=range value=40></div>
+<div class=row><span class=name>system colours</span><input class=c2 type=range value=60></div>
+<div class=row><span class=name>native, track styled</span><input class=c3 type=range value=50></div>
+<div class=row><span class=name>accent + track</span><input class=c4 type=range value=50></div>
+<div class=row><span class=name>plain native</span><input type=range value=50></div>
+<div class=row><span class=name>native disabled</span><input type=range value=50 disabled></div>
+<div class=row><span class=name>styled disabled</span><input class=c1 type=range value=40 disabled></div>
+</section>
+</body></html>

@@ -2,6 +2,21 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- An `input type=range` is styled through its parts. `::-webkit-slider-runnable-track`, `::-webkit-slider-thumb` and the standard and `-moz-` names for them (OneHtml 1.5.0) set the track's and thumb's size, background, border, radius, shadow and margin (the `margin-top: -4px` centring idiom too). The range is as high as its track, the track is centered in the input, and the thumb moves along the track's content box with the value. `appearance: none` on the input or the thumb switches from the native look to the author's boxes. The native look is unchanged: a native thumb is 16 px whatever its rule says, and the input's own border and background stay unpainted.
+- A rule such as `input:hover::-webkit-slider-thumb` restyles the range in place. A page whose only rules that combine a state with a pseudo-element name range parts no longer builds the page again on every hover, focus or press.
+- Dragging a range follows the thumb as laid out (a styled thumb's width and the track's border and padding), and mirrors in a right-to-left range.
+- New styled-node kinds `SliderContainer`, `SliderTrack` and `SliderThumb`, and `ControlKind.RangeThumb`.
+- A `range-parts` geometry and pixel set of six pages (custom sliders, native with styled parts, the parts' box model, states, ranges in flow, dark scheme).
+
+### Changed
+
+- OneHtml and OneHtml.Accessibility 1.5.0.
+- A range with `appearance: none` is 129 px wide like a native one (it had no size), and its baseline is the bottom border edge under both appearances.
+
 ## [1.2.0] - 2026-10-27
 
 ### Added

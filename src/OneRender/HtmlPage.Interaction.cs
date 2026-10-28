@@ -39,7 +39,13 @@ public sealed partial class HtmlPage
     // The same for a style source that may be live; `changed` holds the element indices whose style object differs from what the page shows (ignored when `all`).
     internal bool TryRestyle(StyleSource styles, ReadOnlySpan<int> changed, bool all, CancellationToken cancellationToken, double now = 0, bool edit = false, int textElement = -1, string? text = null)
     {
-        if (_updater is null || _front is null || styles.HasInteractivePseudoElementRules)
+        if (all || edit)
+        {
+            // The sheets may differ from the ones the page was built with.
+            _sliderOnlyDynamic = DynamicPseudoRulesAreSliderOnly(styles);
+        }
+
+        if (_updater is null || _front is null || NeedsRebuildForPseudoRules(styles))
         {
             return false;
         }
@@ -52,6 +58,11 @@ public sealed partial class HtmlPage
 
         StyledTree st = Styled;
         _front.CurrentStyles = styles;
+        if (styles.HasInteractivePseudoElementRules)
+        {
+            _front.MarkRangePartsDirty();
+        }
+
         if (all)
         {
             for (int i = 0; i < st.Count; i++)
@@ -123,6 +134,11 @@ public sealed partial class HtmlPage
 
         StyledTree st = Styled;
         _front.CurrentStyles = styles;
+        if (styles.HasInteractivePseudoElementRules)
+        {
+            _front.MarkRangePartsDirty();
+        }
+
         foreach (int index in changed)
         {
             // Controls whose `:checked`, `:disabled` or `:indeterminate` style changed, and what depends on them.
@@ -223,6 +239,54 @@ public sealed partial class HtmlPage
 
         st.SetText(child, text);
         return true;
+    }
+
+    // Rules that combine a changing state with a pseudo-element (`input:hover::before`) can add or remove boxes, so a page that has any is
+    // built again on every state change. Rules whose only pseudo-elements are the parts of a range (`input:hover::slider-thumb`) change no
+    // box that exists: the parts are always there and only their styles move, so those pages restyle in place.
+    private bool _sliderOnlyDynamic;
+
+    internal bool NeedsRebuildForPseudoRules(StyleSource styles) => styles.HasInteractivePseudoElementRules && !_sliderOnlyDynamic;
+
+    private static readonly string[] SliderPartNames = ["slider-thumb", "slider-track", "slider-fill", "slider-runnable-track", "range-thumb", "range-track", "range-progress"];
+
+    private static readonly string[] OtherPseudoElementNames = ["before", "after", "marker", "placeholder", "selection", "first-line", "first-letter", "backdrop", "file-selector"];
+
+    // True when the author sheets mention range parts and no other pseudo-element. A text scan: a false "no" only costs the in-place path.
+    internal static bool DynamicPseudoRulesAreSliderOnly(StyleSource styles)
+    {
+        if (!styles.HasInteractivePseudoElementRules)
+        {
+            return false;
+        }
+
+        bool slider = false;
+        foreach (StyleSheetInfo info in styles.ToSnapshot().Sheets)
+        {
+            if (info.Origin != StyleOrigin.Author)
+            {
+                continue;
+            }
+
+            string t = info.Sheet.Text;
+            foreach (string name in OtherPseudoElementNames)
+            {
+                if (t.Contains(name, StringComparison.OrdinalIgnoreCase))
+                {
+                    return false;
+                }
+            }
+
+            foreach (string name in SliderPartNames)
+            {
+                if (t.Contains(name, StringComparison.OrdinalIgnoreCase))
+                {
+                    slider = true;
+                }
+            }
+        }
+
+        return slider;
     }
 
     private System.Collections.Generic.IReadOnlyList<StyleSheetInfo>? _scannedSheets;

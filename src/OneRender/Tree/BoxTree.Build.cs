@@ -202,8 +202,9 @@ public sealed partial class BoxTree
         _nodeBox[s] = b;
         if (bk is BoxKind.Container or BoxKind.Inline)
         {
-            PushFrame(s, kind == StyledNodeKind.Element ? st.FirstChildOf(s) : -1, b, splitBase);
-            if (kind != StyledNodeKind.Element && !st.TextOf(s).IsEmpty)
+            bool hasChildren = kind is StyledNodeKind.Element or StyledNodeKind.SliderContainer or StyledNodeKind.SliderTrack or StyledNodeKind.SliderThumb;
+            PushFrame(s, hasChildren ? st.FirstChildOf(s) : -1, b, splitBase);
+            if (!hasChildren && !st.TextOf(s).IsEmpty)
             {
                 // The generated string of ::before / ::after is the box's only child.
                 NewBox(BoxKind.Text, BoxLevel.Inline, FormattingContext.None, BoxTraits.None, sid, s, b);
