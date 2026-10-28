@@ -2,7 +2,7 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.2.0] - 2026-10-27
 
 ### Added
 
@@ -79,6 +79,7 @@ First release. All packages share one version.
 - Container queries and `@scope` depend on OneHtml support that is not yet available.
 - WOFF2 fonts on browser WebAssembly need decoded bytes from the host (the platform has no Brotli).
 
+[1.2.0]: https://github.com/recursive-ai-oss/onerender-csharp/releases/tag/v1.2.0
 [1.1.0]: https://github.com/recursive-ai-oss/onerender-csharp/releases/tag/v1.1.0
 [1.0.1]: https://github.com/recursive-ai-oss/onerender-csharp/releases/tag/v1.0.1
 [1.0.0]: https://github.com/recursive-ai-oss/onerender-csharp/releases/tag/v1.0.0
