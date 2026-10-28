@@ -2,6 +2,16 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.3.1] - 2026-10-28
+
+### Changed
+
+- OneHtml and OneHtml.Accessibility 1.5.1.
+
+### Fixed
+
+- A hover, focus or press change over a range styled by a state rule on its parts (`input:hover::-webkit-slider-thumb`) no longer allocates: it was about 800 bytes a pointer move in the cascade and is now 0 B in steady state.
+
 ## [1.3.0] - 2026-10-28
 
 ### Added
@@ -94,6 +104,7 @@ First release. All packages share one version.
 - Container queries and `@scope` depend on OneHtml support that is not yet available.
 - WOFF2 fonts on browser WebAssembly need decoded bytes from the host (the platform has no Brotli).
 
+[1.3.1]: https://github.com/recursive-ai-oss/onerender-csharp/releases/tag/v1.3.1
 [1.3.0]: https://github.com/recursive-ai-oss/onerender-csharp/releases/tag/v1.3.0
 [1.2.0]: https://github.com/recursive-ai-oss/onerender-csharp/releases/tag/v1.2.0
 [1.1.0]: https://github.com/recursive-ai-oss/onerender-csharp/releases/tag/v1.1.0

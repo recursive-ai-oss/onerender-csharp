@@ -292,13 +292,12 @@ public class RangePartTests
     }
 
     [Fact]
-    public void AHoverRuleOnAPartCostsOnlyTheCascadeRecomputingTheParts()
+    public void AHoverRuleOnAPartAllocatesNothingInSteadyState()
     {
-        // `input:hover::slider-thumb` reads state, so the cascade drops its cached part styles on every state change and computes them again
-        // (about 800 bytes a pointer move with two ranges on the page, all in the cascade). The test bounds it; the engine's own restyle,
-        // layout and paint of the parts add nothing, as the test above shows.
+        // `input:hover::-webkit-slider-thumb` reads the input's state, so each pointer move restyles the parts in place: the cascade reuses
+        // its pseudo-element boxes across state changes, and the engine's restyle, layout and paint of the parts allocate nothing either.
         long bytes = HoverBytes(StateCss, out string where);
-        Assert.True(bytes <= 300 * 1200, where);
+        Assert.True(bytes == 0, where);
     }
 
     [Fact]
