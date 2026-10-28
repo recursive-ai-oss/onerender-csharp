@@ -4,6 +4,7 @@ using OneRender.Tree;
 using RecursiveAI.OneHtml;
 using RecursiveAI.OneHtml.Css;
 using RecursiveAI.OneHtml.Editing;
+using RecursiveAI.OneHtml.Selectors;
 
 namespace OneRender.Interaction;
 
@@ -454,6 +455,12 @@ public sealed partial class InteractivePage
         }
 
         _page.Form.ClearElement(element);
+        if (_live is not null)
+        {
+            Node inSnapshot = InSnapshot(element);
+            _live.ApplyFormState([FormStateChange.Checked(inSnapshot, null), FormStateChange.Indeterminate(inSnapshot, null)]);
+            _viewStale = true;
+        }
     }
 
     // A text control the user has not changed follows its value attribute (HTML: the dirty value flag is false); one they changed keeps
@@ -516,12 +523,13 @@ public sealed partial class InteractivePage
             throw new InvalidOperationException("The edit would change the shape of the document.");
         }
 
-        DocumentStyles view = DocumentStylesEditing.Restyle(_view, result, ct).Styles;
-        DocumentStyles baseStyles = ReferenceEquals(_view, _baseStyles) ? view : DocumentStylesEditing.Restyle(_baseStyles, result, ct).Styles;
+        // The edit starts from the cascade as it stands (hover, focus and form state included); the live cascade is made again from the result.
+        DocumentStyles view = DocumentStylesEditing.Restyle(CurrentView(), result, ct).Styles;
         _snapshot = result.Document;
         DocumentSnapshots.Set(_page.Document, result.Document);
         _view = view;
-        _baseStyles = baseStyles;
+        _live = null;
+        _viewStale = false;
         afterSnapshot?.Invoke();
         outcome |= ShowStyles(view, false, true, textElement, text, ct, rebuild);
         // The content may have moved under a stationary pointer, as after a scroll: boundary events and :hover follow, as in a browser.

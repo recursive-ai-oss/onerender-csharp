@@ -3,6 +3,7 @@ using OneRender.Interaction;
 using RecursiveAI.OneHtml;
 using RecursiveAI.OneHtml.Css;
 using Xunit;
+using ElementStateChange = OneRender.Interaction.ElementStateChange;
 
 namespace OneRender.Tests;
 

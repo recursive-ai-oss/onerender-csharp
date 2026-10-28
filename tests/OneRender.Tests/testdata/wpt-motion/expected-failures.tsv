@@ -38,7 +38,6 @@ css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	
 css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	100px normal	animation-range belongs to scroll-driven animations, deferred past the first release
 css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	10% normal	animation-range belongs to scroll-driven animations, deferred past the first release
 css/css-animations/parsing/animation-range-shorthand.html	valid	animation-range	entry normal	animation-range belongs to scroll-driven animations, deferred past the first release
-css/css-transitions/parsing/transition-invalid.html	invalid	transition	initial 1s	OneHtml's shorthand expansion accepts a CSS-wide keyword next to other values
 css/css-transitions/parsing/transition-timing-function-computed.html	computed	transition-timing-function	steps(calc(2 * sibling-index()), jump-none)	steps() with sibling-index() or a sign() that needs a layout context is not evaluated
 css/css-transitions/parsing/transition-timing-function-computed.html	computed	transition-timing-function	steps(sibling-index(), jump-none)	steps() with sibling-index() or a sign() that needs a layout context is not evaluated
 css/css-transitions/parsing/transition-timing-function-computed.html	computed	transition-timing-function	steps(calc(2 * sign(1em - 1000px)), jump-none)	steps() with sibling-index() or a sign() that needs a layout context is not evaluated
