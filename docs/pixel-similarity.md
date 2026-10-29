@@ -27,7 +27,7 @@ Chrome for Testing 156.0.8078.47, font set from the `.Fonts` package files, engi
 | range-parts | 1280×800 | 6 | 0.9988 | 0.9962 | native |
 | range-parts | 390×844 | 6 | 0.9963 | 0.9879 | native |
 
-What the lowest page shows (looked at side by side, `flowbite-components` at 390×844): the form controls (inputs, checkbox, password field) are not drawn in Chrome's default style yet, a card header that Chrome paints with a gradient is plain white in ours (a Tailwind 4 gradient utility; the cause is not yet traced), and the timeline dots are squares. Pages of the other sets were not inspected one by one; their layout agrees with Chrome's (geometry 100% and 99.97%), so the remaining difference is mostly glyph and edge anti-aliasing.
+What the lowest page shows (looked at side by side, `flowbite-components` at 390×844): a card header that Chrome paints with a gradient is plain white in ours (a Tailwind 4 gradient utility; the cause is not yet traced), and the timeline dots are squares. Pages of the other sets were not inspected one by one; their layout agrees with Chrome's (geometry 100% and 99.97%), so the remaining difference is mostly glyph and edge anti-aliasing.
 
 ## Reproduce
 

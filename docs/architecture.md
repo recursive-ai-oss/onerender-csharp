@@ -32,7 +32,7 @@ C# builder (StyleDeclaration) ────────────────�
   text, color and a few more). Shorthands are expanded before they reach the pipeline: by OneHtml's cascade for the
   HTML front end and by `StyleDeclaration.TrySet` for the builder, with `ShorthandFallbacks` covering `border-radius`,
   `overflow`, `flex`, `grid` and the others the cascade keeps whole. (`white-space`, `text-wrap` and `border-block`/`border-inline` are expanded by
-  OneHtml 1.2 on both paths.)
+  OneHtml on both paths.)
 - `ComputedValues` is one struct of typed fields (enums, `Length`, `ColorValue`, doubles). **Styles are interned**: a
   `StyleTable` stores one row per distinct computed style, and a node holds a `StyleId`. A document with thousands of
   nodes typically has tens of rows. Rows are found by value equality, so `StyleId` equality means identical style.
