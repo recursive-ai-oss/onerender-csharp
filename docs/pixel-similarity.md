@@ -10,7 +10,7 @@ Information only: no gate depends on it. It shows how close our pixels are to Ch
 
 ## Results
 
-Chrome for Testing 156.0.8078.47, font set from the `.Fonts` package files, engine at the commit that adds this page.
+Chrome for Testing 156.0.8078.47, font set from the `.Fonts` package files. The text-block, templates, tailwind, chrome-probes and grid-lab rows were measured at the commit that added this page (during the 1.0.0 work, with OneHtml 1.1.1); the range-parts rows were added with 1.3.0 (OneHtml 1.5.0). Nothing was re-measured for 1.3.1, so the older rows predate the form-control, color-scheme and Tailwind fixes since, and current scores may differ.
 
 | Set | Viewport | Pages | Mean SSIM | Min SSIM | Lowest page |
 |---|---|---|---|---|---|
@@ -27,7 +27,7 @@ Chrome for Testing 156.0.8078.47, font set from the `.Fonts` package files, engi
 | range-parts | 1280×800 | 6 | 0.9988 | 0.9962 | native |
 | range-parts | 390×844 | 6 | 0.9963 | 0.9879 | native |
 
-What the lowest page shows (looked at side by side, `flowbite-components` at 390×844): a card header that Chrome paints with a gradient is plain white in ours (a Tailwind 4 gradient utility; the cause is not yet traced), and the timeline dots are squares. Pages of the other sets were not inspected one by one; their layout agrees with Chrome's (geometry 100% and 99.97%), so the remaining difference is mostly glyph and edge anti-aliasing.
+`flowbite-components` at 390×844 was the lowest page when the tailwind row was measured. Which differences account for its score has not been re-checked since; the layout of all sets agrees with Chrome's (geometry 100% and 99.97%), and the remaining difference is expected to be mostly glyph and edge anti-aliasing, plus any paint features not yet implemented (see the known limitations in the README).
 
 ## Reproduce
 
