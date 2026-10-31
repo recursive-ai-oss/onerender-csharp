@@ -61,6 +61,14 @@ public class FontsTests
             Assert.Equal(hashes[key], Convert.ToHexStringLower(SHA256.HashData(info.ReadAllBytes())));
         }
 
+        // The fallback-only symbol face is the same release file the opt-in Symbols package ships.
+        FontFaceInfo symbols = Assert.Single(DefaultFonts.FallbackFaces);
+        Assert.Equal("Noto Sans Symbols 2", symbols.Family);
+        Assert.Equal(hashes["NotoSansSymbols2/" + symbols.FileName], Convert.ToHexStringLower(SHA256.HashData(symbols.ReadAllBytes())));
+        Assert.Equal("c4a0a80f0041ce4be81e2478faad22776d23edb98ae3f0d19bd37044820ecf9d", hashes["NotoSansSymbols2/" + symbols.FileName]);
+        Assert.DoesNotContain(DefaultFonts.Faces, f => f.Family == symbols.Family);
+        Assert.False(DefaultFonts.TryResolveFamily("Noto Sans Symbols 2", out _));
+
         foreach (string family in DefaultFonts.Families)
         {
             string folder = family.StartsWith("Liberation", StringComparison.Ordinal) ? "Liberation" : family;
@@ -177,7 +185,7 @@ public class FontsTests
             }
         }
 
-        Assert.Equal(23, hashes.Count);
+        Assert.Equal(25, hashes.Count);
         return hashes;
     }
 

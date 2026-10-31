@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.RegularExpressions;
 using OnePdf;
+using OneRender.Fonts;
 using OneRender.Image;
 using OneRender.Layout;
 using OneRender.Painting;
@@ -50,6 +51,13 @@ public class MissingGlyphTests
         }
 
         return runs;
+    }
+
+    [Fact]
+    public void TheBasePackageAddsItsSymbolFaceOnce()
+    {
+        // No opt-in fonts package is registered in this test project: twenty default faces and the fallback-only symbol face.
+        Assert.Equal(DefaultFonts.Faces.Count + DefaultFonts.FallbackFaces.Count, FontProviders.CreateDefault().Catalog.FaceCount);
     }
 
     [Fact]
