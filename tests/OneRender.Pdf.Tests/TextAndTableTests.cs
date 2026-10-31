@@ -23,7 +23,7 @@ public class TextAndTableTests
         if (Support.OutDir is { } od) { File.WriteAllText(Path.Combine(od, name + ".src.txt"), source); File.WriteAllText(Path.Combine(od, name + ".ext.txt"), extracted); }
         // Element boundaries carry no white space in the source but extraction separates words, so compare the characters.
         // Extraction may add generated content (list numbers, counters), so check that every source character is present
-        // (the star in the certificate seal has no glyph in the shipped fonts) and that sample windows of the source appear in
+        // and that sample windows of the source appear in
         // order.
         string a = string.Concat(Words(source)), b = string.Concat(Words(extracted));
         var counts = new Dictionary<char, int>();

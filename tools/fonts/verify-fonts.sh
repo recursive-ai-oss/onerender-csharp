@@ -22,7 +22,12 @@ while IFS=$'\t' read -r kind a b c d; do
     file)
       dl=$(fetch "$b")
       if [ "$c" != "-" ]; then
-        mkdir -p "$dl.x"; tar -xzf "$dl" -C "$dl.x" "$c"; dl="$dl.x/$c"
+        mkdir -p "$dl.x"
+        case "$b" in
+          *.zip) python3 -c 'import sys,zipfile; zipfile.ZipFile(sys.argv[1]).extract(sys.argv[2], sys.argv[3])' "$dl" "$c" "$dl.x" ;;
+          *) tar -xzf "$dl" -C "$dl.x" "$c" ;;
+        esac
+        dl="$dl.x/$c"
       fi
       got=$(sum "$dl")
       if [ "$got" != "$d" ]; then echo "FAIL $a: upstream sha256 $got, manifest $d"; fail=1

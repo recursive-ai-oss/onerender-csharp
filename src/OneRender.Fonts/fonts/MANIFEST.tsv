@@ -27,3 +27,7 @@ file	Caladea/Caladea-BoldItalic.ttf	https://raw.githubusercontent.com/huertatipo
 file	Caladea/Caladea-Italic.ttf	https://raw.githubusercontent.com/huertatipografica/Caladea/336a529cfad3d103d6527752686f8331d13e820a/fonts/ttf/Caladea-Italic.ttf	-	4359a8e24f748b6447b1ff6d7a174febe70961d29f8bb8634b56dacd740a3deb
 file	Caladea/Caladea-Regular.ttf	https://raw.githubusercontent.com/huertatipografica/Caladea/336a529cfad3d103d6527752686f8331d13e820a/fonts/ttf/Caladea-Regular.ttf	-	f1e899278b7b4491aba5b6a8253c4b04c050cc59b21865be5c37559a775153cd
 file	Caladea/OFL.txt	https://raw.githubusercontent.com/huertatipografica/Caladea/336a529cfad3d103d6527752686f8331d13e820a/OFL.txt	-	ccdab61d371d8c8683a128a92cd7d498dbdb1d37689f7cb21f1bf6b16658d213
+archive	https://github.com/notofonts/symbols/releases/download/NotoSansSymbols2-v2.008/NotoSansSymbols2-v2.008.zip	346c930bbe8eb946701a05c54e9c11a2094dee1d93c387bf1771c0a3e335688f
+# Noto Sans Symbols 2 is a fallback-only face. Its OFL.txt is the notofonts/symbols release text, stored with identical bytes.
+file	NotoSansSymbols2/NotoSansSymbols2-Regular.ttf	https://github.com/notofonts/symbols/releases/download/NotoSansSymbols2-v2.008/NotoSansSymbols2-v2.008.zip	NotoSansSymbols2/unhinted/ttf/NotoSansSymbols2-Regular.ttf	c4a0a80f0041ce4be81e2478faad22776d23edb98ae3f0d19bd37044820ecf9d
+file	NotoSansSymbols2/OFL.txt	https://github.com/notofonts/symbols/releases/download/NotoSansSymbols-v2.003/NotoSansSymbols-v2.003.zip	OFL.txt	b118dd41337806a5d4797052c77caf3bd096aed783e5eb21b4d11154351e1ac0

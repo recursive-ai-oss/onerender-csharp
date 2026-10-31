@@ -47,7 +47,7 @@ Known gaps, each with a diagnostic where it changes the picture: blend modes `hu
 
 ## Text
 
-A glyph run becomes real text. The writer embeds the face as a subset (OnePdf does the subsetting at output; the engine rebuilds an sfnt from the face's tables because it keeps no file bytes, and the shipped font files are never altered). `/ToUnicode` maps each used glyph to the source text of its cluster, and the marked-content `/ActualText` carries the run's source text, so extraction returns the source, including ligatures and bidi runs. When a profile is requested, a character the face lacks is not shown as `.notdef` (ISO 14289-1 7.21.8, ISO 19005-2 6.2.11.8): the glyph slot keeps its advance and draws the font's space, and the text stays in the structure. Without a profile the `.notdef` box is drawn like on screen.
+A glyph run becomes real text. The writer embeds the face as a subset (OnePdf does the subsetting at output; the engine rebuilds an sfnt from the face's tables because it keeps no file bytes, and the shipped font files are never altered). `/ToUnicode` maps each used glyph to the source text of its cluster, and the marked-content `/ActualText` carries the run's source text, so extraction returns the source, including ligatures and bidi runs. A character no face has is never shown as `.notdef`, in any profile (ISO 14289-1 7.21.8, ISO 19005-2 6.2.11.8): the glyph slot keeps its advance and draws the font's space, and the text stays in the structure and in `/ToUnicode`. The default fonts include a symbol face for the common symbols, so most such characters never get that far.
 
 ## Tags
 

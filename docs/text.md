@@ -87,9 +87,10 @@ allocated. Runtimes without a native Brotli (browser WebAssembly) report WOFF2 a
 
 `ResolvedFontList.Select(codePoint)` walks the list (cluster-aware: a base character and its combining marks stay in one face
 where one face covers the cluster). Private-use characters skip the generic and default faces. A character no face covers
-renders the primary face's `.notdef` and records a `TextDiagnostic` of kind missing glyph whose `Package` names the opt-in
+is shaped as the primary face's `.notdef` (glyph 0, so its advance is kept) and records a `TextDiagnostic` of kind missing glyph whose `Package` names the opt-in
 package that would cover it (`RecursiveAI.OneRender.Fonts.Noto.<Script>`, `.Fonts.Cjk`, `.Fonts.Emoji`; the table is
-`FontPackages`). `TextDiagnostics` keeps 512 entries and counts the rest in `Dropped`. Canonical-equivalence matching
+`FontPackages`). Backends never draw glyph 0: the raster and the PDF writer skip it, and the PDF keeps the text in `/ToUnicode` and
+`/ActualText`. `TextDiagnostics` keeps 512 entries and counts the rest in `Dropped`. Canonical-equivalence matching
 (Fonts 4 §5.4's normalization step) is not done.
 
 ## Opt-in fonts packages
@@ -120,7 +121,10 @@ it at start-up: the package's build files add a module initializer to the applic
 for NativeAOT and trimming). `OptionalFonts.Packages` lists the registered packages in a fixed order (text scripts by package id,
 then emoji), whatever the registration order. `FontProviders.CreateDefault` registers their faces after the default fonts, so they are
 fallback faces: they supply only characters the listed families and the default fonts lack, and a missing-glyph diagnostic for their
-script goes away. `ForCurrentThread()` starts a new provider when a package is registered later. A host with its own
+script goes away. After the opt-in faces, `CreateDefault` registers the fallback-only faces of the base package
+(`DefaultFonts.FallbackFaces`: Noto Sans Symbols 2, which covers stars, arrows, dingbats and similar symbols). No family name,
+alias or generic family selects them, and they are not added again when `RecursiveAI.OneRender.Fonts.Noto.Symbols` (which ships the
+same file) is referenced. `ForCurrentThread()` starts a new provider when a package is registered later. A host with its own
 `FontCatalog` reads `OptionalFonts.Packages` (or one `Package`) and adds the faces itself.
 
 **Color bitmap glyphs.** `ColorBitmapGlyphs.TryGet` reads a glyph's PNG and metrics from `CBLC`/`CBDT` (strike with the most pixels

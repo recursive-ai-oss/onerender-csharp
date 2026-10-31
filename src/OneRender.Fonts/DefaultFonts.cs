@@ -40,6 +40,13 @@ public static class DefaultFonts
         new(Caladea, 700, FontSlant.Italic, "Caladea-BoldItalic.ttf", "Caladea", 83356),
     ];
 
+    // A symbol face used only to supply characters no other face has (stars, arrows, dingbats, game and music symbols).
+    // It is not in Faces or Families and no generic family or alias maps to it.
+    private static readonly FontFaceInfo[] s_fallbackFaces =
+    [
+        new("Noto Sans Symbols 2", 400, FontSlant.Normal, "NotoSansSymbols2-Regular.ttf", "NotoSansSymbols2", 671568),
+    ];
+
     // Generic families and well-known names. Keys are lower-case ASCII; matching lower-cases the input ordinally.
     // The family names themselves are included so a resolved name resolves to itself.
     private static readonly (string Key, string Family)[] s_names =
@@ -71,6 +78,13 @@ public static class DefaultFonts
 
     /// <summary>All 20 shipped faces, grouped by family (Liberation Sans, Serif, Mono, Carlito, Caladea), each in the order regular, bold, italic, bold italic. The list is shared and read-only.</summary>
     public static IReadOnlyList<FontFaceInfo> Faces => s_faces;
+
+    /// <summary>
+    /// Faces that ship only as a last resort for characters the <see cref="Faces"/> lack: Noto Sans Symbols 2 (version 2.008), which covers
+    /// symbols such as U+2605 (black star). Hosts register them after every other face; no family name, alias or generic family selects them.
+    /// The list is shared and read-only.
+    /// </summary>
+    public static IReadOnlyList<FontFaceInfo> FallbackFaces => s_fallbackFaces;
 
     /// <summary>The five shipped family names, in the order of <see cref="Faces"/>.</summary>
     public static IReadOnlyList<string> Families { get; } = [Sans, Serif, Mono, Carlito, Caladea];

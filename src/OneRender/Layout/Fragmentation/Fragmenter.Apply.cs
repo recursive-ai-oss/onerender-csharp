@@ -208,13 +208,21 @@ internal sealed partial class Fragmenter
 
                 if (k > 0 && rec.Header >= 0 && firstBody >= 0)
                 {
-                    tree.CloneSubtree(rec.Header, piece, new Rect(hr.X, tree.BorderBoxOf(firstBody).Y - rec.HeaderReserve, hr.Width, hr.Height));
+                    // The header goes in the room reserved above the first row of the piece (CSS Tables 3 §9.1: it repeats at the top of
+                    // every fragment). The row group's own box starts at the top of the piece and holds that room, so measure from its first row.
+                    int firstRow = tree.FirstChildOf(firstBody);
+                    double rowTop = tree.BorderBoxOf(firstBody).Y + (firstRow >= 0 ? tree.BorderBoxOf(firstRow).Y : rec.HeaderReserve);
+                    tree.CloneSubtree(rec.Header, piece, new Rect(hr.X, rowTop - rec.HeaderReserve, hr.Width, hr.Height));
                 }
 
                 if (k < pieces.Count - 1 && rec.Footer >= 0 && lastBody >= 0)
                 {
+                    // The footer follows the last row of the piece, at the gap it had after the last row group in the table. The row
+                    // group's box runs to the end of the fragmentainer and includes the room reserved for the footer, so measure from its last row.
                     Rect lb = tree.BorderBoxOf(lastBody);
-                    tree.CloneSubtree(rec.Footer, piece, new Rect(fr.X, lb.Bottom + (rec.FooterReserve - fr.Height), fr.Width, fr.Height));
+                    int lastRow = tree.LastChildOf(lastBody);
+                    double rowBottom = lastRow >= 0 ? lb.Y + tree.BorderBoxOf(lastRow).Bottom : lb.Bottom - rec.FooterReserve;
+                    tree.CloneSubtree(rec.Footer, piece, new Rect(fr.X, rowBottom + (rec.FooterReserve - fr.Height), fr.Width, fr.Height));
                 }
             }
         }

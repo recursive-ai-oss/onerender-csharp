@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>Default fonts for OneRender: metric-compatible Liberation, Carlito and Caladea families, embedded byte-for-byte.</Description>
+    <Description>Default fonts for OneRender: metric-compatible Liberation, Carlito and Caladea families, plus Noto Sans Symbols 2 as a fallback-only face, embedded byte-for-byte.</Description>
     <PackageLicenseExpression>(MIT OR Apache-2.0) AND OFL-1.1</PackageLicenseExpression>
   </PropertyGroup>
 
@@ -10,6 +10,7 @@
     <EmbeddedResource Include="fonts/Liberation/*" LogicalName="fonts/Liberation/%(Filename)%(Extension)" />
     <EmbeddedResource Include="fonts/Carlito/*" LogicalName="fonts/Carlito/%(Filename)%(Extension)" />
     <EmbeddedResource Include="fonts/Caladea/*" LogicalName="fonts/Caladea/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="fonts/NotoSansSymbols2/*" LogicalName="fonts/NotoSansSymbols2/%(Filename)%(Extension)" />
     <EmbeddedResource Include="fonts/MANIFEST.tsv" LogicalName="fonts/MANIFEST.tsv" />
   </ItemGroup>
 
