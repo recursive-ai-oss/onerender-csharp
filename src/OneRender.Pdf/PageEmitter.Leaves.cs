@@ -502,10 +502,10 @@ internal sealed partial class PageEmitter
             }
 
             int gid = (uint)ids[i] < (uint)glyphCount ? ids[i] : 0;
-            if (gid == 0 && _s.Options.Profile != PdfProfile.None)
+            if (gid == 0)
             {
-                // ISO 14289-1 7.21.8 and ISO 19005-2 6.2.11.8 forbid showing .notdef: a character the face lacks keeps its advance
-                // but draws nothing (the text is still in the structure through /ActualText).
+                // ISO 14289-1 7.21.8 and ISO 19005-2 6.2.11.8 forbid showing .notdef, and a missing-glyph box is never wanted in any
+                // profile: a character no face has keeps its advance but draws nothing (the text stays extractable through /ToUnicode).
                 gid = spaceGlyph;
                 notdefSeen = true;
             }

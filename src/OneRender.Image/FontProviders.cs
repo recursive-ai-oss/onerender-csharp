@@ -36,6 +36,7 @@ public static class FontProviders
         }
 
         AddOptionalPackages(catalog);
+        AddFallbackFaces(catalog);
         return new TextFontProvider(catalog);
     }
 
@@ -82,6 +83,28 @@ public static class FontProviders
                 {
                     catalog.AddFont(OneFont.FontFace.Load(bytes!, info.FaceIndex), info.Family, info.Weight, style, info.Stretch);
                 }
+            }
+        }
+    }
+
+    // The symbol face of the base fonts package comes last, so it only supplies characters nothing else has (a star, an arrow).
+    // The opt-in Noto Symbols package ships the same face; when it is registered the face is already in the catalog and is not added twice.
+    private static void AddFallbackFaces(FontCatalog catalog)
+    {
+        foreach (FontFaceInfo info in DefaultFonts.FallbackFaces)
+        {
+            bool present = false;
+            foreach (OptionalFontPackage package in OptionalFonts.Packages)
+            {
+                foreach (FontFaceInfo f in package.Faces)
+                {
+                    present |= string.Equals(f.Family, info.Family, StringComparison.Ordinal) && f.Weight == info.Weight && f.Slant == info.Slant;
+                }
+            }
+
+            if (!present)
+            {
+                catalog.AddFont(info.ReadAllBytes(), info.Family, info.Weight, info.Slant == FontSlant.Italic ? FontStyleKind.Italic : FontStyleKind.Normal, info.Stretch);
             }
         }
     }

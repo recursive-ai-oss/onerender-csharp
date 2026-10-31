@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Fetches the pinned upstream font files listed in fonts.tsv into a directory laid out like the fonts package
-# (Liberation/, Carlito/, Caladea/), verifying every sha256. Re-running only fetches what is missing or wrong.
+# (Liberation/, Carlito/, Caladea/, NotoSansSymbols2/), verifying every sha256. Re-running only fetches what is missing or wrong.
 # Usage: fetch-fonts.sh [dest]      default: $ONERENDER_HOME/cache/fonts
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -16,7 +16,9 @@ while IFS=$'\t' read -r path url member sha; do
   mkdir -p "$(dirname "$out")"
   file="$dl/$(printf '%s' "$url" | sha256sum | cut -c1-16)"
   [ -f "$file" ] || curl -sfL --retry 3 -o "$file" "$url"
-  if [ "$member" = "-" ]; then cp "$file" "$out"; else tar -xzf "$file" -O "$member" > "$out"; fi
+  if [ "$member" = "-" ]; then cp "$file" "$out"
+  elif [ "${url%.zip}" != "$url" ]; then python3 -c 'import sys,zipfile; sys.stdout.buffer.write(zipfile.ZipFile(sys.argv[1]).read(sys.argv[2]))' "$file" "$member" > "$out"
+  else tar -xzf "$file" -O "$member" > "$out"; fi
   got=$(sum "$out")
   if [ "$got" != "$sha" ]; then echo "sha256 mismatch for $path: $got (expected $sha)" >&2; rm -f "$out"; exit 1; fi
 done < "$here/fonts.tsv"

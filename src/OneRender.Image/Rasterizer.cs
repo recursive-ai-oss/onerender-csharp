@@ -542,6 +542,11 @@ internal sealed partial class Rasterizer : IDisposable
         ReadOnlySpan<float> xs = run.X, ys = run.Y;
         for (int i = 0; i < ids.Length; i++)
         {
+            if (ids[i] == 0)
+            {
+                continue; // .notdef is never drawn: a character no face has keeps its advance and shows nothing, as in the PDF output
+            }
+
             GlyphOutline outline = face.GetOutline(ids[i]);
             if (outline.IsEmpty)
             {

@@ -1,6 +1,6 @@
 # RecursiveAI.OneRender.Fonts
 
-The default fonts for OneRender, embedded unmodified so output is identical on every machine: Liberation Sans, Serif and Mono (also answering to Arial, Helvetica, Times New Roman and Courier New), Carlito (Calibri) and Caladea (Cambria), each in regular, bold, italic and bold italic.
+The default fonts for OneRender, embedded unmodified so output is identical on every machine: Liberation Sans, Serif and Mono (also answering to Arial, Helvetica, Times New Roman and Courier New), Carlito (Calibri) and Caladea (Cambria), each in regular, bold, italic and bold italic. Noto Sans Symbols 2 ships too, as a fallback-only face for symbols (stars, arrows, dingbats) the other fonts lack; no family name selects it.
 
 `DefaultFonts` lists the faces, resolves family names and opens the licence and manifest. Script coverage beyond Latin, Greek and Cyrillic is in the opt-in packages `RecursiveAI.OneRender.Fonts.Noto.<Script>`, `.Fonts.Cjk` and `.Fonts.Emoji`.
 

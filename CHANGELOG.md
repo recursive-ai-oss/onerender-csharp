@@ -2,6 +2,22 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.3.2] - unreleased
+
+### Fixed
+
+- A character no font has is never drawn as the font's missing-glyph box in a PDF, whatever the profile (it was drawn under `PdfProfile.None`, and OnePDF's `PdfAConverter` refused such files under ISO 19005-2 6.2.11.8). The slot keeps its advance, draws nothing, and the text stays extractable. The raster backend skips the box too.
+- The repeated `thead` and `tfoot` rows of a table that spans pages were placed one row height outside the page area, so they were clipped away on every continuation page of a PDF or image. The header now sits at the top of the page area and the footer follows the last row, both inside the page.
+
+### Added
+
+- `RecursiveAI.OneRender.Fonts` ships Noto Sans Symbols 2 (2.008, the release file byte for byte, with its OFL.txt) as a fallback-only face (`DefaultFonts.FallbackFaces`): stars, arrows, dingbats and similar symbols render with the default fonts alone. No family name or generic family selects it, and `RecursiveAI.OneRender.Fonts.Noto.Symbols` (the same file) does not register it twice.
+- A test renders the eight document templates, converts them to PDF/A-2b with `PdfAConverter`, and `tools/pdf/run-verapdf-pdfa.sh` validates the converted files with veraPDF.
+
+### Changed
+
+- OnePdf 1.15.1 (was 1.11.1).
+
 ## [1.3.1] - 2026-10-28
 
 ### Changed
