@@ -8,6 +8,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - `.Pdf`: text after a colour emoji was invisible. The emoji's text layer is written in render mode 3, and the writer kept that mode for every later text object; each run now sets its own mode.
 - `HtmlPdfResult.Diagnostics` now carries a `DiagnosticKind.MissingGlyph` diagnostic when a character has no glyph in any font, naming the fonts package that covers it (one per package, one per character no package covers).
+- Text that overflows the page area sideways in a PDF (a table that cannot be narrower than its widest word, a long unbreakable word) is no longer cut at the content box: it is drawn into the side margins (at most 24% of the content width per side, so it never reaches a neighbouring page), and stays extractable. Rows cut at a page break were not the cause: they already continue on the next page.
 
 ### Added
 
