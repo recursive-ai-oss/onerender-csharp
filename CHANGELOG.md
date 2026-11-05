@@ -2,6 +2,17 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- `.Pdf`: text after a colour emoji was invisible. The emoji's text layer is written in render mode 3, and the writer kept that mode for every later text object; each run now sets its own mode.
+- `HtmlPdfResult.Diagnostics` now carries a `DiagnosticKind.MissingGlyph` diagnostic when a character has no glyph in any font, naming the fonts package that covers it (one per package, one per character no package covers).
+
+### Added
+
+- `DiagnosticKind.MissingGlyph`.
+
 ## [1.3.2] - 2026-10-31
 
 ### Fixed

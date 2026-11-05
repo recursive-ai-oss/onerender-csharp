@@ -2,6 +2,7 @@ using System.IO;
 using OnePdf;
 using OneRender.Image;
 using OneRender.Painting;
+using OneRender.Text;
 using OneFont;
 
 namespace OneRender.Pdf;
@@ -34,6 +35,24 @@ internal sealed class PdfShared
     public DiagnosticBag Diagnostics { get; }
 
     public TagWriter Tags { get; }
+
+    private readonly HashSet<string> _missingPackages = new(StringComparer.Ordinal);
+    private readonly HashSet<int> _missingUncovered = [];
+
+    /// <summary>
+    /// Records a character no face could draw. One diagnostic per fonts package that would cover it (naming the first such character),
+    /// and one per character that no package covers, so a page of emoji is one line and not hundreds.
+    /// </summary>
+    public void NoteMissingGlyph(int codePoint)
+    {
+        string? package = FontPackages.ForCodePoint(codePoint);
+        if (package is null ? !_missingUncovered.Add(codePoint) : !_missingPackages.Add(package))
+        {
+            return;
+        }
+
+        Diagnostics.Add(DiagnosticKind.MissingGlyph, new TextDiagnostic(TextDiagnosticKind.MissingGlyph, codePoint, package).Message);
+    }
 
     public int Pages { get; set; }
 
