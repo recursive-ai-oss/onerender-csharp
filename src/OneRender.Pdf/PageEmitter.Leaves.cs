@@ -508,6 +508,7 @@ internal sealed partial class PageEmitter
                 // profile: a character no face has keeps its advance but draws nothing (the text stays extractable through /ToUnicode).
                 gid = spaceGlyph;
                 notdefSeen = true;
+                NoteMissingCluster(source, clusters, i);
             }
 
             int cl = Math.Clamp(clusters[i], 0, source.Length);
@@ -528,21 +529,52 @@ internal sealed partial class PageEmitter
         _b.Scale(1, -1);
         _b.SetFont(font, size);
         bool bitmaps = ColorBitmapGlyphs.HasBitmaps(run.Face);
-        if (bitmaps)
-        {
-            // A color bitmap font has no outlines to paint: the text is written invisibly so it stays selectable and extractable,
-            // and each glyph's bitmap is drawn over it below.
-            _b.SetTextRenderMode(PdfTextRenderMode.Invisible);
-        }
-
+        // The builder remembers the text render mode itself and q/Q does not rewind that memory, so a mode left at Invisible would be
+        // written into every later text object (PDF 32000-1 9.3.6: Tr persists across BT/ET). Each run sets the mode it needs, and a
+        // bitmap run restores Fill below. A color bitmap font has no outlines to paint: its text is written invisibly so it stays
+        // selectable and extractable, and each glyph's bitmap is drawn over it.
+        _b.SetTextRenderMode(bitmaps ? PdfTextRenderMode.Invisible : PdfTextRenderMode.Fill);
         _b.DrawGlyphRun(0, 0, glyphs, source);
         _b.Restore();
         if (bitmaps)
         {
+            _b.SetTextRenderMode(PdfTextRenderMode.Fill);
             ColorBitmapGlyphItems(in run, ids);
         }
 
         EndAlpha(saved);
+    }
+
+    // Reports the first drawable character of the cluster at glyph i that has no glyph. Controls, joiners and variation selectors are
+    // drawn by no font, so they are not missing. The cluster's text ends at the nearest larger cluster value among the neighbouring
+    // glyphs (left to right or right to left), which keeps this constant-time per glyph.
+    private void NoteMissingCluster(string source, ReadOnlySpan<int> clusters, int i)
+    {
+        int start = clusters[i];
+        int end = source.Length;
+        if (i + 1 < clusters.Length && clusters[i + 1] > start)
+        {
+            end = Math.Min(end, clusters[i + 1]);
+        }
+
+        if (i > 0 && clusters[i - 1] > start)
+        {
+            end = Math.Min(end, clusters[i - 1]);
+        }
+
+        for (int k = Math.Max(start, 0); k < end && k < source.Length;)
+        {
+            int cp = char.IsHighSurrogate(source[k]) && k + 1 < source.Length && char.IsLowSurrogate(source[k + 1]) ? char.ConvertToUtf32(source[k], source[k + 1]) : source[k];
+            k += cp > 0xFFFF ? 2 : 1;
+            if (cp < 0x20 || (cp >= 0x7F && cp <= 0x9F) || cp == 0x00AD || (cp >= 0x200B && cp <= 0x200F) || (cp >= 0x2028 && cp <= 0x202E)
+                || (cp >= 0x2060 && cp <= 0x206F) || (cp >= 0xFE00 && cp <= 0xFE0F) || cp == 0xFEFF || (cp >= 0xE0000 && cp <= 0xE0FFF))
+            {
+                continue;
+            }
+
+            _s.NoteMissingGlyph(cp);
+            return;
+        }
     }
 
     // Each glyph of a color bitmap font is its PNG, scaled from the strike's pixels per em to the run's font size and placed by the

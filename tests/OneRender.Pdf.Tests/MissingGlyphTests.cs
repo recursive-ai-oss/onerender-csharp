@@ -120,6 +120,44 @@ public class MissingGlyphTests
         }
     }
 
+    [Fact]
+    public void ResultNamesThePackageThatCoversAMissingCharacter()
+    {
+        // No opt-in package is registered in this test project, so an emoji and a Tamil letter have no glyph.
+        HtmlPdfResult result;
+        using (var ms = new MemoryStream())
+        {
+            result = HtmlPdf.ToPdf("<p>\U0001F600 \U0001F680 \u0B85 \u0B85</p>", ms);
+        }
+
+        var missing = result.Diagnostics.Where(d => d.Kind == DiagnosticKind.MissingGlyph).ToList();
+        // One line per package, however many characters it would cover.
+        Assert.Single(missing, d => d.Message.Contains("RecursiveAI.OneRender.Fonts.Emoji", StringComparison.Ordinal));
+        Assert.Single(missing, d => d.Message.Contains("RecursiveAI.OneRender.Fonts.Noto.Tamil", StringComparison.Ordinal));
+        Assert.Equal(2, missing.Count);
+
+        using var clean = new MemoryStream();
+        Assert.DoesNotContain(HtmlPdf.ToPdf("<p>plain text</p>", clean).Diagnostics, d => d.Kind == DiagnosticKind.MissingGlyph);
+    }
+
+    [Fact]
+    public void ZeroWidthJoinersStayInTheTextLayerWithoutAnEmojiFont()
+    {
+        const string family = "\U0001F468\u200D\U0001F469\u200D\U0001F467";
+        byte[] pdf = HtmlPdf.ToPdf("<p>a " + family + " b</p>", new HtmlPdfOptions { Output = new PdfOutputOptions { Profile = PdfProfile.None } });
+        using PdfDocument doc = PdfDocument.Open(pdf);
+        var sb = new StringBuilder();
+        foreach (PdfPage p in doc.Pages)
+        {
+            foreach (var g in p.ExtractText().Glyphs)
+            {
+                sb.Append(g.Text);
+            }
+        }
+
+        Assert.Contains(family, sb.ToString(), StringComparison.Ordinal);
+    }
+
     /// <summary>True when any show-text operand of any page, decoded as 2-byte glyph codes, holds code 0 (the codes are glyph indexes, Identity-H).</summary>
     private static bool ShowsGlyphZero(byte[] pdf)
     {

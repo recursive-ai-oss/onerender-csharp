@@ -14,6 +14,9 @@ public enum DiagnosticKind : byte
 
     /// <summary>The host's resource resolver returned nothing for a resource.</summary>
     MissingResource,
+
+    /// <summary>No font has a glyph for a character that was drawn; the message names the opt-in fonts package that covers it, when there is one.</summary>
+    MissingGlyph,
 }
 
 /// <summary>One thing the engine noticed while building a tree. Diagnostics never stop a build.</summary>
