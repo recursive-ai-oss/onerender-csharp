@@ -88,7 +88,7 @@ Tagged PDF/UA-1 output with complex-script text (full Arabic, Devanagari or Thai
 
 ## Choices the specs leave open
 
-- The page is laid out at the content width of the first page and each page region is clipped to the content area; the margins hold the page layer.
+- The page is laid out at the content width of the first page and each page region is clipped at the top and bottom to the content area, where the page break fell. Sideways the clip reaches the page's left and right margins, so content that overflows the page area (a table wider than its widest word, a long unbreakable word) is drawn in the margin up to the sheet's edge, not cut off at the content box. The margins otherwise hold the page layer.
 - A profile other than `None` buffers the file; `None` streams.
 - Links are annotations only for non-fragment targets; in-document anchors need positions the list does not carry.
 - Conic gradients are 180 wedges; at 192 dpi islands rasterize at twice the screen resolution.

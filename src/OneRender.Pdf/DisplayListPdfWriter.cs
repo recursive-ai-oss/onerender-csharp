@@ -256,7 +256,12 @@ public sealed class DisplayListPdfWriter : IDisposable
         }
 
         double tx = (setup.MarginLeft - region.X) * K, ty = (setup.Height - setup.MarginTop + region.Y) * K;
-        EmitRegion(page, list, region, tx, ty, Math.Min(region.Width, setup.ContentWidth), Math.Min(region.Height, setup.ContentHeight), ct);
+        // Content that overflows the page area sideways (a table wider than its widest word allows, a long unbreakable word) is shown in
+        // the side margins up to the sheet's edge, as it would be on paper, instead of being cut at the content box. Pages sit a half
+        // page apart in the list's space (PageFragmentation.PageStride), so the margins never reach a neighbour's content. Top and
+        // bottom stay cut: that is where the page break fell.
+        var wide = new RectF(region.X - (float)setup.MarginLeft, region.Y, region.Width + (float)(setup.MarginLeft + setup.MarginRight), region.Height);
+        EmitRegion(page, list, wide, tx, ty, Math.Min(region.Width, setup.ContentWidth) + setup.MarginLeft + setup.MarginRight, Math.Min(region.Height, setup.ContentHeight), ct);
         _shared.Tags.FlushLinks(page);
         page.Commit();
     }

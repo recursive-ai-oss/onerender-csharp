@@ -2,6 +2,12 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- Text that overflows the page area sideways in a PDF (a table that cannot be narrower than its widest word, a long unbreakable word) is no longer cut at the content box: it is drawn into the side margins up to the sheet's edge, and stays extractable. Rows cut at a page break were not the cause: they already continue on the next page.
+
 ## [1.3.2] - 2026-10-31
 
 ### Fixed
