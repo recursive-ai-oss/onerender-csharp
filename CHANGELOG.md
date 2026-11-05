@@ -6,7 +6,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Fixed
 
-- Text that overflows the page area sideways in a PDF (a table that cannot be narrower than its widest word, a long unbreakable word) is no longer cut at the content box: it is drawn into the side margins up to the sheet's edge, and stays extractable. Rows cut at a page break were not the cause: they already continue on the next page.
+- Text that overflows the page area sideways in a PDF (a table that cannot be narrower than its widest word, a long unbreakable word) is no longer cut at the content box: it is drawn into the side margins (at most 24% of the content width per side, so it never reaches a neighbouring page), and stays extractable. Rows cut at a page break were not the cause: they already continue on the next page.
 
 ## [1.3.2] - 2026-10-31
 

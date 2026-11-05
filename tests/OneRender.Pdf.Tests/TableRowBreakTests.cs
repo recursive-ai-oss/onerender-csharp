@@ -102,4 +102,25 @@ public class TableRowBreakTests
         var order = TaggedOrder(Head + "<table><tr><td><p>" + Words(900) + "</p></td></tr></table></body></html>");
         Assert.Equal(Enumerable.Range(0, 900), order);
     }
+
+    [Fact]
+    public void MarginsWiderThanHalfTheContentWidthNeverShowANeighbouringPage()
+    {
+        // Content width 160 px, side margins 120 px: the page-to-page gap in the list is 80 px, less than a margin.
+        string head = "<!DOCTYPE html><html lang='en'><head><title>t</title><style>@page{size:400px 300px;margin:40px 120px}html,body{margin:0}p{margin:0;font:14px/18px Liberation Sans}</style></head><body>";
+        string text = string.Join("", Enumerable.Range(0, 120).Select(i => "<p>line" + i + "</p>"));
+        byte[] pdf = HtmlPdf.ToPdf(head + text + "</body></html>", new HtmlPdfOptions { Page = new PdfPageSetup(400, 300, 40, 120, 40, 120) });
+        using PdfDocument doc = PdfDocument.Open(pdf);
+        Assert.True(doc.Pages.Count >= 4, "pages " + doc.Pages.Count);
+        var seen = new List<int>();
+        for (int i = 0; i < doc.Pages.Count; i++)
+        {
+            foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(doc.Pages[i].ExtractText().Text, @"line(\d+)"))
+            {
+                seen.Add(int.Parse(m.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture));
+            }
+        }
+
+        Assert.Equal(Enumerable.Range(0, 120), seen);
+    }
 }
