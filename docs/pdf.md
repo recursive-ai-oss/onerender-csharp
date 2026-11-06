@@ -67,9 +67,17 @@ Tagging is on by default (`Tagged`). The painter adds `BeginTag`/`EndTag` items 
 | `section`, `article` | `Sect` |
 | `div`, `main`, `nav`, `aside`, `header`, `footer`, `figure`, `form`, `fieldset`, `address`, `dl` | `Div` |
 
+A display list built by hand (a document producer that is not HTML) may also use these roles, which the HTML painter never emits: `Note` → `Note`, `Reference` → `Reference`, `TOC` → `TOC`, `TOCI` → `TOCI`, `Formula` → `Formula` (ISO 32000-1 14.8.4). `Formula` takes its alternative text like `Figure` does (`/Alt`; PDF/UA-1 7.7 wants one on every formula), and `TOCI` and `Note` carry it too if given.
+
+**Artifacts.** `BeginTag(id, TagRole.Artifact)` marks everything up to its `EndTag` as an artifact, written `/Artifact BMC`. The overload `BeginTag(id, ArtifactType, ArtifactSubtype)` gives the artifact a kind (ISO 32000-1 14.8.2.2): the content is written inside `/Artifact <</Type /Pagination/Subtype /Header>> BDC` … `EMC`. Types are `Pagination`, `Layout`, `Page` and `Background`; subtypes `Header`, `Footer` and `Watermark` (the standard defines subtypes for pagination only, and the writer passes whatever is given). Decoration drawn inside a typed scope (fills, borders) takes the scope's kind; the innermost typed scope wins and the kind ends with its `EndTag`. With both arguments `None` the output is exactly that of the plain artifact. Typed artifacts are not structure elements, so PDF/UA-1 checks see no change.
+
 Everything painted outside a tagged element (page backgrounds, borders of untagged boxes, decoration) is marked as an artifact. The document root is `Document`; the document language and the title come from the options, or the `lang` attribute and `<title>` in the happy path; `DisplayDocumentTitle` is set when there is a title. Empty `td`/`th` get an invisible anchor fill so the cell exists in the structure (otherwise the table is irregular, Matterhorn 15-003). Nesting is capped: the painter emits at most 14 tags in a chain, and the structure writer folds anything deeper than 96 into its parent. Elements inside a transparency-group form XObject cannot be tagged separately; their content belongs to the enclosing element.
 
 Identity: a tag item's element is `Id >> 16` (the box, the part, the occurrence in the low 16 bits). A pop of any other scope closes the tags open above it, so scopes always nest.
+
+## Diagnostics
+
+`HtmlPdfResult.Diagnostics` (and `DisplayListPdfWriter.Diagnostics`) hold `Diagnostic(Kind, Message)` entries. `DiagnosticKind.MissingGlyph` is raised when a character has no glyph in any registered font: one diagnostic per opt-in fonts package that would cover the character (the message names the package, for example `RecursiveAI.OneRender.Fonts.Cjk`) and one per character no package covers. The glyph is not drawn, its advance is kept, and the text stays extractable. `.Image` reports no diagnostics.
 
 ## Limits
 

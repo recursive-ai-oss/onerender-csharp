@@ -32,6 +32,7 @@ internal sealed partial class PageEmitter
         public float PrevAlpha;
         public BlendMode PrevBlend;
         public byte TagKind;
+        public int PrevArtifactKind;
     }
 
     private readonly PdfShared _s;
@@ -47,6 +48,10 @@ internal sealed partial class PageEmitter
     private int _sp;
     private int _depth;
     private int _artifactTags;
+
+    // The kind (type | subtype << 8) of the innermost open artifact scope that has one; 0 when none. ISO 32000-1 14.8.2.2.
+    private int _artifactKind;
+    private int _mcArtifactKind;
     private bool _mcOpen;
     private int _mcKind;
     private PdfStructureElement? _mcElement;
@@ -360,6 +365,13 @@ internal sealed partial class PageEmitter
         if (it.Role == TagRole.Artifact)
         {
             s.TagKind = 1;
+            s.PrevArtifactKind = _artifactKind;
+            int kind = (int)it.ArtifactType | ((int)it.ArtifactSubtype << 8);
+            if (kind != 0)
+            {
+                _artifactKind = kind;
+            }
+
             _artifactTags++;
         }
         else
@@ -386,6 +398,7 @@ internal sealed partial class PageEmitter
         _chainVersion++;
         if (kind == 1)
         {
+            _artifactKind = _scopes[_sp].PrevArtifactKind;
             _artifactTags--;
         }
         else if (_chainN > 0)
@@ -421,15 +434,26 @@ internal sealed partial class PageEmitter
         PdfStreamPageBuilder page = _page!;
         if (!content || _artifactTags > 0)
         {
-            if (_mcOpen && _mcKind == 2)
+            // Decoration drawn inside a typed artifact scope takes that scope's type; elsewhere it is a plain artifact.
+            int ak = _artifactTags > 0 ? _artifactKind : 0;
+            if (_mcOpen && _mcKind == 2 && _mcArtifactKind == ak)
             {
                 return;
             }
 
             CloseMc();
-            page.BeginArtifact();
+            if (ak == 0)
+            {
+                page.BeginArtifact();
+            }
+            else
+            {
+                page.BeginArtifact((PdfArtifactType)(ak & 0xFF), (PdfArtifactSubtype)((ak >> 8) & 0xFF));
+            }
+
             _mcOpen = true;
             _mcKind = 2;
+            _mcArtifactKind = ak;
             return;
         }
 
@@ -447,6 +471,7 @@ internal sealed partial class PageEmitter
             page.BeginArtifact();
             _mcOpen = true;
             _mcKind = 2;
+            _mcArtifactKind = 0;
             return;
         }
 

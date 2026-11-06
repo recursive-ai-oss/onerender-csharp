@@ -17,6 +17,13 @@
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
   </PropertyGroup>
 
+  <!-- Every package is checked against the last release for source and binary compatibility when it is packed. Raise the baseline
+       to the previous release after each release. -->
+  <PropertyGroup>
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <PackageValidationBaselineVersion>1.3.3</PackageValidationBaselineVersion>
+  </PropertyGroup>
+
   <ItemGroup>
     <Using Include="System" />
     <Using Include="System.Collections.Generic" />

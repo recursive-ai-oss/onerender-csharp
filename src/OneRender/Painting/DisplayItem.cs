@@ -151,7 +151,7 @@ public readonly partial struct DisplayItem
 
     /// <summary>
     /// The area the item can touch, in the space it is painted in (inside any enclosing transform, before clipping).
-    /// Empty for items without pixels of their own (pushes, pops, tags).
+    /// Empty for items without pixels of their own (pops, tags and every push except a clip, which holds its shape's bounds).
     /// </summary>
     public RectF LocalBounds => Rec.Local;
 
@@ -311,10 +311,16 @@ public readonly partial struct DisplayItem
     public string? LinkTarget => Rec.Kind == ItemKind.BeginTag ? _list.StringAt(Rec.C) : null;
 
     /// <summary>The number of columns a table cell's <see cref="ItemKind.BeginTag"/> covers; 1 otherwise.</summary>
-    public int ColumnSpan => Rec.Kind == ItemKind.BeginTag && Rec.E != 0 ? Rec.E & 0x7FF : 1;
+    public int ColumnSpan => Rec.Kind == ItemKind.BeginTag && Rec.E != 0 && Rec.A != 0 ? Rec.E & 0x7FF : 1;
 
     /// <summary>The number of rows a table cell's <see cref="ItemKind.BeginTag"/> covers; 1 otherwise.</summary>
-    public int RowSpan => Rec.Kind == ItemKind.BeginTag && Rec.E != 0 ? Rec.E >> 11 : 1;
+    public int RowSpan => Rec.Kind == ItemKind.BeginTag && Rec.E != 0 && Rec.A != 0 ? Rec.E >> 11 : 1;
+
+    /// <summary>The artifact type of a <see cref="TagRole.Artifact"/> tag; <see cref="ArtifactType.None"/> for other items or when none was given.</summary>
+    public ArtifactType ArtifactType => Rec.Kind == ItemKind.BeginTag && Rec.A == 0 ? (ArtifactType)(Rec.E & 0xFF) : ArtifactType.None;
+
+    /// <summary>The artifact subtype of a <see cref="TagRole.Artifact"/> tag; <see cref="ArtifactSubtype.None"/> for other items or when none was given.</summary>
+    public ArtifactSubtype ArtifactSubtype => Rec.Kind == ItemKind.BeginTag && Rec.A == 0 ? (ArtifactSubtype)((Rec.E >> 8) & 0xFF) : ArtifactSubtype.None;
 
     /// <summary>Language of a tag, or null.</summary>
     public string? Language => Rec.Kind == ItemKind.BeginTag ? _list.StringAt(Rec.D) : null;

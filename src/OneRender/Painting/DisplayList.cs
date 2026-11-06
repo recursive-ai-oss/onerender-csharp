@@ -794,9 +794,12 @@ public sealed partial class DisplayList
     /// <param name="language">A BCP 47 language tag when it differs from the parent's, or null.</param>
     /// <param name="columnSpan">For a table cell, the number of columns it covers (1 to 1000); 1 for other roles.</param>
     /// <param name="rowSpan">For a table cell, the number of rows it covers (1 to 65534); 1 for other roles.</param>
-    public void BeginTag(ItemId id, TagRole role, string? altText = null, string? linkTarget = null, string? language = null, int columnSpan = 1, int rowSpan = 1)
+    public void BeginTag(ItemId id, TagRole role, string? altText = null, string? linkTarget = null, string? language = null, int columnSpan = 1, int rowSpan = 1) =>
+        BeginTagCore(id, role, altText, linkTarget, language, columnSpan, rowSpan, 0);
+
+    private void BeginTagCore(ItemId id, TagRole role, string? altText, string? linkTarget, string? language, int columnSpan, int rowSpan, int artifactKind)
     {
-        if ((int)role > (int)TagRole.Form)
+        if ((int)role > (int)TagRole.Formula)
         {
             throw new ArgumentOutOfRangeException(nameof(role));
         }
@@ -820,8 +823,39 @@ public sealed partial class DisplayList
             rec.E = c | (r << 11);
             H((ulong)rec.E);
         }
+        else if (artifactKind != 0)
+        {
+            // The kind rides in E (spans are for table cells only) and joins the content hash so damage sees a change.
+            rec.E = artifactKind;
+            H((ulong)rec.E);
+        }
 
         FinishPush(_count - 1);
+    }
+
+    /// <summary>
+    /// Starts an artifact scope with a kind: everything painted until <see cref="EndTag"/> is page furniture a reader skips, and a PDF
+    /// writer marks it <c>/Artifact &lt;&lt;/Type … /Subtype …&gt;&gt;</c> (ISO 32000-1 14.8.2.2). Equal to
+    /// <c>BeginTag(id, TagRole.Artifact)</c> when both arguments are <c>None</c>. No display-list format change: a reader that ignores the
+    /// kind still draws the same pixels.
+    /// </summary>
+    /// <param name="id">The item's stable id.</param>
+    /// <param name="type">The artifact type; <see cref="ArtifactType.None"/> for an unspecified one.</param>
+    /// <param name="subtype">The subtype, meaningful with <see cref="ArtifactType.Pagination"/>; <see cref="ArtifactSubtype.None"/> for none.</param>
+    /// <exception cref="ArgumentOutOfRangeException">An argument is not a defined member.</exception>
+    public void BeginTag(ItemId id, ArtifactType type, ArtifactSubtype subtype = ArtifactSubtype.None)
+    {
+        if ((int)type > (int)ArtifactType.Background)
+        {
+            throw new ArgumentOutOfRangeException(nameof(type));
+        }
+
+        if ((int)subtype > (int)ArtifactSubtype.Watermark)
+        {
+            throw new ArgumentOutOfRangeException(nameof(subtype));
+        }
+
+        BeginTagCore(id, TagRole.Artifact, null, null, null, 1, 1, (int)type | ((int)subtype << 8));
     }
 
     /// <summary>Ends the innermost semantic element.</summary>

@@ -90,7 +90,7 @@ where one face covers the cluster). Private-use characters skip the generic and 
 is shaped as the primary face's `.notdef` (glyph 0, so its advance is kept) and records a `TextDiagnostic` of kind missing glyph whose `Package` names the opt-in
 package that would cover it (`RecursiveAI.OneRender.Fonts.Noto.<Script>`, `.Fonts.Cjk`, `.Fonts.Emoji`; the table is
 `FontPackages`). Backends never draw glyph 0: the raster and the PDF writer skip it, and the PDF keeps the text in `/ToUnicode` and
-`/ActualText`. `TextDiagnostics` keeps 512 entries and counts the rest in `Dropped`. Canonical-equivalence matching
+`/ActualText`. The PDF writer also reports it as `DiagnosticKind.MissingGlyph` in the result's `Diagnostics`, once per covering package and once per uncovered character. `TextDiagnostics` keeps 512 entries and counts the rest in `Dropped`. Canonical-equivalence matching
 (Fonts 4 §5.4's normalization step) is not done.
 
 ## Opt-in fonts packages

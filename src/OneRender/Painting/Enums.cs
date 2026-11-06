@@ -329,4 +329,54 @@ public enum TagRole : byte
 
     /// <summary>A form field or form container.</summary>
     Form = 29,
+
+    /// <summary>A note, such as a footnote or endnote (PDF structure type <c>Note</c>, ISO 32000-1 14.8.4.2).</summary>
+    Note = 30,
+
+    /// <summary>A reference to elsewhere in the document, such as a citation (PDF <c>Reference</c>, ISO 32000-1 14.8.4.2).</summary>
+    Reference = 31,
+
+    /// <summary>A table of contents (PDF <c>TOC</c>, ISO 32000-1 14.8.4.2).</summary>
+    TOC = 32,
+
+    /// <summary>An item of a table of contents (PDF <c>TOCI</c>, ISO 32000-1 14.8.4.2). Its alternative text is written like a figure's.</summary>
+    TOCI = 33,
+
+    /// <summary>A mathematical formula (PDF <c>Formula</c>, ISO 32000-1 14.8.4.5). Like a figure it should carry alternative text (PDF/UA-1 7.7).</summary>
+    Formula = 34,
+}
+
+/// <summary>The kind of an artifact (ISO 32000-1 14.8.2.2.2): what the content is, so a reader knows why it is not structure.</summary>
+public enum ArtifactType : byte
+{
+    /// <summary>No kind given: written as a plain artifact.</summary>
+    None = 0,
+
+    /// <summary>Page-production material such as running headers, footers and page numbers.</summary>
+    Pagination = 1,
+
+    /// <summary>Layout material such as rules and decorative shapes.</summary>
+    Layout = 2,
+
+    /// <summary>Page material such as print marks.</summary>
+    Page = 3,
+
+    /// <summary>A background.</summary>
+    Background = 4,
+}
+
+/// <summary>The subtype of a <see cref="ArtifactType.Pagination"/> artifact (ISO 32000-1 14.8.2.2.2).</summary>
+public enum ArtifactSubtype : byte
+{
+    /// <summary>No subtype.</summary>
+    None = 0,
+
+    /// <summary>A running header.</summary>
+    Header = 1,
+
+    /// <summary>A running footer.</summary>
+    Footer = 2,
+
+    /// <summary>A watermark.</summary>
+    Watermark = 3,
 }

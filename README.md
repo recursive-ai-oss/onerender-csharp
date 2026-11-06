@@ -118,6 +118,7 @@ retained.ClearDamage();
 - **No network, no clock, no processes.** Resources come from the host's resolver; time comes from the host (`Advance(nowMs)`; renders default to time 0).
 - **Safe code.** No `unsafe`, no reflection, no runtime codegen. Hostile input is bounded: depth, node, page, counter, grid-track and iteration limits are checked before the work they guard, and recursion never follows tree depth. Fuzz targets for the parsers, layout, paint, incremental edits, PDF output and font data are in `fuzz/`.
 - **Two layers.** Every package exposes the low level; the happy-path APIs use only it.
+- **Other producers.** OneDocument (formerly OneOffice) paints into onerender's display list and writes tagged PDF through `.Pdf`.
 
 ## Support matrix
 
