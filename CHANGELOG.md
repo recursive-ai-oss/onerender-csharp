@@ -2,13 +2,25 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- `TagRole.Note`, `Reference`, `TOC`, `TOCI` and `Formula` (values 30 to 34; existing values unchanged), accepted by `DisplayList.BeginTag` and written by `.Pdf` as the structure types `Note`, `Reference`, `TOC`, `TOCI` and `Formula`. A formula keeps its alternative text.
+- `ArtifactType` (`None`, `Pagination`, `Layout`, `Page`, `Background`), `ArtifactSubtype` (`None`, `Header`, `Footer`, `Watermark`), the overload `DisplayList.BeginTag(ItemId, ArtifactType, ArtifactSubtype)` and `DisplayItem.ArtifactType` / `ArtifactSubtype`. `.Pdf` writes the kind as `/Artifact <</Type … /Subtype …>> BDC`. The kind is part of the item's content hash. Output without a kind is unchanged, and the display-list format version is unchanged.
+- Package validation against 1.3.3 on every package.
+
+### Documentation
+
+- `docs/display-list.md` states what `LocalBounds`, `RootBounds` and `LayerBounds` hold for each push item (a clip carries its shape's bounds; the other pushes have none). `docs/pdf.md` describes the new roles and artifact kinds and `DiagnosticKind.MissingGlyph`.
+
 ## [1.3.3] - 2026-11-04
 
 ### Fixed
 
 - `.Pdf`: text after a colour emoji was invisible. The emoji's text layer is written in render mode 3, and the writer kept that mode for every later text object; each run now sets its own mode.
 - `HtmlPdfResult.Diagnostics` now carries a `DiagnosticKind.MissingGlyph` diagnostic when a character has no glyph in any font, naming the fonts package that covers it (one per package, one per character no package covers).
-- Text that overflows the page area sideways in a PDF (a table that cannot be narrower than its widest word, a long unbreakable word) is no longer cut at the content box: it is drawn into the side margins (at most 24% of the content width per side, so it never reaches a neighbouring page), and stays extractable. Rows cut at a page break were not the cause: they already continue on the next page.
+- Text that overflows the page area sideways in a PDF (a table that cannot be narrower than its widest word, a long unbreakable word) is no longer cut at the content box: it is drawn into the side margins (at most `min(margin, 0.24 × content width)` per side, so it never reaches a neighbouring page), and stays extractable while it starts inside that region; text that starts beyond it (a whole table cell, say) is still cut and is not in the PDF. Rows cut at a page break were not the cause: they already continue on the next page.
 
 ### Added
 

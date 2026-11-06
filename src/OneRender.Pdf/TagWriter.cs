@@ -90,6 +90,11 @@ internal sealed class TagWriter
         TagRole.BlockQuote => "BlockQuote",
         TagRole.Code => "Code",
         TagRole.Form => "Form",
+        TagRole.Note => "Note",
+        TagRole.Reference => "Reference",
+        TagRole.TOC => "TOC",
+        TagRole.TOCI => "TOCI",
+        TagRole.Formula => "Formula",
         _ => "Span",
     };
 
