@@ -11,7 +11,7 @@ An HTML and CSS layout and rendering engine for .NET, written from the specifica
 | `RecursiveAI.OneRender.Pdf` | Display list to tagged PDF (`HtmlPdf.ToPdf`, `DisplayListPdfWriter`). | OneRender, OnePdf (core), `.Image` |
 | `RecursiveAI.OneRender.Razor` | A Razor component to a PDF or an image in one call. | OneRender, `.Image`, `.Pdf`, the ASP.NET Core shared framework |
 | `RecursiveAI.OneRender.Accessibility` | Rendered page facts (boxes, paint order, text boxes, colors behind text) in OneHtml's `RenderedFacts` shape. | OneRender, OneHtml.Accessibility |
-| `RecursiveAI.OneRender.Fonts` | Default fonts: Liberation Sans/Serif/Mono, Carlito, Caladea. | fonts only |
+| `RecursiveAI.OneRender.Fonts` | Default fonts: Liberation Sans/Serif/Mono, Carlito, Caladea, plus Noto Sans Symbols 2 as a fallback for symbols. | fonts only |
 | `RecursiveAI.OneRender.Fonts.Noto.<Script>` (29), `.Fonts.Cjk`, `.Fonts.Emoji` | Opt-in script coverage. | `.Fonts` |
 
 Every library targets `net10.0` and is NativeAOT-, trim- and WebAssembly-clean (the Razor package needs ASP.NET Core and is not part of the WebAssembly check). Family libraries come from NuGet at the versions pinned in `Directory.Packages.props`.
@@ -110,7 +110,7 @@ retained.ClearDamage();
 
 ## Fonts
 
-`RecursiveAI.OneRender.Fonts` embeds Liberation Sans, Serif and Mono (also answering to Arial, Helvetica, Times New Roman and Courier New), Carlito (Calibri) and Caladea (Cambria), unmodified, so output is the same on every machine. `.Image` references it, so the happy paths need no setup. Script coverage is opt-in: reference `RecursiveAI.OneRender.Fonts.Noto.<Script>` (Arabic, Hebrew, Devanagari, Thai and 25 more), `.Fonts.Cjk` (Noto Sans CJK, about 32 MB) or `.Fonts.Emoji` (Noto Color Emoji) and the package registers itself at start-up. When a glyph is missing, the engine records a diagnostic that names the package that covers it. System fonts are used only through a provider you pass in. WOFF and WOFF2 `@font-face` fonts work; on browser WebAssembly WOFF2 needs decoded bytes from the host because the platform has no Brotli. Details: [docs/text.md](docs/text.md).
+`RecursiveAI.OneRender.Fonts` embeds Liberation Sans, Serif and Mono (also answering to Arial, Helvetica, Times New Roman and Courier New), Carlito (Calibri) and Caladea (Cambria), plus Noto Sans Symbols 2 as a fallback-only face for stars, arrows, dingbats and similar symbols (no family name selects it), all unmodified, so output is the same on every machine. `.Image` references it, so the happy paths need no setup. Script coverage is opt-in: reference `RecursiveAI.OneRender.Fonts.Noto.<Script>` (Arabic, Hebrew, Devanagari, Thai and 25 more), `.Fonts.Cjk` (Noto Sans CJK, about 32 MB) or `.Fonts.Emoji` (Noto Color Emoji) and the package registers itself at start-up. When a glyph is missing, the engine records a diagnostic that names the package that covers it. System fonts are used only through a provider you pass in. WOFF and WOFF2 `@font-face` fonts work; on browser WebAssembly WOFF2 needs decoded bytes from the host because the platform has no Brotli. Details: [docs/text.md](docs/text.md).
 
 ## Design
 

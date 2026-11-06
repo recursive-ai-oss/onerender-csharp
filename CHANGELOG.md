@@ -126,7 +126,7 @@ First release. All packages share one version.
 - **RecursiveAI.OneRender** (the engine; depends on OneHtml and OneFont only)
   - Styled-node tree with typed computed values, fed by OneHtml's DOM and cascade or by a C# builder (`StyledTree`); box tree; incremental layout into a fragment tree.
   - Layout: block and inline formatting, margin collapsing, floats, positioning (relative, absolute, fixed, sticky), overflow and scrolling, flexbox, grid with subgrid, the CSS table model, multi-column, intrinsic sizing, aspect-ratio, bidi text with OneFont shaping and line breaking, `@font-face` (WOFF and WOFF2).
-  - Paged media: fragmentation, `@page`, margin boxes, page counters, named pages, `string-set`, `target-counter`, leaders, repeated table headers and footers.
+  - Paged media: fragmentation, `@page`, margin boxes, page counters, named pages, `string-set`, `target-counter`, leaders, repeated table headers and footers (until 1.3.2 the repeated rows were placed outside the page area and clipped away on continuation pages).
   - Paint into a retained, versioned display list with stable item IDs and damage regions: backgrounds, gradients, borders and radii, shadows, transforms, opacity, blend modes, clip paths, masks, filters, images, inline SVG, generated content and lists. Transform and opacity changes patch the list without relayout.
   - Interaction: hit testing, DOM-standard events (capture, target, bubble, `preventDefault`), focus, scrolling with scroll snap, text selection, CSS Transitions and Animations on the host's clock, synchronous layout queries.
   - Form controls with Chrome's default look, text editing with caret, selection, undo, clipboard hooks and IME composition, and the `select` dropdown as an overlay in the same display list.
